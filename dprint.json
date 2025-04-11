@@ -29,10 +29,6 @@
         "exts": [
           "rs"
         ]
-      },
-      {
-        "command": "dart format .",
-        "exts": ["dart"]
       }
     ]
   },
