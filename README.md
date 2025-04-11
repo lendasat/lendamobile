@@ -1,16 +1,21 @@
 # ark_flutter
 
-A new Flutter project.
+A sample project of how to use ark-rs within flutter
+using [flutter-rust-bridge](https://cjycode.com/flutter_rust_bridge/).
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. Install flutter for your system including setting up simulators
+2. run `flutter run`
 
-A few resources to get you started if this is your first Flutter project:
+## Development
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Whenever you make changes in the rust code, you will need to re-generate the flutter bindings.
+You can do this with
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter_rust_bridge_codegen generate --watch
+```
+
+Unfortunately, after making changes in rust, you will need to restart flutter as currently flutter does not support
+hot-reload/hot-restart yet.
