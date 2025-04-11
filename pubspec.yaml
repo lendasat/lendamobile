@@ -37,6 +37,8 @@ dependencies:
   rust_lib_ark_flutter:
     path: rust_builder
   flutter_rust_bridge: 2.9.0
+  logger: ^2.5.0
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:

@@ -7,7 +7,13 @@ edition = "2021"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-flutter_rust_bridge = "=2.9.0"
+anyhow = "1"
+flutter_rust_bridge = { version = "=2.9.0" }
+parking_lot = { version = "0.12.1" }
+state = "0.6.0"
+tracing = "0.1.37"
+tracing-log = "0.2.0"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter", "time", "json"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
