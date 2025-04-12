@@ -1,11 +1,11 @@
 use crate::frb_generated::StreamSink;
 use crate::logger;
 
-pub mod simple;
+pub mod ark_api;
 
-pub fn test(i: i32) {
-    // using the 'log' crate macros
-    tracing::info!("test called with: {i}")
+#[flutter_rust_bridge::frb(init)]
+pub fn init_app() {
+    flutter_rust_bridge::setup_default_user_utils();
 }
 
 pub fn init_logging(sink: StreamSink<logger::LogEntry>) {

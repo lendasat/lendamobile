@@ -7,6 +7,4 @@ import 'frb_generated.dart';
 import 'logger.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-Future<void> test({required int i}) => RustLib.instance.api.crateApiTest(i: i);
-
 Stream<LogEntry> initLogging() => RustLib.instance.api.crateApiInitLogging();

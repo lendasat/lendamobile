@@ -1,7 +1,7 @@
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api.dart';
+import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:flutter/material.dart';
-import 'package:ark_flutter/src/rust/api/simple.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
 
 Future setupLogger() async {
@@ -32,6 +32,8 @@ Future setupLogger() async {
 Future<void> main() async {
   await RustLib.init();
   await setupLogger();
+  var aspId = await setupArkClient();
+  logger.i("Received id $aspId");
 
   runApp(const MyApp());
 }
@@ -44,9 +46,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(title: const Text('flutter_rust_bridge quickstart')),
-        body: Center(
-          child: Text(
-              'Action: Call Rust `greet("Tom")`\nResult: `${greet(name: "Tom")}`'),
+        body: const Center(
+          child: Text('Nothing yet'),
         ),
       ),
     );

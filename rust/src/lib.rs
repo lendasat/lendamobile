@@ -1,3 +1,4 @@
 pub mod api;
+pub mod ark;
 mod frb_generated;
-mod logger;
+pub mod logger;

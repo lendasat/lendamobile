@@ -110,7 +110,7 @@ where
 
 struct Visitor<'a>(&'a mut BTreeMap<String, String>);
 
-impl<'a> tracing::field::Visit for Visitor<'a> {
+impl tracing::field::Visit for Visitor<'_> {
     fn record_f64(&mut self, field: &tracing::field::Field, value: f64) {
         self.0.insert(field.name().to_string(), value.to_string());
     }
