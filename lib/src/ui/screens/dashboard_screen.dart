@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/settings_screen.dart';
+import 'package:ark_flutter/src/ui/screens/send_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String aspId;
@@ -62,8 +63,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _handleSend() {
-    // TODO: Navigate to send screen
+    // Navigate to send screen
     logger.i("Send button pressed");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SendScreen(
+          aspId: widget.aspId,
+          availableSats: _btcBalance * 100000000, // Convert BTC to SATS
+        ),
+      ),
+    );
   }
 
   void _handleReceive() {
@@ -79,8 +89,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('Receive Bitcoin',
-            style: TextStyle(color: Colors.white)),
+        title: const Text('Receive Bitcoin', style: TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
