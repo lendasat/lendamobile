@@ -4,6 +4,9 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
 
+// Import the onboarding screen
+import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
+
 Future setupLogger() async {
   buildLogger(false);
 
@@ -44,12 +47,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: const Text('flutter_rust_bridge quickstart')),
-        body: const Center(
-          child: Text('Nothing yet'),
-        ),
+      title: 'WTF Bitcoin Wallet',
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.amber,
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        useMaterial3: true,
       ),
+      home: const OnboardingScreen(),
     );
   }
 }
