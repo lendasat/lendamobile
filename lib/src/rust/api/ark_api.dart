@@ -6,8 +6,15 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-Future<String> setupNewWallet() =>
-    RustLib.instance.api.crateApiArkApiSetupNewWallet();
+Future<bool> walletExists({required String dataDir}) =>
+    RustLib.instance.api.crateApiArkApiWalletExists(dataDir: dataDir);
 
-Future<String> restoreWallet({required String nsec}) =>
-    RustLib.instance.api.crateApiArkApiRestoreWallet(nsec: nsec);
+Future<String> setupNewWallet({required String dataDir}) =>
+    RustLib.instance.api.crateApiArkApiSetupNewWallet(dataDir: dataDir);
+
+Future<String> loadExistingWallet({required String dataDir}) =>
+    RustLib.instance.api.crateApiArkApiLoadExistingWallet(dataDir: dataDir);
+
+Future<String> restoreWallet({required String nsec, required String dataDir}) =>
+    RustLib.instance.api
+        .crateApiArkApiRestoreWallet(nsec: nsec, dataDir: dataDir);

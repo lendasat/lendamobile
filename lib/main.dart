@@ -3,9 +3,9 @@ import 'package:ark_flutter/src/rust/api.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
-
-// Import the onboarding screen
 import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
+import 'package:ark_flutter/src/ui/screens/dashboard_screen.dart';
+import 'package:path_provider/path_provider.dart';
 
 Future setupLogger() async {
   buildLogger(false);
@@ -32,27 +32,63 @@ Future setupLogger() async {
   logger.d("Logger is working!");
 }
 
+Future<Widget> determineStartScreen() async {
+  try {
+    // Get application support directory
+    final applicationSupportDirectory = await getApplicationSupportDirectory();
+    final dataDir = applicationSupportDirectory.path;
+    logger.i("Checking for wallet in directory: $dataDir");
+
+    // Check if wallet exists
+    final exists = await walletExists(dataDir: dataDir);
+
+    if (exists) {
+      logger.i("Wallet found, setting up client");
+      // Setup ARK client with existing wallet
+      final aspId = await loadExistingWallet(dataDir: dataDir);
+      logger.i("Wallet setup complete, ID: $aspId");
+
+      // Return the dashboard screen with the ASP ID
+      return DashboardScreen(aspId: aspId);
+    } else {
+      logger.i("No wallet found, showing onboarding screen");
+      // Return the onboarding screen
+      return const OnboardingScreen();
+    }
+  } catch (e) {
+    logger.e("Error while checking wallet existence: $e");
+    // In case of error, show the onboarding screen
+    return const OnboardingScreen();
+  }
+}
+
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
   await setupLogger();
 
-  runApp(const MyApp());
+  // Determine which screen to show first
+  final startScreen = await determineStartScreen();
+
+  runApp(MyApp(startScreen: startScreen));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Widget startScreen;
+
+  const MyApp({super.key, required this.startScreen});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'WTF Bitcoin Wallet',
+      title: 'WTFark Wallet',
       theme: ThemeData(
         brightness: Brightness.dark,
         primarySwatch: Colors.amber,
         scaffoldBackgroundColor: const Color(0xFF121212),
         useMaterial3: true,
       ),
-      home: const OnboardingScreen(),
+      home: startScreen,
     );
   }
 }

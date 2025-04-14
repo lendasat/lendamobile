@@ -2199,6 +2199,7 @@ dependencies = [
  "esplora-client",
  "flutter_rust_bridge",
  "futures",
+ "hex",
  "nostr",
  "parking_lot",
  "rand",

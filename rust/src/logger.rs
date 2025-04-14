@@ -1,8 +1,8 @@
 use crate::frb_generated::StreamSink;
+use crate::state::LOG_STREAM_SINK;
 use anyhow::Context;
 use anyhow::Result;
 use parking_lot::RwLock;
-use state::InitCell;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::sync::Once;
@@ -15,8 +15,6 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::Layer;
-
-static LOG_STREAM_SINK: InitCell<RwLock<Arc<StreamSink<LogEntry>>>> = InitCell::new();
 
 const RUST_LOG_ENV: &str = "RUST_LOG";
 static INIT_LOGGER_ONCE: Once = Once::new();

@@ -2,6 +2,7 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/dashboard_screen.dart';
+import 'package:path_provider/path_provider.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -37,12 +38,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _isLoading = true;
     });
 
+    final dataDir = await getApplicationSupportDirectory();
+
     try {
       if (_selectedOption == 'new') {
         logger.i('Creating new wallet');
 
         try {
-          var aspId = await setupNewWallet();
+          var aspId = await setupNewWallet(dataDir: dataDir.path);
           logger.i("Received id $aspId");
 
           // Navigate to dashboard
@@ -62,7 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         logger.i('Restoring wallet with key');
 
         try {
-          var aspId = await restoreWallet(nsec: _secretKeyController.text);
+          var aspId = await restoreWallet(nsec: _secretKeyController.text, dataDir: dataDir.path);
           logger.i("Received id $aspId");
 
           // Navigate to dashboard
