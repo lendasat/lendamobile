@@ -36,3 +36,23 @@ pub async fn balance() -> Result<Balance> {
         },
     })
 }
+
+pub struct Addresses {
+    pub boarding: String,
+    pub offchain: String,
+    /// bitcoin:tb1pgfr8058rfwuxujs03yrwpwazzf9xh34az2z6nzmjyly5gy7yzk3sa4dkh8?ark=tark1lfeudey8dlajmlykr4mrej56h3eafwywlju0telljtw9t6d2257sz8qw3fu7hgf6582e68gawp950gndjlvw4r5ler9pztxp0d5srsc5welph&amount=0.00001234
+    pub bip21: String,
+}
+
+pub fn address() -> Result<Addresses> {
+    let addresses = crate::ark::client::address()?;
+
+    let boarding = addresses.boarding.to_string();
+    let offchain = addresses.offchain.encode();
+    let bip21 = format!("bitcoin:{boarding}?ark={offchain}");
+    Ok(Addresses {
+        boarding,
+        offchain,
+        bip21,
+    })
+}

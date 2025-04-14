@@ -21,6 +21,34 @@ Future<String> restoreWallet({required String nsec, required String dataDir}) =>
 
 Future<Balance> balance() => RustLib.instance.api.crateApiArkApiBalance();
 
+Future<Addresses> address() => RustLib.instance.api.crateApiArkApiAddress();
+
+class Addresses {
+  final String boarding;
+  final String offchain;
+
+  /// bitcoin:tb1pgfr8058rfwuxujs03yrwpwazzf9xh34az2z6nzmjyly5gy7yzk3sa4dkh8?ark=tark1lfeudey8dlajmlykr4mrej56h3eafwywlju0telljtw9t6d2257sz8qw3fu7hgf6582e68gawp950gndjlvw4r5ler9pztxp0d5srsc5welph&amount=0.00001234
+  final String bip21;
+
+  const Addresses({
+    required this.boarding,
+    required this.offchain,
+    required this.bip21,
+  });
+
+  @override
+  int get hashCode => boarding.hashCode ^ offchain.hashCode ^ bip21.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Addresses &&
+          runtimeType == other.runtimeType &&
+          boarding == other.boarding &&
+          offchain == other.offchain &&
+          bip21 == other.bip21;
+}
+
 class Balance {
   final OffchainBalance offchain;
 

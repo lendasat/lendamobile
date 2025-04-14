@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
@@ -23,10 +24,13 @@ class ReceiveScreen extends StatefulWidget {
 }
 
 class _ReceiveScreenState extends State<ReceiveScreen> {
-  // Mock data - would be fetched from backend
-  final String _bip21Address = "bitcoin:tb...0.00001234";
-  final String _btcAddress = "tb1pgfr805...zk3sa4dkh8";
-  final String _arkAddress = "tark1lfeu...src5welph";
+  bool _isLoading = true;
+  String? _error;
+
+  String _bip21Address = "";
+  String _btcAddress = "";
+  String _arkAddress = "";
+
 
   bool _showCopyMenu = false;
 
@@ -43,6 +47,36 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
     'BTC': null,
     'Ark': null,
   };
+
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAddresses();
+  }
+
+  Future<void> _fetchAddresses() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final addresses = await address();
+      setState(() {
+        _bip21Address = addresses.bip21;
+        _arkAddress = addresses.offchain;
+        _btcAddress = addresses.boarding;
+      });
+    } catch (e) {
+      logger.e("Error fetching addresses: $e");
+      setState(() {
+        _error = e.toString();
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -295,6 +329,17 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
                   if (_showCopyMenu) _buildAddressOptions(),
 
                   const SizedBox(height: 16),
+
+                  if (_error != null)
+                    const Text(
+                      'Error loading addresses',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+
                 ],
               ),
             ),
@@ -424,3 +469,5 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
     );
   }
 }
+
+
