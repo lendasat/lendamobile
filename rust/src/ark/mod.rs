@@ -6,8 +6,9 @@ use crate::ark::storage::InMemoryDb;
 use anyhow::{anyhow, Result};
 use ark_rs::client::OfflineClient;
 use bitcoin::key::{Keypair, Secp256k1};
-use bitcoin::secp256k1::SecretKey;
+use bitcoin::secp256k1::{All, SecretKey};
 use bitcoin::Network;
+use nostr::Keys;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -15,16 +16,29 @@ use std::sync::Arc;
 // const ARK_SERVER: &'static str = "https://mutinynet.arkade.sh";
 
 const ESPLORA_URL: &str = "http://localhost:30000";
-const ARK_SERVER: &'static str = "http://localhost:7070";
+const ARK_SERVER: &str = "http://localhost:7070";
 
-pub async fn setup_client() -> Result<String> {
+pub async fn setup_new_wallet() -> Result<String> {
     let secp = Secp256k1::new();
 
+    // TODO: generate random one
     let sk =
         SecretKey::from_str("01010101010101010001020304050607ffff0000ffff00006363636363636363")
             .expect("to be a secret key");
     let kp = Keypair::from_secret_key(&secp, &sk);
+    let string = setup_client(kp, secp).await?;
+    Ok(string)
+}
 
+pub async fn restore_wallet(nsec: String) -> Result<String> {
+    let secp = Secp256k1::new();
+    let keys = Keys::parse(nsec.as_str())?;
+    let kp = *keys.key_pair(&secp);
+    let string = setup_client(kp, secp).await?;
+    Ok(string)
+}
+
+pub async fn setup_client(kp: Keypair, secp: Secp256k1<All>) -> Result<String> {
     let db = InMemoryDb::default();
 
     let wallet = ark_bdk_wallet::Wallet::new(kp, secp, Network::Signet, ESPLORA_URL, db)?;

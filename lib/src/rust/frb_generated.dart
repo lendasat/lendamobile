@@ -70,7 +70,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.9.0';
 
   @override
-  int get rustContentHash => 531932598;
+  int get rustContentHash => -1897266909;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -85,7 +85,9 @@ abstract class RustLibApi extends BaseApi {
 
   Stream<LogEntry> crateApiInitLogging();
 
-  Future<String> crateApiArkApiSetupArkClient();
+  Future<String> crateApiArkApiRestoreWallet({required String nsec});
+
+  Future<String> crateApiArkApiSetupNewWallet();
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -146,10 +148,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<String> crateApiArkApiSetupArkClient() {
+  Future<String> crateApiArkApiRestoreWallet({required String nsec}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(nsec, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 3, port: port_);
       },
@@ -157,15 +160,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_String,
         decodeErrorData: sse_decode_AnyhowException,
       ),
-      constMeta: kCrateApiArkApiSetupArkClientConstMeta,
+      constMeta: kCrateApiArkApiRestoreWalletConstMeta,
+      argValues: [nsec],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiArkApiRestoreWalletConstMeta =>
+      const TaskConstMeta(
+        debugName: "restore_wallet",
+        argNames: ["nsec"],
+      );
+
+  @override
+  Future<String> crateApiArkApiSetupNewWallet() {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 4, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiArkApiSetupNewWalletConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiArkApiSetupArkClientConstMeta =>
+  TaskConstMeta get kCrateApiArkApiSetupNewWalletConstMeta =>
       const TaskConstMeta(
-        debugName: "setup_ark_client",
+        debugName: "setup_new_wallet",
         argNames: [],
       );
 

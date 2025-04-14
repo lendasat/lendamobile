@@ -13,6 +13,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   String? _selectedOption;
   final TextEditingController _secretKeyController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -23,39 +24,96 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _handleOptionSelect(String option) {
     setState(() {
       _selectedOption = option;
+
+      if (option == 'new') {
+        _secretKeyController.clear();
+      }
     });
   }
 
   void _handleContinue() async {
-    if (_selectedOption == 'new') {
-      logger.i('Creating new wallet');
-      // Call your Rust backend to create a new wallet
-      var aspId = await setupArkClient();
-      logger.i("Received id $aspId");
+    // Show loading indicator
+    setState(() {
+      _isLoading = true;
+    });
 
-      // Navigate to dashboard
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-              builder: (context) => DashboardScreen(aspId: aspId)),
-        );
+    try {
+      if (_selectedOption == 'new') {
+        logger.i('Creating new wallet');
+
+        try {
+          var aspId = await setupNewWallet();
+          logger.i("Received id $aspId");
+
+          // Navigate to dashboard
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                  builder: (context) => DashboardScreen(aspId: aspId)),
+            );
+          }
+        } catch (e) {
+          logger.e("Failed to create new wallet: $e");
+          _showErrorDialog("Failed to create wallet",
+              "There was an error creating your new wallet. Please try again.\n\nError: ${e.toString()}");
+        }
+      } else if (_selectedOption == 'existing' &&
+          _secretKeyController.text.isNotEmpty) {
+        logger.i('Restoring wallet with key');
+
+        try {
+          var aspId = await restoreWallet(nsec: _secretKeyController.text);
+          logger.i("Received id $aspId");
+
+          // Navigate to dashboard
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                  builder: (context) => DashboardScreen(aspId: aspId)),
+            );
+          }
+        } catch (e) {
+          logger.e("Failed to restore wallet: $e");
+          _showErrorDialog("Failed to restore wallet",
+              "There was an error restoring your wallet. Please check your nsec and try again.\n\nError: ${e.toString()}");
+        }
       }
-    } else if (_selectedOption == 'existing' &&
-        _secretKeyController.text.isNotEmpty) {
-      logger.i('Restoring wallet with key: ${_secretKeyController.text}');
-      // Call your Rust backend to restore wallet with the provided secret key
-      var aspId =
-          await setupArkClient(); // You might need a different function for restoration
-      logger.i("Received id $aspId");
-
-      // Navigate to dashboard
+    } finally {
+      // Hide loading indicator if we're still mounted
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-              builder: (context) => DashboardScreen(aspId: aspId)),
-        );
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
+  }
+
+  void _showErrorDialog(String title, String message) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[850],
+        title: Text(
+          title,
+          style: const TextStyle(color: Colors.red),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.amber,
+            ),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -83,11 +141,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      'Bitcoin Wallet for Ark L2',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey[300],
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.grey[300],
+                        ),
+                        children: const [
+                          TextSpan(
+                            text: 'W',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: 'allet '),
+                          TextSpan(
+                            text: 'T',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: 'hat '),
+                          TextSpan(
+                            text: 'F',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: 'lies on Ark'),
+                        ],
                       ),
                     ),
                   ],
@@ -129,7 +205,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     // Secret Key Input (shown only when "Existing Wallet" is selected)
                     if (_selectedOption == 'existing') ...[
                       const Text(
-                        'Enter your secret key:',
+                        'Enter your nsec:',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.white70,
@@ -146,7 +222,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           style: const TextStyle(color: Colors.white),
                           maxLines: 3,
                           decoration: const InputDecoration(
-                            hintText: 'Paste your secret recovery phrase...',
+                            hintText: 'Paste your recovery nsec...',
                             hintStyle: TextStyle(color: Colors.grey),
                             contentPadding: EdgeInsets.all(16),
                             border: InputBorder.none,
@@ -162,12 +238,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _selectedOption != null
-                      ? (_selectedOption == 'existing' &&
-                              _secretKeyController.text.isEmpty
-                          ? null // Disable if existing wallet is selected but no key provided
-                          : _handleContinue)
-                      : null, // Disable if no option is selected
+
+                  onPressed: _isLoading
+                      ? null
+                      : (_selectedOption == 'new' || _selectedOption == 'existing'
+                      ? _handleContinue
+                      : null),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber[500],
                     foregroundColor: Colors.black,
@@ -176,13 +252,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'CONTINUE',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.black),
+                            strokeWidth: 3,
+                          ),
+                        )
+                      : const Text(
+                          'CONTINUE',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],

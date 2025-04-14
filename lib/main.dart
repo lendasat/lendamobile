@@ -35,8 +35,6 @@ Future setupLogger() async {
 Future<void> main() async {
   await RustLib.init();
   await setupLogger();
-  var aspId = await setupArkClient();
-  logger.i("Received id $aspId");
 
   runApp(const MyApp());
 }

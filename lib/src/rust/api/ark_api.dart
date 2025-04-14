@@ -6,5 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-Future<String> setupArkClient() =>
-    RustLib.instance.api.crateApiArkApiSetupArkClient();
+Future<String> setupNewWallet() =>
+    RustLib.instance.api.crateApiArkApiSetupNewWallet();
+
+Future<String> restoreWallet({required String nsec}) =>
+    RustLib.instance.api.crateApiArkApiRestoreWallet(nsec: nsec);
