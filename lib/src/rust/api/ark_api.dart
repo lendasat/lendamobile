@@ -34,6 +34,9 @@ Future<String> send({required String address, required BigInt amountSats}) =>
 
 Future<void> settle() => RustLib.instance.api.crateApiArkApiSettle();
 
+Future<String> nsec({required String dataDir}) =>
+    RustLib.instance.api.crateApiArkApiNsec(dataDir: dataDir);
+
 class Addresses {
   final String boarding;
   final String offchain;

@@ -1,6 +1,8 @@
+import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:path_provider/path_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   final String aspId;
@@ -15,11 +17,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // Mock settings data - replace with actual user preferences
-  bool _biometricEnabled = true;
-  String _selectedNetwork = 'Mainnet';
-  String _recoveryPhrase =
-      'witch collapse practice feed shame open despair creek road again ice least';
+  String _selectedNetwork = 'Regtest';
+  String _nsec = 'Unknown';
 
   // Text editing controllers for URL inputs
   final TextEditingController _esploraUrlController =
@@ -29,6 +28,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // Updated network options
   final List<String> _supportedNetworks = ['Mainnet', 'Signet', 'Regtest'];
+
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNsec();
+  }
+
+  Future<void> _fetchNsec() async {
+    try {
+      var dataDir = await getApplicationSupportDirectory();
+      var key = await nsec(dataDir: dataDir.path);
+      setState(() {
+        _nsec = key;
+      });
+    } catch (err) {
+      logger.e("Error getting nsec: $err");
+    }
+  }
+
 
   @override
   void dispose() {
@@ -51,13 +70,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Never share your recovery phrase with anyone!',
+              'Never share your recovery key with anyone!',
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
             Text(
-              'Anyone with this phrase can access your wallet and steal your funds. Store it in a secure place.',
+              'Anyone with this key can access your wallet and steal your funds. Store it in a secure place.',
               style: TextStyle(color: Colors.white70),
             ),
           ],
@@ -70,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              _showRecoveryPhraseDialog();
+              _showRecoveryKeyDialog();
             },
             child: const Text('I UNDERSTAND',
                 style: TextStyle(color: Colors.amber)),
@@ -80,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showRecoveryPhraseDialog() {
+  void _showRecoveryKeyDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -103,36 +122,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children:
-                        _recoveryPhrase.split(' ').asMap().entries.map((entry) {
-                      int index = entry.key;
-                      String word = entry.value;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[800],
-                          borderRadius: BorderRadius.circular(4),
+                    spacing: 8, runSpacing: 8, children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        _nsec,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'monospace',
                         ),
-                        child: Text(
-                          '${index + 1}. $word',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                      ),
+                    )
+                  ]),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () {
-                Clipboard.setData(ClipboardData(text: _recoveryPhrase));
+                Clipboard.setData(ClipboardData(text: _nsec));
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                       content: Text('Recovery phrase copied to clipboard')),
@@ -217,10 +230,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('Wallet'),
           _buildSettingsCard([
             ListTile(
-              title: const Text('View Recovery Phrase',
+              title: const Text('View Recovery Key',
                   style: TextStyle(color: Colors.white)),
               subtitle: Text(
-                'Backup your wallet with these 12 words',
+                'Backup your wallet with these key',
                 style: TextStyle(color: Colors.grey[400], fontSize: 12),
               ),
               trailing: const Icon(Icons.chevron_right, color: Colors.grey),
@@ -438,3 +451,5 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
+
+

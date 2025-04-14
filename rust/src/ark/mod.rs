@@ -102,3 +102,9 @@ pub(crate) async fn wallet_exists(data_dir: String) -> Result<bool> {
     let maybe_sk = read_seed_file(data_dir.as_str())?;
     Ok(maybe_sk.is_some())
 }
+
+pub(crate) async fn nsec(data_dir: String) -> Result<nostr::SecretKey> {
+    let sk = read_seed_file(data_dir.as_str())?.ok_or(anyhow!("Seed file does not exist"))?;
+    let sk = nostr::SecretKey::from_slice(sk.as_ref())?;
+    Ok(sk)
+}

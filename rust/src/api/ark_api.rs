@@ -1,6 +1,7 @@
 use anyhow::Result;
 use ark_rs::core::ArkTransaction;
 use bitcoin::Amount;
+use nostr::ToBech32;
 
 pub async fn wallet_exists(data_dir: String) -> Result<bool> {
     crate::ark::wallet_exists(data_dir).await
@@ -126,4 +127,9 @@ pub async fn send(address: String, amount_sats: u64) -> Result<String> {
 pub async fn settle() -> Result<()> {
     crate::ark::client::settle().await?;
     Ok(())
+}
+
+pub async fn nsec(data_dir: String) -> Result<String> {
+    let nsec = crate::ark::nsec(data_dir).await?;
+    Ok(nsec.to_bech32()?)
 }
