@@ -24,7 +24,9 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _isBalanceLoading = true;
+  bool _isTransactionFetching = true;
   String? _balanceError;
+  List<Transaction> _transactions = [];
 
   // Store all balance types
   double _pendingBalance = 0.0;
@@ -38,24 +40,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Exchange rate
   final double _btcToUsdRate = 65000.0;
 
-  // Transaction history - replace with actual data
-  final List<Map<String, dynamic>> _recentTransactions = [
-    {
-      'type': 'received',
-      'amount': 0.05,
-      'date': DateTime.now().subtract(const Duration(days: 1)),
-      'address': 'bc1q...v3m4',
-      'status': 'completed',
-    },
-    {
-      'type': 'sent',
-      'amount': 0.025,
-      'date': DateTime.now().subtract(const Duration(days: 3)),
-      'address': 'bc1q...k7j9',
-      'status': 'completed',
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -64,8 +48,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _fetchWalletData() async {
-    _fetchBalance();
-    // In the future, also fetch transactions and other data
+    await Future.wait([
+      _fetchBalance(),
+      _fetchTransactions(),
+    ]);
+  }
+
+  Future<void> _fetchTransactions() async {
+    try {
+      setState(() {
+        _isTransactionFetching = true;
+      });
+
+      final transactions = await txHistory();
+      setState(() {
+        _isTransactionFetching = false;
+        _transactions = transactions;
+      });
+      logger.i("Fetched ${transactions.length} transactions");
+    } catch (e) {
+      logger.e("Error fetching transaction history: $e");
+      _showErrorSnackbar("Couldn't update transactions: ${e.toString()}");
+    } finally {
+      setState(() {
+        _isTransactionFetching = false;
+      });
+    }
   }
 
   Future<void> _fetchBalance() async {
@@ -451,6 +459,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildRecentTransactions() {
-    return TransactionHistoryWidget(aspId: widget.aspId);
+    return TransactionHistoryWidget(
+      aspId: widget.aspId,
+      transactions: _transactions,
+      loading: _isTransactionFetching
+    );
   }
 }

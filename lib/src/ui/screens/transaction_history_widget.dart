@@ -5,10 +5,13 @@ import 'package:intl/intl.dart';
 
 class TransactionHistoryWidget extends StatefulWidget {
   final String aspId;
+  final List<Transaction> transactions;
+  final bool loading;
 
   const TransactionHistoryWidget({
     Key? key,
     required this.aspId,
+    required this.transactions, required this.loading,
   }) : super(key: key);
 
   @override
@@ -17,60 +20,11 @@ class TransactionHistoryWidget extends StatefulWidget {
 }
 
 class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
-  bool _isLoading = true;
   String? _error;
-  List<Transaction> _transactions = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchTransactions();
-  }
-
-  Future<void> _fetchTransactions() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final transactions = await txHistory();
-
-      // Sort transactions by date (newest first)
-      transactions.sort((a, b) {
-        final aTime = _getTransactionTime(a);
-        final bTime = _getTransactionTime(b);
-
-        if (aTime == null && bTime == null) return 0;
-        if (aTime == null) return 1;
-        if (bTime == null) return -1;
-
-        return bTime.compareTo(aTime); // Descending order
-      });
-
-      setState(() {
-        _transactions = transactions;
-        _isLoading = false;
-      });
-
-      logger.i("Fetched ${transactions.length} transactions");
-    } catch (e) {
-      logger.e("Error fetching transaction history: $e");
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
-
-  DateTime? _getTransactionTime(Transaction tx) {
-    return tx.map(
-      boarding: (tx) => tx.confirmedAt != null
-          ? DateTime.fromMillisecondsSinceEpoch(tx.confirmedAt!.toInt() * 1000)
-          : null,
-      round: (tx) => DateTime.fromMillisecondsSinceEpoch(tx.createdAt.toInt() * 1000),
-      redeem: (tx) => DateTime.fromMillisecondsSinceEpoch(tx.createdAt.toInt() * 1000),
-    );
   }
 
   @override
@@ -89,21 +43,6 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            if (_isLoading)
-              const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
-                ),
-              )
-            else
-              IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.grey),
-                onPressed: _fetchTransactions,
-                iconSize: 20,
-              ),
           ],
         ),
         const SizedBox(height: 12),
@@ -120,15 +59,11 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                     'Error loading transactions',
                     style: TextStyle(color: Colors.grey[400]),
                   ),
-                  TextButton(
-                    onPressed: _fetchTransactions,
-                    child: const Text('Try Again', style: TextStyle(color: Colors.amber)),
-                  ),
                 ],
               ),
             ),
           )
-        else if (_isLoading)
+        else if (widget.loading)
           const Center(
             child: Padding(
               padding: EdgeInsets.all(32.0),
@@ -137,7 +72,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               ),
             ),
           )
-        else if (_transactions.isEmpty)
+        else if (widget.transactions.isEmpty)
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(32.0),
@@ -157,9 +92,9 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _transactions.length,
+              itemCount: widget.transactions.length,
               separatorBuilder: (context, index) => const Divider(color: Colors.grey),
-              itemBuilder: (context, index) => _buildTransactionItem(_transactions[index]),
+              itemBuilder: (context, index) => _buildTransactionItem(widget.transactions[index]),
             ),
       ],
     );
