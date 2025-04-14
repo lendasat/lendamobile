@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.9.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 936472720;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -839389436;
 
 // Section: executor
 
@@ -110,38 +110,6 @@ fn wire__crate__api__ark_api__balance_impl(
                     })()
                     .await,
                 )
-            }
-        },
-    )
-}
-fn wire__crate__api__ark_api__enum_fn_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "enum_fn",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(crate::api::ark_api::enum_fn())?;
-                    Ok(output_ok)
-                })())
             }
         },
     )
@@ -329,6 +297,41 @@ fn wire__crate__api__ark_api__setup_new_wallet_impl(
         },
     )
 }
+fn wire__crate__api__ark_api__tx_history_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "tx_history",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::ark_api::tx_history().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__ark_api__wallet_exists_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -425,10 +428,10 @@ impl SseDecode for bool {
     }
 }
 
-impl SseDecode for i32 {
+impl SseDecode for i64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
+        deserializer.cursor.read_i64::<NativeEndian>().unwrap()
     }
 }
 
@@ -439,6 +442,18 @@ impl SseDecode for Vec<u8> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<u8>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::ark_api::Transaction> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::ark_api::Transaction>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -480,17 +495,53 @@ impl SseDecode for crate::api::ark_api::OffchainBalance {
     }
 }
 
-impl SseDecode for crate::api::ark_api::TestEnum {
+impl SseDecode for Option<i64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<i64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for crate::api::ark_api::Transaction {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
-                return crate::api::ark_api::TestEnum::Test;
+                let mut var_txid = <String>::sse_decode(deserializer);
+                let mut var_amountSats = <u64>::sse_decode(deserializer);
+                let mut var_confirmedAt = <Option<i64>>::sse_decode(deserializer);
+                return crate::api::ark_api::Transaction::Boarding {
+                    txid: var_txid,
+                    amount_sats: var_amountSats,
+                    confirmed_at: var_confirmedAt,
+                };
             }
             1 => {
-                let mut var_test = <i32>::sse_decode(deserializer);
-                return crate::api::ark_api::TestEnum::Test2 { test: var_test };
+                let mut var_txid = <String>::sse_decode(deserializer);
+                let mut var_amountSats = <i64>::sse_decode(deserializer);
+                let mut var_createdAt = <i64>::sse_decode(deserializer);
+                return crate::api::ark_api::Transaction::Round {
+                    txid: var_txid,
+                    amount_sats: var_amountSats,
+                    created_at: var_createdAt,
+                };
+            }
+            2 => {
+                let mut var_txid = <String>::sse_decode(deserializer);
+                let mut var_amountSats = <i64>::sse_decode(deserializer);
+                let mut var_isSettled = <bool>::sse_decode(deserializer);
+                let mut var_createdAt = <i64>::sse_decode(deserializer);
+                return crate::api::ark_api::Transaction::Redeem {
+                    txid: var_txid,
+                    amount_sats: var_amountSats,
+                    is_settled: var_isSettled,
+                    created_at: var_createdAt,
+                };
             }
             _ => {
                 unimplemented!("");
@@ -518,6 +569,13 @@ impl SseDecode for () {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {}
 }
 
+impl SseDecode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
+    }
+}
+
 fn pde_ffi_dispatcher_primary_impl(
     func_id: i32,
     port: flutter_rust_bridge::for_generated::MessagePort,
@@ -529,14 +587,14 @@ fn pde_ffi_dispatcher_primary_impl(
     match func_id {
         1 => wire__crate__api__ark_api__address_impl(port, ptr, rust_vec_len, data_len),
         2 => wire__crate__api__ark_api__balance_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire__crate__api__ark_api__enum_fn_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__init_logging_impl(port, ptr, rust_vec_len, data_len),
-        6 => {
+        3 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__api__init_logging_impl(port, ptr, rust_vec_len, data_len),
+        5 => {
             wire__crate__api__ark_api__load_existing_wallet_impl(port, ptr, rust_vec_len, data_len)
         }
-        7 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
         9 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
@@ -636,24 +694,58 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::OffchainBalance>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::ark_api::TestEnum {
+impl flutter_rust_bridge::IntoDart for crate::api::ark_api::Transaction {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            crate::api::ark_api::TestEnum::Test => [0.into_dart()].into_dart(),
-            crate::api::ark_api::TestEnum::Test2 { test } => {
-                [1.into_dart(), test.into_into_dart().into_dart()].into_dart()
-            }
+            crate::api::ark_api::Transaction::Boarding {
+                txid,
+                amount_sats,
+                confirmed_at,
+            } => [
+                0.into_dart(),
+                txid.into_into_dart().into_dart(),
+                amount_sats.into_into_dart().into_dart(),
+                confirmed_at.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::api::ark_api::Transaction::Round {
+                txid,
+                amount_sats,
+                created_at,
+            } => [
+                1.into_dart(),
+                txid.into_into_dart().into_dart(),
+                amount_sats.into_into_dart().into_dart(),
+                created_at.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::api::ark_api::Transaction::Redeem {
+                txid,
+                amount_sats,
+                is_settled,
+                created_at,
+            } => [
+                2.into_dart(),
+                txid.into_into_dart().into_dart(),
+                amount_sats.into_into_dart().into_dart(),
+                is_settled.into_into_dart().into_dart(),
+                created_at.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             _ => {
                 unimplemented!("");
             }
         }
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::ark_api::TestEnum {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::TestEnum>
-    for crate::api::ark_api::TestEnum
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::ark_api::Transaction
 {
-    fn into_into_dart(self) -> crate::api::ark_api::TestEnum {
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::Transaction>
+    for crate::api::ark_api::Transaction
+{
+    fn into_into_dart(self) -> crate::api::ark_api::Transaction {
         self
     }
 }
@@ -704,10 +796,10 @@ impl SseEncode for bool {
     }
 }
 
-impl SseEncode for i32 {
+impl SseEncode for i64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
+        serializer.cursor.write_i64::<NativeEndian>(self).unwrap();
     }
 }
 
@@ -717,6 +809,16 @@ impl SseEncode for Vec<u8> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <u8>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::ark_api::Transaction> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::ark_api::Transaction>::sse_encode(item, serializer);
         }
     }
 }
@@ -743,16 +845,51 @@ impl SseEncode for crate::api::ark_api::OffchainBalance {
     }
 }
 
-impl SseEncode for crate::api::ark_api::TestEnum {
+impl SseEncode for Option<i64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <i64>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for crate::api::ark_api::Transaction {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::api::ark_api::TestEnum::Test => {
+            crate::api::ark_api::Transaction::Boarding {
+                txid,
+                amount_sats,
+                confirmed_at,
+            } => {
                 <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(txid, serializer);
+                <u64>::sse_encode(amount_sats, serializer);
+                <Option<i64>>::sse_encode(confirmed_at, serializer);
             }
-            crate::api::ark_api::TestEnum::Test2 { test } => {
+            crate::api::ark_api::Transaction::Round {
+                txid,
+                amount_sats,
+                created_at,
+            } => {
                 <i32>::sse_encode(1, serializer);
-                <i32>::sse_encode(test, serializer);
+                <String>::sse_encode(txid, serializer);
+                <i64>::sse_encode(amount_sats, serializer);
+                <i64>::sse_encode(created_at, serializer);
+            }
+            crate::api::ark_api::Transaction::Redeem {
+                txid,
+                amount_sats,
+                is_settled,
+                created_at,
+            } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(txid, serializer);
+                <i64>::sse_encode(amount_sats, serializer);
+                <bool>::sse_encode(is_settled, serializer);
+                <i64>::sse_encode(created_at, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -778,6 +915,13 @@ impl SseEncode for u8 {
 impl SseEncode for () {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
+}
+
+impl SseEncode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
+    }
 }
 
 #[cfg(not(target_family = "wasm"))]

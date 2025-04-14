@@ -1,10 +1,12 @@
+import 'package:ark_flutter/src/ui/screens/transaction_history_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/settings_screen.dart';
 import 'package:ark_flutter/src/ui/screens/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/receive_screen.dart';
-import 'package:ark_flutter/src/rust/api/ark_api.dart'; // Import the Rust API
+import 'package:ark_flutter/src/rust/api/ark_api.dart';
+
 
 enum BalanceType { pending, confirmed, total }
 
@@ -449,99 +451,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildRecentTransactions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Recent Transactions',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 12),
-        if (_recentTransactions.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                children: [
-                  const Icon(Icons.history, color: Colors.grey, size: 48),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No transaction history yet',
-                    style: TextStyle(color: Colors.grey[400]),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _recentTransactions.length,
-            separatorBuilder: (context, index) =>
-            const Divider(color: Colors.grey),
-            itemBuilder: (context, index) {
-              final tx = _recentTransactions[index];
-              final bool isReceived = tx['type'] == 'received';
-
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isReceived ? Colors.green[900] : Colors.red[900],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    isReceived ? Icons.arrow_downward : Icons.arrow_upward,
-                    color: Colors.white,
-                  ),
-                ),
-                title: Text(
-                  isReceived ? 'Received Bitcoin' : 'Sent Bitcoin',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                subtitle: Text(
-                  '${tx['address']} • ${tx['date'].toString().split(' ')[0]}',
-                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '${isReceived ? '+' : '-'} ₿${tx['amount']}',
-                      style: TextStyle(
-                        color: isReceived ? Colors.green[400] : Colors.red[400],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      tx['status'],
-                      style: TextStyle(
-                        color: tx['status'] == 'completed'
-                            ? Colors.grey[400]
-                            : Colors.amber[400],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-                onTap: () {
-                  // TODO: Show transaction details
-                  logger.i("Transaction tapped: ${tx['address']}");
-                },
-              );
-            },
-          ),
-      ],
-    );
+    return TransactionHistoryWidget(aspId: widget.aspId);
   }
 }

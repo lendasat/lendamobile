@@ -2,9 +2,8 @@ use crate::state::ARK_CLIENT;
 use anyhow::Result;
 use anyhow::{anyhow, bail};
 use ark_rs::client::OffChainBalance;
-use ark_rs::core::ArkAddress;
+use ark_rs::core::{ArkAddress, ArkTransaction};
 use bitcoin::Address;
-use parking_lot::RwLock;
 use std::sync::Arc;
 
 pub struct Balance {
@@ -61,7 +60,7 @@ pub fn address() -> Result<Addresses> {
                 .get_boarding_address()
                 .map_err(|error| anyhow!("Could not get boarding address {error:#}"))?;
 
-            let (offchain_address, vtxo) = client
+            let (offchain_address, _vtxo) = client
                 .get_offchain_address()
                 .map_err(|error| anyhow!("Could not get offchain address {error:#}"))?;
 
@@ -69,6 +68,29 @@ pub fn address() -> Result<Addresses> {
                 boarding: boarding_address,
                 offchain: offchain_address,
             })
+        }
+    }
+}
+
+pub async fn tx_history() -> Result<Vec<ArkTransaction>> {
+    let maybe_client = ARK_CLIENT.try_get();
+
+    match maybe_client {
+        None => {
+            bail!("Ark client not initialized");
+        }
+        Some(client) => {
+            // Clone the Arc<Client> so we can drop the lock guard
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+
+            let txs = client
+                .transaction_history()
+                .await
+                .map_err(|error| anyhow!("Failed getting transaction history {error:#}"))?;
+            Ok(txs)
         }
     }
 }

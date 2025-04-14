@@ -12,7 +12,7 @@ ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "a3a17
 ark-rs = { git = "https://github.com/ArkLabsHQ/ark-rs.git", features = ["client"], rev = "a3a173b" }
 bitcoin = { version = "0.32.4", features = ["rand"] }
 esplora-client = { version = "0.11.0", features = ["async-https", "blocking-https"] }
-flutter_rust_bridge = { version = "=2.9.0" }
+flutter_rust_bridge = { version = "=2.9.0", features = ["anyhow"] }
 futures = "0.3.31"
 hex = "0.4"
 nostr = { version = "0.40.0", default-features = false, features = ["std"] }

@@ -1,4 +1,5 @@
 use anyhow::Result;
+use ark_rs::core::ArkTransaction;
 
 pub async fn wallet_exists(data_dir: String) -> Result<bool> {
     crate::ark::wallet_exists(data_dir).await
@@ -40,7 +41,6 @@ pub async fn balance() -> Result<Balance> {
 pub struct Addresses {
     pub boarding: String,
     pub offchain: String,
-    /// bitcoin:tb1pgfr8058rfwuxujs03yrwpwazzf9xh34az2z6nzmjyly5gy7yzk3sa4dkh8?ark=tark1lfeudey8dlajmlykr4mrej56h3eafwywlju0telljtw9t6d2257sz8qw3fu7hgf6582e68gawp950gndjlvw4r5ler9pztxp0d5srsc5welph&amount=0.00001234
     pub bip21: String,
 }
 
@@ -57,11 +57,61 @@ pub fn address() -> Result<Addresses> {
     })
 }
 
-pub enum TestEnum {
-    Test,
-    Test2 { test: i32 },
+pub enum Transaction {
+    Boarding {
+        txid: String,
+        amount_sats: u64,
+        confirmed_at: Option<i64>,
+    },
+    Round {
+        txid: String,
+        amount_sats: i64,
+        created_at: i64,
+    },
+    Redeem {
+        txid: String,
+        amount_sats: i64,
+        is_settled: bool,
+        created_at: i64,
+    },
 }
 
-pub fn enum_fn() -> TestEnum {
-    TestEnum::Test2 { test: 42 }
+pub async fn tx_history() -> Result<Vec<Transaction>> {
+    let vec = crate::ark::client::tx_history().await?;
+    let txs = vec
+        .into_iter()
+        .map(|tx| match tx {
+            ArkTransaction::Boarding {
+                txid,
+                amount,
+                confirmed_at,
+            } => Transaction::Boarding {
+                txid: txid.to_string(),
+                amount_sats: amount.to_sat(),
+                confirmed_at,
+            },
+            ArkTransaction::Round {
+                txid,
+                amount,
+                created_at,
+            } => Transaction::Round {
+                txid: txid.to_string(),
+                amount_sats: amount.to_sat(),
+                created_at,
+            },
+            ArkTransaction::Redeem {
+                txid,
+                amount,
+                is_settled,
+                created_at,
+            } => Transaction::Redeem {
+                txid: txid.to_string(),
+                amount_sats: amount.to_sat(),
+                is_settled,
+                created_at,
+            },
+        })
+        .collect();
+
+    Ok(txs)
 }

@@ -70,7 +70,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.9.0';
 
   @override
-  int get rustContentHash => 936472720;
+  int get rustContentHash => -839389436;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -85,8 +85,6 @@ abstract class RustLibApi extends BaseApi {
 
   Future<Balance> crateApiArkApiBalance();
 
-  Future<TestEnum> crateApiArkApiEnumFn();
-
   Future<void> crateApiInitApp();
 
   Stream<LogEntry> crateApiInitLogging();
@@ -97,6 +95,8 @@ abstract class RustLibApi extends BaseApi {
       {required String nsec, required String dataDir});
 
   Future<String> crateApiArkApiSetupNewWallet({required String dataDir});
+
+  Future<List<Transaction>> crateApiArkApiTxHistory();
 
   Future<bool> crateApiArkApiWalletExists({required String dataDir});
 }
@@ -156,35 +156,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<TestEnum> crateApiArkApiEnumFn() {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 3, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_test_enum,
-        decodeErrorData: null,
-      ),
-      constMeta: kCrateApiArkApiEnumFnConstMeta,
-      argValues: [],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCrateApiArkApiEnumFnConstMeta => const TaskConstMeta(
-        debugName: "enum_fn",
-        argNames: [],
-      );
-
-  @override
   Future<void> crateApiInitApp() {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 4, port: port_);
+            funcId: 3, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -209,7 +186,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_StreamSink_log_entry_Sse(sink, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 5, port: port_);
+            funcId: 4, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -234,7 +211,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 6, port: port_);
+            funcId: 5, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -261,7 +238,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(nsec, serializer);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 7, port: port_);
+            funcId: 6, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -286,7 +263,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 8, port: port_);
+            funcId: 7, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -302,6 +279,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "setup_new_wallet",
         argNames: ["dataDir"],
+      );
+
+  @override
+  Future<List<Transaction>> crateApiArkApiTxHistory() {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 8, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_transaction,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiArkApiTxHistoryConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiArkApiTxHistoryConstMeta => const TaskConstMeta(
+        debugName: "tx_history",
+        argNames: [],
       );
 
   @override
@@ -377,15 +377,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int dco_decode_i_32(dynamic raw) {
+  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as int;
+    return dco_decode_i_64(raw);
+  }
+
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeI64(raw);
   }
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<Transaction> dco_decode_list_transaction(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_transaction).toList();
   }
 
   @protected
@@ -419,14 +431,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TestEnum dco_decode_test_enum(dynamic raw) {
+  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_i_64(raw);
+  }
+
+  @protected
+  Transaction dco_decode_transaction(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return const TestEnum_Test();
+        return Transaction_Boarding(
+          txid: dco_decode_String(raw[1]),
+          amountSats: dco_decode_u_64(raw[2]),
+          confirmedAt: dco_decode_opt_box_autoadd_i_64(raw[3]),
+        );
       case 1:
-        return TestEnum_Test2(
-          test: dco_decode_i_32(raw[1]),
+        return Transaction_Round(
+          txid: dco_decode_String(raw[1]),
+          amountSats: dco_decode_i_64(raw[2]),
+          createdAt: dco_decode_i_64(raw[3]),
+        );
+      case 2:
+        return Transaction_Redeem(
+          txid: dco_decode_String(raw[1]),
+          amountSats: dco_decode_i_64(raw[2]),
+          isSettled: dco_decode_bool(raw[3]),
+          createdAt: dco_decode_i_64(raw[4]),
         );
       default:
         throw Exception("unreachable");
@@ -496,9 +527,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer) {
+  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getInt32();
+    return (sse_decode_i_64(deserializer));
+  }
+
+  @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getPlatformInt64();
   }
 
   @protected
@@ -506,6 +543,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<Transaction> sse_decode_list_transaction(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <Transaction>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_transaction(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -541,16 +590,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TestEnum sse_decode_test_enum(SseDeserializer deserializer) {
+  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_i_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  Transaction sse_decode_transaction(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        return const TestEnum_Test();
+        var var_txid = sse_decode_String(deserializer);
+        var var_amountSats = sse_decode_u_64(deserializer);
+        var var_confirmedAt = sse_decode_opt_box_autoadd_i_64(deserializer);
+        return Transaction_Boarding(
+            txid: var_txid,
+            amountSats: var_amountSats,
+            confirmedAt: var_confirmedAt);
       case 1:
-        var var_test = sse_decode_i_32(deserializer);
-        return TestEnum_Test2(test: var_test);
+        var var_txid = sse_decode_String(deserializer);
+        var var_amountSats = sse_decode_i_64(deserializer);
+        var var_createdAt = sse_decode_i_64(deserializer);
+        return Transaction_Round(
+            txid: var_txid,
+            amountSats: var_amountSats,
+            createdAt: var_createdAt);
+      case 2:
+        var var_txid = sse_decode_String(deserializer);
+        var var_amountSats = sse_decode_i_64(deserializer);
+        var var_isSettled = sse_decode_bool(deserializer);
+        var var_createdAt = sse_decode_i_64(deserializer);
+        return Transaction_Redeem(
+            txid: var_txid,
+            amountSats: var_amountSats,
+            isSettled: var_isSettled,
+            createdAt: var_createdAt);
       default:
         throw UnimplementedError('');
     }
@@ -571,6 +652,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_decode_unit(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt32();
   }
 
   @protected
@@ -620,9 +707,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_i_32(int self, SseSerializer serializer) {
+  void sse_encode_box_autoadd_i_64(
+      PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putInt32(self);
+    sse_encode_i_64(self, serializer);
+  }
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putPlatformInt64(self);
   }
 
   @protected
@@ -631,6 +725,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_list_transaction(
+      List<Transaction> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_transaction(item, serializer);
+    }
   }
 
   @protected
@@ -655,14 +759,49 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_test_enum(TestEnum self, SseSerializer serializer) {
+  void sse_encode_opt_box_autoadd_i_64(
+      PlatformInt64? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_i_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_transaction(Transaction self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
-      case TestEnum_Test():
+      case Transaction_Boarding(
+          txid: final txid,
+          amountSats: final amountSats,
+          confirmedAt: final confirmedAt
+        ):
         sse_encode_i_32(0, serializer);
-      case TestEnum_Test2(test: final test):
+        sse_encode_String(txid, serializer);
+        sse_encode_u_64(amountSats, serializer);
+        sse_encode_opt_box_autoadd_i_64(confirmedAt, serializer);
+      case Transaction_Round(
+          txid: final txid,
+          amountSats: final amountSats,
+          createdAt: final createdAt
+        ):
         sse_encode_i_32(1, serializer);
-        sse_encode_i_32(test, serializer);
+        sse_encode_String(txid, serializer);
+        sse_encode_i_64(amountSats, serializer);
+        sse_encode_i_64(createdAt, serializer);
+      case Transaction_Redeem(
+          txid: final txid,
+          amountSats: final amountSats,
+          isSettled: final isSettled,
+          createdAt: final createdAt
+        ):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(txid, serializer);
+        sse_encode_i_64(amountSats, serializer);
+        sse_encode_bool(isSettled, serializer);
+        sse_encode_i_64(createdAt, serializer);
     }
   }
 
@@ -681,5 +820,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_unit(void self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt32(self);
   }
 }

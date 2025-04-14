@@ -25,13 +25,12 @@ Future<Balance> balance() => RustLib.instance.api.crateApiArkApiBalance();
 
 Future<Addresses> address() => RustLib.instance.api.crateApiArkApiAddress();
 
-Future<TestEnum> enumFn() => RustLib.instance.api.crateApiArkApiEnumFn();
+Future<List<Transaction>> txHistory() =>
+    RustLib.instance.api.crateApiArkApiTxHistory();
 
 class Addresses {
   final String boarding;
   final String offchain;
-
-  /// bitcoin:tb1pgfr8058rfwuxujs03yrwpwazzf9xh34az2z6nzmjyly5gy7yzk3sa4dkh8?ark=tark1lfeudey8dlajmlykr4mrej56h3eafwywlju0telljtw9t6d2257sz8qw3fu7hgf6582e68gawp950gndjlvw4r5ler9pztxp0d5srsc5welph&amount=0.00001234
   final String bip21;
 
   const Addresses({
@@ -97,11 +96,23 @@ class OffchainBalance {
 }
 
 @freezed
-sealed class TestEnum with _$TestEnum {
-  const TestEnum._();
+sealed class Transaction with _$Transaction {
+  const Transaction._();
 
-  const factory TestEnum.test() = TestEnum_Test;
-  const factory TestEnum.test2({
-    required int test,
-  }) = TestEnum_Test2;
+  const factory Transaction.boarding({
+    required String txid,
+    required BigInt amountSats,
+    PlatformInt64? confirmedAt,
+  }) = Transaction_Boarding;
+  const factory Transaction.round({
+    required String txid,
+    required PlatformInt64 amountSats,
+    required PlatformInt64 createdAt,
+  }) = Transaction_Round;
+  const factory Transaction.redeem({
+    required String txid,
+    required PlatformInt64 amountSats,
+    required bool isSettled,
+    required PlatformInt64 createdAt,
+  }) = Transaction_Redeem;
 }
