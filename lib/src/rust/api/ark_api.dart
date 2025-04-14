@@ -5,6 +5,8 @@
 
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
+part 'ark_api.freezed.dart';
 
 Future<bool> walletExists({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiWalletExists(dataDir: dataDir);
@@ -22,6 +24,8 @@ Future<String> restoreWallet({required String nsec, required String dataDir}) =>
 Future<Balance> balance() => RustLib.instance.api.crateApiArkApiBalance();
 
 Future<Addresses> address() => RustLib.instance.api.crateApiArkApiAddress();
+
+Future<TestEnum> enumFn() => RustLib.instance.api.crateApiArkApiEnumFn();
 
 class Addresses {
   final String boarding;
@@ -90,4 +94,14 @@ class OffchainBalance {
           pendingSats == other.pendingSats &&
           confirmedSats == other.confirmedSats &&
           totalSats == other.totalSats;
+}
+
+@freezed
+sealed class TestEnum with _$TestEnum {
+  const TestEnum._();
+
+  const factory TestEnum.test() = TestEnum_Test;
+  const factory TestEnum.test2({
+    required int test,
+  }) = TestEnum_Test2;
 }

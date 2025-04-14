@@ -56,3 +56,12 @@ pub fn address() -> Result<Addresses> {
         bip21,
     })
 }
+
+pub enum TestEnum {
+    Test,
+    Test2 { test: i32 },
+}
+
+pub fn enum_fn() -> TestEnum {
+    TestEnum::Test2 { test: 42 }
+}
