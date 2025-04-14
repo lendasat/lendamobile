@@ -28,7 +28,8 @@ class _SignTransactionScreenState extends State<SignTransactionScreen> {
 
     try {
       // Simulate transaction signing
-      logger.i("Signing transaction to ${widget.address} for ${widget.amount} SATS");
+      logger.i(
+          "Signing transaction to ${widget.address} for ${widget.amount} SATS");
       await Future.delayed(const Duration(seconds: 2));
 
       // Navigate to success screen after simulated signing
@@ -68,9 +69,9 @@ class _SignTransactionScreenState extends State<SignTransactionScreen> {
         leading: _isLoading
             ? null
             : IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
@@ -81,97 +82,100 @@ class _SignTransactionScreenState extends State<SignTransactionScreen> {
       ),
       body: _isLoading
           ? const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF7E71F0)),
-        ),
-      )
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF7E71F0)),
+              ),
+            )
           : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Transaction details
-            _buildDetailRow(
-              Icons.account_balance_wallet_outlined,
-              'Address',
-              widget.address.length > 20
-                  ? '${widget.address.substring(0, 10)}...${widget.address.substring(widget.address.length - 10)}'
-                  : widget.address,
-              iconColor: Colors.grey,
-              labelColor: Colors.grey,
-              valueColor: Colors.white,
-            ),
-            _buildDivider(),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Transaction details
+                  _buildDetailRow(
+                    Icons.account_balance_wallet_outlined,
+                    'Address',
+                    widget.address.length > 20
+                        ? '${widget.address.substring(0, 10)}...${widget.address.substring(widget.address.length - 10)}'
+                        : widget.address,
+                    iconColor: Colors.grey,
+                    labelColor: Colors.grey,
+                    valueColor: Colors.white,
+                  ),
+                  _buildDivider(),
 
-            _buildDetailRow(
-              Icons.swap_horiz_outlined,
-              'Direction',
-              'Paying inside Ark',
-              iconColor: Colors.grey,
-              labelColor: Colors.grey,
-              valueColor: Colors.white,
-            ),
-            _buildDivider(),
+                  _buildDetailRow(
+                    Icons.swap_horiz_outlined,
+                    'Direction',
+                    'Paying inside Ark',
+                    iconColor: Colors.grey,
+                    labelColor: Colors.grey,
+                    valueColor: Colors.white,
+                  ),
+                  _buildDivider(),
 
-            _buildDetailRow(
-              Icons.attach_money_outlined,
-              'Amount',
-              '${widget.amount.toInt()} SATS',
-              iconColor: Colors.grey,
-              labelColor: Colors.grey,
-              valueColor: Colors.white,
-            ),
-            _buildDivider(),
+                  _buildDetailRow(
+                    Icons.attach_money_outlined,
+                    'Amount',
+                    '${widget.amount.toInt()} SATS',
+                    iconColor: Colors.grey,
+                    labelColor: Colors.grey,
+                    valueColor: Colors.white,
+                  ),
+                  _buildDivider(),
 
-            _buildDetailRow(
-              Icons.account_balance_outlined,
-              'Network fees',
-              '0 SATS',
-              iconColor: Colors.grey,
-              labelColor: Colors.grey,
-              valueColor: Colors.white,
-            ),
-            _buildDivider(),
+                  _buildDetailRow(
+                    Icons.account_balance_outlined,
+                    'Network fees',
+                    '0 SATS',
+                    iconColor: Colors.grey,
+                    labelColor: Colors.grey,
+                    valueColor: Colors.white,
+                  ),
+                  _buildDivider(),
 
-            _buildDetailRow(
-              Icons.summarize_outlined,
-              'Total',
-              '${widget.amount.toInt()} SATS',
-              iconColor: Colors.grey,
-              labelColor: Colors.grey,
-              valueColor: Colors.white,
-              isLast: true,
-            ),
+                  _buildDetailRow(
+                    Icons.summarize_outlined,
+                    'Total',
+                    '${widget.amount.toInt()} SATS',
+                    iconColor: Colors.grey,
+                    labelColor: Colors.grey,
+                    valueColor: Colors.white,
+                    isLast: true,
+                  ),
 
-            const Spacer(),
+                  const Spacer(),
 
-            // Sign button
-            ElevatedButton(
-              onPressed: _handleSign,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber[500],
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
+                  // Sign button
+                  ElevatedButton(
+                    onPressed: _handleSign,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber[500],
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'TAP TO SIGN',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              child: const Text(
-                'TAP TO SIGN',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value, {
+  Widget _buildDetailRow(
+    IconData icon,
+    String label,
+    String value, {
     bool isLast = false,
     Color iconColor = Colors.grey,
     Color labelColor = Colors.grey,

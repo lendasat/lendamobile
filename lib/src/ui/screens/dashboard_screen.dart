@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/settings_screen.dart';
 import 'package:ark_flutter/src/ui/screens/send_screen.dart';
+import 'package:ark_flutter/src/ui/screens/receive_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String aspId;
@@ -77,11 +78,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _handleReceive() {
-    // TODO: Navigate to receive screen
+    // Navigate to receive screen
     logger.i("Receive button pressed");
-
-    // For now, just show a dialog with the QR code
-    _showReceiveDialog();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReceiveScreen(
+          aspId: widget.aspId,
+        ),
+      ),
+    );
   }
 
   void _showReceiveDialog() {
@@ -89,7 +95,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('Receive Bitcoin', style: TextStyle(color: Colors.white)),
+        title: const Text('Receive Bitcoin',
+            style: TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

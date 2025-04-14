@@ -138,7 +138,8 @@ class _SendScreenState extends State<SendScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         hintText: 'Bitcoin or Ark address',
                         hintStyle: TextStyle(color: Colors.grey),
                       ),
