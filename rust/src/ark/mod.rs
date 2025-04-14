@@ -1,19 +1,19 @@
-mod esplora;
-mod storage;
+pub mod esplora;
+mod seed_file;
+pub mod storage;
 
 use crate::ark::esplora::EsploraClient;
+use crate::ark::seed_file::{read_seed_file, write_seed_file};
 use crate::ark::storage::InMemoryDb;
+use crate::state::ARK_CLIENT;
 use anyhow::{anyhow, bail, Result};
 use ark_rs::client::OfflineClient;
 use bitcoin::key::{Keypair, Secp256k1};
 use bitcoin::secp256k1::{All, SecretKey};
 use bitcoin::Network;
 use nostr::Keys;
+use parking_lot::RwLock;
 use rand::RngCore;
-use std::fs;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 use std::sync::Arc;
 
 // const ESPLORA_URL: &str = "https://mutinynet.com/api";
@@ -21,51 +21,6 @@ use std::sync::Arc;
 
 const ESPLORA_URL: &str = "http://localhost:30000";
 const ARK_SERVER: &str = "http://localhost:7070";
-
-pub fn write_seed_file(sk: &SecretKey, data_dir: String) -> Result<()> {
-    let data_path = Path::new(&data_dir);
-    fs::create_dir_all(data_path)
-        .map_err(|e| anyhow::anyhow!("Failed to create data directory: {}", e))?;
-    let seed_path = data_path.join("seed");
-    let mut file = File::create(&seed_path)
-        .map_err(|e| anyhow::anyhow!("Failed to create seed file: {}", e))?;
-
-    let sk_hex = hex::encode(sk.secret_bytes());
-
-    file.write_all(sk_hex.as_bytes())
-        .map_err(|e| anyhow::anyhow!("Failed to write seed file: {}", e))?;
-
-    tracing::debug!(seed_path = ?seed_path, "Stored secret key in file");
-
-    Ok(())
-}
-
-pub fn read_seed_file(data_dir: &str) -> Result<Option<SecretKey>> {
-    let data_path = Path::new(data_dir);
-    let seed_path = data_path.join("seed");
-
-    // Check if seed file exists
-    if !seed_path.exists() {
-        tracing::debug!(seed_path = ?seed_path, "Seed file does not exist");
-        return Ok(None);
-    }
-
-    // Read the file contents
-    let sk_hex = fs::read_to_string(&seed_path)
-        .map_err(|e| anyhow::anyhow!("Failed to read seed file: {}", e))?;
-
-    // Decode hex to bytes
-    let sk_bytes = hex::decode(sk_hex.trim())
-        .map_err(|e| anyhow::anyhow!("Failed to decode hex in seed file: {}", e))?;
-
-    // Create SecretKey from bytes
-    let sk = SecretKey::from_slice(&sk_bytes)
-        .map_err(|e| anyhow::anyhow!("Failed to create secret key from seed file: {}", e))?;
-
-    tracing::debug!(seed_path = ?seed_path, "Successfully read secret key from file");
-
-    Ok(Some(sk))
-}
 
 pub async fn setup_new_wallet(data_dir: String) -> Result<String> {
     let secp = Secp256k1::new();
@@ -132,7 +87,9 @@ pub async fn setup_client(kp: Keypair, secp: Secp256k1<All>) -> Result<String> {
     .await
     .map_err(|err| anyhow!(err))?;
 
-    let info = client.server_info;
+    let info = client.server_info.clone();
+
+    ARK_CLIENT.set(RwLock::new(Arc::new(client)));
 
     tracing::info!(server_pk = ?info.pk, "Connected to server");
 
