@@ -28,6 +28,12 @@ Future<Addresses> address() => RustLib.instance.api.crateApiArkApiAddress();
 Future<List<Transaction>> txHistory() =>
     RustLib.instance.api.crateApiArkApiTxHistory();
 
+Future<String> send({required String address, required BigInt amountSats}) =>
+    RustLib.instance.api
+        .crateApiArkApiSend(address: address, amountSats: amountSats);
+
+Future<void> settle() => RustLib.instance.api.crateApiArkApiSettle();
+
 class Addresses {
   final String boarding;
   final String offchain;

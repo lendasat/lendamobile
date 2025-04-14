@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_success_screen.dart';
@@ -30,7 +31,7 @@ class _SignTransactionScreenState extends State<SignTransactionScreen> {
       // Simulate transaction signing
       logger.i(
           "Signing transaction to ${widget.address} for ${widget.amount} SATS");
-      await Future.delayed(const Duration(seconds: 2));
+      await send(address: widget.address, amountSats: BigInt.from(widget.amount));
 
       // Navigate to success screen after simulated signing
       if (mounted) {

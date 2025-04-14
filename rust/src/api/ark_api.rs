@@ -1,5 +1,6 @@
 use anyhow::Result;
 use ark_rs::core::ArkTransaction;
+use bitcoin::Amount;
 
 pub async fn wallet_exists(data_dir: String) -> Result<bool> {
     crate::ark::wallet_exists(data_dir).await
@@ -114,4 +115,15 @@ pub async fn tx_history() -> Result<Vec<Transaction>> {
         .collect();
 
     Ok(txs)
+}
+
+pub async fn send(address: String, amount_sats: u64) -> Result<String> {
+    let amount = Amount::from_sat(amount_sats);
+    let txid = crate::ark::client::send(address, amount).await?;
+    Ok(txid.to_string())
+}
+
+pub async fn settle() -> Result<()> {
+    crate::ark::client::settle().await?;
+    Ok(())
 }

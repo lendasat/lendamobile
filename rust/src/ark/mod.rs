@@ -1,3 +1,4 @@
+mod address_helper;
 pub mod client;
 pub mod esplora;
 mod seed_file;
