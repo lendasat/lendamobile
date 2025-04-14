@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/settings_screen.dart';
 import 'package:ark_flutter/src/ui/screens/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/receive_screen.dart';
+import 'package:ark_flutter/src/rust/api/ark_api.dart'; // Import the Rust API
 
 class DashboardScreen extends StatefulWidget {
   final String aspId;
@@ -18,10 +19,14 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // Mock data - replace with actual data from Rust backend
-  double _btcBalance = 0.12345678;
-  double _usdValue = 7123.45;
+  bool _isBalanceLoading = true;
+  String? _balanceError;
+  double _btcBalance = 0.0;
+  double _usdValue = 0.0;
   String _walletAddress = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+
+  // BTC to USD conversion rate - would ideally come from an API
+  final double _btcToUsdRate = 65000.0;
 
   // Transaction history - replace with actual data
   final List<Map<String, dynamic>> _recentTransactions = [
@@ -44,23 +49,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch real wallet balance and transaction data using widget.aspId
     logger.i("Dashboard initialized with ASP ID: ${widget.aspId}");
     _fetchWalletData();
   }
 
   Future<void> _fetchWalletData() async {
-    // TODO: Implement actual data fetching from Rust backend
-    // This would use the aspId to get real balance and transaction data
-    logger.i("Fetching wallet data...");
+    _fetchBalance();
+    // In the future, also fetch transactions and other data
+  }
 
-    // For now, we'll simulate a delay and use mock data
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // In a real implementation, you'd update with real data from backend
+  Future<void> _fetchBalance() async {
     setState(() {
-      // Mock data would be replaced with real data
+      _isBalanceLoading = true;
+      _balanceError = null;
     });
+
+    try {
+      // Call the Rust balance function
+      final balanceResult = await balance();
+
+      // Convert the amount from sats to BTC
+      final totalSats = balanceResult.offchain.totalSats;
+      final btcAmount = totalSats.toDouble() / 100000000; // 1 BTC = 100,000,000 sats
+
+      setState(() {
+        _btcBalance = btcAmount;
+        _usdValue = btcAmount * _btcToUsdRate;
+        _isBalanceLoading = false;
+      });
+
+      logger.i("Balance updated: $_btcBalance BTC");
+    } catch (e) {
+      logger.e("Error fetching balance: $e");
+      setState(() {
+        _balanceError = e.toString();
+        _isBalanceLoading = false;
+      });
+
+      _showErrorSnackbar("Couldn't update balance: ${e.toString()}");
+    }
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red[700],
+        action: SnackBarAction(
+          label: 'RETRY',
+          textColor: Colors.white,
+          onPressed: _fetchWalletData,
+        ),
+      ),
+    );
   }
 
   void _handleSend() {
@@ -173,37 +214,88 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Total Balance',
-            style: TextStyle(
-              color: Colors.black87,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 8),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '₿ $_btcBalance',
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '≈ \$$_usdValue',
-                style: const TextStyle(
+              const Text(
+                'Total Balance',
+                style: TextStyle(
                   color: Colors.black87,
                   fontSize: 16,
                 ),
               ),
+              if (_isBalanceLoading)
+                const SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
+                  ),
+                ),
             ],
           ),
+          const SizedBox(height: 8),
+          if (_balanceError != null)
+            Text(
+              'Error loading balance',
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          else if (_isBalanceLoading)
+            _buildBalanceSkeleton()
+          else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '₿ ${_btcBalance.toStringAsFixed(_btcBalance < 0.001 ? 8 : 5)}',
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '≈ \$${_usdValue.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBalanceSkeleton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 32,
+          width: 150,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 16,
+          width: 100,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      ],
     );
   }
 

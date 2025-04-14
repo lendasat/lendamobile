@@ -1,3 +1,4 @@
+pub mod client;
 pub mod esplora;
 mod seed_file;
 pub mod storage;

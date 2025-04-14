@@ -18,3 +18,48 @@ Future<String> loadExistingWallet({required String dataDir}) =>
 Future<String> restoreWallet({required String nsec, required String dataDir}) =>
     RustLib.instance.api
         .crateApiArkApiRestoreWallet(nsec: nsec, dataDir: dataDir);
+
+Future<Balance> balance() => RustLib.instance.api.crateApiArkApiBalance();
+
+class Balance {
+  final OffchainBalance offchain;
+
+  const Balance({
+    required this.offchain,
+  });
+
+  @override
+  int get hashCode => offchain.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Balance &&
+          runtimeType == other.runtimeType &&
+          offchain == other.offchain;
+}
+
+class OffchainBalance {
+  final BigInt pendingSats;
+  final BigInt confirmedSats;
+  final BigInt totalSats;
+
+  const OffchainBalance({
+    required this.pendingSats,
+    required this.confirmedSats,
+    required this.totalSats,
+  });
+
+  @override
+  int get hashCode =>
+      pendingSats.hashCode ^ confirmedSats.hashCode ^ totalSats.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OffchainBalance &&
+          runtimeType == other.runtimeType &&
+          pendingSats == other.pendingSats &&
+          confirmedSats == other.confirmedSats &&
+          totalSats == other.totalSats;
+}
