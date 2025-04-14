@@ -6,6 +6,8 @@ import 'package:ark_flutter/src/ui/screens/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/receive_screen.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart'; // Import the Rust API
 
+enum BalanceType { pending, confirmed, total }
+
 class DashboardScreen extends StatefulWidget {
   final String aspId;
 
@@ -21,11 +23,17 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _isBalanceLoading = true;
   String? _balanceError;
-  double _btcBalance = 0.0;
-  double _usdValue = 0.0;
-  String _walletAddress = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
 
-  // BTC to USD conversion rate - would ideally come from an API
+  // Store all balance types
+  double _pendingBalance = 0.0;
+  double _confirmedBalance = 0.0;
+  double _totalBalance = 0.0;
+
+  // Current selections
+  BalanceType _currentBalanceType = BalanceType.total;
+  bool _showBtcAsMain = true; // Toggle between BTC and USD as main display
+
+  // Exchange rate
   final double _btcToUsdRate = 65000.0;
 
   // Transaction history - replace with actual data
@@ -68,17 +76,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Call the Rust balance function
       final balanceResult = await balance();
 
-      // Convert the amount from sats to BTC
-      final totalSats = balanceResult.offchain.totalSats;
-      final btcAmount = totalSats.toDouble() / 100000000; // 1 BTC = 100,000,000 sats
-
+      // Store all balance types (converting from sats to BTC)
       setState(() {
-        _btcBalance = btcAmount;
-        _usdValue = btcAmount * _btcToUsdRate;
+        _pendingBalance = balanceResult.offchain.pendingSats.toDouble() / 100000000;
+        _confirmedBalance = balanceResult.offchain.confirmedSats.toDouble() / 100000000;
+        _totalBalance = balanceResult.offchain.totalSats.toDouble() / 100000000;
         _isBalanceLoading = false;
       });
 
-      logger.i("Balance updated: $_btcBalance BTC");
+      logger.i("Balance updated: Total: $_totalBalance BTC, Confirmed: $_confirmedBalance BTC, Pending: $_pendingBalance BTC");
     } catch (e) {
       logger.e("Error fetching balance: $e");
       setState(() {
@@ -88,6 +94,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       _showErrorSnackbar("Couldn't update balance: ${e.toString()}");
     }
+  }
+
+  void _toggleBalanceType() {
+    setState(() {
+      switch (_currentBalanceType) {
+        case BalanceType.total:
+          _currentBalanceType = BalanceType.pending;
+          break;
+        case BalanceType.pending:
+          _currentBalanceType = BalanceType.confirmed;
+          break;
+        case BalanceType.confirmed:
+          _currentBalanceType = BalanceType.total;
+          break;
+      }
+    });
+
+    // Show a toast to indicate the change
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Showing ${_currentBalanceType.name} balance'),
+        duration: const Duration(seconds: 1),
+        backgroundColor: Colors.amber[700],
+      ),
+    );
+  }
+
+  void _toggleDisplayUnit() {
+    setState(() {
+      _showBtcAsMain = !_showBtcAsMain;
+    });
   }
 
   void _showErrorSnackbar(String message) {
@@ -112,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       MaterialPageRoute(
         builder: (context) => SendScreen(
           aspId: widget.aspId,
-          availableSats: _btcBalance * 100000000, // Convert BTC to SATS
+          availableSats: _getSelectedBalance() * 100000000, // Convert BTC to SATS
         ),
       ),
     );
@@ -131,6 +169,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Helper methods for the balance display
+  double _getSelectedBalance() {
+    switch (_currentBalanceType) {
+      case BalanceType.pending:
+        return _pendingBalance;
+      case BalanceType.confirmed:
+        return _confirmedBalance;
+      case BalanceType.total:
+        return _totalBalance;
+    }
+  }
+
+  String _getBalanceTypeText() {
+    switch (_currentBalanceType) {
+      case BalanceType.pending:
+        return 'Pending Balance';
+      case BalanceType.confirmed:
+        return 'Confirmed Balance';
+      case BalanceType.total:
+        return 'Total Balance';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -217,9 +277,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Total Balance',
-                style: TextStyle(
+              Text(
+                _getBalanceTypeText(),
+                style: const TextStyle(
                   color: Colors.black87,
                   fontSize: 16,
                 ),
@@ -250,21 +310,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
           else
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '₿ ${_btcBalance.toStringAsFixed(_btcBalance < 0.001 ? 8 : 5)}',
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+              children: _showBtcAsMain
+                  ? [
+                // BTC as main, USD as secondary
+                Expanded(
+                  child: InkWell(
+                    onTap: _toggleBalanceType,
+                    child: Text(
+                      '₿ ${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  '≈ \$${_usdValue.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 16,
+                InkWell(
+                  onTap: _toggleDisplayUnit,
+                  child: Text(
+                    '≈ \$${(_getSelectedBalance() * _btcToUsdRate).toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ]
+                  : [
+                // USD as main, BTC as secondary
+                Expanded(
+                  child: InkWell(
+                    onTap: _toggleBalanceType,
+                    child: Text(
+                      '\$${(_getSelectedBalance() * _btcToUsdRate).toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: _toggleDisplayUnit,
+                  child: Text(
+                    '≈ ₿${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ],
@@ -386,7 +483,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _recentTransactions.length,
             separatorBuilder: (context, index) =>
-                const Divider(color: Colors.grey),
+            const Divider(color: Colors.grey),
             itemBuilder: (context, index) {
               final tx = _recentTransactions[index];
               final bool isReceived = tx['type'] == 'received';
