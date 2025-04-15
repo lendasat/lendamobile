@@ -94,7 +94,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await _settingsService.saveEsploraUrl(_esploraUrlController.text);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Esplora URL saved  - will only take effect after a restart')),
+        const SnackBar(
+            content: Text(
+                'Esplora URL saved  - will only take effect after a restart')),
       );
       logger.i("Esplora URL saved: ${_esploraUrlController.text}");
     } catch (err) {
@@ -110,7 +112,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await _settingsService.saveNetwork(network);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network saved - will only take effect after a restart')),
+        const SnackBar(
+            content:
+                Text('Network saved - will only take effect after a restart')),
       );
       logger.i("Esplora URL saved: ${_esploraUrlController.text}");
     } catch (err) {
@@ -126,7 +130,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await _settingsService.saveArkServerUrl(_arkServerController.text);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ark Server URL saved - will only take effect after a restart')),
+        const SnackBar(
+            content: Text(
+                'Ark Server URL saved - will only take effect after a restart')),
       );
       logger.i("Ark Server URL saved: ${_arkServerController.text}");
     } catch (err) {
@@ -209,8 +215,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Wrap(
-                    spacing: 8, runSpacing: 8, children: [
+                  Wrap(spacing: 8, runSpacing: 8, children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
@@ -295,7 +300,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 notificationTitle: 'Restarting App',
                 notificationBody: 'Please tap here to open the app again.',
               );
-
             },
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,
@@ -346,7 +350,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Backup your wallet with these key',
                       style: TextStyle(color: Colors.grey[400], fontSize: 12),
                     ),
-                    trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                    trailing:
+                        const Icon(Icons.chevron_right, color: Colors.grey),
                     onTap: _showBackupWarningDialog,
                   ),
                 ]),
@@ -358,14 +363,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSettingsCard([
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child:             ListTile(
-                      title:
-                      const Text('Network', style: TextStyle(color: Colors.white)),
+                    child: ListTile(
+                      title: const Text('Network',
+                          style: TextStyle(color: Colors.white)),
                       trailing: DropdownButton<String>(
                         value: _selectedNetwork,
                         dropdownColor: Colors.grey[850],
                         underline: const SizedBox(),
-                        icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                        icon: const Icon(Icons.arrow_drop_down,
+                            color: Colors.grey),
                         style: const TextStyle(color: Colors.amber),
                         onChanged: (String? value) {
                           if (value != null) {
@@ -460,15 +466,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSectionHeader('About'),
                 _buildSettingsCard([
                   ListTile(
-                    title:
-                        const Text('Network', style: TextStyle(color: Colors.white)),
+                    title: const Text('Network',
+                        style: TextStyle(color: Colors.white)),
                     subtitle: _info != null
                         ? Text(
                             _info!.network,
-                            style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                          ):
-                        Text("loading",
-                            style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                            style: TextStyle(
+                                color: Colors.grey[400], fontSize: 12),
+                          )
+                        : Text("loading",
+                            style: TextStyle(
+                                color: Colors.grey[400], fontSize: 12)),
                   ),
                 ]),
 
@@ -484,8 +492,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Delete all wallet data from this device',
                       style: TextStyle(color: Colors.grey[400], fontSize: 12),
                     ),
-                    trailing:
-                        const Icon(Icons.warning_amber_rounded, color: Colors.red),
+                    trailing: const Icon(Icons.warning_amber_rounded,
+                        color: Colors.red),
                     onTap: _showResetWalletDialog,
                   ),
                 ], borderColor: Colors.red.withOpacity(0.3)),

@@ -122,7 +122,7 @@ class TransactionDetailsDialog extends StatelessWidget {
         : 'Pending confirmation';
     final createdTime = DateTime.fromMillisecondsSinceEpoch(createdAt * 1000);
     final formattedCreatedAtDate =
-    DateFormat('MMMM d, y - h:mm a').format(createdTime);
+        DateFormat('MMMM d, y - h:mm a').format(createdTime);
     final amountBtc = amountSats.toDouble() / 100000000;
 
     return Dialog(
@@ -166,7 +166,6 @@ class TransactionDetailsDialog extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-
             if (!isSettled)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -229,5 +228,4 @@ class TransactionDetailsDialog extends StatelessWidget {
       ),
     );
   }
-
 }

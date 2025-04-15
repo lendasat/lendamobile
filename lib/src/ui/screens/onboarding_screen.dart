@@ -5,7 +5,6 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/dashboard_screen.dart';
 import 'package:path_provider/path_provider.dart';
 
-
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -48,7 +47,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-
   @override
   void dispose() {
     _secretKeyController.dispose();
@@ -78,7 +76,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         logger.i('Creating new wallet');
 
         try {
-          var aspId = await setupNewWallet(dataDir: dataDir.path, network: _network!, esplora: _esploraUrl!, server: _arkServerUrl!);
+          var aspId = await setupNewWallet(
+              dataDir: dataDir.path,
+              network: _network!,
+              esplora: _esploraUrl!,
+              server: _arkServerUrl!);
           logger.i("Received id $aspId");
 
           // Navigate to dashboard
@@ -98,7 +100,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         logger.i('Restoring wallet with key');
 
         try {
-          var aspId = await restoreWallet(nsec: _secretKeyController.text, dataDir: dataDir.path, network: _network!, esplora: _esploraUrl!, server: _arkServerUrl!);
+          var aspId = await restoreWallet(
+              nsec: _secretKeyController.text,
+              dataDir: dataDir.path,
+              network: _network!,
+              esplora: _esploraUrl!,
+              server: _arkServerUrl!);
           logger.i("Received id $aspId");
 
           // Navigate to dashboard
@@ -274,12 +281,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-
                   onPressed: _isLoading
                       ? null
-                      : (_selectedOption == 'new' || _selectedOption == 'existing'
-                      ? _handleContinue
-                      : null),
+                      : (_selectedOption == 'new' ||
+                              _selectedOption == 'existing'
+                          ? _handleContinue
+                          : null),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber[500],
                     foregroundColor: Colors.black,

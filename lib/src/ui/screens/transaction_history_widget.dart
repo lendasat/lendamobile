@@ -11,7 +11,8 @@ class TransactionHistoryWidget extends StatefulWidget {
   const TransactionHistoryWidget({
     Key? key,
     required this.aspId,
-    required this.transactions, required this.loading,
+    required this.transactions,
+    required this.loading,
   }) : super(key: key);
 
   @override
@@ -46,7 +47,6 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
           ],
         ),
         const SizedBox(height: 12),
-
         if (_error != null)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -73,29 +73,31 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             ),
           )
         else if (widget.transactions.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  children: [
-                    const Icon(Icons.history, color: Colors.grey, size: 48),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No transaction history yet',
-                      style: TextStyle(color: Colors.grey[400]),
-                    ),
-                  ],
-                ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                children: [
+                  const Icon(Icons.history, color: Colors.grey, size: 48),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No transaction history yet',
+                    style: TextStyle(color: Colors.grey[400]),
+                  ),
+                ],
               ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: widget.transactions.length,
-              separatorBuilder: (context, index) => const Divider(color: Colors.grey),
-              itemBuilder: (context, index) => _buildTransactionItem(widget.transactions[index]),
             ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: widget.transactions.length,
+            separatorBuilder: (context, index) =>
+                const Divider(color: Colors.grey),
+            itemBuilder: (context, index) =>
+                _buildTransactionItem(widget.transactions[index]),
+          ),
       ],
     );
   }
@@ -118,15 +120,14 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     );
   }
 
-
   Widget _buildTransactionDetailsItem(
-      String dialogTitle,
-      String txid,
-      int createdAt,
-      int amountSats,
-      bool isSettled,
-      int? confirmedAt,
-      ) {
+    String dialogTitle,
+    String txid,
+    int createdAt,
+    int amountSats,
+    bool isSettled,
+    int? confirmedAt,
+  ) {
     final createdTime = DateTime.fromMillisecondsSinceEpoch(createdAt * 1000);
     final formattedDate = DateFormat('MMM d, y').format(createdTime);
     final amountBtc = amountSats / 100000000;
@@ -136,12 +137,19 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isSettled ? amountSats.isNegative ? Colors.purple[900] : Colors.green[900] : Colors.amber[500],
+          color: isSettled
+              ? amountSats.isNegative
+                  ? Colors.purple[900]
+                  : Colors.green[900]
+              : Colors.amber[500],
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
-          isSettled?
-          amountSats.isNegative ? Icons.upload : Icons.download : Icons.watch_later,
+          isSettled
+              ? amountSats.isNegative
+                  ? Icons.upload
+                  : Icons.download
+              : Icons.watch_later,
           color: Colors.white,
         ),
       ),
@@ -163,7 +171,11 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
           Text(
             '₿${amountBtc.toStringAsFixed(8)}',
             style: TextStyle(
-              color: isSettled ? amountSats.isNegative ? Colors.purple[400] : Colors.green[400] : Colors.grey[300],
+              color: isSettled
+                  ? amountSats.isNegative
+                      ? Colors.purple[400]
+                      : Colors.green[400]
+                  : Colors.grey[300],
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -177,16 +189,15 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         ],
       ),
       onTap: () => _showTransactionDetails(
-         txid,
-         createdAt,
-         amountSats,
-         isSettled,
-         dialogTitle,
+        txid,
+        createdAt,
+        amountSats,
+        isSettled,
+        dialogTitle,
         confirmedAt,
       ),
     );
   }
-
 
   void _showTransactionDetails(
     String txid,
@@ -208,4 +219,3 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     );
   }
 }
-

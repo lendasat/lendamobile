@@ -31,7 +31,6 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
   String _btcAddress = "";
   String _arkAddress = "";
 
-
   bool _showCopyMenu = false;
 
   // Track which addresses have been copied (for showing checkmarks)
@@ -47,7 +46,6 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
     'BTC': null,
     'Ark': null,
   };
-
 
   @override
   void initState() {
@@ -339,7 +337,6 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     )
-
                 ],
               ),
             ),
@@ -469,5 +466,3 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
     );
   }
 }
-
-

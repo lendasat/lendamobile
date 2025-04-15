@@ -1,12 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 // const ESPLORA_URL: &str = "https://mutinynet.com/api";
 // const ARK_SERVER: &'static str = "https://mutinynet.arkade.sh";
 
 // pub const ESPLORA_URL: &str = "http://localhost:30000";
 // pub const ARK_SERVER: &str = "http://localhost:7070";
-
 
 class SettingsService {
   // Keys for SharedPreferences
@@ -52,7 +50,6 @@ class SettingsService {
     return prefs.setString(_arkServerUrlKey, url);
   }
 
-
   // Get Ark Network
   Future<String> getNetwork() async {
     final prefs = await SharedPreferences.getInstance();
@@ -64,7 +61,6 @@ class SettingsService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.setString(_arkNetworkKey, network);
   }
-
 
   // Reset to defaults
   Future<void> resetToDefaults() async {

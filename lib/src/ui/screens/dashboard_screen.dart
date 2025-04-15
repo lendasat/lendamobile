@@ -7,7 +7,6 @@ import 'package:ark_flutter/src/ui/screens/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/receive_screen.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 
-
 enum BalanceType { pending, confirmed, total }
 
 class DashboardScreen extends StatefulWidget {
@@ -88,13 +87,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       // Store all balance types (converting from sats to BTC)
       setState(() {
-        _pendingBalance = balanceResult.offchain.pendingSats.toDouble() / 100000000;
-        _confirmedBalance = balanceResult.offchain.confirmedSats.toDouble() / 100000000;
+        _pendingBalance =
+            balanceResult.offchain.pendingSats.toDouble() / 100000000;
+        _confirmedBalance =
+            balanceResult.offchain.confirmedSats.toDouble() / 100000000;
         _totalBalance = balanceResult.offchain.totalSats.toDouble() / 100000000;
         _isBalanceLoading = false;
       });
 
-      logger.i("Balance updated: Total: $_totalBalance BTC, Confirmed: $_confirmedBalance BTC, Pending: $_pendingBalance BTC");
+      logger.i(
+          "Balance updated: Total: $_totalBalance BTC, Confirmed: $_confirmedBalance BTC, Pending: $_pendingBalance BTC");
     } catch (e) {
       logger.e("Error fetching balance: $e");
       setState(() {
@@ -160,7 +162,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       MaterialPageRoute(
         builder: (context) => SendScreen(
           aspId: widget.aspId,
-          availableSats: _getSelectedBalance() * 100000000, // Convert BTC to SATS
+          availableSats:
+              _getSelectedBalance() * 100000000, // Convert BTC to SATS
         ),
       ),
     );
@@ -322,59 +325,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: _showBtcAsMain
                   ? [
-                // BTC as main, USD as secondary
-                Expanded(
-                  child: InkWell(
-                    onTap: _toggleBalanceType,
-                    child: Text(
-                      '₿ ${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                      // BTC as main, USD as secondary
+                      Expanded(
+                        child: InkWell(
+                          onTap: _toggleBalanceType,
+                          child: Text(
+                            '₿ ${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                InkWell(
-                  onTap: _toggleDisplayUnit,
-                  child: Text(
-                    '≈ \$${(_getSelectedBalance() * _btcToUsdRate).toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ]
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: _toggleDisplayUnit,
+                        child: Text(
+                          '≈ \$${(_getSelectedBalance() * _btcToUsdRate).toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ]
                   : [
-                // USD as main, BTC as secondary
-                Expanded(
-                  child: InkWell(
-                    onTap: _toggleBalanceType,
-                    child: Text(
-                      '\$${(_getSelectedBalance() * _btcToUsdRate).toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                      // USD as main, BTC as secondary
+                      Expanded(
+                        child: InkWell(
+                          onTap: _toggleBalanceType,
+                          child: Text(
+                            '\$${(_getSelectedBalance() * _btcToUsdRate).toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                InkWell(
-                  onTap: _toggleDisplayUnit,
-                  child: Text(
-                    '≈ ₿${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ],
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: _toggleDisplayUnit,
+                        child: Text(
+                          '≈ ₿${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
             ),
         ],
       ),
@@ -460,9 +463,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildRecentTransactions() {
     return TransactionHistoryWidget(
-      aspId: widget.aspId,
-      transactions: _transactions,
-      loading: _isTransactionFetching
-    );
+        aspId: widget.aspId,
+        transactions: _transactions,
+        loading: _isTransactionFetching);
   }
 }

@@ -31,7 +31,8 @@ class _SignTransactionScreenState extends State<SignTransactionScreen> {
       // Simulate transaction signing
       logger.i(
           "Signing transaction to ${widget.address} for ${widget.amount} SATS");
-      await send(address: widget.address, amountSats: BigInt.from(widget.amount));
+      await send(
+          address: widget.address, amountSats: BigInt.from(widget.amount));
 
       // Navigate to success screen after simulated signing
       if (mounted) {
