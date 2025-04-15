@@ -1,4 +1,4 @@
-# ark_flutter
+# WTFark - A Wallet That Flies on Ark
 
 A sample project of how to use ark-rs within flutter
 using [flutter-rust-bridge](https://cjycode.com/flutter_rust_bridge/).
@@ -6,7 +6,8 @@ using [flutter-rust-bridge](https://cjycode.com/flutter_rust_bridge/).
 ## Getting Started
 
 1. Install flutter for your system including setting up simulators
-2. run `flutter run`
+2. build rust backend with `flutter_rust_bridge_codegen generate`
+2. run the app on your simulator `flutter run`
 
 ## Development
 
