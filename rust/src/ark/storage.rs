@@ -3,11 +3,12 @@ use ark_rs::client::Error;
 use ark_rs::core::BoardingOutput;
 use bitcoin::secp256k1::SecretKey;
 use bitcoin::XOnlyPublicKey;
+use std::collections::HashMap;
 use std::sync::RwLock;
 
 #[derive(Default)]
 pub struct InMemoryDb {
-    boarding_outputs: RwLock<Vec<(SecretKey, BoardingOutput)>>,
+    boarding_outputs: RwLock<HashMap<BoardingOutput, SecretKey>>,
 }
 
 impl Persistence for InMemoryDb {
@@ -16,10 +17,8 @@ impl Persistence for InMemoryDb {
         sk: SecretKey,
         boarding_output: BoardingOutput,
     ) -> Result<(), Error> {
-        self.boarding_outputs
-            .write()
-            .unwrap()
-            .push((sk, boarding_output));
+        let mut guard = self.boarding_outputs.write().unwrap();
+        guard.insert(boarding_output, sk);
 
         Ok(())
     }
@@ -30,8 +29,7 @@ impl Persistence for InMemoryDb {
             .read()
             .unwrap()
             .clone()
-            .into_iter()
-            .map(|(_, b)| b)
+            .into_keys()
             .collect())
     }
 
@@ -41,7 +39,7 @@ impl Persistence for InMemoryDb {
             .read()
             .unwrap()
             .iter()
-            .find_map(|(sk, b)| if b.owner_pk() == *pk { Some(*sk) } else { None });
+            .find_map(|(b, sk)| if b.owner_pk() == *pk { Some(*sk) } else { None });
         let secret_key = maybe_sk.unwrap();
         Ok(secret_key)
     }
