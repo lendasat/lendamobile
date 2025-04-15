@@ -1,22 +1,61 @@
-# WTFark - A Wallet That Flies on Ark
+# ark-flutter-sample
 
-A sample project of how to use ark-rs within flutter
-using [flutter-rust-bridge](https://cjycode.com/flutter_rust_bridge/).
+A sample project demonstrating how to integrate [ark-rs](https://github.com/ArkLabsHQ/ark-rs/) with Flutter using [flutter-rust-bridge](https://cjycode.com/flutter_rust_bridge/). This project serves as a reference implementation for building an Ark Wallet using Flutter and Rust.
+
+## Features
+
+- Ark wallet functionality
+- Cross-platform support (iOS/Android)
+- Rust backend for performance and security
+
+## Prerequisites
+
+- Flutter SDK (latest stable version)
+- Rust toolchain
+- iOS Simulator or Android Emulator
+- [flutter-rust-bridge](https://cjycode.com/flutter_rust_bridge/)
 
 ## Getting Started
 
-1. Install flutter for your system including setting up simulators
-2. build rust backend with `flutter_rust_bridge_codegen generate`
-2. run the app on your simulator `flutter run`
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/ArkLabsHQ/ark-flutter-sample.git
+   cd ark-flutter-sample
+   ```
+
+2. Install dependencies:
+   ```bash
+   flutter pub get
+   ```
+
+3. Generate Flutter-Rust bindings:
+   ```bash
+   flutter_rust_bridge_codegen generate
+   ```
+
+4. Run the app:
+   ```bash
+   flutter run
+   ```
 
 ## Development
 
-Whenever you make changes in the rust code, you will need to re-generate the flutter bindings.
-You can do this with
+### Rust Code Changes
 
-```bash
-flutter_rust_bridge_codegen generate --watch
-```
+When making changes to the Rust code:
 
-Unfortunately, after making changes in rust, you will need to restart flutter as currently flutter does not support
-hot-reload/hot-restart yet.
+1. Regenerate the Flutter bindings:
+   ```bash
+   flutter_rust_bridge_codegen generate --watch
+   ```
+
+2. Restart the Flutter app:
+   ```bash
+   flutter run
+   ```
+   Note: Hot-reload/hot-restart is not currently supported for Rust code changes.
+
+### Project Structure
+
+- `lib/` - Flutter/Dart code
+- `rust/` - Rust code
