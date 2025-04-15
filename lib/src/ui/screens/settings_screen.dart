@@ -37,6 +37,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _fetchNsec();
+    // _fetchInfo()
   }
 
   Future<void> _fetchNsec() async {

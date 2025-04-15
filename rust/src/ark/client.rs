@@ -90,10 +90,13 @@ pub async fn tx_history() -> Result<Vec<ArkTransaction>> {
                 Arc::clone(&*guard)
             };
 
-            let txs = client
+            let mut txs = client
                 .transaction_history()
                 .await
                 .map_err(|error| anyhow!("Failed getting transaction history {error:#}"))?;
+
+            // sort desc, i.e. newest transactions first
+            txs.sort_by(|a, b| b.created_at().cmp(&a.created_at()));
             Ok(txs)
         }
     }
@@ -117,6 +120,7 @@ pub async fn send(address: String, amount: Amount) -> Result<Txid> {
                 let amount = uri.amount.unwrap_or(amount);
 
                 if let Some(address) = uri.btc_address {
+                    // TODO: there seems to be a bug sending on-chain
                     let txid = client
                         .send_on_chain(address.assume_checked(), amount)
                         .await
@@ -134,7 +138,6 @@ pub async fn send(address: String, amount: Amount) -> Result<Txid> {
                 }
             } else if is_ark_address(address.as_str()) {
                 let address = ArkAddress::decode(address.as_str())?;
-                // TODO: why does this return a psbt?
                 let psbt = client
                     .send_vtxo(address, amount)
                     .await
