@@ -21,8 +21,9 @@ use std::sync::Arc;
 // const ESPLORA_URL: &str = "https://mutinynet.com/api";
 // const ARK_SERVER: &'static str = "https://mutinynet.arkade.sh";
 
-const ESPLORA_URL: &str = "http://localhost:30000";
-const ARK_SERVER: &str = "http://localhost:7070";
+// TODO: make this configurable
+pub const ESPLORA_URL: &str = "http://localhost:30000";
+pub const ARK_SERVER: &str = "http://localhost:7070";
 
 pub async fn setup_new_wallet(data_dir: String) -> Result<String> {
     let secp = Secp256k1::new();

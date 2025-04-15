@@ -20,8 +20,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _selectedNetwork = 'Regtest';
   String _nsec = 'Unknown';
+  Info? _info;
 
   // Text editing controllers for URL inputs
   final TextEditingController _esploraUrlController =
@@ -29,15 +29,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _arkServerController =
       TextEditingController(text: 'https://ark.example.com/api/v1');
 
-  // Updated network options
-  final List<String> _supportedNetworks = ['Mainnet', 'Signet', 'Regtest'];
-
 
   @override
   void initState() {
     super.initState();
     _fetchNsec();
-    // _fetchInfo()
+    _fetchInfo();
   }
 
   Future<void> _fetchNsec() async {
@@ -49,6 +46,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
     } catch (err) {
       logger.e("Error getting nsec: $err");
+    }
+  }
+  Future<void> _fetchInfo() async {
+    try {
+      var info = await information();
+
+      setState(() {
+        _info = info;
+      });
+    } catch (err) {
+      logger.e("Error getting info: $err");
     }
   }
 
@@ -246,36 +254,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               trailing: const Icon(Icons.chevron_right, color: Colors.grey),
               onTap: _showBackupWarningDialog,
             ),
-            ListTile(
-              title:
-                  const Text('Network', style: TextStyle(color: Colors.white)),
-              subtitle: Text(
-                'Currently using $_selectedNetwork',
-                style: TextStyle(color: Colors.grey[400], fontSize: 12),
-              ),
-              trailing: DropdownButton<String>(
-                value: _selectedNetwork,
-                dropdownColor: Colors.grey[850],
-                underline: const SizedBox(),
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
-                style: const TextStyle(color: Colors.amber),
-                onChanged: (String? value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedNetwork = value;
-                    });
-                    logger.i("Network changed to: $value");
-                  }
-                },
-                items: _supportedNetworks
-                    .map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              ),
-            ),
           ]),
 
           const SizedBox(height: 24),
@@ -372,12 +350,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('About'),
           _buildSettingsCard([
             ListTile(
-              title: const Text('App Version',
-                  style: TextStyle(color: Colors.white)),
-              subtitle: Text(
-                'v1.0.0 (beta)',
-                style: TextStyle(color: Colors.grey[400], fontSize: 12),
-              ),
+              title:
+                  const Text('Network', style: TextStyle(color: Colors.white)),
+              subtitle: _info != null
+                  ? Text(
+                      _info!.network,
+                      style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                    ):
+                  Text("loading",
+                      style: TextStyle(color: Colors.grey[400], fontSize: 12)),
             ),
           ]),
 

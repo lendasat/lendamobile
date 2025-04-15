@@ -1,3 +1,4 @@
+use crate::ark::{ARK_SERVER, ESPLORA_URL};
 use anyhow::Result;
 use ark_rs::core::ArkTransaction;
 use bitcoin::Amount;
@@ -136,4 +137,21 @@ pub async fn nsec(data_dir: String) -> Result<String> {
 
 pub async fn reset_wallet(data_dir: String) -> Result<()> {
     crate::ark::delete_wallet(data_dir)
+}
+
+pub struct Info {
+    pub server_pk: String,
+    pub network: String,
+    pub esplora: String,
+    pub server_url: String,
+}
+
+pub async fn information() -> Result<Info> {
+    let info = crate::ark::client::info()?;
+    Ok(Info {
+        server_pk: info.pk.to_string(),
+        network: info.network.to_string(),
+        esplora: ESPLORA_URL.to_string(),
+        server_url: ARK_SERVER.to_string(),
+    })
 }

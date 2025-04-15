@@ -3,6 +3,7 @@ use crate::state::ARK_CLIENT;
 use anyhow::Result;
 use anyhow::{anyhow, bail};
 use ark_rs::client::OffChainBalance;
+use ark_rs::core::server::Info;
 use ark_rs::core::{ArkAddress, ArkTransaction};
 use bitcoin::{Address, Amount, Txid};
 use rand::rngs::StdRng;
@@ -35,7 +36,7 @@ pub async fn balance() -> Result<Balance> {
                 .map_err(|error| anyhow!("Could not fetch balance {error}"))?;
 
             Ok(Balance {
-                // TODO: woud be good to also get the on-chain balance here
+                // TODO: would be good to also get the on-chain balance here
                 offchain: offchain_balance,
             })
         }
@@ -96,7 +97,7 @@ pub async fn tx_history() -> Result<Vec<ArkTransaction>> {
                 .map_err(|error| anyhow!("Failed getting transaction history {error:#}"))?;
 
             // sort desc, i.e. newest transactions first
-            txs.sort_by(|a, b| b.created_at().cmp(&a.created_at()));
+            txs.sort_by_key(|b| std::cmp::Reverse(b.created_at()));
             Ok(txs)
         }
     }
@@ -179,4 +180,22 @@ pub async fn settle() -> Result<()> {
     }
 
     Ok(())
+}
+
+pub(crate) fn info() -> Result<Info> {
+    let maybe_client = ARK_CLIENT.try_get();
+
+    match maybe_client {
+        None => {
+            bail!("Ark client not initialized")
+        }
+        Some(client) => {
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+            let info = client.server_info.clone();
+            Ok(info)
+        }
+    }
 }

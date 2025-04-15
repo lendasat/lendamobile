@@ -40,6 +40,8 @@ Future<String> nsec({required String dataDir}) =>
 Future<void> resetWallet({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiResetWallet(dataDir: dataDir);
 
+Future<Info> information() => RustLib.instance.api.crateApiArkApiInformation();
+
 class Addresses {
   final String boarding;
   final String offchain;
@@ -80,6 +82,37 @@ class Balance {
       other is Balance &&
           runtimeType == other.runtimeType &&
           offchain == other.offchain;
+}
+
+class Info {
+  final String serverPk;
+  final String network;
+  final String esplora;
+  final String serverUrl;
+
+  const Info({
+    required this.serverPk,
+    required this.network,
+    required this.esplora,
+    required this.serverUrl,
+  });
+
+  @override
+  int get hashCode =>
+      serverPk.hashCode ^
+      network.hashCode ^
+      esplora.hashCode ^
+      serverUrl.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Info &&
+          runtimeType == other.runtimeType &&
+          serverPk == other.serverPk &&
+          network == other.network &&
+          esplora == other.esplora &&
+          serverUrl == other.serverUrl;
 }
 
 class OffchainBalance {
