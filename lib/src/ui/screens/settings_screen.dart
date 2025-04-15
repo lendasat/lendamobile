@@ -1,7 +1,10 @@
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:path_provider/path_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -187,11 +190,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: const Text('CANCEL', style: TextStyle(color: Colors.white)),
           ),
           TextButton(
-            onPressed: () {
-              // TODO: Implement wallet reset functionality
-              logger.i("Reset wallet requested");
-              Navigator.pop(context);
-              // Navigate back to onboarding screen after reset
+            onPressed: () async {
+              // Reset wallet
+              var dataDir = await getApplicationSupportDirectory();
+              await resetWallet(dataDir: dataDir.path);
+
+              Get.reloadAll(force: true);
+              Get.to(const OnboardingScreen());
+
             },
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,

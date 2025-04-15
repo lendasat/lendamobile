@@ -37,6 +37,9 @@ Future<void> settle() => RustLib.instance.api.crateApiArkApiSettle();
 Future<String> nsec({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiNsec(dataDir: dataDir);
 
+Future<void> resetWallet({required String dataDir}) =>
+    RustLib.instance.api.crateApiArkApiResetWallet(dataDir: dataDir);
+
 class Addresses {
   final String boarding;
   final String offchain;

@@ -5,7 +5,7 @@ mod seed_file;
 pub mod storage;
 
 use crate::ark::esplora::EsploraClient;
-use crate::ark::seed_file::{read_seed_file, write_seed_file};
+use crate::ark::seed_file::{read_seed_file, reset_wallet, write_seed_file};
 use crate::ark::storage::InMemoryDb;
 use crate::state::ARK_CLIENT;
 use anyhow::{anyhow, bail, Result};
@@ -107,4 +107,8 @@ pub(crate) async fn nsec(data_dir: String) -> Result<nostr::SecretKey> {
     let sk = read_seed_file(data_dir.as_str())?.ok_or(anyhow!("Seed file does not exist"))?;
     let sk = nostr::SecretKey::from_slice(sk.as_ref())?;
     Ok(sk)
+}
+
+pub fn delete_wallet(data_dir: String) -> Result<()> {
+    reset_wallet(data_dir.as_str())
 }

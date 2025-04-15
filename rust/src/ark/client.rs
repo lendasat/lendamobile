@@ -5,6 +5,8 @@ use anyhow::{anyhow, bail};
 use ark_rs::client::OffChainBalance;
 use ark_rs::core::{ArkAddress, ArkTransaction};
 use bitcoin::{Address, Amount, Txid};
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -160,18 +162,16 @@ pub async fn settle() -> Result<()> {
         None => {
             bail!("Ark client not initialized");
         }
-        Some(_client) => {
-            // let client = {
-            //     let guard = client.read();
-            //     Arc::clone(&*guard)
-            // };
-            // FIXME!
-            // let mut rng = rand::thread_rng();
-            //
-            // client
-            //     .board(&mut rng)
-            //     .await
-            //     .map_err(|e| anyhow!("Failed settling {e:#}"))?;
+        Some(client) => {
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+            let mut rng = StdRng::from_entropy();
+            client
+                .board(&mut rng)
+                .await
+                .map_err(|e| anyhow!("Failed settling {e:#}"))?;
         }
     }
 

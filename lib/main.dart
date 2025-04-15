@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
 import 'package:ark_flutter/src/ui/screens/dashboard_screen.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:path_provider/path_provider.dart';
 
 Future setupLogger() async {
@@ -80,7 +81,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'WTFark Wallet',
       theme: ThemeData(
         brightness: Brightness.dark,

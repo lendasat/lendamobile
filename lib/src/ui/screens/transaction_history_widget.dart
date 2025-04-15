@@ -32,10 +32,10 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Transaction History',
               style: TextStyle(
                 color: Colors.white,
@@ -290,6 +290,97 @@ class _TransactionDetailsDialog extends StatelessWidget {
     required this.transaction,
   }) : super(key: key);
 
+  Future<void> _handleSettlement(BuildContext context) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.grey[850],
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Settling transaction...',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Perform settlement
+      await settle();
+      logger.i("Transaction settled successfully");
+
+      // Close loading dialog and show success
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.grey[850],
+            title: const Text(
+              'Success',
+              style: TextStyle(color: Colors.white),
+            ),
+            content: const Text(
+              'Transaction settled successfully!',
+              style: TextStyle(color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close success dialog
+                  Navigator.of(context).pop(); // Close transaction details
+                  Navigator.of(context).pop(); // Go to home screen
+                },
+                child: const Text(
+                  'Go to Home',
+                  style: TextStyle(color: Colors.amber),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog and show error
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.grey[850],
+            title: const Text(
+              'Error',
+              style: TextStyle(color: Colors.red),
+            ),
+            content: Text(
+              'Failed to settle transaction: ${e.toString()}',
+              style: const TextStyle(color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(color: Colors.amber),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+      logger.e("Error settling transaction: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -326,8 +417,7 @@ class _TransactionDetailsDialog extends StatelessWidget {
             const SizedBox(height: 24),
 
             transaction.map(
-              boarding: (tx) => tx.confirmedAt == null
-                  ? Column(
+              boarding: (tx) => Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(
@@ -343,55 +433,7 @@ class _TransactionDetailsDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () async {
-                      try {
-                        Navigator.pop(context);
-                        // Show loading indicator
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) => const AlertDialog(
-                            backgroundColor: Colors.grey,
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
-                                ),
-                                SizedBox(height: 16),
-                                Text('Settling transaction...', style: TextStyle(color: Colors.white)),
-                              ],
-                            ),
-                          ),
-                        );
-
-                        // Call the settle function
-                        // await settle();
-
-                        // Close loading dialog and show success
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Transaction settled successfully'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        // Close loading dialog and show error
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Failed to settle: ${e.toString()}'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                        logger.e("Error settling transaction: $e");
-                      }
-                    },
+                    onPressed: () => _handleSettlement(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.amber[500],
                       foregroundColor: Colors.black,
@@ -403,8 +445,7 @@ class _TransactionDetailsDialog extends StatelessWidget {
                     child: const Text('SETTLE', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
-              )
-                  : const SizedBox(),
+              ),
               round: (_) => const SizedBox(),
               redeem: (_) => const SizedBox(),
             ),
@@ -418,7 +459,7 @@ class _TransactionDetailsDialog extends StatelessWidget {
     return transaction.map(
       boarding: (_) => 'Boarding Transaction',
       round: (_) => 'Settle Transaction',
-      redeem: (_) => 'Received Offchain',
+      redeem: (tx) => tx.amountSats.isNegative ? 'Sent Offchain' : 'Received Offchain',
     );
   }
 
@@ -432,7 +473,6 @@ class _TransactionDetailsDialog extends StatelessWidget {
             ? DateFormat('MMMM d, y - h:mm a').format(confirmedTime)
             : 'Pending confirmation';
         final amountBtc = tx.amountSats.toDouble() / 100000000;
-        final amountSats = tx.amountSats.toString();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,20 +484,6 @@ class _TransactionDetailsDialog extends StatelessWidget {
             if (tx.confirmedAt != null)
               _buildDetailRow('Confirmed At', formattedDate),
 
-            if (tx.confirmedAt == null) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'Transaction pending. Funds will be non-reversible after settlement.',
-                  style: TextStyle(color: Colors.amber, fontSize: 14),
-                ),
-              ),
-            ],
           ],
         );
       },
@@ -489,7 +515,7 @@ class _TransactionDetailsDialog extends StatelessWidget {
           children: [
             _buildDetailRow('Transaction ID', tx.txid),
             _buildDetailRow('Status', tx.isSettled ? 'Settled' : 'Pending'),
-            _buildDetailRow('Amount (BTC)', '+ ₿${amountBtc.toStringAsFixed(8)}'),
+            _buildDetailRow('Amount (BTC)', '₿${amountBtc.abs().toStringAsFixed(8)}'),
             _buildDetailRow('Date', formattedDate),
           ],
         );

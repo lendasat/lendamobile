@@ -133,3 +133,7 @@ pub async fn nsec(data_dir: String) -> Result<String> {
     let nsec = crate::ark::nsec(data_dir).await?;
     Ok(nsec.to_bech32()?)
 }
+
+pub async fn reset_wallet(data_dir: String) -> Result<()> {
+    crate::ark::delete_wallet(data_dir)
+}
