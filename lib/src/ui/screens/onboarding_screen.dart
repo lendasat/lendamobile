@@ -1,8 +1,10 @@
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/dashboard_screen.dart';
 import 'package:path_provider/path_provider.dart';
+
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -15,6 +17,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String? _selectedOption;
   final TextEditingController _secretKeyController = TextEditingController();
   bool _isLoading = false;
+  final SettingsService _settingsService = SettingsService();
+  String? _esploraUrl;
+  String? _arkServerUrl;
+  String? _network;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final esploraUrl = await _settingsService.getEsploraUrl();
+      final arkServerUrl = await _settingsService.getArkServerUrl();
+      final network = await _settingsService.getNetwork();
+
+      setState(() {
+        _esploraUrl = esploraUrl;
+        _arkServerUrl = arkServerUrl;
+        _network = network;
+        _isLoading = false;
+      });
+    } catch (err) {
+      logger.e("Error loading settings: $err");
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
 
   @override
   void dispose() {
@@ -45,7 +78,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         logger.i('Creating new wallet');
 
         try {
-          var aspId = await setupNewWallet(dataDir: dataDir.path);
+          var aspId = await setupNewWallet(dataDir: dataDir.path, network: _network!, esplora: _esploraUrl!, server: _arkServerUrl!);
           logger.i("Received id $aspId");
 
           // Navigate to dashboard
@@ -65,7 +98,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         logger.i('Restoring wallet with key');
 
         try {
-          var aspId = await restoreWallet(nsec: _secretKeyController.text, dataDir: dataDir.path);
+          var aspId = await restoreWallet(nsec: _secretKeyController.text, dataDir: dataDir.path, network: _network!, esplora: _esploraUrl!, server: _arkServerUrl!);
           logger.i("Received id $aspId");
 
           // Navigate to dashboard

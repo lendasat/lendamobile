@@ -1,11 +1,11 @@
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
 import 'package:ark_flutter/src/ui/screens/dashboard_screen.dart';
-import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:path_provider/path_provider.dart';
 
 Future setupLogger() async {
@@ -33,6 +33,8 @@ Future setupLogger() async {
   logger.d("Logger is working!");
 }
 
+final SettingsService _settingsService = SettingsService();
+
 Future<Widget> determineStartScreen() async {
   try {
     // Get application support directory
@@ -43,10 +45,18 @@ Future<Widget> determineStartScreen() async {
     // Check if wallet exists
     final exists = await walletExists(dataDir: dataDir);
 
+    final esploraUrl = await _settingsService.getEsploraUrl();
+    final arkServerUrl = await _settingsService.getArkServerUrl();
+    final network = await _settingsService.getNetwork();
+
     if (exists) {
       logger.i("Wallet found, setting up client");
       // Setup ARK client with existing wallet
-      final aspId = await loadExistingWallet(dataDir: dataDir);
+      final aspId = await loadExistingWallet(
+          dataDir: dataDir,
+          esplora: esploraUrl,
+          server: arkServerUrl,
+          network: network);
       logger.i("Wallet setup complete, ID: $aspId");
 
       // Return the dashboard screen with the ASP ID
@@ -81,7 +91,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return MaterialApp(
       title: 'WTFark Wallet',
       theme: ThemeData(
         brightness: Brightness.dark,

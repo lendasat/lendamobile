@@ -244,12 +244,20 @@ fn wire__crate__api__ark_api__load_existing_wallet_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_data_dir = <String>::sse_decode(&mut deserializer);
+            let api_network = <String>::sse_decode(&mut deserializer);
+            let api_esplora = <String>::sse_decode(&mut deserializer);
+            let api_server = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
-                        let output_ok =
-                            crate::api::ark_api::load_existing_wallet(api_data_dir).await?;
+                        let output_ok = crate::api::ark_api::load_existing_wallet(
+                            api_data_dir,
+                            api_network,
+                            api_esplora,
+                            api_server,
+                        )
+                        .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -354,12 +362,21 @@ fn wire__crate__api__ark_api__restore_wallet_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_nsec = <String>::sse_decode(&mut deserializer);
             let api_data_dir = <String>::sse_decode(&mut deserializer);
+            let api_network = <String>::sse_decode(&mut deserializer);
+            let api_esplora = <String>::sse_decode(&mut deserializer);
+            let api_server = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
-                        let output_ok =
-                            crate::api::ark_api::restore_wallet(api_nsec, api_data_dir).await?;
+                        let output_ok = crate::api::ark_api::restore_wallet(
+                            api_nsec,
+                            api_data_dir,
+                            api_network,
+                            api_esplora,
+                            api_server,
+                        )
+                        .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -464,11 +481,20 @@ fn wire__crate__api__ark_api__setup_new_wallet_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_data_dir = <String>::sse_decode(&mut deserializer);
+            let api_network = <String>::sse_decode(&mut deserializer);
+            let api_esplora = <String>::sse_decode(&mut deserializer);
+            let api_server = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
-                        let output_ok = crate::api::ark_api::setup_new_wallet(api_data_dir).await?;
+                        let output_ok = crate::api::ark_api::setup_new_wallet(
+                            api_data_dir,
+                            api_network,
+                            api_esplora,
+                            api_server,
+                        )
+                        .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -620,13 +646,9 @@ impl SseDecode for crate::api::ark_api::Info {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_serverPk = <String>::sse_decode(deserializer);
         let mut var_network = <String>::sse_decode(deserializer);
-        let mut var_esplora = <String>::sse_decode(deserializer);
-        let mut var_serverUrl = <String>::sse_decode(deserializer);
         return crate::api::ark_api::Info {
             server_pk: var_serverPk,
             network: var_network,
-            esplora: var_esplora,
-            server_url: var_serverUrl,
         };
     }
 }
@@ -857,8 +879,6 @@ impl flutter_rust_bridge::IntoDart for crate::api::ark_api::Info {
         [
             self.server_pk.into_into_dart().into_dart(),
             self.network.into_into_dart().into_dart(),
-            self.esplora.into_into_dart().into_dart(),
-            self.server_url.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1027,8 +1047,6 @@ impl SseEncode for crate::api::ark_api::Info {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.server_pk, serializer);
         <String>::sse_encode(self.network, serializer);
-        <String>::sse_encode(self.esplora, serializer);
-        <String>::sse_encode(self.server_url, serializer);
     }
 }
 

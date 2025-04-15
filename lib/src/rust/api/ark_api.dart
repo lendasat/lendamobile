@@ -11,15 +11,34 @@ part 'ark_api.freezed.dart';
 Future<bool> walletExists({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiWalletExists(dataDir: dataDir);
 
-Future<String> setupNewWallet({required String dataDir}) =>
-    RustLib.instance.api.crateApiArkApiSetupNewWallet(dataDir: dataDir);
+Future<String> setupNewWallet(
+        {required String dataDir,
+        required String network,
+        required String esplora,
+        required String server}) =>
+    RustLib.instance.api.crateApiArkApiSetupNewWallet(
+        dataDir: dataDir, network: network, esplora: esplora, server: server);
 
-Future<String> loadExistingWallet({required String dataDir}) =>
-    RustLib.instance.api.crateApiArkApiLoadExistingWallet(dataDir: dataDir);
+Future<String> loadExistingWallet(
+        {required String dataDir,
+        required String network,
+        required String esplora,
+        required String server}) =>
+    RustLib.instance.api.crateApiArkApiLoadExistingWallet(
+        dataDir: dataDir, network: network, esplora: esplora, server: server);
 
-Future<String> restoreWallet({required String nsec, required String dataDir}) =>
-    RustLib.instance.api
-        .crateApiArkApiRestoreWallet(nsec: nsec, dataDir: dataDir);
+Future<String> restoreWallet(
+        {required String nsec,
+        required String dataDir,
+        required String network,
+        required String esplora,
+        required String server}) =>
+    RustLib.instance.api.crateApiArkApiRestoreWallet(
+        nsec: nsec,
+        dataDir: dataDir,
+        network: network,
+        esplora: esplora,
+        server: server);
 
 Future<Balance> balance() => RustLib.instance.api.crateApiArkApiBalance();
 
@@ -87,22 +106,14 @@ class Balance {
 class Info {
   final String serverPk;
   final String network;
-  final String esplora;
-  final String serverUrl;
 
   const Info({
     required this.serverPk,
     required this.network,
-    required this.esplora,
-    required this.serverUrl,
   });
 
   @override
-  int get hashCode =>
-      serverPk.hashCode ^
-      network.hashCode ^
-      esplora.hashCode ^
-      serverUrl.hashCode;
+  int get hashCode => serverPk.hashCode ^ network.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -110,9 +121,7 @@ class Info {
       other is Info &&
           runtimeType == other.runtimeType &&
           serverPk == other.serverPk &&
-          network == other.network &&
-          esplora == other.esplora &&
-          serverUrl == other.serverUrl;
+          network == other.network;
 }
 
 class OffchainBalance {

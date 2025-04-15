@@ -18,14 +18,12 @@ use parking_lot::RwLock;
 use rand::RngCore;
 use std::sync::Arc;
 
-// const ESPLORA_URL: &str = "https://mutinynet.com/api";
-// const ARK_SERVER: &'static str = "https://mutinynet.arkade.sh";
-
-// TODO: make this configurable
-pub const ESPLORA_URL: &str = "http://localhost:30000";
-pub const ARK_SERVER: &str = "http://localhost:7070";
-
-pub async fn setup_new_wallet(data_dir: String) -> Result<String> {
+pub async fn setup_new_wallet(
+    data_dir: String,
+    network: Network,
+    esplora: String,
+    server: String,
+) -> Result<String> {
     let secp = Secp256k1::new();
     let mut random_bytes = [0u8; 32];
     rand::thread_rng().fill_bytes(&mut random_bytes);
@@ -37,21 +35,32 @@ pub async fn setup_new_wallet(data_dir: String) -> Result<String> {
     write_seed_file(&sk, data_dir)?;
 
     let kp = Keypair::from_secret_key(&secp, &sk);
-    let pubkey = setup_client(kp, secp).await?;
+    let pubkey = setup_client(kp, secp, network, esplora, server).await?;
     Ok(pubkey)
 }
 
-pub async fn restore_wallet(nsec: String, data_dir: String) -> Result<String> {
+pub async fn restore_wallet(
+    nsec: String,
+    data_dir: String,
+    network: Network,
+    esplora: String,
+    server: String,
+) -> Result<String> {
     let secp = Secp256k1::new();
     let keys = Keys::parse(nsec.as_str())?;
     let kp = *keys.key_pair(&secp);
     write_seed_file(&kp.secret_key(), data_dir)?;
 
-    let pubkey = setup_client(kp, secp).await?;
+    let pubkey = setup_client(kp, secp, network, esplora, server).await?;
     Ok(pubkey)
 }
 
-pub(crate) async fn load_existing_wallet(data_dir: String) -> Result<String> {
+pub(crate) async fn load_existing_wallet(
+    data_dir: String,
+    network: Network,
+    esplora: String,
+    server: String,
+) -> Result<String> {
     let maybe_sk = read_seed_file(data_dir.as_str())?;
 
     match maybe_sk {
@@ -61,19 +70,25 @@ pub(crate) async fn load_existing_wallet(data_dir: String) -> Result<String> {
         Some(key) => {
             let secp = Secp256k1::new();
             let kp = Keypair::from_secret_key(&secp, &key);
-            let server_pk = setup_client(kp, secp).await?;
+            let server_pk = setup_client(kp, secp, network, esplora, server).await?;
             Ok(server_pk)
         }
     }
 }
 
-pub async fn setup_client(kp: Keypair, secp: Secp256k1<All>) -> Result<String> {
+pub async fn setup_client(
+    kp: Keypair,
+    secp: Secp256k1<All>,
+    network: Network,
+    esplora: String,
+    server: String,
+) -> Result<String> {
     let db = InMemoryDb::default();
 
-    let wallet = ark_bdk_wallet::Wallet::new(kp, secp, Network::Signet, ESPLORA_URL, db)?;
+    let wallet = ark_bdk_wallet::Wallet::new(kp, secp, network, esplora.as_str(), db)?;
 
     let wallet = Arc::new(wallet);
-    let esplora = EsploraClient::new(ESPLORA_URL)?;
+    let esplora = EsploraClient::new(esplora.as_str())?;
     tracing::info!("Checking esplora connection");
 
     esplora.check_connection().await?;
@@ -84,7 +99,7 @@ pub async fn setup_client(kp: Keypair, secp: Secp256k1<All>) -> Result<String> {
         kp,
         Arc::new(esplora),
         wallet.clone(),
-        ARK_SERVER.to_string(),
+        server,
     )
     .connect()
     .await

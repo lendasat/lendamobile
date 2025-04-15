@@ -1,23 +1,42 @@
-use crate::ark::{ARK_SERVER, ESPLORA_URL};
 use anyhow::Result;
 use ark_rs::core::ArkTransaction;
-use bitcoin::Amount;
+use bitcoin::{Amount, Network};
 use nostr::ToBech32;
+use std::str::FromStr;
 
 pub async fn wallet_exists(data_dir: String) -> Result<bool> {
     crate::ark::wallet_exists(data_dir).await
 }
 
-pub async fn setup_new_wallet(data_dir: String) -> Result<String> {
-    crate::ark::setup_new_wallet(data_dir).await
+pub async fn setup_new_wallet(
+    data_dir: String,
+    network: String,
+    esplora: String,
+    server: String,
+) -> Result<String> {
+    let network = Network::from_str(network.as_str())?;
+    crate::ark::setup_new_wallet(data_dir, network, esplora, server).await
 }
 
-pub async fn load_existing_wallet(data_dir: String) -> Result<String> {
-    crate::ark::load_existing_wallet(data_dir).await
+pub async fn load_existing_wallet(
+    data_dir: String,
+    network: String,
+    esplora: String,
+    server: String,
+) -> Result<String> {
+    let network = Network::from_str(network.as_str())?;
+    crate::ark::load_existing_wallet(data_dir, network, esplora, server).await
 }
 
-pub async fn restore_wallet(nsec: String, data_dir: String) -> Result<String> {
-    crate::ark::restore_wallet(nsec, data_dir).await
+pub async fn restore_wallet(
+    nsec: String,
+    data_dir: String,
+    network: String,
+    esplora: String,
+    server: String,
+) -> Result<String> {
+    let network = Network::from_str(network.as_str())?;
+    crate::ark::restore_wallet(nsec, data_dir, network, esplora, server).await
 }
 
 pub struct Balance {
@@ -142,8 +161,6 @@ pub async fn reset_wallet(data_dir: String) -> Result<()> {
 pub struct Info {
     pub server_pk: String,
     pub network: String,
-    pub esplora: String,
-    pub server_url: String,
 }
 
 pub async fn information() -> Result<Info> {
@@ -151,7 +168,5 @@ pub async fn information() -> Result<Info> {
     Ok(Info {
         server_pk: info.pk.to_string(),
         network: info.network.to_string(),
-        esplora: ESPLORA_URL.to_string(),
-        server_url: ARK_SERVER.to_string(),
     })
 }
