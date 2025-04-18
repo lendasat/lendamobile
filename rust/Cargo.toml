@@ -8,14 +8,15 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 anyhow = "1"
-ark-bdk-wallet = { git = "https://github.com/coblox/ark-rs.git", rev = "12c1c0647bf4b4a2b13b9590c5c8a7205f2f2a4a" }
-ark-rs = { git = "https://github.com/coblox/ark-rs.git", features = ["client"], rev = "12c1c0647bf4b4a2b13b9590c5c8a7205f2f2a4a" }
+ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "9a1ae76d5c27a02877f6458558010e12074b3953" }
+ark-rs = { git = "https://github.com/ArkLabsHQ/ark-rs.git", features = ["client"], rev = "9a1ae76d5c27a02877f6458558010e12074b3953" }
 bitcoin = { version = "0.32.4", features = ["rand"] }
 esplora-client = { version = "0.11.0", features = ["async-https", "blocking-https"] }
 flutter_rust_bridge = { version = "=2.9.0", features = ["anyhow"] }
 futures = "0.3.31"
 hex = "0.4"
 nostr = { version = "0.40.0", default-features = false, features = ["std"] }
+openssl = { version = "0.10", features = ["vendored"] }
 parking_lot = { version = "0.12.1" }
 rand = "0.8.5"
 rand_chacha = "0.9.0"
