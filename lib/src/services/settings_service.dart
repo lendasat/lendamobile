@@ -1,21 +1,17 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-// const ESPLORA_URL: &str = "https://mutinynet.com/api";
-// const ARK_SERVER: &'static str = "https://mutinynet.arkade.sh";
-
-// pub const ESPLORA_URL: &str = "http://localhost:30000";
-// pub const ARK_SERVER: &str = "http://localhost:7070";
-
 class SettingsService {
   // Keys for SharedPreferences
   static const String _esploraUrlKey = 'esplora_url';
   static const String _arkServerUrlKey = 'ark_server_url';
   static const String _arkNetworkKey = 'ark_network';
 
-  // Default values
-  static const String defaultEsploraUrl = 'http://localhost:30000';
-  static const String defaultArkServerUrl = 'http://localhost:7070';
-  static const String defaultArkNetwork = 'regtest';
+  // Default values from environment variables
+  static String get defaultEsploraUrl =>
+      dotenv.env['ESPLORA_URL'] ?? 'http://localhost:30000';
+  static String get defaultArkServerUrl =>
+      dotenv.env['ARK_SERVER_URL'] ?? 'http://localhost:7070';
+  static String get defaultArkNetwork => dotenv.env['ARK_NETWORK'] ?? 'regtest';
 
   // Singleton instance
   static final SettingsService _instance = SettingsService._internal();
