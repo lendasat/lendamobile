@@ -76,6 +76,8 @@ jobs:
           flutter-version: '3.29.2'
           channel: 'stable'
 
+      - uses: kuhnroyal/flutter-fvm-config-action/setup@v3
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -92,14 +94,30 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Settup flutter rust bridge
+        run: cargo install flutter_rust_bridge_codegen
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.2'
           channel: 'stable'
 
+      - uses: kuhnroyal/flutter-fvm-config-action/setup@v3
+
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Build rust library
+        run: flutter_rust_bridge_codegen generate
 
       - name: Build iOS
         run: flutter build ios --debug --no-codesign
