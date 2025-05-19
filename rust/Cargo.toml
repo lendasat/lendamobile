@@ -8,8 +8,8 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 anyhow = "1"
-ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "9a1ae76d5c27a02877f6458558010e12074b3953" }
-ark-rs = { git = "https://github.com/ArkLabsHQ/ark-rs.git", features = ["client"], rev = "9a1ae76d5c27a02877f6458558010e12074b3953" }
+ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "c754d7adc8552b14d9d14ef871df271196089d8f" }
+ark-rs = { git = "https://github.com/ArkLabsHQ/ark-rs.git", features = ["client"], rev = "c754d7adc8552b14d9d14ef871df271196089d8f" }
 bitcoin = { version = "0.32.4", features = ["rand"] }
 esplora-client = { version = "0.11.0", features = ["async-https", "blocking-https"] }
 flutter_rust_bridge = { version = "=2.9.0", features = ["anyhow"] }
