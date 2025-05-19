@@ -9,10 +9,10 @@ class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  _OnboardingScreenState createState() => _OnboardingScreenState();
+  OnboardingScreenState createState() => OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class OnboardingScreenState extends State<OnboardingScreen> {
   String? _selectedOption;
   final TextEditingController _secretKeyController = TextEditingController();
   bool _isLoading = false;
@@ -356,7 +356,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       color: isSelected
-                          ? Colors.black.withOpacity(0.7)
+                          ? Colors.white.withAlpha((0.7 * 255).round())
                           : Colors.white70,
                     ),
                   ),

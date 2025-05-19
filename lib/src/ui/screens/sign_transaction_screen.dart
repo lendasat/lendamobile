@@ -9,17 +9,17 @@ class SignTransactionScreen extends StatefulWidget {
   final double amount;
 
   const SignTransactionScreen({
-    Key? key,
+    super.key,
     required this.aspId,
     required this.address,
     required this.amount,
-  }) : super(key: key);
+  });
 
   @override
-  _SignTransactionScreenState createState() => _SignTransactionScreenState();
+  SignTransactionScreenState createState() => SignTransactionScreenState();
 }
 
-class _SignTransactionScreenState extends State<SignTransactionScreen> {
+class SignTransactionScreenState extends State<SignTransactionScreen> {
   bool _isLoading = false;
 
   void _handleSign() async {

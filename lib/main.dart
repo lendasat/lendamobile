@@ -51,7 +51,7 @@ Future<Widget> determineStartScreen() async {
     final network = await _settingsService.getNetwork();
 
     logger.i(
-        "Running on ${network} against ark server ${arkServerUrl} and esplora ${esploraUrl}");
+        "Running on $network against ark server $arkServerUrl and esplora $esploraUrl");
 
     if (exists) {
       logger.i("Wallet found, setting up client");

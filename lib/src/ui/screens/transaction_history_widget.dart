@@ -9,18 +9,18 @@ class TransactionHistoryWidget extends StatefulWidget {
   final bool loading;
 
   const TransactionHistoryWidget({
-    Key? key,
+    super.key,
     required this.aspId,
     required this.transactions,
     required this.loading,
-  }) : super(key: key);
+  });
 
   @override
-  _TransactionHistoryWidgetState createState() =>
-      _TransactionHistoryWidgetState();
+  TransactionHistoryWidgetState createState() =>
+      TransactionHistoryWidgetState();
 }
 
-class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
+class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   String? _error;
 
   @override

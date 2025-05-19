@@ -6,10 +6,10 @@ class TransactionSuccessScreen extends StatelessWidget {
   final double amount;
 
   const TransactionSuccessScreen({
-    Key? key,
+    super.key,
     required this.aspId,
     required this.amount,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +48,7 @@ class TransactionSuccessScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF7E71F0).withOpacity(0.5),
+                          color: const Color(0xFF7E71F0).withAlpha((0.5 * 255).round()),
                           blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),

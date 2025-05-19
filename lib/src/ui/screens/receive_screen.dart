@@ -1,13 +1,12 @@
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:path_provider/path_provider.dart';
 
@@ -15,16 +14,15 @@ class ReceiveScreen extends StatefulWidget {
   final String aspId;
 
   const ReceiveScreen({
-    Key? key,
+    super.key,
     required this.aspId,
-  }) : super(key: key);
+  });
 
   @override
-  _ReceiveScreenState createState() => _ReceiveScreenState();
+  ReceiveScreenState createState() => ReceiveScreenState();
 }
 
-class _ReceiveScreenState extends State<ReceiveScreen> {
-  bool _isLoading = true;
+class ReceiveScreenState extends State<ReceiveScreen> {
   String? _error;
 
   String _bip21Address = "";
@@ -34,14 +32,14 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
   bool _showCopyMenu = false;
 
   // Track which addresses have been copied (for showing checkmarks)
-  Map<String, bool> _copiedAddresses = {
+  final Map<String, bool> _copiedAddresses = {
     'BIP21': false,
     'BTC': false,
     'Ark': false,
   };
 
   // Timers for resetting the checkmarks
-  Map<String, Timer?> _checkmarkTimers = {
+  final Map<String, Timer?> _checkmarkTimers = {
     'BIP21': null,
     'BTC': null,
     'Ark': null,
@@ -54,9 +52,6 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
   }
 
   Future<void> _fetchAddresses() async {
-    setState(() {
-      _isLoading = true;
-    });
     try {
       final addresses = await address();
       setState(() {
@@ -70,9 +65,6 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
         _error = e.toString();
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
@@ -121,7 +113,7 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
     logger.i("Copied $type address: $address");
   }
 
-  GlobalKey _qrKey = GlobalKey();
+  final GlobalKey _qrKey = GlobalKey();
 
   Future<void> _handleShare() async {
     try {
