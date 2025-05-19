@@ -33,7 +33,9 @@ A sample project demonstrating how to integrate [ark-rs](https://github.com/ArkL
    flutter_rust_bridge_codegen generate
    ```
 
-4. Run the app:
+4. Create a copy of `.env_sample` and call it `.env`. Adjust the variables if necessary
+
+5. Run the app:
    ```bash
    flutter run
    ```

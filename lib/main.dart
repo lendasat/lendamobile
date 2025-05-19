@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
 import 'package:ark_flutter/src/ui/screens/dashboard_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path_provider/path_provider.dart';
 
 Future setupLogger() async {
@@ -49,6 +50,9 @@ Future<Widget> determineStartScreen() async {
     final arkServerUrl = await _settingsService.getArkServerUrl();
     final network = await _settingsService.getNetwork();
 
+    logger.i(
+        "Running on ${network} against ark server ${arkServerUrl} and esplora ${esploraUrl}");
+
     if (exists) {
       logger.i("Wallet found, setting up client");
       // Setup ARK client with existing wallet
@@ -74,6 +78,9 @@ Future<Widget> determineStartScreen() async {
 }
 
 Future<void> main() async {
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
   await setupLogger();
