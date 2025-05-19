@@ -64,8 +64,7 @@ class ReceiveScreenState extends State<ReceiveScreen> {
       setState(() {
         _error = e.toString();
       });
-    } finally {
-    }
+    } finally {}
   }
 
   @override

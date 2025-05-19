@@ -48,7 +48,8 @@ class TransactionSuccessScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF7E71F0).withAlpha((0.5 * 255).round()),
+                          color: const Color(0xFF7E71F0)
+                              .withAlpha((0.5 * 255).round()),
                           blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),
