@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use ark_rs::core::ArkAddress;
+use ark_core::ArkAddress;
 use bitcoin::address::NetworkUnchecked;
 use bitcoin::{Address, Amount};
 use std::collections::HashMap;

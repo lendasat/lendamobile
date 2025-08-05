@@ -36,7 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   rust_lib_ark_flutter:
     path: rust_builder
-  flutter_rust_bridge: 2.9.0
+  flutter_rust_bridge: 2.11.1
   logger: ^2.5.0
   path_provider: ^2.1.5
   qr_flutter: ^4.1.0

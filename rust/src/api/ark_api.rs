@@ -1,5 +1,4 @@
 use anyhow::Result;
-use ark_rs::core::ArkTransaction;
 use bitcoin::{Amount, Network};
 use nostr::ToBech32;
 use std::str::FromStr;
@@ -103,7 +102,7 @@ pub async fn tx_history() -> Result<Vec<Transaction>> {
     let txs = vec
         .into_iter()
         .map(|tx| match tx {
-            ArkTransaction::Boarding {
+            ark_core::history::Transaction::Boarding {
                 txid,
                 amount,
                 confirmed_at,
@@ -112,7 +111,7 @@ pub async fn tx_history() -> Result<Vec<Transaction>> {
                 amount_sats: amount.to_sat(),
                 confirmed_at,
             },
-            ArkTransaction::Round {
+            ark_core::history::Transaction::Commitment {
                 txid,
                 amount,
                 created_at,
@@ -121,7 +120,7 @@ pub async fn tx_history() -> Result<Vec<Transaction>> {
                 amount_sats: amount.to_sat(),
                 created_at,
             },
-            ArkTransaction::Redeem {
+            ark_core::history::Transaction::Ark {
                 txid,
                 amount,
                 is_settled,
