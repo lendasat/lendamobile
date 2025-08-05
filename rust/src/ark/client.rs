@@ -2,9 +2,10 @@ use crate::ark::address_helper::{decode_bip21, is_ark_address, is_bip21, is_btc_
 use crate::state::ARK_CLIENT;
 use anyhow::Result;
 use anyhow::{anyhow, bail};
-use ark_rs::client::OffChainBalance;
-use ark_rs::core::server::Info;
-use ark_rs::core::{ArkAddress, ArkTransaction};
+use ark_client::OffChainBalance;
+use ark_core::history::Transaction;
+use ark_core::server::Info;
+use ark_core::ArkAddress;
 use bitcoin::{Address, Amount, Txid};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -77,7 +78,7 @@ pub fn address() -> Result<Addresses> {
     }
 }
 
-pub async fn tx_history() -> Result<Vec<ArkTransaction>> {
+pub async fn tx_history() -> Result<Vec<Transaction>> {
     let maybe_client = ARK_CLIENT.try_get();
 
     match maybe_client {
@@ -128,23 +129,21 @@ pub async fn send(address: String, amount: Amount) -> Result<Txid> {
                         .map_err(|e| anyhow!("Failed sending onchain {e:#}"))?;
                     Ok(txid)
                 } else if let Some(address) = uri.ark_address {
-                    let psbt = client
+                    let txid = client
                         .send_vtxo(address, amount)
                         .await
                         .map_err(|e| anyhow!("Failed sending offchain {e:#}"))?;
-                    let transaction = psbt.extract_tx()?;
-                    Ok(transaction.compute_txid())
+                    Ok(txid)
                 } else {
                     bail!("Unknown bip21 format. We only support bitcoin: and ark: addresses");
                 }
             } else if is_ark_address(address.as_str()) {
                 let address = ArkAddress::decode(address.as_str())?;
-                let psbt = client
+                let txid = client
                     .send_vtxo(address, amount)
                     .await
                     .map_err(|e| anyhow!("Failed sending offchain {e:#}"))?;
-                let transaction = psbt.extract_tx()?;
-                Ok(transaction.compute_txid())
+                Ok(txid)
             } else if is_btc_address(address.as_str()) {
                 let address = Address::from_str(address.as_str())?;
                 let txid = client
@@ -173,7 +172,7 @@ pub async fn settle() -> Result<()> {
             };
             let mut rng = StdRng::from_entropy();
             client
-                .board(&mut rng)
+                .settle(&mut rng, false)
                 .await
                 .map_err(|e| anyhow!("Failed settling {e:#}"))?;
         }

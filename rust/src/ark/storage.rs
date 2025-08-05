@@ -1,6 +1,6 @@
-use ark_rs::client::wallet::Persistence;
-use ark_rs::client::Error;
-use ark_rs::core::BoardingOutput;
+use ark_client::wallet::Persistence;
+use ark_client::Error;
+use ark_core::BoardingOutput;
 use bitcoin::secp256k1::SecretKey;
 use bitcoin::XOnlyPublicKey;
 use std::collections::HashMap;

@@ -9,7 +9,7 @@ use crate::ark::seed_file::{read_seed_file, reset_wallet, write_seed_file};
 use crate::ark::storage::InMemoryDb;
 use crate::state::ARK_CLIENT;
 use anyhow::{anyhow, bail, Result};
-use ark_rs::client::OfflineClient;
+use ark_client::OfflineClient;
 use bitcoin::key::{Keypair, Secp256k1};
 use bitcoin::secp256k1::{All, SecretKey};
 use bitcoin::Network;

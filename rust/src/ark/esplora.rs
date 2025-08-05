@@ -1,5 +1,5 @@
-use ark_rs::client::error::IntoError;
-use ark_rs::client::{Blockchain, Error, ExplorerUtxo, SpendStatus};
+use ark_client::error::IntoError;
+use ark_client::{Blockchain, Error, ExplorerUtxo, SpendStatus};
 use bitcoin::OutPoint;
 use bitcoin::{Address, Amount, Transaction, Txid};
 
@@ -97,6 +97,18 @@ impl Blockchain for EsploraClient {
             .broadcast(tx)
             .await
             .map_err(|err| format!("Could not broadcast tx {err:#}").into_error())?;
+        Ok(())
+    }
+
+    async fn get_fee_rate(&self) -> Result<f64, Error> {
+        Ok(1.0)
+    }
+
+    async fn broadcast_package(&self, txs: &[&Transaction]) -> Result<(), Error> {
+        // FIXME: unfortunately esplora client does not support packages, so this is not correct
+        for tx in txs {
+            self.broadcast(tx).await?;
+        }
         Ok(())
     }
 }

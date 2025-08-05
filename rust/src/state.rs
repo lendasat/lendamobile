@@ -3,7 +3,7 @@ use crate::ark::storage::InMemoryDb;
 use crate::frb_generated::StreamSink;
 use crate::logger::LogEntry;
 use ark_bdk_wallet::Wallet;
-use ark_rs::client::Client;
+use ark_client::Client;
 use parking_lot::RwLock;
 use state::InitCell;
 use std::sync::Arc;
