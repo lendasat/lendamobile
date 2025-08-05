@@ -54,7 +54,7 @@ jobs:
 
   build-android:
     name: Build Android APK
-    needs: [rust-checks, flutter-checks]
+    needs: [ rust-checks, flutter-checks ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -78,6 +78,13 @@ jobs:
 
       - uses: kuhnroyal/flutter-fvm-config-action/setup@v3
 
+      - name: Make .env file for flutter build
+        uses: SpicyPizza/create-envfile@v2.0
+        with:
+          envkey_ESPLORA_URL: "http://localhost:30000"
+          envkey_ARK_SERVER_URL: "http://localhost:7070"
+          envkey_ARK_NETWORK: "regtest"
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -89,7 +96,7 @@ jobs:
 
   build-ios:
     name: Build iOS
-    needs: [rust-checks, flutter-checks]
+    needs: [ rust-checks, flutter-checks ]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -112,6 +119,13 @@ jobs:
           channel: 'stable'
 
       - uses: kuhnroyal/flutter-fvm-config-action/setup@v3
+
+      - name: Make .env file for flutter build
+        uses: SpicyPizza/create-envfile@v2.0
+        with:
+          envkey_ESPLORA_URL: "http://localhost:30000"
+          envkey_ARK_SERVER_URL: "http://localhost:7070"
+          envkey_ARK_NETWORK: "regtest"
 
       - name: Install dependencies
         run: flutter pub get
