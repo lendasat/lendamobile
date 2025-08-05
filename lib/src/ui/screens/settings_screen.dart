@@ -1,5 +1,4 @@
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
-import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
@@ -11,15 +10,15 @@ class SettingsScreen extends StatefulWidget {
   final String aspId;
 
   const SettingsScreen({
-    Key? key,
+    super.key,
     required this.aspId,
-  }) : super(key: key);
+  });
 
   @override
-  _SettingsScreenState createState() => _SettingsScreenState();
+  SettingsScreenState createState() => SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class SettingsScreenState extends State<SettingsScreen> {
   String _nsec = 'Unknown';
   Info? _info;
   String _selectedNetwork = 'Regtest';
@@ -496,7 +495,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         color: Colors.red),
                     onTap: _showResetWalletDialog,
                   ),
-                ], borderColor: Colors.red.withOpacity(0.3)),
+                ], borderColor: Colors.red.withAlpha((0.3 * 255).round())),
 
                 const SizedBox(height: 40),
               ],
@@ -551,7 +550,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             } else {
               return child;
             }
-          }).toList(),
+          }),
         ],
       ),
     );

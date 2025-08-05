@@ -23,3 +23,6 @@ clippy:
 
 run:
     flutter run
+
+flutter-fmt:
+    dart format  --output=write .

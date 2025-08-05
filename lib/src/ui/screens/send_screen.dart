@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/sign_transaction_screen.dart';
 
@@ -8,16 +7,16 @@ class SendScreen extends StatefulWidget {
   final double availableSats;
 
   const SendScreen({
-    Key? key,
+    super.key,
     required this.aspId,
     required this.availableSats,
-  }) : super(key: key);
+  });
 
   @override
-  _SendScreenState createState() => _SendScreenState();
+  SendScreenState createState() => SendScreenState();
 }
 
-class _SendScreenState extends State<SendScreen> {
+class SendScreenState extends State<SendScreen> {
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   double _usdAmount = 0.0;

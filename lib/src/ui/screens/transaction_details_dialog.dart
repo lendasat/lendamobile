@@ -13,14 +13,14 @@ class TransactionDetailsDialog extends StatelessWidget {
   final String dialogTitle;
 
   const TransactionDetailsDialog({
-    Key? key,
+    super.key,
     required this.dialogTitle,
     required this.txid,
     required this.createdAt,
     this.confirmedAt,
     required this.amountSats,
     required this.isSettled,
-  }) : super(key: key);
+  });
 
   Future<void> _handleSettlement(BuildContext context) async {
     try {
@@ -173,7 +173,7 @@ class TransactionDetailsDialog extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.2),
+                      color: Colors.amber..withAlpha((0.2 * 255).round()),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(

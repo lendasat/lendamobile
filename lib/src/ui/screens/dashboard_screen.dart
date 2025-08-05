@@ -1,6 +1,5 @@
 import 'package:ark_flutter/src/ui/screens/transaction_history_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/settings_screen.dart';
 import 'package:ark_flutter/src/ui/screens/send_screen.dart';
@@ -13,15 +12,15 @@ class DashboardScreen extends StatefulWidget {
   final String aspId;
 
   const DashboardScreen({
-    Key? key,
+    super.key,
     required this.aspId,
-  }) : super(key: key);
+  });
 
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  DashboardScreenState createState() => DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class DashboardScreenState extends State<DashboardScreen> {
   bool _isBalanceLoading = true;
   bool _isTransactionFetching = true;
   String? _balanceError;
@@ -278,7 +277,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.amber.withOpacity(0.3),
+            color: Colors.amber.withAlpha((0.3 * 255).round()),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -310,9 +309,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 8),
           if (_balanceError != null)
-            Text(
+            const Text(
               'Error loading balance',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.red,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -392,7 +391,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           height: 32,
           width: 150,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withAlpha((0.2 * 255).round()),
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -401,7 +400,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           height: 16,
           width: 100,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withAlpha((0.15 * 255).round()),
             borderRadius: BorderRadius.circular(4),
           ),
         ),
