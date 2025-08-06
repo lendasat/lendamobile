@@ -1,6 +1,8 @@
 # ark-flutter-sample
 
-A sample project demonstrating how to integrate [ark-rs](https://github.com/ArkLabsHQ/ark-rs/) with Flutter using [flutter-rust-bridge](https://cjycode.com/flutter_rust_bridge/). This project serves as a reference implementation for building an Ark Wallet using Flutter and Rust.
+A sample project demonstrating how to integrate [ark-rs](https://github.com/ArkLabsHQ/ark-rs/) with
+Flutter using [flutter-rust-bridge](https://cjycode.com/flutter_rust_bridge/). This project serves
+as a reference implementation for building an Ark Wallet using Flutter and Rust.
 
 ## Features
 
