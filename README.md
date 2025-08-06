@@ -30,10 +30,17 @@ A sample project demonstrating how to integrate [ark-rs](https://github.com/ArkL
 
 3. Generate Flutter-Rust bindings:
    ```bash
-   flutter_rust_bridge_codegen generate
+   just ffi-build
    ```
 
 4. Create a copy of `.env_sample` and call it `.env`. Adjust the variables if necessary
+
+5. Build for your target platform
+
+```bash
+   just ios-build
+   just android-build
+```
 
 5. Run the app:
    ```bash

@@ -1,11 +1,17 @@
-set dotenv-load
+set dotenv-load := true
 
 ## ------------------------
 ## rust helper functions
 ## ------------------------
 
-rust-build:
+ffi-build:
     flutter_rust_bridge_codegen generate
+
+android-build:
+    cd rust && cargo ndk -o ../android/app/src/main/jniLibs build
+
+ios-build:
+    cd rust && cargo build --release --target aarch64-apple-ios
 
 rust-watch:
     flutter_rust_bridge_codegen generate
@@ -15,7 +21,6 @@ clippy:
     set -euxo pipefail
     cd rust
     cargo clippy --all-targets --all-features -- -D warnings
-
 
 ## ------------------------
 ## fluttrer helper functions
