@@ -1,6 +1,8 @@
 # ark-flutter-sample
 
-A sample project demonstrating how to integrate [ark-rs](https://github.com/ArkLabsHQ/ark-rs/) with Flutter using [flutter-rust-bridge](https://cjycode.com/flutter_rust_bridge/). This project serves as a reference implementation for building an Ark Wallet using Flutter and Rust.
+A sample project demonstrating how to integrate [ark-rs](https://github.com/ArkLabsHQ/ark-rs/) with
+Flutter using [flutter-rust-bridge](https://cjycode.com/flutter_rust_bridge/). This project serves
+as a reference implementation for building an Ark Wallet using Flutter and Rust.
 
 ## Features
 
@@ -30,10 +32,17 @@ A sample project demonstrating how to integrate [ark-rs](https://github.com/ArkL
 
 3. Generate Flutter-Rust bindings:
    ```bash
-   flutter_rust_bridge_codegen generate
+   just ffi-build
    ```
 
 4. Create a copy of `.env_sample` and call it `.env`. Adjust the variables if necessary
+
+5. Build for your target platform
+
+```bash
+   just ios-build
+   just android-build
+```
 
 5. Run the app:
    ```bash
