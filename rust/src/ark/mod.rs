@@ -17,6 +17,7 @@ use nostr::Keys;
 use parking_lot::RwLock;
 use rand::RngCore;
 use std::sync::Arc;
+use std::time::Duration;
 
 pub async fn setup_new_wallet(
     data_dir: String,
@@ -24,6 +25,7 @@ pub async fn setup_new_wallet(
     esplora: String,
     server: String,
 ) -> Result<String> {
+    crate::init_crypto_provider();
     let secp = Secp256k1::new();
     let mut random_bytes = [0u8; 32];
     rand::thread_rng().fill_bytes(&mut random_bytes);
@@ -56,6 +58,7 @@ pub async fn restore_wallet(
     esplora: String,
     server: String,
 ) -> Result<String> {
+    crate::init_crypto_provider();
     let secp = Secp256k1::new();
     let keys =
         Keys::parse(nsec.as_str()).map_err(|e| anyhow!("Failed to parse nsec key: {}", e))?;
@@ -74,6 +77,7 @@ pub(crate) async fn load_existing_wallet(
     esplora: String,
     server: String,
 ) -> Result<String> {
+    crate::init_crypto_provider();
     let maybe_sk = read_seed_file(data_dir.as_str())
         .map_err(|e| anyhow!("Failed to read seed file from '{}': {}", data_dir, e))?;
 
@@ -125,6 +129,7 @@ pub async fn setup_client(
         Arc::new(esplora),
         wallet.clone(),
         server.clone(),
+        Duration::from_secs(30),
     )
     .connect()
     .await
