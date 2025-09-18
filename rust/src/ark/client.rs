@@ -146,8 +146,9 @@ pub async fn send(address: String, amount: Amount) -> Result<Txid> {
                 Ok(txid)
             } else if is_btc_address(address.as_str()) {
                 let address = Address::from_str(address.as_str())?;
+                let rng = &mut StdRng::from_entropy();
                 let txid = client
-                    .send_on_chain(address.assume_checked(), amount)
+                    .collaborative_redeem(rng, address.assume_checked(), amount, true)
                     .await
                     .map_err(|e| anyhow!("Failed sending onchain {e:#}"))?;
                 Ok(txid)
