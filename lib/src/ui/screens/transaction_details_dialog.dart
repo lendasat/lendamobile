@@ -173,12 +173,12 @@ class TransactionDetailsDialog extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.amber..withAlpha((0.2 * 255).round()),
+                      color: Colors.amber.withAlpha((0.2 * 200).round()),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
                       'Transaction pending. Funds will be non-reversible after settlement.',
-                      style: TextStyle(color: Colors.amber, fontSize: 14),
+                      style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),
                   const SizedBox(height: 16),

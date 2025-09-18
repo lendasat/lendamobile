@@ -17,6 +17,7 @@ use nostr::Keys;
 use parking_lot::RwLock;
 use rand::RngCore;
 use std::sync::Arc;
+use std::time::Duration;
 
 pub async fn setup_new_wallet(
     data_dir: String,
@@ -24,6 +25,7 @@ pub async fn setup_new_wallet(
     esplora: String,
     server: String,
 ) -> Result<String> {
+    crate::init_crypto_provider();
     let secp = Secp256k1::new();
     let mut random_bytes = [0u8; 32];
     rand::thread_rng().fill_bytes(&mut random_bytes);
@@ -32,10 +34,20 @@ pub async fn setup_new_wallet(
     let sk = SecretKey::from_slice(&random_bytes)
         .map_err(|e| anyhow::anyhow!("Failed to create secret key: {}", e))?;
 
-    write_seed_file(&sk, data_dir)?;
+    write_seed_file(&sk, data_dir).map_err(|e| anyhow!("Failed to write seed file: {}", e))?;
 
     let kp = Keypair::from_secret_key(&secp, &sk);
-    let pubkey = setup_client(kp, secp, network, esplora, server).await?;
+    let pubkey = setup_client(kp, secp, network, esplora.clone(), server.clone())
+        .await
+        .map_err(|e| {
+            anyhow!(
+                "Failed to setup client - Network: {:?}, Esplora: {}, Server: {} - Error: {}",
+                network,
+                esplora,
+                server,
+                e
+            )
+        })?;
     Ok(pubkey)
 }
 
@@ -46,12 +58,16 @@ pub async fn restore_wallet(
     esplora: String,
     server: String,
 ) -> Result<String> {
+    crate::init_crypto_provider();
     let secp = Secp256k1::new();
-    let keys = Keys::parse(nsec.as_str())?;
+    let keys =
+        Keys::parse(nsec.as_str()).map_err(|e| anyhow!("Failed to parse nsec key: {}", e))?;
     let kp = *keys.key_pair(&secp);
-    write_seed_file(&kp.secret_key(), data_dir)?;
+    write_seed_file(&kp.secret_key(), data_dir)
+        .map_err(|e| anyhow!("Failed to write seed file: {}", e))?;
 
-    let pubkey = setup_client(kp, secp, network, esplora, server).await?;
+    let pubkey = setup_client(kp, secp, network, esplora.clone(), server.clone()).await
+        .map_err(|e| anyhow!("Failed to setup client after restore - Network: {:?}, Esplora: {}, Server: {} - Error: {}", network, esplora, server, e))?;
     Ok(pubkey)
 }
 
@@ -61,16 +77,19 @@ pub(crate) async fn load_existing_wallet(
     esplora: String,
     server: String,
 ) -> Result<String> {
-    let maybe_sk = read_seed_file(data_dir.as_str())?;
+    crate::init_crypto_provider();
+    let maybe_sk = read_seed_file(data_dir.as_str())
+        .map_err(|e| anyhow!("Failed to read seed file from '{}': {}", data_dir, e))?;
 
     match maybe_sk {
         None => {
-            bail!("No seed file found")
+            bail!("No seed file found in directory: {}", data_dir)
         }
         Some(key) => {
             let secp = Secp256k1::new();
             let kp = Keypair::from_secret_key(&secp, &key);
-            let server_pk = setup_client(kp, secp, network, esplora, server).await?;
+            let server_pk = setup_client(kp, secp, network, esplora.clone(), server.clone()).await
+                .map_err(|e| anyhow!("Failed to setup client from existing wallet - Network: {:?}, Esplora: {}, Server: {} - Error: {}", network, esplora, server, e))?;
             Ok(server_pk)
         }
     }
@@ -80,18 +99,28 @@ pub async fn setup_client(
     kp: Keypair,
     secp: Secp256k1<All>,
     network: Network,
-    esplora: String,
+    esplora_url: String,
     server: String,
 ) -> Result<String> {
     let db = InMemoryDb::default();
 
-    let wallet = ark_bdk_wallet::Wallet::new(kp, secp, network, esplora.as_str(), db)?;
+    let wallet = ark_bdk_wallet::Wallet::new(kp, secp, network, esplora_url.as_str(), db)
+        .map_err(|e| anyhow!("Failed to create wallet: {}", e))?;
 
     let wallet = Arc::new(wallet);
-    let esplora = EsploraClient::new(esplora.as_str())?;
+    let esplora = EsploraClient::new(esplora_url.as_str()).map_err(|e| {
+        anyhow!(
+            "Failed to create Esplora client for URL '{}': {}",
+            esplora_url,
+            e
+        )
+    })?;
     tracing::info!("Checking esplora connection");
 
-    esplora.check_connection().await?;
+    esplora
+        .check_connection()
+        .await
+        .map_err(|e| anyhow!("Failed to connect to Esplora at '{}': {}", esplora_url, e))?;
 
     tracing::info!("Connecting to Ark");
     let client = OfflineClient::new(
@@ -99,11 +128,12 @@ pub async fn setup_client(
         kp,
         Arc::new(esplora),
         wallet.clone(),
-        server,
+        server.clone(),
+        Duration::from_secs(30),
     )
     .connect()
     .await
-    .map_err(|err| anyhow!(err))?;
+    .map_err(|err| anyhow!("Failed to connect to Ark server at '{}': {}", server, err))?;
 
     let info = client.server_info.clone();
 
