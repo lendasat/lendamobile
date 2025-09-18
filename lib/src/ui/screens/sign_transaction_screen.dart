@@ -107,16 +107,6 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
                   _buildDivider(),
 
                   _buildDetailRow(
-                    Icons.swap_horiz_outlined,
-                    'Direction',
-                    'Paying inside Ark',
-                    iconColor: Colors.grey,
-                    labelColor: Colors.grey,
-                    valueColor: Colors.white,
-                  ),
-                  _buildDivider(),
-
-                  _buildDetailRow(
                     Icons.attach_money_outlined,
                     'Amount',
                     '${widget.amount.toInt()} SATS',
