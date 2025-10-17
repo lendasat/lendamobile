@@ -9,7 +9,7 @@ use crate::ark::seed_file::{read_seed_file, reset_wallet, write_seed_file};
 use crate::ark::storage::InMemoryDb;
 use crate::state::ARK_CLIENT;
 use anyhow::{anyhow, bail, Result};
-use ark_client::OfflineClient;
+use ark_client::{InMemorySwapStorage, OfflineClient};
 use bitcoin::key::{Keypair, Secp256k1};
 use bitcoin::secp256k1::{All, SecretKey};
 use bitcoin::Network;
@@ -24,6 +24,7 @@ pub async fn setup_new_wallet(
     network: Network,
     esplora: String,
     server: String,
+    boltz_url: String,
 ) -> Result<String> {
     crate::init_crypto_provider();
     let secp = Secp256k1::new();
@@ -37,17 +38,25 @@ pub async fn setup_new_wallet(
     write_seed_file(&sk, data_dir).map_err(|e| anyhow!("Failed to write seed file: {}", e))?;
 
     let kp = Keypair::from_secret_key(&secp, &sk);
-    let pubkey = setup_client(kp, secp, network, esplora.clone(), server.clone())
-        .await
-        .map_err(|e| {
-            anyhow!(
-                "Failed to setup client - Network: {:?}, Esplora: {}, Server: {} - Error: {}",
-                network,
-                esplora,
-                server,
-                e
-            )
-        })?;
+    let pubkey = setup_client(
+        kp,
+        secp,
+        network,
+        esplora.clone(),
+        server.clone(),
+        boltz_url.clone(),
+    )
+    .await
+    .map_err(|e| {
+        anyhow!(
+            "Failed to setup client - Network: {:?}, Esplora: {}, Server: {}, Boltz: {} - Error: {}",
+            network,
+            esplora,
+            server,
+            boltz_url,
+            e
+        )
+    })?;
     Ok(pubkey)
 }
 
@@ -57,6 +66,7 @@ pub async fn restore_wallet(
     network: Network,
     esplora: String,
     server: String,
+    boltz_url: String,
 ) -> Result<String> {
     crate::init_crypto_provider();
     let secp = Secp256k1::new();
@@ -66,7 +76,7 @@ pub async fn restore_wallet(
     write_seed_file(&kp.secret_key(), data_dir)
         .map_err(|e| anyhow!("Failed to write seed file: {}", e))?;
 
-    let pubkey = setup_client(kp, secp, network, esplora.clone(), server.clone()).await
+    let pubkey = setup_client(kp, secp, network, esplora.clone(), server.clone(), boltz_url).await
         .map_err(|e| anyhow!("Failed to setup client after restore - Network: {:?}, Esplora: {}, Server: {} - Error: {}", network, esplora, server, e))?;
     Ok(pubkey)
 }
@@ -76,6 +86,7 @@ pub(crate) async fn load_existing_wallet(
     network: Network,
     esplora: String,
     server: String,
+    boltz_url: String,
 ) -> Result<String> {
     crate::init_crypto_provider();
     let maybe_sk = read_seed_file(data_dir.as_str())
@@ -88,7 +99,7 @@ pub(crate) async fn load_existing_wallet(
         Some(key) => {
             let secp = Secp256k1::new();
             let kp = Keypair::from_secret_key(&secp, &key);
-            let server_pk = setup_client(kp, secp, network, esplora.clone(), server.clone()).await
+            let server_pk = setup_client(kp, secp, network, esplora.clone(), server.clone(), boltz_url).await
                 .map_err(|e| anyhow!("Failed to setup client from existing wallet - Network: {:?}, Esplora: {}, Server: {} - Error: {}", network, esplora, server, e))?;
             Ok(server_pk)
         }
@@ -101,6 +112,7 @@ pub async fn setup_client(
     network: Network,
     esplora_url: String,
     server: String,
+    boltz_url: String,
 ) -> Result<String> {
     let db = InMemoryDb::default();
 
@@ -124,11 +136,13 @@ pub async fn setup_client(
 
     tracing::info!("Connecting to Ark");
     let client = OfflineClient::new(
-        "alice".to_string(),
+        "sample-client".to_string(),
         kp,
         Arc::new(esplora),
-        wallet.clone(),
+        wallet,
         server.clone(),
+        Arc::new(InMemorySwapStorage::new()),
+        boltz_url,
         Duration::from_secs(30),
     )
     .connect()
@@ -139,9 +153,9 @@ pub async fn setup_client(
 
     ARK_CLIENT.set(RwLock::new(Arc::new(client)));
 
-    tracing::info!(server_pk = ?info.pk, "Connected to server");
+    tracing::info!(server_pk = ?info.signer_pk, "Connected to server");
 
-    Ok(info.pk.to_string())
+    Ok(info.signer_pk.to_string())
 }
 
 pub(crate) async fn wallet_exists(data_dir: String) -> Result<bool> {

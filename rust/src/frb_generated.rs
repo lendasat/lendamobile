@@ -247,6 +247,7 @@ fn wire__crate__api__ark_api__load_existing_wallet_impl(
             let api_network = <String>::sse_decode(&mut deserializer);
             let api_esplora = <String>::sse_decode(&mut deserializer);
             let api_server = <String>::sse_decode(&mut deserializer);
+            let api_boltz_url = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
@@ -256,6 +257,7 @@ fn wire__crate__api__ark_api__load_existing_wallet_impl(
                             api_network,
                             api_esplora,
                             api_server,
+                            api_boltz_url,
                         )
                         .await?;
                         Ok(output_ok)
@@ -365,6 +367,7 @@ fn wire__crate__api__ark_api__restore_wallet_impl(
             let api_network = <String>::sse_decode(&mut deserializer);
             let api_esplora = <String>::sse_decode(&mut deserializer);
             let api_server = <String>::sse_decode(&mut deserializer);
+            let api_boltz_url = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
@@ -375,6 +378,7 @@ fn wire__crate__api__ark_api__restore_wallet_impl(
                             api_network,
                             api_esplora,
                             api_server,
+                            api_boltz_url,
                         )
                         .await?;
                         Ok(output_ok)
@@ -484,6 +488,7 @@ fn wire__crate__api__ark_api__setup_new_wallet_impl(
             let api_network = <String>::sse_decode(&mut deserializer);
             let api_esplora = <String>::sse_decode(&mut deserializer);
             let api_server = <String>::sse_decode(&mut deserializer);
+            let api_boltz_url = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
@@ -493,6 +498,7 @@ fn wire__crate__api__ark_api__setup_new_wallet_impl(
                             api_network,
                             api_esplora,
                             api_server,
+                            api_boltz_url,
                         )
                         .await?;
                         Ok(output_ok)

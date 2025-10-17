@@ -30,7 +30,8 @@ as a reference implementation for building an Ark Wallet using Flutter and Rust.
    flutter pub get
    ```
 
-3. Generate Flutter-Rust bindings:
+3. Generate Flutter-Rust bindings :
+NOTE: make sure you have the correct flutter version installed as defined in .fmrc!
    ```bash
    just ffi-build
    ```

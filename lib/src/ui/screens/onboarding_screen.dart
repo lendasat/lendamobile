@@ -20,6 +20,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
   String? _esploraUrl;
   String? _arkServerUrl;
   String? _network;
+  String? _boltzUrl;
 
   @override
   void initState() {
@@ -32,11 +33,13 @@ class OnboardingScreenState extends State<OnboardingScreen> {
       final esploraUrl = await _settingsService.getEsploraUrl();
       final arkServerUrl = await _settingsService.getArkServerUrl();
       final network = await _settingsService.getNetwork();
+      final boltzUrl = await _settingsService.getBoltzUrl();
 
       setState(() {
         _esploraUrl = esploraUrl;
         _arkServerUrl = arkServerUrl;
         _network = network;
+        _boltzUrl = boltzUrl;
         _isLoading = false;
       });
     } catch (err) {
@@ -80,7 +83,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               dataDir: dataDir.path,
               network: _network!,
               esplora: _esploraUrl!,
-              server: _arkServerUrl!);
+              server: _arkServerUrl!,
+              boltzUrl: _boltzUrl!);
           logger.i("Received id $aspId");
 
           // Navigate to dashboard
@@ -105,7 +109,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               dataDir: dataDir.path,
               network: _network!,
               esplora: _esploraUrl!,
-              server: _arkServerUrl!);
+              server: _arkServerUrl!,
+              boltzUrl: _boltzUrl!);
           logger.i("Received id $aspId");
 
           // Navigate to dashboard

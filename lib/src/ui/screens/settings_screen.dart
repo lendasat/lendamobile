@@ -29,6 +29,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   // Text editing controllers for URL inputs
   final TextEditingController _esploraUrlController = TextEditingController();
   final TextEditingController _arkServerController = TextEditingController();
+  final TextEditingController _boltzUrlController = TextEditingController();
 
   final List<String> _supportedNetworks = ['bitcoin', 'signet', 'regtest'];
 
@@ -49,10 +50,12 @@ class SettingsScreenState extends State<SettingsScreen> {
       final esploraUrl = await _settingsService.getEsploraUrl();
       final arkServerUrl = await _settingsService.getArkServerUrl();
       final network = await _settingsService.getNetwork();
+      final boltzUrl = await _settingsService.getBoltzUrl();
 
       setState(() {
         _esploraUrlController.text = esploraUrl;
         _arkServerController.text = arkServerUrl;
+        _boltzUrlController.text = boltzUrl;
         _selectedNetwork = network;
         _isLoading = false;
       });
@@ -142,10 +145,29 @@ class SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  // Save Boltz URL
+  Future<void> _saveBoltzUrl() async {
+    try {
+      await _settingsService.saveBoltzUrl(_boltzUrlController.text);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                'Boltz URL saved - will only take effect after a restart')),
+      );
+      logger.i("Boltz URL saved: ${_boltzUrlController.text}");
+    } catch (err) {
+      logger.e("Error saving Boltz URL: $err");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to save Boltz URL')),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _esploraUrlController.dispose();
     _arkServerController.dispose();
+    _boltzUrlController.dispose();
     super.dispose();
   }
 
@@ -451,6 +473,39 @@ class SettingsScreenState extends State<SettingsScreen> {
                             suffixIcon: IconButton(
                               icon: const Icon(Icons.save, color: Colors.amber),
                               onPressed: _saveArkServerUrl,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Boltz URL',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _boltzUrlController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: SettingsService.defaultBoltzUrl,
+                            hintStyle: TextStyle(color: Colors.grey[600]),
+                            filled: true,
+                            fillColor: Colors.grey[800],
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.save, color: Colors.amber),
+                              onPressed: _saveBoltzUrl,
                             ),
                           ),
                         ),
