@@ -12,9 +12,10 @@ pub async fn setup_new_wallet(
     network: String,
     esplora: String,
     server: String,
+    boltz_url: String,
 ) -> Result<String> {
     let network = Network::from_str(network.as_str())?;
-    crate::ark::setup_new_wallet(data_dir, network, esplora, server).await
+    crate::ark::setup_new_wallet(data_dir, network, esplora, server, boltz_url).await
 }
 
 pub async fn load_existing_wallet(
@@ -22,9 +23,10 @@ pub async fn load_existing_wallet(
     network: String,
     esplora: String,
     server: String,
+    boltz_url: String,
 ) -> Result<String> {
     let network = Network::from_str(network.as_str())?;
-    crate::ark::load_existing_wallet(data_dir, network, esplora, server).await
+    crate::ark::load_existing_wallet(data_dir, network, esplora, server, boltz_url).await
 }
 
 pub async fn restore_wallet(
@@ -33,9 +35,10 @@ pub async fn restore_wallet(
     network: String,
     esplora: String,
     server: String,
+    boltz_url: String,
 ) -> Result<String> {
     let network = Network::from_str(network.as_str())?;
-    crate::ark::restore_wallet(nsec, data_dir, network, esplora, server).await
+    crate::ark::restore_wallet(nsec, data_dir, network, esplora, server, boltz_url).await
 }
 
 pub struct Balance {
@@ -165,7 +168,7 @@ pub struct Info {
 pub async fn information() -> Result<Info> {
     let info = crate::ark::client::info()?;
     Ok(Info {
-        server_pk: info.pk.to_string(),
+        server_pk: info.signer_pk.to_string(),
         network: info.network.to_string(),
     })
 }

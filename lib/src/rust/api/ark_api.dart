@@ -15,30 +15,42 @@ Future<String> setupNewWallet(
         {required String dataDir,
         required String network,
         required String esplora,
-        required String server}) =>
+        required String server,
+        required String boltzUrl}) =>
     RustLib.instance.api.crateApiArkApiSetupNewWallet(
-        dataDir: dataDir, network: network, esplora: esplora, server: server);
+        dataDir: dataDir,
+        network: network,
+        esplora: esplora,
+        server: server,
+        boltzUrl: boltzUrl);
 
 Future<String> loadExistingWallet(
         {required String dataDir,
         required String network,
         required String esplora,
-        required String server}) =>
+        required String server,
+        required String boltzUrl}) =>
     RustLib.instance.api.crateApiArkApiLoadExistingWallet(
-        dataDir: dataDir, network: network, esplora: esplora, server: server);
+        dataDir: dataDir,
+        network: network,
+        esplora: esplora,
+        server: server,
+        boltzUrl: boltzUrl);
 
 Future<String> restoreWallet(
         {required String nsec,
         required String dataDir,
         required String network,
         required String esplora,
-        required String server}) =>
+        required String server,
+        required String boltzUrl}) =>
     RustLib.instance.api.crateApiArkApiRestoreWallet(
         nsec: nsec,
         dataDir: dataDir,
         network: network,
         esplora: esplora,
-        server: server);
+        server: server,
+        boltzUrl: boltzUrl);
 
 Future<Balance> balance() => RustLib.instance.api.crateApiArkApiBalance();
 

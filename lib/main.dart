@@ -49,9 +49,10 @@ Future<Widget> determineStartScreen() async {
     final esploraUrl = await _settingsService.getEsploraUrl();
     final arkServerUrl = await _settingsService.getArkServerUrl();
     final network = await _settingsService.getNetwork();
+    final boltzUrl = await _settingsService.getBoltzUrl();
 
     logger.i(
-        "Running on $network against ark server $arkServerUrl and esplora $esploraUrl");
+        "Running on $network against ark server $arkServerUrl, esplora $esploraUrl, and boltz $boltzUrl");
 
     if (exists) {
       logger.i("Wallet found, setting up client");
@@ -60,7 +61,8 @@ Future<Widget> determineStartScreen() async {
           dataDir: dataDir,
           esplora: esploraUrl,
           server: arkServerUrl,
-          network: network);
+          network: network,
+          boltzUrl: boltzUrl);
       logger.i("Wallet setup complete, ID: $aspId");
 
       // Return the dashboard screen with the ASP ID

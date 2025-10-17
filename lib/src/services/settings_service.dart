@@ -6,6 +6,7 @@ class SettingsService {
   static const String _esploraUrlKey = 'esplora_url';
   static const String _arkServerUrlKey = 'ark_server_url';
   static const String _arkNetworkKey = 'ark_network';
+  static const String _boltzUrlKey = 'boltz_url';
 
   // Default values from environment variables
   static String get defaultEsploraUrl =>
@@ -13,6 +14,8 @@ class SettingsService {
   static String get defaultArkServerUrl =>
       dotenv.env['ARK_SERVER_URL'] ?? 'http://localhost:7070';
   static String get defaultArkNetwork => dotenv.env['ARK_NETWORK'] ?? 'regtest';
+  static String get defaultBoltzUrl =>
+      dotenv.env['BOLTZ_URL'] ?? 'http://localhost:9001';
 
   // Singleton instance
   static final SettingsService _instance = SettingsService._internal();
@@ -59,11 +62,24 @@ class SettingsService {
     return prefs.setString(_arkNetworkKey, network);
   }
 
+  // Get Boltz URL
+  Future<String> getBoltzUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_boltzUrlKey) ?? defaultBoltzUrl;
+  }
+
+  // Save Boltz URL
+  Future<bool> saveBoltzUrl(String url) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_boltzUrlKey, url);
+  }
+
   // Reset to defaults
   Future<void> resetToDefaults() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_esploraUrlKey);
     await prefs.remove(_arkServerUrlKey);
     await prefs.remove(_arkNetworkKey);
+    await prefs.remove(_boltzUrlKey);
   }
 }

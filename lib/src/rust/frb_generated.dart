@@ -97,7 +97,8 @@ abstract class RustLibApi extends BaseApi {
       {required String dataDir,
       required String network,
       required String esplora,
-      required String server});
+      required String server,
+      required String boltzUrl});
 
   Future<String> crateApiArkApiNsec({required String dataDir});
 
@@ -108,7 +109,8 @@ abstract class RustLibApi extends BaseApi {
       required String dataDir,
       required String network,
       required String esplora,
-      required String server});
+      required String server,
+      required String boltzUrl});
 
   Future<String> crateApiArkApiSend(
       {required String address, required BigInt amountSats});
@@ -119,7 +121,8 @@ abstract class RustLibApi extends BaseApi {
       {required String dataDir,
       required String network,
       required String esplora,
-      required String server});
+      required String server,
+      required String boltzUrl});
 
   Future<List<Transaction>> crateApiArkApiTxHistory();
 
@@ -257,7 +260,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       {required String dataDir,
       required String network,
       required String esplora,
-      required String server}) {
+      required String server,
+      required String boltzUrl}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -265,6 +269,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(network, serializer);
         sse_encode_String(esplora, serializer);
         sse_encode_String(server, serializer);
+        sse_encode_String(boltzUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 6, port: port_);
       },
@@ -273,7 +278,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData: sse_decode_AnyhowException,
       ),
       constMeta: kCrateApiArkApiLoadExistingWalletConstMeta,
-      argValues: [dataDir, network, esplora, server],
+      argValues: [dataDir, network, esplora, server, boltzUrl],
       apiImpl: this,
     ));
   }
@@ -281,7 +286,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiArkApiLoadExistingWalletConstMeta =>
       const TaskConstMeta(
         debugName: "load_existing_wallet",
-        argNames: ["dataDir", "network", "esplora", "server"],
+        argNames: ["dataDir", "network", "esplora", "server", "boltzUrl"],
       );
 
   @override
@@ -338,7 +343,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       required String dataDir,
       required String network,
       required String esplora,
-      required String server}) {
+      required String server,
+      required String boltzUrl}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -347,6 +353,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(network, serializer);
         sse_encode_String(esplora, serializer);
         sse_encode_String(server, serializer);
+        sse_encode_String(boltzUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 9, port: port_);
       },
@@ -355,7 +362,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData: sse_decode_AnyhowException,
       ),
       constMeta: kCrateApiArkApiRestoreWalletConstMeta,
-      argValues: [nsec, dataDir, network, esplora, server],
+      argValues: [nsec, dataDir, network, esplora, server, boltzUrl],
       apiImpl: this,
     ));
   }
@@ -363,7 +370,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiArkApiRestoreWalletConstMeta =>
       const TaskConstMeta(
         debugName: "restore_wallet",
-        argNames: ["nsec", "dataDir", "network", "esplora", "server"],
+        argNames: [
+          "nsec",
+          "dataDir",
+          "network",
+          "esplora",
+          "server",
+          "boltzUrl"
+        ],
       );
 
   @override
@@ -420,7 +434,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       {required String dataDir,
       required String network,
       required String esplora,
-      required String server}) {
+      required String server,
+      required String boltzUrl}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -428,6 +443,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(network, serializer);
         sse_encode_String(esplora, serializer);
         sse_encode_String(server, serializer);
+        sse_encode_String(boltzUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 12, port: port_);
       },
@@ -436,7 +452,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData: sse_decode_AnyhowException,
       ),
       constMeta: kCrateApiArkApiSetupNewWalletConstMeta,
-      argValues: [dataDir, network, esplora, server],
+      argValues: [dataDir, network, esplora, server, boltzUrl],
       apiImpl: this,
     ));
   }
@@ -444,7 +460,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiArkApiSetupNewWalletConstMeta =>
       const TaskConstMeta(
         debugName: "setup_new_wallet",
-        argNames: ["dataDir", "network", "esplora", "server"],
+        argNames: ["dataDir", "network", "esplora", "server", "boltzUrl"],
       );
 
   @override
