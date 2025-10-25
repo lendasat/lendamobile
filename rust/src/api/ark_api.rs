@@ -217,9 +217,7 @@ pub async fn wait_for_payment(
     use bitcoin::Address;
     use std::str::FromStr;
 
-    let ark_addr = ark_address
-        .map(|s| ArkAddress::decode(&s))
-        .transpose()?;
+    let ark_addr = ark_address.map(|s| ArkAddress::decode(&s)).transpose()?;
 
     let boarding_addr = boarding_address
         .map(|s| Address::from_str(&s))

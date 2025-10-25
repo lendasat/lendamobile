@@ -43,8 +43,8 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.2'
-          channel: 'stable'
+          flutter-version: "3.29.2"
+          channel: "stable"
 
       - name: Install dependencies
         run: flutter pub get
@@ -54,7 +54,7 @@ jobs:
 
   build-android:
     name: Build Android APK
-    needs: [ rust-checks, flutter-checks ]
+    needs: [rust-checks, flutter-checks]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -73,8 +73,8 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.2'
-          channel: 'stable'
+          flutter-version: "3.29.2"
+          channel: "stable"
 
       - uses: kuhnroyal/flutter-fvm-config-action/setup@v3
 
@@ -96,7 +96,7 @@ jobs:
 
   build-ios:
     name: Build iOS
-    needs: [ rust-checks, flutter-checks ]
+    needs: [rust-checks, flutter-checks]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -115,8 +115,8 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.2'
-          channel: 'stable'
+          flutter-version: "3.29.2"
+          channel: "stable"
 
       - uses: kuhnroyal/flutter-fvm-config-action/setup@v3
 

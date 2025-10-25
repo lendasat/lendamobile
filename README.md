@@ -31,7 +31,7 @@ as a reference implementation for building an Ark Wallet using Flutter and Rust.
    ```
 
 3. Generate Flutter-Rust bindings :
-NOTE: make sure you have the correct flutter version installed as defined in .fmrc!
+   NOTE: make sure you have the correct flutter version installed as defined in .fmrc!
    ```bash
    just ffi-build
    ```
@@ -41,8 +41,8 @@ NOTE: make sure you have the correct flutter version installed as defined in .fm
 5. Build for your target platform
 
 ```bash
-   just ios-build
-   just android-build
+just ios-build
+just android-build
 ```
 
 5. Run the app:

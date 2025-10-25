@@ -31,3 +31,10 @@ run:
 
 flutter-fmt:
     dart format  --output=write .
+
+## ------------------------
+## formatting
+## ------------------------
+
+fmt:
+    dprint fmt
