@@ -201,3 +201,41 @@ pub async fn information() -> Result<Info> {
         network: info.network.to_string(),
     })
 }
+
+pub struct PaymentReceived {
+    pub txid: String,
+    pub amount_sats: u64,
+}
+
+pub async fn wait_for_payment(
+    ark_address: Option<String>,
+    boarding_address: Option<String>,
+    boltz_swap_id: Option<String>,
+    timeout_seconds: u64,
+) -> Result<PaymentReceived> {
+    use ark_core::ArkAddress;
+    use bitcoin::Address;
+    use std::str::FromStr;
+
+    let ark_addr = ark_address
+        .map(|s| ArkAddress::decode(&s))
+        .transpose()?;
+
+    let boarding_addr = boarding_address
+        .map(|s| Address::from_str(&s))
+        .transpose()?
+        .map(|a| a.assume_checked());
+
+    let payment = crate::ark::client::wait_for_payment(
+        ark_addr,
+        boarding_addr,
+        boltz_swap_id,
+        timeout_seconds,
+    )
+    .await?;
+
+    Ok(PaymentReceived {
+        txid: payment.txid.to_string(),
+        amount_sats: payment.amount.to_sat(),
+    })
+}

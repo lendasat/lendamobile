@@ -72,7 +72,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 2080225858;
+  int get rustContentHash => -95231310;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -125,6 +125,12 @@ abstract class RustLibApi extends BaseApi {
       required String boltzUrl});
 
   Future<List<Transaction>> crateApiArkApiTxHistory();
+
+  Future<PaymentReceived> crateApiArkApiWaitForPayment(
+      {String? arkAddress,
+      String? boardingAddress,
+      String? boltzSwapId,
+      required BigInt timeoutSeconds});
 
   Future<bool> crateApiArkApiWalletExists({required String dataDir});
 }
@@ -488,13 +494,50 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<PaymentReceived> crateApiArkApiWaitForPayment(
+      {String? arkAddress,
+      String? boardingAddress,
+      String? boltzSwapId,
+      required BigInt timeoutSeconds}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_opt_String(arkAddress, serializer);
+        sse_encode_opt_String(boardingAddress, serializer);
+        sse_encode_opt_String(boltzSwapId, serializer);
+        sse_encode_u_64(timeoutSeconds, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 14, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_payment_received,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiArkApiWaitForPaymentConstMeta,
+      argValues: [arkAddress, boardingAddress, boltzSwapId, timeoutSeconds],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiArkApiWaitForPaymentConstMeta =>
+      const TaskConstMeta(
+        debugName: "wait_for_payment",
+        argNames: [
+          "arkAddress",
+          "boardingAddress",
+          "boltzSwapId",
+          "timeoutSeconds"
+        ],
+      );
+
+  @override
   Future<bool> crateApiArkApiWalletExists({required String dataDir}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 14, port: port_);
+            funcId: 15, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
@@ -652,6 +695,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_String(raw);
+  }
+
+  @protected
   BoltzSwap? dco_decode_opt_box_autoadd_boltz_swap(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_boltz_swap(raw);
@@ -667,6 +716,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_64(raw);
+  }
+
+  @protected
+  PaymentReceived dco_decode_payment_received(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PaymentReceived(
+      txid: dco_decode_String(arr[0]),
+      amountSats: dco_decode_u_64(arr[1]),
+    );
   }
 
   @protected
@@ -857,6 +918,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   BoltzSwap? sse_decode_opt_box_autoadd_boltz_swap(
       SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -888,6 +960,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     } else {
       return null;
     }
+  }
+
+  @protected
+  PaymentReceived sse_decode_payment_received(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_txid = sse_decode_String(deserializer);
+    var var_amountSats = sse_decode_u_64(deserializer);
+    return PaymentReceived(txid: var_txid, amountSats: var_amountSats);
   }
 
   @protected
@@ -1078,6 +1158,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_boltz_swap(
       BoltzSwap? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -1107,6 +1197,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_box_autoadd_u_64(self, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_payment_received(
+      PaymentReceived self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.txid, serializer);
+    sse_encode_u_64(self.amountSats, serializer);
   }
 
   @protected

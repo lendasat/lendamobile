@@ -76,6 +76,17 @@ Future<void> resetWallet({required String dataDir}) =>
 
 Future<Info> information() => RustLib.instance.api.crateApiArkApiInformation();
 
+Future<PaymentReceived> waitForPayment(
+        {String? arkAddress,
+        String? boardingAddress,
+        String? boltzSwapId,
+        required BigInt timeoutSeconds}) =>
+    RustLib.instance.api.crateApiArkApiWaitForPayment(
+        arkAddress: arkAddress,
+        boardingAddress: boardingAddress,
+        boltzSwapId: boltzSwapId,
+        timeoutSeconds: timeoutSeconds);
+
 class Addresses {
   final String boarding;
   final String offchain;
@@ -193,6 +204,27 @@ class OffchainBalance {
           pendingSats == other.pendingSats &&
           confirmedSats == other.confirmedSats &&
           totalSats == other.totalSats;
+}
+
+class PaymentReceived {
+  final String txid;
+  final BigInt amountSats;
+
+  const PaymentReceived({
+    required this.txid,
+    required this.amountSats,
+  });
+
+  @override
+  int get hashCode => txid.hashCode ^ amountSats.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PaymentReceived &&
+          runtimeType == other.runtimeType &&
+          txid == other.txid &&
+          amountSats == other.amountSats;
 }
 
 @freezed

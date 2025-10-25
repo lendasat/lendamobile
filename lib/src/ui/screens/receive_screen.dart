@@ -29,6 +29,7 @@ class ReceiveScreenState extends State<ReceiveScreen> {
   String _btcAddress = "";
   String _arkAddress = "";
   String _lightningInvoice = "";
+  String? _boltzSwapId;
 
   bool _showCopyMenu = false;
 
@@ -49,6 +50,11 @@ class ReceiveScreenState extends State<ReceiveScreen> {
     'Ark': null,
     'Lightning': null,
   };
+
+  // Payment monitoring state
+  bool _waitingForPayment = false;
+  PaymentReceived? _paymentReceived;
+  int _monitoringSessionId = 0; // Track current monitoring session
 
   @override
   void initState() {
@@ -73,13 +79,127 @@ class ReceiveScreenState extends State<ReceiveScreen> {
         _arkAddress = addresses.offchain;
         _btcAddress = addresses.boarding;
         _lightningInvoice = addresses.lightning?.invoice ?? "";
+        _boltzSwapId = addresses.lightning?.swapId;
+        _paymentReceived = null; // Reset payment state
+        _monitoringSessionId++; // Increment session to invalidate old monitoring
+        _waitingForPayment = false; // Reset flag for new monitoring
       });
+
+      // Start monitoring for payments with new session
+      _startPaymentMonitoring();
     } catch (e) {
       logger.e("Error fetching addresses: $e");
       setState(() {
         _error = e.toString();
       });
     } finally {}
+  }
+
+  Future<void> _startPaymentMonitoring() async {
+    if (_waitingForPayment) {
+      logger.i("Already waiting for payment, skipping duplicate call");
+      return;
+    }
+
+    // Capture the current session ID to check later if this monitoring is still valid
+    final sessionId = _monitoringSessionId;
+
+    setState(() {
+      _waitingForPayment = true;
+    });
+
+    try {
+      logger.i("Started waiting for payment (session $sessionId)...");
+      logger.i("Ark address: $_arkAddress");
+      logger.i("Boarding address: $_btcAddress");
+      logger.i("Boltz swap ID: $_boltzSwapId");
+
+      // Wait for payment with 5 minute timeout
+      final payment = await waitForPayment(
+        arkAddress: _arkAddress.isNotEmpty ? _arkAddress : null,
+        boardingAddress: _btcAddress.isNotEmpty ? _btcAddress : null,
+        boltzSwapId: _boltzSwapId,
+        timeoutSeconds: BigInt.from(300), // 5 minutes
+      );
+
+      // Check if this monitoring session is still current
+      if (!mounted || _monitoringSessionId != sessionId) {
+        logger.i("Monitoring session $sessionId is outdated, ignoring result");
+        return;
+      }
+
+      setState(() {
+        _paymentReceived = payment;
+        _waitingForPayment = false;
+      });
+
+      logger.i("Payment received! TXID: ${payment.txid}, Amount: ${payment.amountSats} sats");
+
+      // Show success dialog
+      _showPaymentReceivedDialog(payment);
+    } catch (e) {
+      logger.e("Error waiting for payment (session $sessionId): $e");
+
+      // Check if this monitoring session is still current
+      if (!mounted || _monitoringSessionId != sessionId) {
+        logger.i("Monitoring session $sessionId is outdated, ignoring error");
+        return;
+      }
+
+      setState(() {
+        _waitingForPayment = false;
+      });
+
+      // Don't show error if it's just a timeout - that's expected
+      if (!e.toString().contains('timeout') && !e.toString().contains('Timeout')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment monitoring error: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  void _showPaymentReceivedDialog(PaymentReceived payment) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[850],
+          title: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.amber, size: 32),
+              const SizedBox(width: 12),
+              const Text('Payment Received!', style: TextStyle(color: Colors.white)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Amount: ${payment.amountSats} sats',
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'TXID: ${payment.txid}',
+                style: TextStyle(color: Colors.grey[400], fontSize: 12),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                Navigator.of(context).pop(); // Return to previous screen
+              },
+              child: const Text('OK', style: TextStyle(color: Colors.amber)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -316,6 +436,80 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                   ),
 
                   const SizedBox(height: 24),
+
+                  // Payment monitoring status
+                  if (_waitingForPayment)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Monitoring for incoming payment...',
+                              style: TextStyle(
+                                color: Colors.amber[300],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Payment received status
+                  if (_paymentReceived != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Payment Received!',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '${_paymentReceived!.amountSats} sats',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   // QR Code
                   RepaintBoundary(
