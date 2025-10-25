@@ -1,5 +1,5 @@
 use anyhow::Result;
-use bitcoin::{Amount, Network};
+use bitcoin::Network;
 use nostr::ToBech32;
 use std::str::FromStr;
 
@@ -62,21 +62,50 @@ pub async fn balance() -> Result<Balance> {
     })
 }
 
+#[derive(Debug, Clone)]
 pub struct Addresses {
     pub boarding: String,
     pub offchain: String,
     pub bip21: String,
+    pub lightning: Option<BoltzSwap>,
 }
 
-pub fn address() -> Result<Addresses> {
-    let addresses = crate::ark::client::address()?;
+#[derive(Debug, Clone)]
+pub struct BoltzSwap {
+    pub swap_id: String,
+    pub amount_sats: u64,
+    pub invoice: String,
+}
+
+pub async fn address(amount: Option<u64>) -> Result<Addresses> {
+    let addresses = crate::ark::client::address(amount.map(bitcoin::Amount::from_sat)).await?;
 
     let boarding = addresses.boarding.to_string();
     let offchain = addresses.offchain.encode();
-    let bip21 = format!("bitcoin:{boarding}?ark={offchain}");
+    let lightning = addresses.boltz_swap;
+    let amount = match amount {
+        None => "".to_string(),
+        Some(a) => {
+            format!("&amount={}", a.to_string())
+        }
+    };
+
+    let lightning_invoice = match &lightning {
+        None => "".to_string(),
+        Some(lightning) => {
+            format!("&lightning={}", lightning.invoice)
+        }
+    };
+
+    let bip21 = format!("bitcoin:{boarding}?arkade={offchain}{lightning_invoice}{amount}",);
     Ok(Addresses {
         boarding,
         offchain,
+        lightning: lightning.map(|lightning| BoltzSwap {
+            swap_id: lightning.swap_id,
+            amount_sats: lightning.amount.to_sat(),
+            invoice: lightning.invoice,
+        }),
         bip21,
     })
 }
@@ -141,7 +170,7 @@ pub async fn tx_history() -> Result<Vec<Transaction>> {
 }
 
 pub async fn send(address: String, amount_sats: u64) -> Result<String> {
-    let amount = Amount::from_sat(amount_sats);
+    let amount = bitcoin::Amount::from_sat(amount_sats);
     let txid = crate::ark::client::send(address, amount).await?;
     Ok(txid.to_string())
 }

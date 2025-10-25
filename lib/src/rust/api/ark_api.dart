@@ -8,6 +8,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'ark_api.freezed.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`
+
 Future<bool> walletExists({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiWalletExists(dataDir: dataDir);
 
@@ -54,7 +56,8 @@ Future<String> restoreWallet(
 
 Future<Balance> balance() => RustLib.instance.api.crateApiArkApiBalance();
 
-Future<Addresses> address() => RustLib.instance.api.crateApiArkApiAddress();
+Future<Addresses> address({BigInt? amount}) =>
+    RustLib.instance.api.crateApiArkApiAddress(amount: amount);
 
 Future<List<Transaction>> txHistory() =>
     RustLib.instance.api.crateApiArkApiTxHistory();
@@ -77,15 +80,21 @@ class Addresses {
   final String boarding;
   final String offchain;
   final String bip21;
+  final BoltzSwap? lightning;
 
   const Addresses({
     required this.boarding,
     required this.offchain,
     required this.bip21,
+    this.lightning,
   });
 
   @override
-  int get hashCode => boarding.hashCode ^ offchain.hashCode ^ bip21.hashCode;
+  int get hashCode =>
+      boarding.hashCode ^
+      offchain.hashCode ^
+      bip21.hashCode ^
+      lightning.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -94,7 +103,8 @@ class Addresses {
           runtimeType == other.runtimeType &&
           boarding == other.boarding &&
           offchain == other.offchain &&
-          bip21 == other.bip21;
+          bip21 == other.bip21 &&
+          lightning == other.lightning;
 }
 
 class Balance {
@@ -113,6 +123,30 @@ class Balance {
       other is Balance &&
           runtimeType == other.runtimeType &&
           offchain == other.offchain;
+}
+
+class BoltzSwap {
+  final String swapId;
+  final BigInt amountSats;
+  final String invoice;
+
+  const BoltzSwap({
+    required this.swapId,
+    required this.amountSats,
+    required this.invoice,
+  });
+
+  @override
+  int get hashCode => swapId.hashCode ^ amountSats.hashCode ^ invoice.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BoltzSwap &&
+          runtimeType == other.runtimeType &&
+          swapId == other.swapId &&
+          amountSats == other.amountSats &&
+          invoice == other.invoice;
 }
 
 class Info {

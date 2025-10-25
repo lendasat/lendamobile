@@ -38,10 +38,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Balance dco_decode_balance(dynamic raw);
 
   @protected
+  BoltzSwap dco_decode_boltz_swap(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
 
   @protected
+  BoltzSwap dco_decode_box_autoadd_boltz_swap(dynamic raw);
+
+  @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  BigInt dco_decode_box_autoadd_u_64(dynamic raw);
 
   @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
@@ -62,7 +71,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   OffchainBalance dco_decode_offchain_balance(dynamic raw);
 
   @protected
+  BoltzSwap? dco_decode_opt_box_autoadd_boltz_swap(dynamic raw);
+
+  @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
 
   @protected
   Transaction dco_decode_transaction(dynamic raw);
@@ -93,10 +108,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Balance sse_decode_balance(SseDeserializer deserializer);
 
   @protected
+  BoltzSwap sse_decode_boltz_swap(SseDeserializer deserializer);
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  BoltzSwap sse_decode_box_autoadd_boltz_swap(SseDeserializer deserializer);
+
+  @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
@@ -117,7 +141,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   OffchainBalance sse_decode_offchain_balance(SseDeserializer deserializer);
 
   @protected
+  BoltzSwap? sse_decode_opt_box_autoadd_boltz_swap(
+      SseDeserializer deserializer);
+
+  @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
   Transaction sse_decode_transaction(SseDeserializer deserializer);
@@ -152,11 +183,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_balance(Balance self, SseSerializer serializer);
 
   @protected
+  void sse_encode_boltz_swap(BoltzSwap self, SseSerializer serializer);
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_boltz_swap(
+      BoltzSwap self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_i_64(
       PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
@@ -180,8 +221,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       OffchainBalance self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_boltz_swap(
+      BoltzSwap? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_box_autoadd_i_64(
       PlatformInt64? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
 
   @protected
   void sse_encode_transaction(Transaction self, SseSerializer serializer);

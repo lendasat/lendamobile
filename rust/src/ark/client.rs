@@ -44,12 +44,19 @@ pub async fn balance() -> Result<Balance> {
     }
 }
 
+pub struct BoltzSwap {
+    pub swap_id: String,
+    pub amount: Amount,
+    pub invoice: String,
+}
+
 pub struct Addresses {
     pub boarding: Address,
     pub offchain: ArkAddress,
+    pub boltz_swap: Option<BoltzSwap>,
 }
 
-pub fn address() -> Result<Addresses> {
+pub async fn address(amount: Option<Amount>) -> Result<Addresses> {
     let maybe_client = ARK_CLIENT.try_get();
 
     match maybe_client {
@@ -70,9 +77,19 @@ pub fn address() -> Result<Addresses> {
                 .get_offchain_address()
                 .map_err(|error| anyhow!("Could not get offchain address {error:#}"))?;
 
+            let reverse_swap_result = match amount {
+                None => None,
+                Some(amount) => Some(client.get_ln_invoice(amount).await?),
+            };
+
             Ok(Addresses {
                 boarding: boarding_address,
                 offchain: offchain_address,
+                boltz_swap: reverse_swap_result.map(|s| BoltzSwap {
+                    swap_id: s.swap_id,
+                    amount: s.amount,
+                    invoice: s.invoice.to_string(),
+                }),
             })
         }
     }

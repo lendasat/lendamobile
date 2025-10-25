@@ -51,7 +51,7 @@ fn wire__crate__api__ark_api__address_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "address",
             port: Some(port_),
@@ -67,13 +67,15 @@ fn wire__crate__api__ark_api__address_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_amount = <Option<u64>>::sse_decode(&mut deserializer);
             deserializer.end();
-            move |context| {
+            move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::ark_api::address()?;
+                    (move || async move {
+                        let output_ok = crate::api::ark_api::address(api_amount).await?;
                         Ok(output_ok)
-                    })(),
+                    })()
+                    .await,
                 )
             }
         },
@@ -615,10 +617,12 @@ impl SseDecode for crate::api::ark_api::Addresses {
         let mut var_boarding = <String>::sse_decode(deserializer);
         let mut var_offchain = <String>::sse_decode(deserializer);
         let mut var_bip21 = <String>::sse_decode(deserializer);
+        let mut var_lightning = <Option<crate::api::ark_api::BoltzSwap>>::sse_decode(deserializer);
         return crate::api::ark_api::Addresses {
             boarding: var_boarding,
             offchain: var_offchain,
             bip21: var_bip21,
+            lightning: var_lightning,
         };
     }
 }
@@ -629,6 +633,20 @@ impl SseDecode for crate::api::ark_api::Balance {
         let mut var_offchain = <crate::api::ark_api::OffchainBalance>::sse_decode(deserializer);
         return crate::api::ark_api::Balance {
             offchain: var_offchain,
+        };
+    }
+}
+
+impl SseDecode for crate::api::ark_api::BoltzSwap {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_swapId = <String>::sse_decode(deserializer);
+        let mut var_amountSats = <u64>::sse_decode(deserializer);
+        let mut var_invoice = <String>::sse_decode(deserializer);
+        return crate::api::ark_api::BoltzSwap {
+            swap_id: var_swapId,
+            amount_sats: var_amountSats,
+            invoice: var_invoice,
         };
     }
 }
@@ -719,11 +737,33 @@ impl SseDecode for crate::api::ark_api::OffchainBalance {
     }
 }
 
+impl SseDecode for Option<crate::api::ark_api::BoltzSwap> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::ark_api::BoltzSwap>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<i64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<i64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<u64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<u64>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -850,6 +890,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::ark_api::Addresses {
             self.boarding.into_into_dart().into_dart(),
             self.offchain.into_into_dart().into_dart(),
             self.bip21.into_into_dart().into_dart(),
+            self.lightning.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -876,6 +917,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::Balance>
     for crate::api::ark_api::Balance
 {
     fn into_into_dart(self) -> crate::api::ark_api::Balance {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::ark_api::BoltzSwap {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.swap_id.into_into_dart().into_dart(),
+            self.amount_sats.into_into_dart().into_dart(),
+            self.invoice.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::ark_api::BoltzSwap
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::BoltzSwap>
+    for crate::api::ark_api::BoltzSwap
+{
+    fn into_into_dart(self) -> crate::api::ark_api::BoltzSwap {
         self
     }
 }
@@ -1024,6 +1087,7 @@ impl SseEncode for crate::api::ark_api::Addresses {
         <String>::sse_encode(self.boarding, serializer);
         <String>::sse_encode(self.offchain, serializer);
         <String>::sse_encode(self.bip21, serializer);
+        <Option<crate::api::ark_api::BoltzSwap>>::sse_encode(self.lightning, serializer);
     }
 }
 
@@ -1031,6 +1095,15 @@ impl SseEncode for crate::api::ark_api::Balance {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::api::ark_api::OffchainBalance>::sse_encode(self.offchain, serializer);
+    }
+}
+
+impl SseEncode for crate::api::ark_api::BoltzSwap {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.swap_id, serializer);
+        <u64>::sse_encode(self.amount_sats, serializer);
+        <String>::sse_encode(self.invoice, serializer);
     }
 }
 
@@ -1098,12 +1171,32 @@ impl SseEncode for crate::api::ark_api::OffchainBalance {
     }
 }
 
+impl SseEncode for Option<crate::api::ark_api::BoltzSwap> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::ark_api::BoltzSwap>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<i64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <i64>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<u64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <u64>::sse_encode(value, serializer);
         }
     }
 }

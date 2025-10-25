@@ -9,13 +9,14 @@ use crate::ark::seed_file::{read_seed_file, reset_wallet, write_seed_file};
 use crate::ark::storage::InMemoryDb;
 use crate::state::ARK_CLIENT;
 use anyhow::{anyhow, bail, Result};
-use ark_client::{InMemorySwapStorage, OfflineClient};
+use ark_client::{OfflineClient, SqliteSwapStorage};
 use bitcoin::key::{Keypair, Secp256k1};
 use bitcoin::secp256k1::{All, SecretKey};
 use bitcoin::Network;
 use nostr::Keys;
 use parking_lot::RwLock;
 use rand::RngCore;
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -35,7 +36,8 @@ pub async fn setup_new_wallet(
     let sk = SecretKey::from_slice(&random_bytes)
         .map_err(|e| anyhow::anyhow!("Failed to create secret key: {}", e))?;
 
-    write_seed_file(&sk, data_dir).map_err(|e| anyhow!("Failed to write seed file: {}", e))?;
+    write_seed_file(&sk, data_dir.clone())
+        .map_err(|e| anyhow!("Failed to write seed file: {}", e))?;
 
     let kp = Keypair::from_secret_key(&secp, &sk);
     let pubkey = setup_client(
@@ -45,6 +47,7 @@ pub async fn setup_new_wallet(
         esplora.clone(),
         server.clone(),
         boltz_url.clone(),
+        data_dir
     )
     .await
     .map_err(|e| {
@@ -73,10 +76,10 @@ pub async fn restore_wallet(
     let keys =
         Keys::parse(nsec.as_str()).map_err(|e| anyhow!("Failed to parse nsec key: {}", e))?;
     let kp = *keys.key_pair(&secp);
-    write_seed_file(&kp.secret_key(), data_dir)
+    write_seed_file(&kp.secret_key(), data_dir.clone())
         .map_err(|e| anyhow!("Failed to write seed file: {}", e))?;
 
-    let pubkey = setup_client(kp, secp, network, esplora.clone(), server.clone(), boltz_url).await
+    let pubkey = setup_client(kp, secp, network, esplora.clone(), server.clone(), boltz_url,data_dir ).await
         .map_err(|e| anyhow!("Failed to setup client after restore - Network: {:?}, Esplora: {}, Server: {} - Error: {}", network, esplora, server, e))?;
     Ok(pubkey)
 }
@@ -99,7 +102,7 @@ pub(crate) async fn load_existing_wallet(
         Some(key) => {
             let secp = Secp256k1::new();
             let kp = Keypair::from_secret_key(&secp, &key);
-            let server_pk = setup_client(kp, secp, network, esplora.clone(), server.clone(), boltz_url).await
+            let server_pk = setup_client(kp, secp, network, esplora.clone(), server.clone(), boltz_url, data_dir ).await
                 .map_err(|e| anyhow!("Failed to setup client from existing wallet - Network: {:?}, Esplora: {}, Server: {} - Error: {}", network, esplora, server, e))?;
             Ok(server_pk)
         }
@@ -113,6 +116,7 @@ pub async fn setup_client(
     esplora_url: String,
     server: String,
     boltz_url: String,
+    data_dir: String,
 ) -> Result<String> {
     let db = InMemoryDb::default();
 
@@ -135,13 +139,21 @@ pub async fn setup_client(
         .map_err(|e| anyhow!("Failed to connect to Esplora at '{}': {}", esplora_url, e))?;
 
     tracing::info!("Connecting to Ark");
+
+    let data_path = Path::new(data_dir.as_str());
+    let swap_storage = data_path.join("boltz_swap_storage.sqlite");
+
+    let sqlite_storage = SqliteSwapStorage::new(swap_storage)
+        .await
+        .map_err(|e| anyhow!(e))?;
+
     let client = OfflineClient::new(
         "sample-client".to_string(),
         kp,
         Arc::new(esplora),
         wallet,
         server.clone(),
-        Arc::new(InMemorySwapStorage::new()),
+        Arc::new(sqlite_storage),
         boltz_url,
         Duration::from_secs(30),
     )

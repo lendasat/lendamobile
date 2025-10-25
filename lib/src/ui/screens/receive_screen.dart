@@ -28,14 +28,18 @@ class ReceiveScreenState extends State<ReceiveScreen> {
   String _bip21Address = "";
   String _btcAddress = "";
   String _arkAddress = "";
+  String _lightningInvoice = "";
 
   bool _showCopyMenu = false;
+
+  final TextEditingController _amountController = TextEditingController();
 
   // Track which addresses have been copied (for showing checkmarks)
   final Map<String, bool> _copiedAddresses = {
     'BIP21': false,
     'BTC': false,
     'Ark': false,
+    'Lightning': false,
   };
 
   // Timers for resetting the checkmarks
@@ -43,6 +47,7 @@ class ReceiveScreenState extends State<ReceiveScreen> {
     'BIP21': null,
     'BTC': null,
     'Ark': null,
+    'Lightning': null,
   };
 
   @override
@@ -53,11 +58,21 @@ class ReceiveScreenState extends State<ReceiveScreen> {
 
   Future<void> _fetchAddresses() async {
     try {
-      final addresses = await address();
+      // Parse amount from controller (in sats)
+      BigInt? amountSats;
+      if (_amountController.text.isNotEmpty) {
+        final parsedAmount = int.tryParse(_amountController.text);
+        if (parsedAmount != null && parsedAmount > 0) {
+          amountSats = BigInt.from(parsedAmount);
+        }
+      }
+
+      final addresses = await address(amount: amountSats);
       setState(() {
         _bip21Address = addresses.bip21;
         _arkAddress = addresses.offchain;
         _btcAddress = addresses.boarding;
+        _lightningInvoice = addresses.lightning?.invoice ?? "";
       });
     } catch (e) {
       logger.e("Error fetching addresses: $e");
@@ -75,6 +90,7 @@ class ReceiveScreenState extends State<ReceiveScreen> {
         timer.cancel();
       }
     });
+    _amountController.dispose();
     super.dispose();
   }
 
@@ -136,6 +152,8 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                 _buildShareOption('BIP21 Address', 'BIP21'),
                 _buildShareOption('BTC Address', 'BTC'),
                 _buildShareOption('Ark Address', 'Ark'),
+                if (_lightningInvoice.isNotEmpty)
+                  _buildShareOption('Lightning Invoice', 'Lightning'),
                 _buildShareOption('QR Code Image', 'QR'),
               ],
             ),
@@ -160,6 +178,10 @@ class ReceiveScreenState extends State<ReceiveScreen> {
         case 'Ark':
           addressToShare = _arkAddress;
           addressType = "Ark";
+          break;
+        case 'Lightning':
+          addressToShare = _lightningInvoice;
+          addressType = "Lightning";
           break;
         case 'QR':
           // Share the QR code as an image
@@ -259,6 +281,42 @@ class ReceiveScreenState extends State<ReceiveScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
+                  // Amount input field
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[850],
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: TextField(
+                      controller: _amountController,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Amount (sats)',
+                        labelStyle: TextStyle(color: Colors.grey[400]),
+                        // TODO: This minimum amount requirement is not true and will be removed
+                        helperText: 'Lightning invoice requires amount ≥ 500 sats',
+                        helperStyle: TextStyle(color: Colors.grey[500], fontSize: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.refresh, color: Colors.amber),
+                          onPressed: _fetchAddresses,
+                          tooltip: 'Generate addresses',
+                        ),
+                      ),
+                      onSubmitted: (_) => _fetchAddresses(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
                   // QR Code
                   RepaintBoundary(
                     key: _qrKey,
@@ -405,6 +463,18 @@ class ReceiveScreenState extends State<ReceiveScreen> {
             onTap: () => _copyAddress(_arkAddress, 'Ark'),
             isCopied: _copiedAddresses['Ark']!,
           ),
+
+          // Lightning Invoice (only show if available)
+          if (_lightningInvoice.isNotEmpty) ...[
+            const Divider(
+                height: 1, indent: 16, endIndent: 16, color: Colors.grey),
+            _buildAddressOption(
+              label: 'Lightning invoice',
+              address: _lightningInvoice,
+              onTap: () => _copyAddress(_lightningInvoice, 'Lightning'),
+              isCopied: _copiedAddresses['Lightning']!,
+            ),
+          ],
         ],
       ),
     );
