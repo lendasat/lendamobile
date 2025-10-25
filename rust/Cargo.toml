@@ -8,12 +8,12 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 anyhow = "1"
-#ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "8028a" }
-#ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "8028a" }
-#ark-client = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "8028a", default-features = false, features = ["tls-webpki-roots"] }ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "8028a" }
+# ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "8028a" }
+# ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "8028a" }
+# ark-client = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "8028a", default-features = false, features = ["tls-webpki-roots"] }ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "8028a" }
 ark-bdk-wallet = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-bdk-wallet" }
-ark-core = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-core" }
 ark-client = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-client", default-features = false, features = ["tls-webpki-roots"] }
+ark-core = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-core" }
 async-trait = "0.1"
 bitcoin = { version = "0.32.4", features = ["rand"] }
 esplora-client = { version = "0.11.0", features = ["async-https-native"] }
@@ -24,6 +24,7 @@ nostr = { version = "0.40.0", default-features = false, features = ["std"] }
 openssl = { version = "0.10", features = ["vendored"] }
 parking_lot = { version = "0.12.1" }
 rand = "0.8.5"
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
 serde_json = "1.0.145"
 state = "0.6.0"
 tokio = { version = "1", features = ["full"] }
@@ -31,7 +32,6 @@ tracing = "0.1.37"
 tracing-log = "0.2.0"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter", "time", "json"] }
 url = "2.5.4"
-rustls = { version = "0.23", default-features = false, features = ["ring"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
