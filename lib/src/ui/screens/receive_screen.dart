@@ -12,10 +12,12 @@ import 'package:path_provider/path_provider.dart';
 
 class ReceiveScreen extends StatefulWidget {
   final String aspId;
+  final int amount; // Amount in sats, 0 means any amount
 
   const ReceiveScreen({
     super.key,
     required this.aspId,
+    required this.amount,
   });
 
   @override
@@ -32,8 +34,6 @@ class ReceiveScreenState extends State<ReceiveScreen> {
   String? _boltzSwapId;
 
   bool _showCopyMenu = false;
-
-  final TextEditingController _amountController = TextEditingController();
 
   // Track which addresses have been copied (for showing checkmarks)
   final Map<String, bool> _copiedAddresses = {
@@ -54,7 +54,6 @@ class ReceiveScreenState extends State<ReceiveScreen> {
   // Payment monitoring state
   bool _waitingForPayment = false;
   PaymentReceived? _paymentReceived;
-  int _monitoringSessionId = 0; // Track current monitoring session
 
   @override
   void initState() {
@@ -64,14 +63,8 @@ class ReceiveScreenState extends State<ReceiveScreen> {
 
   Future<void> _fetchAddresses() async {
     try {
-      // Parse amount from controller (in sats)
-      BigInt? amountSats;
-      if (_amountController.text.isNotEmpty) {
-        final parsedAmount = int.tryParse(_amountController.text);
-        if (parsedAmount != null && parsedAmount > 0) {
-          amountSats = BigInt.from(parsedAmount);
-        }
-      }
+      // Use amount from widget (0 means any amount)
+      final BigInt? amountSats = widget.amount > 0 ? BigInt.from(widget.amount) : null;
 
       final addresses = await address(amount: amountSats);
       setState(() {
@@ -80,19 +73,16 @@ class ReceiveScreenState extends State<ReceiveScreen> {
         _btcAddress = addresses.boarding;
         _lightningInvoice = addresses.lightning?.invoice ?? "";
         _boltzSwapId = addresses.lightning?.swapId;
-        _paymentReceived = null; // Reset payment state
-        _monitoringSessionId++; // Increment session to invalidate old monitoring
-        _waitingForPayment = false; // Reset flag for new monitoring
       });
 
-      // Start monitoring for payments with new session
+      // Start monitoring for payments
       _startPaymentMonitoring();
     } catch (e) {
       logger.e("Error fetching addresses: $e");
       setState(() {
         _error = e.toString();
       });
-    } finally {}
+    }
   }
 
   Future<void> _startPaymentMonitoring() async {
@@ -101,15 +91,12 @@ class ReceiveScreenState extends State<ReceiveScreen> {
       return;
     }
 
-    // Capture the current session ID to check later if this monitoring is still valid
-    final sessionId = _monitoringSessionId;
-
     setState(() {
       _waitingForPayment = true;
     });
 
     try {
-      logger.i("Started waiting for payment (session $sessionId)...");
+      logger.i("Started waiting for payment...");
       logger.i("Ark address: $_arkAddress");
       logger.i("Boarding address: $_btcAddress");
       logger.i("Boltz swap ID: $_boltzSwapId");
@@ -122,11 +109,7 @@ class ReceiveScreenState extends State<ReceiveScreen> {
         timeoutSeconds: BigInt.from(300), // 5 minutes
       );
 
-      // Check if this monitoring session is still current
-      if (!mounted || _monitoringSessionId != sessionId) {
-        logger.i("Monitoring session $sessionId is outdated, ignoring result");
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         _paymentReceived = payment;
@@ -138,13 +121,8 @@ class ReceiveScreenState extends State<ReceiveScreen> {
       // Show success dialog
       _showPaymentReceivedDialog(payment);
     } catch (e) {
-      logger.e("Error waiting for payment (session $sessionId): $e");
-
-      // Check if this monitoring session is still current
-      if (!mounted || _monitoringSessionId != sessionId) {
-        logger.i("Monitoring session $sessionId is outdated, ignoring error");
-        return;
-      }
+      logger.e("Error waiting for payment: $e");
+      if (!mounted) return;
 
       setState(() {
         _waitingForPayment = false;
@@ -191,8 +169,11 @@ class ReceiveScreenState extends State<ReceiveScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-                Navigator.of(context).pop(); // Return to previous screen
+                // Close dialog
+                Navigator.of(context).pop();
+
+                // Navigate back to dashboard (pop until we reach it)
+                Navigator.of(context).popUntil((route) => route.isFirst);
               },
               child: const Text('OK', style: TextStyle(color: Colors.amber)),
             ),
@@ -210,7 +191,6 @@ class ReceiveScreenState extends State<ReceiveScreen> {
         timer.cancel();
       }
     });
-    _amountController.dispose();
     super.dispose();
   }
 
@@ -401,41 +381,36 @@ class ReceiveScreenState extends State<ReceiveScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  // Amount input field
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[850],
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: TextField(
-                      controller: _amountController,
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: 'Amount (sats)',
-                        labelStyle: TextStyle(color: Colors.grey[400]),
-                        // TODO: This minimum amount requirement is not true and will be removed
-                        helperText: 'Lightning invoice requires amount ≥ 500 sats',
-                        helperStyle: TextStyle(color: Colors.grey[500], fontSize: 12),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.refresh, color: Colors.amber),
-                          onPressed: _fetchAddresses,
-                          tooltip: 'Generate addresses',
-                        ),
+                  // Amount display (if specified)
+                  if (widget.amount > 0)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[850],
+                        borderRadius: BorderRadius.circular(8.0),
                       ),
-                      onSubmitted: (_) => _fetchAddresses(),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Requesting: ',
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            '${widget.amount} sats',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 24),
 
                   // Payment monitoring status
                   if (_waitingForPayment)

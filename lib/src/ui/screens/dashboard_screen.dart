@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/settings_screen.dart';
 import 'package:ark_flutter/src/ui/screens/send_screen.dart';
-import 'package:ark_flutter/src/ui/screens/receive_screen.dart';
+import 'package:ark_flutter/src/ui/screens/amount_input_screen.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 
 enum BalanceType { pending, confirmed, total }
@@ -168,17 +168,22 @@ class DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _handleReceive() {
-    // Navigate to receive screen
+  Future<void> _handleReceive() async {
+    // Navigate to amount input screen
     logger.i("Receive button pressed");
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ReceiveScreen(
+        builder: (context) => AmountInputScreen(
           aspId: widget.aspId,
         ),
       ),
     );
+
+    // Refresh wallet data when returning from receive flow
+    // This will update the transaction history if a payment was received
+    logger.i("Returned from receive flow, refreshing wallet data");
+    _fetchWalletData();
   }
 
   // Helper methods for the balance display
