@@ -4,6 +4,8 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/settings_screen.dart';
 import 'package:ark_flutter/src/ui/screens/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/amount_input_screen.dart';
+import 'package:ark_flutter/src/ui/screens/buy/buy_screen.dart';
+import 'package:ark_flutter/src/ui/screens/sell/sell_screen.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 
 enum BalanceType { pending, confirmed, total }
@@ -184,6 +186,28 @@ class DashboardScreenState extends State<DashboardScreen> {
     // This will update the transaction history if a payment was received
     logger.i("Returned from receive flow, refreshing wallet data");
     _fetchWalletData();
+  }
+
+  void _handleBuy() {
+    // Navigate to buy screen
+    logger.i("Buy button pressed");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BuyScreen(),
+      ),
+    );
+  }
+
+  void _handleSell() {
+    // Navigate to sell screen
+    logger.i("Sell button pressed");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SellScreen(),
+      ),
+    );
   }
 
   // Helper methods for the balance display
@@ -414,54 +438,87 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildActionButtons() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _handleSend,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[800],
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-            ),
-            icon: const Icon(Icons.arrow_upward),
-            label: const Text(
-              'SEND',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionButton(
+                icon: Icons.arrow_downward,
+                label: 'Receive',
+                onPressed: _handleReceive,
               ),
             ),
-          ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildActionButton(
+                icon: Icons.arrow_upward,
+                label: 'Send',
+                onPressed: _handleSend,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _handleReceive,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber[500],
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-            ),
-            icon: const Icon(Icons.arrow_downward),
-            label: const Text(
-              'RECEIVE',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionButton(
+                icon: Icons.shopping_cart_outlined,
+                label: 'Buy',
+                onPressed: _handleBuy,
               ),
             ),
-          ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildActionButton(
+                icon: Icons.sell_outlined,
+                label: 'Sell',
+                onPressed: _handleSell,
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF1E1E1E),
+        padding: const EdgeInsets.symmetric(
+          vertical: 16.0,
+          horizontal: 16.0,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+          side: BorderSide(
+            color: const Color(0xFFFFFFFF).withOpacity(0.1),
+          ),
+        ),
+        minimumSize: const Size(double.infinity, 50),
+      ),
+      onPressed: onPressed,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white, size: 24),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

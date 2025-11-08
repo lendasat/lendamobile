@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
 import 'logger.dart';
+import 'models/moonpay.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
@@ -53,6 +54,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_box_autoadd_u_64(dynamic raw);
 
   @protected
+  CurrencyInfo dco_decode_currency_info(dynamic raw);
+
+  @protected
+  double dco_decode_f_64(dynamic raw);
+
+  @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
@@ -66,6 +73,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LogEntry dco_decode_log_entry(dynamic raw);
+
+  @protected
+  MoonPayCurrencyLimits dco_decode_moon_pay_currency_limits(dynamic raw);
+
+  @protected
+  MoonPayEncryptedData dco_decode_moon_pay_encrypted_data(dynamic raw);
+
+  @protected
+  MoonPayQuote dco_decode_moon_pay_quote(dynamic raw);
 
   @protected
   OffchainBalance dco_decode_offchain_balance(dynamic raw);
@@ -129,6 +145,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
+  CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
@@ -142,6 +164,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LogEntry sse_decode_log_entry(SseDeserializer deserializer);
+
+  @protected
+  MoonPayCurrencyLimits sse_decode_moon_pay_currency_limits(
+      SseDeserializer deserializer);
+
+  @protected
+  MoonPayEncryptedData sse_decode_moon_pay_encrypted_data(
+      SseDeserializer deserializer);
+
+  @protected
+  MoonPayQuote sse_decode_moon_pay_quote(SseDeserializer deserializer);
 
   @protected
   OffchainBalance sse_decode_offchain_balance(SseDeserializer deserializer);
@@ -212,6 +245,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
 
   @protected
+  void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
@@ -227,6 +266,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_moon_pay_currency_limits(
+      MoonPayCurrencyLimits self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_moon_pay_encrypted_data(
+      MoonPayEncryptedData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_moon_pay_quote(MoonPayQuote self, SseSerializer serializer);
 
   @protected
   void sse_encode_offchain_balance(

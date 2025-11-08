@@ -1,6 +1,7 @@
 pub mod api;
 pub mod ark;
 pub mod logger;
+pub mod models;
 mod state;
 
 #[allow(clippy::all)]

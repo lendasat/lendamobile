@@ -16,6 +16,10 @@ class SettingsService {
   static String get defaultArkNetwork => dotenv.env['ARK_NETWORK'] ?? 'regtest';
   static String get defaultBoltzUrl =>
       dotenv.env['BOLTZ_URL'] ?? 'http://localhost:9001';
+  static String get defaultBackendUrl =>
+      dotenv.env['BACKEND_URL'] ?? 'http://localhost:7337';
+  static String get defaultWebsiteUrl =>
+      dotenv.env['WEBSITE_URL'] ?? 'http://localhost:3000';
 
   // Singleton instance
   static final SettingsService _instance = SettingsService._internal();
@@ -72,6 +76,20 @@ class SettingsService {
   Future<bool> saveBoltzUrl(String url) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.setString(_boltzUrlKey, url);
+  }
+
+  // Get Backend URL
+  Future<String> getBackendUrl() async {
+    // Return the default from .env
+    // This could be extended to support user customization if needed
+    return defaultBackendUrl;
+  }
+
+  // Get Website URL
+  Future<String> getWebsiteUrl() async {
+    // Return the default from .env
+    // This could be extended to support user customization if needed
+    return defaultWebsiteUrl;
   }
 
   // Reset to defaults

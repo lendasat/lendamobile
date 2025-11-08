@@ -11,6 +11,7 @@ import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'logger.dart';
+import 'models/moonpay.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
@@ -72,7 +73,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -95231310;
+  int get rustContentHash => -1129626742;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -99,6 +100,17 @@ abstract class RustLibApi extends BaseApi {
       required String esplora,
       required String server,
       required String boltzUrl});
+
+  Future<MoonPayEncryptedData> crateApiArkApiMoonpayEncryptData(
+      {required String serverUrl, required String data});
+
+  Future<MoonPayCurrencyLimits> crateApiArkApiMoonpayGetCurrencyLimits(
+      {required String serverUrl,
+      required String baseCurrencyCode,
+      required String paymentMethod});
+
+  Future<MoonPayQuote> crateApiArkApiMoonpayGetQuote(
+      {required String serverUrl});
 
   Future<String> crateApiArkApiNsec({required String dataDir});
 
@@ -297,13 +309,96 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<MoonPayEncryptedData> crateApiArkApiMoonpayEncryptData(
+      {required String serverUrl, required String data}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(serverUrl, serializer);
+        sse_encode_String(data, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 7, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_moon_pay_encrypted_data,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiArkApiMoonpayEncryptDataConstMeta,
+      argValues: [serverUrl, data],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiArkApiMoonpayEncryptDataConstMeta =>
+      const TaskConstMeta(
+        debugName: "moonpay_encrypt_data",
+        argNames: ["serverUrl", "data"],
+      );
+
+  @override
+  Future<MoonPayCurrencyLimits> crateApiArkApiMoonpayGetCurrencyLimits(
+      {required String serverUrl,
+      required String baseCurrencyCode,
+      required String paymentMethod}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(serverUrl, serializer);
+        sse_encode_String(baseCurrencyCode, serializer);
+        sse_encode_String(paymentMethod, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 8, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_moon_pay_currency_limits,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiArkApiMoonpayGetCurrencyLimitsConstMeta,
+      argValues: [serverUrl, baseCurrencyCode, paymentMethod],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiArkApiMoonpayGetCurrencyLimitsConstMeta =>
+      const TaskConstMeta(
+        debugName: "moonpay_get_currency_limits",
+        argNames: ["serverUrl", "baseCurrencyCode", "paymentMethod"],
+      );
+
+  @override
+  Future<MoonPayQuote> crateApiArkApiMoonpayGetQuote(
+      {required String serverUrl}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(serverUrl, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 9, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_moon_pay_quote,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiArkApiMoonpayGetQuoteConstMeta,
+      argValues: [serverUrl],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiArkApiMoonpayGetQuoteConstMeta =>
+      const TaskConstMeta(
+        debugName: "moonpay_get_quote",
+        argNames: ["serverUrl"],
+      );
+
+  @override
   Future<String> crateApiArkApiNsec({required String dataDir}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 7, port: port_);
+            funcId: 10, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -327,7 +422,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 8, port: port_);
+            funcId: 11, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -362,7 +457,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(server, serializer);
         sse_encode_String(boltzUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 9, port: port_);
+            funcId: 12, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -396,7 +491,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(address, serializer);
         sse_encode_u_64(amountSats, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 10, port: port_);
+            funcId: 13, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -419,7 +514,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 11, port: port_);
+            funcId: 14, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -452,7 +547,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(server, serializer);
         sse_encode_String(boltzUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 12, port: port_);
+            funcId: 15, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -476,7 +571,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 13, port: port_);
+            funcId: 16, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_transaction,
@@ -507,7 +602,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_opt_String(boltzSwapId, serializer);
         sse_encode_u_64(timeoutSeconds, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 14, port: port_);
+            funcId: 17, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_payment_received,
@@ -537,7 +632,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 15, port: port_);
+            funcId: 18, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
@@ -635,6 +730,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CurrencyInfo dco_decode_currency_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return CurrencyInfo(
+      code: dco_decode_String(arr[0]),
+      minBuyAmount: dco_decode_f_64(arr[1]),
+      maxBuyAmount: dco_decode_f_64(arr[2]),
+    );
+  }
+
+  @protected
+  double dco_decode_f_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as double;
+  }
+
+  @protected
   PlatformInt64 dco_decode_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeI64(raw);
@@ -678,6 +792,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       line: dco_decode_String(arr[4]),
       modulePath: dco_decode_String(arr[5]),
       data: dco_decode_String(arr[6]),
+    );
+  }
+
+  @protected
+  MoonPayCurrencyLimits dco_decode_moon_pay_currency_limits(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return MoonPayCurrencyLimits(
+      quoteCurrency: dco_decode_currency_info(arr[0]),
+      baseCurrency: dco_decode_currency_info(arr[1]),
+    );
+  }
+
+  @protected
+  MoonPayEncryptedData dco_decode_moon_pay_encrypted_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return MoonPayEncryptedData(
+      ciphertext: dco_decode_String(arr[0]),
+      iv: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  MoonPayQuote dco_decode_moon_pay_quote(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return MoonPayQuote(
+      baseCurrencyAmount: dco_decode_f_64(arr[0]),
+      quoteCurrencyAmount: dco_decode_f_64(arr[1]),
+      baseCurrencyCode: dco_decode_String(arr[2]),
+      exchangeRate: dco_decode_f_64(arr[3]),
+      timestamp: dco_decode_String(arr[4]),
     );
   }
 
@@ -853,6 +1006,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_code = sse_decode_String(deserializer);
+    var var_minBuyAmount = sse_decode_f_64(deserializer);
+    var var_maxBuyAmount = sse_decode_f_64(deserializer);
+    return CurrencyInfo(
+        code: var_code,
+        minBuyAmount: var_minBuyAmount,
+        maxBuyAmount: var_maxBuyAmount);
+  }
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getFloat64();
+  }
+
+  @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getPlatformInt64();
@@ -903,6 +1074,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         line: var_line,
         modulePath: var_modulePath,
         data: var_data);
+  }
+
+  @protected
+  MoonPayCurrencyLimits sse_decode_moon_pay_currency_limits(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_quoteCurrency = sse_decode_currency_info(deserializer);
+    var var_baseCurrency = sse_decode_currency_info(deserializer);
+    return MoonPayCurrencyLimits(
+        quoteCurrency: var_quoteCurrency, baseCurrency: var_baseCurrency);
+  }
+
+  @protected
+  MoonPayEncryptedData sse_decode_moon_pay_encrypted_data(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_ciphertext = sse_decode_String(deserializer);
+    var var_iv = sse_decode_String(deserializer);
+    return MoonPayEncryptedData(ciphertext: var_ciphertext, iv: var_iv);
+  }
+
+  @protected
+  MoonPayQuote sse_decode_moon_pay_quote(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_baseCurrencyAmount = sse_decode_f_64(deserializer);
+    var var_quoteCurrencyAmount = sse_decode_f_64(deserializer);
+    var var_baseCurrencyCode = sse_decode_String(deserializer);
+    var var_exchangeRate = sse_decode_f_64(deserializer);
+    var var_timestamp = sse_decode_String(deserializer);
+    return MoonPayQuote(
+        baseCurrencyAmount: var_baseCurrencyAmount,
+        quoteCurrencyAmount: var_quoteCurrencyAmount,
+        baseCurrencyCode: var_baseCurrencyCode,
+        exchangeRate: var_exchangeRate,
+        timestamp: var_timestamp);
   }
 
   @protected
@@ -1106,6 +1312,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.code, serializer);
+    sse_encode_f_64(self.minBuyAmount, serializer);
+    sse_encode_f_64(self.maxBuyAmount, serializer);
+  }
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putFloat64(self);
+  }
+
+  @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putPlatformInt64(self);
@@ -1146,6 +1366,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.line, serializer);
     sse_encode_String(self.modulePath, serializer);
     sse_encode_String(self.data, serializer);
+  }
+
+  @protected
+  void sse_encode_moon_pay_currency_limits(
+      MoonPayCurrencyLimits self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_currency_info(self.quoteCurrency, serializer);
+    sse_encode_currency_info(self.baseCurrency, serializer);
+  }
+
+  @protected
+  void sse_encode_moon_pay_encrypted_data(
+      MoonPayEncryptedData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.ciphertext, serializer);
+    sse_encode_String(self.iv, serializer);
+  }
+
+  @protected
+  void sse_encode_moon_pay_quote(MoonPayQuote self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_f_64(self.baseCurrencyAmount, serializer);
+    sse_encode_f_64(self.quoteCurrencyAmount, serializer);
+    sse_encode_String(self.baseCurrencyCode, serializer);
+    sse_encode_f_64(self.exchangeRate, serializer);
+    sse_encode_String(self.timestamp, serializer);
   }
 
   @protected

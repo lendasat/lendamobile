@@ -144,11 +144,11 @@ class ReceiveScreenState extends State<ReceiveScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.grey[850],
-          title: Row(
+          title: const Row(
             children: [
-              const Icon(Icons.check_circle, color: Colors.amber, size: 32),
-              const SizedBox(width: 12),
-              const Text('Payment Received!', style: TextStyle(color: Colors.white)),
+              Icon(Icons.check_circle, color: Colors.amber, size: 32),
+              SizedBox(width: 12),
+              Text('Payment Received!', style: TextStyle(color: Colors.white)),
             ],
           ),
           content: Column(
@@ -424,7 +424,7 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                       ),
                       child: Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
