@@ -2,6 +2,7 @@ use crate::frb_generated::StreamSink;
 use crate::logger;
 
 pub mod ark_api;
+pub mod bitcoin_api;
 
 #[flutter_rust_bridge::frb(init)]
 pub fn init_app() {

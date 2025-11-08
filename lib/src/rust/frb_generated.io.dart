@@ -5,11 +5,13 @@
 
 import 'api.dart';
 import 'api/ark_api.dart';
+import 'api/bitcoin_api.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'frb_generated.dart';
 import 'logger.dart';
+import 'models/historical_prices.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
@@ -42,10 +44,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
   @protected
+  HistoricalPriceData dco_decode_historical_price_data(dynamic raw);
+
+  @protected
+  HistoricalPriceResponse dco_decode_historical_price_response(dynamic raw);
+
+  @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
   Info dco_decode_info(dynamic raw);
+
+  @protected
+  List<HistoricalPriceData> dco_decode_list_historical_price_data(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
@@ -97,10 +108,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
+  HistoricalPriceData sse_decode_historical_price_data(
+      SseDeserializer deserializer);
+
+  @protected
+  HistoricalPriceResponse sse_decode_historical_price_response(
+      SseDeserializer deserializer);
+
+  @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
   Info sse_decode_info(SseDeserializer deserializer);
+
+  @protected
+  List<HistoricalPriceData> sse_decode_list_historical_price_data(
+      SseDeserializer deserializer);
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
@@ -157,10 +180,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_historical_price_data(
+      HistoricalPriceData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_historical_price_response(
+      HistoricalPriceResponse self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
   void sse_encode_info(Info self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_historical_price_data(
+      List<HistoricalPriceData> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(
