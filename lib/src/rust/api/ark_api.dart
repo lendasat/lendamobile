@@ -4,7 +4,6 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
-import '../models/moonpay.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'ark_api.freezed.dart';
@@ -87,23 +86,6 @@ Future<PaymentReceived> waitForPayment(
         boardingAddress: boardingAddress,
         boltzSwapId: boltzSwapId,
         timeoutSeconds: timeoutSeconds);
-
-Future<MoonPayCurrencyLimits> moonpayGetCurrencyLimits(
-        {required String serverUrl,
-        required String baseCurrencyCode,
-        required String paymentMethod}) =>
-    RustLib.instance.api.crateApiArkApiMoonpayGetCurrencyLimits(
-        serverUrl: serverUrl,
-        baseCurrencyCode: baseCurrencyCode,
-        paymentMethod: paymentMethod);
-
-Future<MoonPayQuote> moonpayGetQuote({required String serverUrl}) =>
-    RustLib.instance.api.crateApiArkApiMoonpayGetQuote(serverUrl: serverUrl);
-
-Future<MoonPayEncryptedData> moonpayEncryptData(
-        {required String serverUrl, required String data}) =>
-    RustLib.instance.api
-        .crateApiArkApiMoonpayEncryptData(serverUrl: serverUrl, data: data);
 
 class Addresses {
   final String boarding;

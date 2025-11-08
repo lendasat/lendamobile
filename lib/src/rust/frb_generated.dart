@@ -5,6 +5,7 @@
 
 import 'api.dart';
 import 'api/ark_api.dart';
+import 'api/moonpay_api.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
@@ -73,7 +74,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -1129626742;
+  int get rustContentHash => -1578507754;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -101,15 +102,25 @@ abstract class RustLibApi extends BaseApi {
       required String server,
       required String boltzUrl});
 
-  Future<MoonPayEncryptedData> crateApiArkApiMoonpayEncryptData(
+  Future<MoonPayEncryptedData> crateApiMoonpayEncryptData(
       {required String serverUrl, required String data});
 
-  Future<MoonPayCurrencyLimits> crateApiArkApiMoonpayGetCurrencyLimits(
+  Future<MoonPayEncryptedData> crateApiMoonpayApiMoonpayEncryptData(
+      {required String serverUrl, required String data});
+
+  Future<MoonPayCurrencyLimits> crateApiMoonpayGetCurrencyLimits(
       {required String serverUrl,
       required String baseCurrencyCode,
       required String paymentMethod});
 
-  Future<MoonPayQuote> crateApiArkApiMoonpayGetQuote(
+  Future<MoonPayCurrencyLimits> crateApiMoonpayApiMoonpayGetCurrencyLimits(
+      {required String serverUrl,
+      required String baseCurrencyCode,
+      required String paymentMethod});
+
+  Future<MoonPayQuote> crateApiMoonpayGetQuote({required String serverUrl});
+
+  Future<MoonPayQuote> crateApiMoonpayApiMoonpayGetQuote(
       {required String serverUrl});
 
   Future<String> crateApiArkApiNsec({required String dataDir});
@@ -309,7 +320,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<MoonPayEncryptedData> crateApiArkApiMoonpayEncryptData(
+  Future<MoonPayEncryptedData> crateApiMoonpayEncryptData(
       {required String serverUrl, required String data}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
@@ -323,20 +334,46 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_moon_pay_encrypted_data,
         decodeErrorData: sse_decode_AnyhowException,
       ),
-      constMeta: kCrateApiArkApiMoonpayEncryptDataConstMeta,
+      constMeta: kCrateApiMoonpayEncryptDataConstMeta,
       argValues: [serverUrl, data],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiArkApiMoonpayEncryptDataConstMeta =>
+  TaskConstMeta get kCrateApiMoonpayEncryptDataConstMeta => const TaskConstMeta(
+        debugName: "moonpay_encrypt_data",
+        argNames: ["serverUrl", "data"],
+      );
+
+  @override
+  Future<MoonPayEncryptedData> crateApiMoonpayApiMoonpayEncryptData(
+      {required String serverUrl, required String data}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(serverUrl, serializer);
+        sse_encode_String(data, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 8, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_moon_pay_encrypted_data,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiMoonpayApiMoonpayEncryptDataConstMeta,
+      argValues: [serverUrl, data],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiMoonpayApiMoonpayEncryptDataConstMeta =>
       const TaskConstMeta(
         debugName: "moonpay_encrypt_data",
         argNames: ["serverUrl", "data"],
       );
 
   @override
-  Future<MoonPayCurrencyLimits> crateApiArkApiMoonpayGetCurrencyLimits(
+  Future<MoonPayCurrencyLimits> crateApiMoonpayGetCurrencyLimits(
       {required String serverUrl,
       required String baseCurrencyCode,
       required String paymentMethod}) {
@@ -347,45 +384,99 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(baseCurrencyCode, serializer);
         sse_encode_String(paymentMethod, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 8, port: port_);
+            funcId: 9, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_moon_pay_currency_limits,
         decodeErrorData: sse_decode_AnyhowException,
       ),
-      constMeta: kCrateApiArkApiMoonpayGetCurrencyLimitsConstMeta,
+      constMeta: kCrateApiMoonpayGetCurrencyLimitsConstMeta,
       argValues: [serverUrl, baseCurrencyCode, paymentMethod],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiArkApiMoonpayGetCurrencyLimitsConstMeta =>
+  TaskConstMeta get kCrateApiMoonpayGetCurrencyLimitsConstMeta =>
       const TaskConstMeta(
         debugName: "moonpay_get_currency_limits",
         argNames: ["serverUrl", "baseCurrencyCode", "paymentMethod"],
       );
 
   @override
-  Future<MoonPayQuote> crateApiArkApiMoonpayGetQuote(
+  Future<MoonPayCurrencyLimits> crateApiMoonpayApiMoonpayGetCurrencyLimits(
+      {required String serverUrl,
+      required String baseCurrencyCode,
+      required String paymentMethod}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(serverUrl, serializer);
+        sse_encode_String(baseCurrencyCode, serializer);
+        sse_encode_String(paymentMethod, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 10, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_moon_pay_currency_limits,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiMoonpayApiMoonpayGetCurrencyLimitsConstMeta,
+      argValues: [serverUrl, baseCurrencyCode, paymentMethod],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiMoonpayApiMoonpayGetCurrencyLimitsConstMeta =>
+      const TaskConstMeta(
+        debugName: "moonpay_get_currency_limits",
+        argNames: ["serverUrl", "baseCurrencyCode", "paymentMethod"],
+      );
+
+  @override
+  Future<MoonPayQuote> crateApiMoonpayGetQuote({required String serverUrl}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(serverUrl, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 11, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_moon_pay_quote,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiMoonpayGetQuoteConstMeta,
+      argValues: [serverUrl],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiMoonpayGetQuoteConstMeta => const TaskConstMeta(
+        debugName: "moonpay_get_quote",
+        argNames: ["serverUrl"],
+      );
+
+  @override
+  Future<MoonPayQuote> crateApiMoonpayApiMoonpayGetQuote(
       {required String serverUrl}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(serverUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 9, port: port_);
+            funcId: 12, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_moon_pay_quote,
         decodeErrorData: sse_decode_AnyhowException,
       ),
-      constMeta: kCrateApiArkApiMoonpayGetQuoteConstMeta,
+      constMeta: kCrateApiMoonpayApiMoonpayGetQuoteConstMeta,
       argValues: [serverUrl],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiArkApiMoonpayGetQuoteConstMeta =>
+  TaskConstMeta get kCrateApiMoonpayApiMoonpayGetQuoteConstMeta =>
       const TaskConstMeta(
         debugName: "moonpay_get_quote",
         argNames: ["serverUrl"],
@@ -398,7 +489,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 10, port: port_);
+            funcId: 13, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -422,7 +513,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 11, port: port_);
+            funcId: 14, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -457,7 +548,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(server, serializer);
         sse_encode_String(boltzUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 12, port: port_);
+            funcId: 15, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -491,7 +582,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(address, serializer);
         sse_encode_u_64(amountSats, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 13, port: port_);
+            funcId: 16, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -514,7 +605,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 14, port: port_);
+            funcId: 17, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -547,7 +638,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(server, serializer);
         sse_encode_String(boltzUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 15, port: port_);
+            funcId: 18, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -571,7 +662,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 16, port: port_);
+            funcId: 19, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_transaction,
@@ -602,7 +693,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_opt_String(boltzSwapId, serializer);
         sse_encode_u_64(timeoutSeconds, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 17, port: port_);
+            funcId: 20, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_payment_received,
@@ -632,7 +723,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 18, port: port_);
+            funcId: 21, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,

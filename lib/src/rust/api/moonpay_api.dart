@@ -3,29 +3,27 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import 'frb_generated.dart';
-import 'logger.dart';
-import 'models/moonpay.dart';
+import '../frb_generated.dart';
+import '../models/moonpay.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-
-Stream<LogEntry> initLogging() => RustLib.instance.api.crateApiInitLogging();
 
 /// Get currency limits for MoonPay transactions
 Future<MoonPayCurrencyLimits> moonpayGetCurrencyLimits(
         {required String serverUrl,
         required String baseCurrencyCode,
         required String paymentMethod}) =>
-    RustLib.instance.api.crateApiMoonpayGetCurrencyLimits(
+    RustLib.instance.api.crateApiMoonpayApiMoonpayGetCurrencyLimits(
         serverUrl: serverUrl,
         baseCurrencyCode: baseCurrencyCode,
         paymentMethod: paymentMethod);
 
 /// Get a quote from MoonPay
 Future<MoonPayQuote> moonpayGetQuote({required String serverUrl}) =>
-    RustLib.instance.api.crateApiMoonpayGetQuote(serverUrl: serverUrl);
+    RustLib.instance.api
+        .crateApiMoonpayApiMoonpayGetQuote(serverUrl: serverUrl);
 
 /// Encrypt data for MoonPay
 Future<MoonPayEncryptedData> moonpayEncryptData(
         {required String serverUrl, required String data}) =>
     RustLib.instance.api
-        .crateApiMoonpayEncryptData(serverUrl: serverUrl, data: data);
+        .crateApiMoonpayApiMoonpayEncryptData(serverUrl: serverUrl, data: data);

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:ark_flutter/src/logger/logger.dart';
-import 'package:ark_flutter/src/rust/api/ark_api.dart' as rust_api;
+import 'package:ark_flutter/src/rust/api.dart' as rust_api;
 import 'package:ark_flutter/src/rust/models/moonpay.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 

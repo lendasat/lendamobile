@@ -5,6 +5,7 @@
 
 import 'api.dart';
 import 'api/ark_api.dart';
+import 'api/moonpay_api.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
