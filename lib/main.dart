@@ -8,6 +8,14 @@ import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
 import 'package:ark_flutter/src/ui/screens/dashboard_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'providers/theme_provider.dart';
+import 'services/language_service.dart';
+import 'services/timezone_service.dart';
+import 'services/currency_preference_service.dart';
 
 Future setupLogger() async {
   buildLogger(false);
@@ -87,6 +95,9 @@ Future<void> main() async {
   await RustLib.init();
   await setupLogger();
 
+  // Initialize timezone database
+  tz.initializeTimeZones();
+
   // Determine which screen to show first
   final startScreen = await determineStartScreen();
 
@@ -100,15 +111,36 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Ark - Flutter - Sample',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.amber,
-        scaffoldBackgroundColor: const Color(0xFF121212),
-        useMaterial3: true,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => ThemeProvider()..loadSavedTheme(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => LanguageService()..loadSavedLanguage(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => TimezoneService()..loadSavedTimezone(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CurrencyPreferenceService()..loadSavedCurrency(),
+        ),
+      ],
+      child: Consumer2<ThemeProvider, LanguageService>(
+        builder: (context, themeProvider, languageService, _) => MaterialApp(
+          title: 'Ark - Flutter - Sample',
+          theme: themeProvider.getMaterialTheme(),
+          locale: languageService.currentLocale,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: LanguageService.supportedLocales,
+          home: startScreen,
+        ),
       ),
-      home: startScreen,
     );
   }
 }

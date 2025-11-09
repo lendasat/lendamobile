@@ -1,3 +1,6 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/models/app_theme_model.dart';
+import 'package:ark_flutter/providers/theme_provider.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_history_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
@@ -5,6 +8,9 @@ import 'package:ark_flutter/src/ui/screens/settings_screen.dart';
 import 'package:ark_flutter/src/ui/screens/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/amount_input_screen.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/app_theme.dart';
+import 'package:provider/provider.dart';
+import 'package:ark_flutter/services/currency_preference_service.dart';
 
 enum BalanceType { pending, confirmed, total }
 
@@ -43,6 +49,11 @@ class DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     logger.i("Dashboard initialized with ASP ID: ${widget.aspId}");
     _fetchWalletData();
+
+    // Fetch exchange rates when dashboard initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CurrencyPreferenceService>().fetchExchangeRates();
+    });
   }
 
   Future<void> _fetchWalletData() async {
@@ -66,7 +77,10 @@ class DashboardScreenState extends State<DashboardScreen> {
       logger.i("Fetched ${transactions.length} transactions");
     } catch (e) {
       logger.e("Error fetching transaction history: $e");
-      _showErrorSnackbar("Couldn't update transactions: ${e.toString()}");
+      if (mounted) {
+        _showErrorSnackbar(
+            "${AppLocalizations.of(context)!.couldntUpdateTransactions} ${e.toString()}");
+      }
     } finally {
       setState(() {
         _isTransactionFetching = false;
@@ -103,7 +117,8 @@ class DashboardScreenState extends State<DashboardScreen> {
         _isBalanceLoading = false;
       });
 
-      _showErrorSnackbar("Couldn't update balance: ${e.toString()}");
+      _showErrorSnackbar(
+          "${AppLocalizations.of(context)!.couldntUpdateBalance} ${e.toString()}");
     }
   }
 
@@ -126,9 +141,10 @@ class DashboardScreenState extends State<DashboardScreen> {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Showing ${_currentBalanceType.name} balance'),
+        content: Text(AppLocalizations.of(context)!
+            .showingBalanceType(_currentBalanceType.name)),
         duration: const Duration(seconds: 1),
-        backgroundColor: Colors.amber[700],
+        backgroundColor: Colors.amber,
       ),
     );
   }
@@ -143,9 +159,9 @@ class DashboardScreenState extends State<DashboardScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red[700],
+        backgroundColor: Colors.red,
         action: SnackBarAction(
-          label: 'RETRY',
+          label: AppLocalizations.of(context)!.retry,
           textColor: Colors.white,
           onPressed: _fetchWalletData,
         ),
@@ -201,35 +217,37 @@ class DashboardScreenState extends State<DashboardScreen> {
   String _getBalanceTypeText() {
     switch (_currentBalanceType) {
       case BalanceType.pending:
-        return 'Pending Balance';
+        return AppLocalizations.of(context)!.pendingBalance;
       case BalanceType.confirmed:
-        return 'Confirmed Balance';
+        return AppLocalizations.of(context)!.confirmedBalance;
       case BalanceType.total:
-        return 'Total Balance';
+        return AppLocalizations.of(context)!.totalBalance;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'WTFark',
           style: TextStyle(
-            color: Colors.white,
+            color: theme.primaryWhite,
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh, color: theme.primaryWhite),
             onPressed: _fetchWalletData,
           ),
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
+            icon: Icon(Icons.settings, color: theme.primaryWhite),
             onPressed: () {
               // Navigate to settings
               logger.i("Settings button pressed");
@@ -270,19 +288,17 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBalanceCard() {
+    final theme = AppTheme.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFF9900), Color(0xFFFFB700)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: theme.silverGradient,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.amber.withAlpha((0.3 * 255).round()),
+            color: theme.primaryGray.withAlpha((0.3 * 255).round()),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -296,27 +312,27 @@ class DashboardScreenState extends State<DashboardScreen> {
             children: [
               Text(
                 _getBalanceTypeText(),
-                style: const TextStyle(
-                  color: Colors.black87,
+                style: TextStyle(
+                  color: theme.primaryBlack,
                   fontSize: 16,
                 ),
               ),
               if (_isBalanceLoading)
-                const SizedBox(
+                SizedBox(
                   height: 16,
                   width: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
+                    valueColor: AlwaysStoppedAnimation<Color>(theme.mutedText),
                   ),
                 ),
             ],
           ),
           const SizedBox(height: 8),
           if (_balanceError != null)
-            const Text(
-              'Error loading balance',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.errorLoadingBalance,
+              style: const TextStyle(
                 color: Colors.red,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -325,63 +341,70 @@ class DashboardScreenState extends State<DashboardScreen> {
           else if (_isBalanceLoading)
             _buildBalanceSkeleton()
           else
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: _showBtcAsMain
-                  ? [
-                      // BTC as main, USD as secondary
-                      Expanded(
-                        child: InkWell(
-                          onTap: _toggleBalanceType,
-                          child: Text(
-                            '₿ ${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
+            Consumer<CurrencyPreferenceService>(
+              builder: (context, currencyService, _) {
+                // Convert BTC → USD → Selected Currency
+                final balanceInUsd = _getSelectedBalance() * _btcToUsdRate;
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: _showBtcAsMain
+                      ? [
+                          // BTC as main, Fiat as secondary
+                          Expanded(
+                            child: InkWell(
+                              onTap: _toggleBalanceType,
+                              child: Text(
+                                '₿ ${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
+                                style: TextStyle(
+                                  color: theme.primaryBlack,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: _toggleDisplayUnit,
-                        child: Text(
-                          '≈ \$${(_getSelectedBalance() * _btcToUsdRate).toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ]
-                  : [
-                      // USD as main, BTC as secondary
-                      Expanded(
-                        child: InkWell(
-                          onTap: _toggleBalanceType,
-                          child: Text(
-                            '\$${(_getSelectedBalance() * _btcToUsdRate).toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: _toggleDisplayUnit,
+                            child: Text(
+                              '≈ ${currencyService.formatAmount(balanceInUsd)}',
+                              style: TextStyle(
+                                color: theme.mutedText,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: _toggleDisplayUnit,
-                        child: Text(
-                          '≈ ₿${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 16,
+                        ]
+                      : [
+                          // Fiat as main, BTC as secondary
+                          Expanded(
+                            child: InkWell(
+                              onTap: _toggleBalanceType,
+                              child: Text(
+                                currencyService.formatAmount(balanceInUsd),
+                                style: TextStyle(
+                                  color: theme.primaryBlack,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: _toggleDisplayUnit,
+                            child: Text(
+                              '≈ ₿${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
+                              style: TextStyle(
+                                color: theme.mutedText,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                );
+              },
             ),
         ],
       ),
@@ -389,6 +412,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBalanceSkeleton() {
+    final theme = AppTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -396,7 +420,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           height: 32,
           width: 150,
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha((0.2 * 255).round()),
+            color: theme.mutedText.withOpacity(0.2),
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -405,7 +429,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           height: 16,
           width: 100,
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha((0.15 * 255).round()),
+            color: theme.mutedText.withOpacity(0.15),
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -414,14 +438,16 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildActionButtons() {
+    final theme = AppTheme.of(context);
+
     return Row(
       children: [
         Expanded(
           child: ElevatedButton.icon(
             onPressed: _handleSend,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[800],
-              foregroundColor: Colors.white,
+              backgroundColor: theme.tertiaryBlack,
+              foregroundColor: theme.primaryWhite,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -429,9 +455,9 @@ class DashboardScreenState extends State<DashboardScreen> {
               elevation: 0,
             ),
             icon: const Icon(Icons.arrow_upward),
-            label: const Text(
-              'SEND',
-              style: TextStyle(
+            label: Text(
+              AppLocalizations.of(context)!.send,
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -443,8 +469,13 @@ class DashboardScreenState extends State<DashboardScreen> {
           child: ElevatedButton.icon(
             onPressed: _handleReceive,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber[500],
-              foregroundColor: Colors.black,
+              backgroundColor:
+                  Provider.of<ThemeProvider>(context, listen: false)
+                              .currentThemeType ==
+                          ThemeType.custom
+                      ? theme.primaryGray
+                      : Colors.amber[500],
+              foregroundColor: theme.mutedText,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -452,9 +483,9 @@ class DashboardScreenState extends State<DashboardScreen> {
               elevation: 0,
             ),
             icon: const Icon(Icons.arrow_downward),
-            label: const Text(
-              'RECEIVE',
-              style: TextStyle(
+            label: Text(
+              AppLocalizations.of(context)!.receive,
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),

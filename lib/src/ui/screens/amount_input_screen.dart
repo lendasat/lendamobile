@@ -1,5 +1,7 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/ui/screens/receive_screen.dart';
+import 'package:ark_flutter/app_theme.dart';
 
 class AmountInputScreen extends StatefulWidget {
   final String aspId;
@@ -51,23 +53,25 @@ class AmountInputScreenState extends State<AmountInputScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
-        title: const Text(
-          'Enter Amount',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context)!.enterAmount,
+          style: TextStyle(color: theme.primaryWhite),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
           onPressed: () => Navigator.pop(context),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: Colors.grey[800],
+            color: theme.secondaryBlack,
             height: 1.0,
           ),
         ),
@@ -80,21 +84,22 @@ class AmountInputScreenState extends State<AmountInputScreen> {
               children: [
                 // Amount display
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                   child: Column(
                     children: [
                       Text(
-                        'Amount (sats)',
+                        '${AppLocalizations.of(context)!.amount} (sats)',
                         style: TextStyle(
-                          color: Colors.grey[400],
+                          color: theme.mutedText,
                           fontSize: 16,
                         ),
                       ),
                       const SizedBox(height: 16),
                       Text(
                         _amount.isEmpty ? '0' : _amount,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: theme.primaryWhite,
                           fontSize: 48,
                           fontWeight: FontWeight.bold,
                         ),
@@ -142,7 +147,7 @@ class AmountInputScreenState extends State<AmountInputScreen> {
                     onPressed: _onContinue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.amber[500],
-                      foregroundColor: Colors.black,
+                      foregroundColor: theme.primaryBlack,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -150,7 +155,9 @@ class AmountInputScreenState extends State<AmountInputScreen> {
                       elevation: 0,
                     ),
                     child: Text(
-                      _amount.isEmpty ? 'SKIP (ANY AMOUNT)' : 'CONTINUE',
+                      _amount.isEmpty
+                          ? AppLocalizations.of(context)!.skipAnyAmount
+                          : AppLocalizations.of(context)!.contin,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -174,14 +181,16 @@ class AmountInputScreenState extends State<AmountInputScreen> {
   }
 
   Widget _buildNumberButton(String number, {VoidCallback? onPressed}) {
+    final theme = AppTheme.of(context);
+
     return SizedBox(
       width: 80,
       height: 80,
       child: ElevatedButton(
         onPressed: onPressed ?? () => _onNumberPressed(number),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.grey[850],
-          foregroundColor: Colors.white,
+          backgroundColor: theme.tertiaryBlack,
+          foregroundColor: theme.primaryWhite,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(40),
           ),

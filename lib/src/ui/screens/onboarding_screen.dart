@@ -1,9 +1,12 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/models/app_theme_model.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/dashboard_screen.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:ark_flutter/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -96,8 +99,12 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           }
         } catch (e) {
           logger.e("Failed to create new wallet: $e");
-          _showErrorDialog("Failed to create wallet",
-              "There was an error creating your new wallet. Please try again.\n\nError: ${e.toString()}");
+          if (mounted) {
+            _showErrorDialog(
+                AppLocalizations.of(context)!.failedToCreateWallet,
+                AppLocalizations.of(context)!
+                    .errorCreatingWallet(e.toString()));
+          }
         }
       } else if (_selectedOption == 'existing' &&
           _secretKeyController.text.isNotEmpty) {
@@ -122,8 +129,12 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           }
         } catch (e) {
           logger.e("Failed to restore wallet: $e");
-          _showErrorDialog("Failed to restore wallet",
-              "There was an error restoring your wallet. Please check your nsec and try again.\n\nError: ${e.toString()}");
+          if (mounted) {
+            _showErrorDialog(
+                AppLocalizations.of(context)!.failedToRestoreWallet,
+                AppLocalizations.of(context)!
+                    .errorRestoringWallet(e.toString()));
+          }
         }
       }
     } finally {
@@ -136,20 +147,48 @@ class OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  // Helper function to build styled tagline with first letter of each word bolded
+  TextSpan _buildStyledTagline(BuildContext context, AppTheme theme) {
+    final text = AppLocalizations.of(context)!.appTagline;
+    final words = text.split(' ');
+
+    return TextSpan(
+      style: TextStyle(
+        fontSize: 18,
+        color: theme.mutedText,
+      ),
+      children: words.asMap().entries.map((entry) {
+        final word = entry.value;
+        final isLast = entry.key == words.length - 1;
+
+        return TextSpan(
+          children: [
+            TextSpan(
+              text: word[0],
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            TextSpan(text: word.substring(1) + (isLast ? '' : ' ')),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
   void _showErrorDialog(String title, String message) {
     if (!mounted) return;
 
+    final theme = AppTheme.of(context, listen: false);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[850],
+        backgroundColor: theme.secondaryBlack,
         title: Text(
           title,
           style: const TextStyle(color: Colors.red),
         ),
         content: Text(
           message,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: theme.primaryWhite),
         ),
         actions: [
           TextButton(
@@ -157,7 +196,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
             style: TextButton.styleFrom(
               foregroundColor: Colors.amber,
             ),
-            child: const Text('OK'),
+            child: Text(AppLocalizations.of(context)!.ok),
           ),
         ],
       ),
@@ -166,8 +205,10 @@ class OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.primaryBlack,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -190,29 +231,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const SizedBox(height: 16),
                     RichText(
-                      text: TextSpan(
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey[300],
-                        ),
-                        children: const [
-                          TextSpan(
-                            text: 'W',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: 'allet '),
-                          TextSpan(
-                            text: 'T',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: 'hat '),
-                          TextSpan(
-                            text: 'F',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: 'lies on Ark'),
-                        ],
-                      ),
+                      text: _buildStyledTagline(context, theme),
                     ),
                   ],
                 ),
@@ -224,55 +243,59 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Choose an option:',
+                    Text(
+                      AppLocalizations.of(context)!.chooseAnOption,
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: theme.primaryWhite,
                       ),
                     ),
                     const SizedBox(height: 24),
 
                     // New Wallet Option
                     _buildOptionCard(
-                      title: 'Create New Wallet',
-                      subtitle: 'Generate a new secure wallet',
+                      title: AppLocalizations.of(context)!.createNewWallet,
+                      subtitle: AppLocalizations.of(context)!
+                          .generateANewSecureWallet,
                       option: 'new',
                     ),
                     const SizedBox(height: 16),
 
                     // Existing Wallet Option
                     _buildOptionCard(
-                      title: 'Restore Existing Wallet',
-                      subtitle: 'Use your secret key to access your wallet',
+                      title:
+                          AppLocalizations.of(context)!.restoreExistingWallet,
+                      subtitle: AppLocalizations.of(context)!
+                          .useYourSecretKeyToAccessYourWallet,
                       option: 'existing',
                     ),
                     const SizedBox(height: 24),
 
                     // Secret Key Input (shown only when "Existing Wallet" is selected)
                     if (_selectedOption == 'existing') ...[
-                      const Text(
-                        'Enter your nsec:',
+                      Text(
+                        AppLocalizations.of(context)!.enterYourNsec,
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.white70,
+                          color: theme.mutedText,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.grey[850],
+                          color: theme.secondaryBlack,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: TextField(
                           controller: _secretKeyController,
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: theme.primaryWhite),
                           maxLines: 3,
-                          decoration: const InputDecoration(
-                            hintText: 'Paste your recovery nsec...',
-                            hintStyle: TextStyle(color: Colors.grey),
-                            contentPadding: EdgeInsets.all(16),
+                          decoration: InputDecoration(
+                            hintText: AppLocalizations.of(context)!
+                                .pasteYourRecoveryNsec,
+                            hintStyle: TextStyle(color: theme.mutedText),
+                            contentPadding: const EdgeInsets.all(16),
                             border: InputBorder.none,
                           ),
                         ),
@@ -301,18 +324,18 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                     elevation: 0,
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.black),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                theme.primaryWhite),
                             strokeWidth: 3,
                           ),
                         )
-                      : const Text(
-                          'CONTINUE',
-                          style: TextStyle(
+                      : Text(
+                          AppLocalizations.of(context)!.contin,
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -332,13 +355,14 @@ class OnboardingScreenState extends State<OnboardingScreen> {
     required String option,
   }) {
     final bool isSelected = _selectedOption == option;
+    final theme = AppTheme.of(context);
 
     return InkWell(
       onTap: () => _handleOptionSelect(option),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.amber[500] : Colors.grey[850],
+          color: isSelected ? Colors.amber[500] : theme.secondaryBlack,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -352,7 +376,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.black : Colors.white,
+                      color:
+                          isSelected ? theme.primaryBlack : theme.primaryWhite,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -361,8 +386,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       color: isSelected
-                          ? Colors.white.withAlpha((0.7 * 255).round())
-                          : Colors.white70,
+                          ? theme.primaryWhite.withAlpha((0.7 * 255).round())
+                          : theme.mutedText,
                     ),
                   ),
                 ],

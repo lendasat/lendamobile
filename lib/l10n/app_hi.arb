@@ -1,0 +1,216 @@
+{
+  "@@locale": "hi",
+  "appTitle": "Ark Flutter",
+  "@appTitle": {
+    "description": "एप्लिकेशन का शीर्षक"
+  },
+  "settings": "सेटिंग्स",
+  "@settings": {
+    "description": "सेटिंग्स पेज का शीर्षक"
+  },
+  "cancel": "रद्द करें",
+  "@cancel": {
+    "description": "रद्द करें बटन का पाठ"
+  },
+  "save": "सहेजें",
+  "@save": {
+    "description": "सहेजें बटन का पाठ"
+  },
+  "apply": "लागू करें",
+  "@apply": {
+    "description": "लागू करें बटन का पाठ"
+  },
+  "done": "पूर्ण",
+  "@done": {
+    "description": "पूर्ण बटन का पाठ"
+  },
+  "select": "चुनें",
+  "@select": {
+    "description": "चुनें बटन का पाठ"
+  },
+  "search": "खोजें",
+  "@search": {
+    "description": "खोज प्लेसहोल्डर पाठ"
+  },
+  "enterAmount": "राशि दर्ज करें",
+  "amount": "राशि",
+  "skipAnyAmount": "छोड़ें (कोई भी राशि)",
+  "contin": "जारी रखें",
+  "currencyUpdatedSuccessfully": "मुद्रा सफलतापूर्वक अपडेट की गई",
+  "changeCurrency": "मुद्रा बदलें",
+  "languageUpdatedSuccessfully": "भाषा सफलतापूर्वक अपडेट की गई",
+  "changeLanguage": "भाषा बदलें",
+  "themeAppliedSuccessfully": "थीम सफलतापूर्वक लागू की गई",
+  "chooseYourColor": "अपना रंग चुनें",
+  "selectColor": "रंग चुनें",
+  "selectColorShade": "रंग की छाया चुनें",
+  "changeYourStyle": "अपनी शैली बदलें",
+  "chooseYourPreferredTheme": "अपनी पसंदीदा थीम चुनें",
+  "dark": "गहरा",
+  "originalDarkTheme": "मूल गहरा थीम",
+  "light": "हल्का",
+  "cleanLightTheme": "साफ हल्का थीम",
+  "applyTheme": "थीम लागू करें",
+  "custom": "कस्टम",
+  "createYourOwnTheme": "अपनी खुद की थीम बनाएं",
+  "timezoneUpdatedSuccessfully": "समय क्षेत्र सफलतापूर्वक अपडेट किया गया",
+  "changeTimezone": "समय क्षेत्र बदलें",
+  "searchTimezone": "समय क्षेत्र खोजें...",
+  "couldntUpdateTransactions": "लेनदेन अपडेट नहीं कर सका:",
+  "couldntUpdateBalance": "बैलेंस अपडेट नहीं कर सका:",
+  "showingBalanceType": "{balanceType} बैलेंस दिखा रहा है",
+  "@showingBalanceType": {
+    "description": "संदेश जब बैलेंस प्रकार बदला जाता है",
+    "placeholders": {
+      "balanceType": {
+        "type": "String",
+        "example": "कुल"
+      }
+    }
+  },
+  "retry": "पुनः प्रयास करें",
+  "pendingBalance": "लंबित बैलेंस",
+  "confirmedBalance": "पुष्ट बैलेंस",
+  "totalBalance": "कुल बैलेंस",
+  "errorLoadingBalance": "बैलेंस लोड करने में त्रुटि",
+  "send": "भेजें",
+  "receive": "प्राप्त करें",
+  "failedToCreateWallet": "वॉलेट बनाने में विफल",
+  "errorCreatingWallet": "आपका नया वॉलेट बनाते समय एक त्रुटि हुई। कृपया पुनः प्रयास करें।\n\nत्रुटि: {error}",
+  "@errorCreatingWallet": {
+    "description": "वॉलेट बनाने में विफलता पर दिखाया गया त्रुटि संदेश",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "कनेक्शन टाइमआउट"
+      }
+    }
+  },
+  "failedToRestoreWallet": "वॉलेट पुनर्स्थापित करने में विफल",
+  "errorRestoringWallet": "आपका वॉलेट पुनर्स्थापित करते समय एक त्रुटि हुई। कृपया अपना nsec जांचें और पुनः प्रयास करें।\n\nत्रुटि: {error}",
+  "@errorRestoringWallet": {
+    "description": "वॉलेट पुनर्स्थापना में विफलता पर दिखाया गया त्रुटि संदेश",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "अमान्य nsec प्रारूप"
+      }
+    }
+  },
+  "appTagline": "Ark पर उड़ने वाला वॉलेट",
+  "@appTagline": {
+    "description": "ऐप का टैगलाइन"
+  },
+  "ok": "ठीक है",
+  "chooseAnOption": "एक विकल्प चुनें:",
+  "createNewWallet": "नया वॉलेट बनाएं",
+  "generateANewSecureWallet": "एक नया सुरक्षित वॉलेट बनाएं",
+  "restoreExistingWallet": "मौजूदा वॉलेट पुनर्स्थापित करें",
+  "useYourSecretKeyToAccessYourWallet": "अपने वॉलेट तक पहुंचने के लिए अपनी गुप्त कुंजी का उपयोग करें",
+  "enterYourNsec": "अपना nsec दर्ज करें:",
+  "pasteYourRecoveryNsec": "अपना रिकवरी nsec पेस्ट करें...",
+  "paymentMonitoringError": "भुगतान मॉनिटरिंग त्रुटि: {error}",
+  "@paymentMonitoringError": {
+    "description": "भुगतान मॉनिटरिंग विफल होने पर दिखाया गया त्रुटि संदेश",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "नेटवर्क कनेक्शन खो गया"
+      }
+    }
+  },
+  "paymentReceived": "भुगतान प्राप्त हुआ!",
+  "addressCopiedToClipboard": "पता क्लिपबोर्ड पर कॉपी किया गया",
+  "shareWhichAddress": "कौन सा पता साझा करें?",
+  "address": "पता",
+  "lightningInvoice": "लाइटनिंग इनवॉइस",
+  "qrCodeImage": "QR कोड छवि",
+  "errorSharing": "साझा करते समय त्रुटि",
+  "myBitcoinAddressQrCode": "मेरा बिटकॉइन पता QR कोड",
+  "requesting": "अनुरोध कर रहे हैं: ",
+  "monitoringForIncomingPayment": "आने वाले भुगतान की निगरानी...",
+  "copyAddress": "पता कॉपी करें",
+  "errorLoadingAddresses": "पते लोड करने में त्रुटि",
+  "share": "साझा करें",
+  "pleaseEnterBothAddressAndAmount": "कृपया पता और राशि दोनों दर्ज करें",
+  "pleaseEnterAValidAmount": "कृपया एक मान्य राशि दर्ज करें",
+  "insufficientFunds": "पर्याप्त धन नहीं",
+  "sendLower": "भेजें",
+  "receiveLower": "प्राप्त करें",
+  "recipientAddress": "प्राप्तकर्ता का पता",
+  "bitcoinOrArkAddress": "बिटकॉइन या Ark पता",
+  "available": "उपलब्ध",
+  "esploraUrlSavedWillOnlyTakeEffectAfterARestart": "Esplora URL सहेजा गया - पुनः प्रारंभ के बाद प्रभावी होगा",
+  "failedToSaveEsploraUrl": "Esplora URL सहेजने में विफल",
+  "networkSavedWillOnlyTakeEffectAfterARestart": "नेटवर्क सहेजा गया - पुनः प्रारंभ के बाद प्रभावी होगा",
+  "arkServerUrlSavedWillOnlyTakeEffectAfterARestart": "Ark सर्वर URL सहेजा गया - पुनः प्रारंभ के बाद प्रभावी होगा",
+  "failedToSaveArkServerUrl": "Ark सर्वर URL सहेजने में विफल",
+  "boltzUrlSavedWillOnlyTakeEffectAfterARestart": "Boltz URL सहेजा गया - पुनः प्रारंभ के बाद प्रभावी होगा",
+  "failedToSaveBoltzUrl": "Boltz URL सहेजने में विफल",
+  "securityWarning": "सुरक्षा चेतावनी",
+  "neverShareYourRecoveryKeyWithAnyone": "अपनी रिकवरी कुंजी किसी के साथ साझा न करें!",
+  "anyoneWithThisKeyCan": "इस कुंजी के साथ कोई भी व्यक्ति आपके वॉलेट तक पहुंच सकता है और आपके धन को चुरा सकता है। इसे सुरक्षित स्थान पर रखें।",
+  "iUnderstand": "मैं समझ गया",
+  "yourRecoveryPhrase": "आपका रिकवरी वाक्यांश",
+  "recoveryPhraseCopiedToClipboard": "रिकवरी वाक्यांश क्लिपबोर्ड पर कॉपी किया गया",
+  "copyToClipboard": "क्लिपबोर्ड पर कॉपी करें",
+  "close": "बंद करें",
+  "resetWallet": "वॉलेट रीसेट करें",
+  "thisWillDeleteAllWalletData": "यह इस डिवाइस से सभी वॉलेट डेटा हटा देगा। आगे बढ़ने से पहले सुनिश्चित करें कि आपने अपना रिकवरी वाक्यांश सहेजा है। यह क्रिया पूर्ववत नहीं की जा सकती।",
+  "restartingApp": "ऐप पुनः प्रारंभ हो रहा है",
+  "pleaseTapHereToOpenTheAppAgain": "कृपया ऐप को फिर से खोलने के लिए यहाँ टैप करें।",
+  "reset": "रीसेट करें",
+  "wallet": "वॉलेट",
+  "viewRecoveryKey": "रिकवरी कुंजी देखें",
+  "backupYourWalletWithTheseKey": "इन कुंजियों के साथ अपना वॉलेट बैकअप करें",
+  "appearancePreferences": "दिखावट और प्राथमिकताएँ",
+  "theme": "थीम",
+  "customizeAppAppearance": "ऐप की दिखावट को अनुकूलित करें",
+  "language": "भाषा",
+  "selectYourPreferredLanguage": "अपनी पसंदीदा भाषा चुनें",
+  "timezone": "समय क्षेत्र",
+  "chooseYourPreferredTimezone": "अपना पसंदीदा समय क्षेत्र चुनें",
+  "currency": "मुद्रा",
+  "chooseYourPreferredCurrency": "अपनी पसंदीदा मुद्रा चुनें",
+  "serverConfiguration": "सर्वर कॉन्फ़िगरेशन",
+  "network": "नेटवर्क",
+  "esploraUrl": "Esplora URL",
+  "arkServer": "Ark सर्वर",
+  "boltzUrl": "Boltz URL",
+  "about": "के बारे में",
+  "loading": "लोड हो रहा है",
+  "dangerZone": "खतरे का क्षेत्र",
+  "deleteAllWalletDataFromThisDevice": "इस डिवाइस से सभी वॉलेट डेटा हटाएँ",
+  "transactionFailed": "लेनदेन विफल:",
+  "signTransaction": "लेनदेन पर हस्ताक्षर करें",
+  "networkFees": "नेटवर्क शुल्क",
+  "total": "कुल",
+  "tapToSign": "हस्ताक्षर करने के लिए टैप करें",
+  "settlingTransaction": "लेनदेन निपटाया जा रहा है...",
+  "success": "सफलता",
+  "transactionSettledSuccessfully": "लेनदेन सफलतापूर्वक पूरा हुआ!",
+  "goToHome": "होम पर जाएँ",
+  "error": "त्रुटि",
+  "failedToSettleTransaction": "लेनदेन पूरा करने में विफल:",
+  "pendingConfirmation": "पुष्टिकरण लंबित",
+  "transactionId": "लेनदेन आईडी",
+  "status": "स्थिति",
+  "confirmed": "पुष्ट",
+  "pending": "लंबित",
+  "date": "तारीख",
+  "confirmedAt": "पुष्ट किया गया समय",
+  "transactionPendingFundsWillBeNonReversibleAfterSettlement": "लेनदेन लंबित है। निपटान के बाद धन अपरिवर्तनीय होगा।",
+  "settle": "निपटाएं",
+  "transactionHistory": "लेनदेन इतिहास",
+  "errorLoadingTransactions": "लेनदेन लोड करने में त्रुटि",
+  "noTransactionHistoryYet": "अभी तक कोई लेनदेन इतिहास नहीं",
+  "boardingTransaction": "बोर्डिंग लेनदेन",
+  "roundTransaction": "राउंड लेनदेन",
+  "redeemTransaction": "रिडीम लेनदेन",
+  "sent": "भेजा गया",
+  "received": "प्राप्त हुआ",
+  "settled": "निपटाया गया",
+  "sentSuccessfully": "सफलतापूर्वक भेजा गया",
+  "returningToWalletAfterSuccessfulTransaction": "सफल लेनदेन के बाद वॉलेट पर लौट रहे हैं",
+  "backToWallet": "वॉलेट पर वापस जाएँ"
+}

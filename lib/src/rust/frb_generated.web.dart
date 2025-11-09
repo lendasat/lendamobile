@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
 import 'logger.dart';
+import 'models/exchange_rates.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
@@ -24,6 +25,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
+
+  @protected
+  Map<String, double> dco_decode_Map_String_f_64_None(dynamic raw);
 
   @protected
   RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Sse(dynamic raw);
@@ -53,13 +57,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_box_autoadd_u_64(dynamic raw);
 
   @protected
+  ExchangeRates dco_decode_exchange_rates(dynamic raw);
+
+  @protected
+  double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FiatCurrency dco_decode_fiat_currency(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
+
+  @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
   Info dco_decode_info(dynamic raw);
 
   @protected
+  List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<(String, double)> dco_decode_list_record_string_f_64(dynamic raw);
 
   @protected
   List<Transaction> dco_decode_list_transaction(dynamic raw);
@@ -86,6 +108,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PaymentReceived dco_decode_payment_received(dynamic raw);
 
   @protected
+  (String, double) dco_decode_record_string_f_64(dynamic raw);
+
+  @protected
   Transaction dco_decode_transaction(dynamic raw);
 
   @protected
@@ -99,6 +124,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+
+  @protected
+  Map<String, double> sse_decode_Map_String_f_64_None(
+      SseDeserializer deserializer);
 
   @protected
   RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Sse(
@@ -129,13 +158,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
+  ExchangeRates sse_decode_exchange_rates(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FiatCurrency sse_decode_fiat_currency(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
   Info sse_decode_info(SseDeserializer deserializer);
 
   @protected
+  List<FiatCurrency> sse_decode_list_fiat_currency(
+      SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<(String, double)> sse_decode_list_record_string_f_64(
+      SseDeserializer deserializer);
 
   @protected
   List<Transaction> sse_decode_list_transaction(SseDeserializer deserializer);
@@ -163,6 +212,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PaymentReceived sse_decode_payment_received(SseDeserializer deserializer);
 
   @protected
+  (String, double) sse_decode_record_string_f_64(SseDeserializer deserializer);
+
+  @protected
   Transaction sse_decode_transaction(SseDeserializer deserializer);
 
   @protected
@@ -175,11 +227,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
-
-  @protected
   void sse_encode_AnyhowException(
       AnyhowException self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_Map_String_f_64_None(
+      Map<String, double> self, SseSerializer serializer);
 
   @protected
   void sse_encode_StreamSink_log_entry_Sse(
@@ -212,14 +265,34 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
 
   @protected
+  void sse_encode_exchange_rates(ExchangeRates self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_fiat_currency(FiatCurrency self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
   void sse_encode_info(Info self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_fiat_currency(
+      List<FiatCurrency> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
       Uint8List self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_record_string_f_64(
+      List<(String, double)> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_transaction(
@@ -251,6 +324,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       PaymentReceived self, SseSerializer serializer);
 
   @protected
+  void sse_encode_record_string_f_64(
+      (String, double) self, SseSerializer serializer);
+
+  @protected
   void sse_encode_transaction(Transaction self, SseSerializer serializer);
 
   @protected
@@ -261,9 +338,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
 }
 
 // Section: wire_class

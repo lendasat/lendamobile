@@ -1,0 +1,216 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Ark Flutter",
+  "@appTitle": {
+    "description": "Titre de l'application"
+  },
+  "settings": "Paramètres",
+  "@settings": {
+    "description": "Titre de la page des paramètres"
+  },
+  "cancel": "Annuler",
+  "@cancel": {
+    "description": "Texte du bouton Annuler"
+  },
+  "save": "Enregistrer",
+  "@save": {
+    "description": "Texte du bouton Enregistrer"
+  },
+  "apply": "Appliquer",
+  "@apply": {
+    "description": "Texte du bouton Appliquer"
+  },
+  "done": "Terminé",
+  "@done": {
+    "description": "Texte du bouton Terminé"
+  },
+  "select": "Sélectionner",
+  "@select": {
+    "description": "Texte du bouton Sélectionner"
+  },
+  "search": "Rechercher",
+  "@search": {
+    "description": "Texte du champ de recherche"
+  },
+  "enterAmount": "Entrer le montant",
+  "amount": "Montant",
+  "skipAnyAmount": "PASSER (N'IMPORTE QUEL MONTANT)",
+  "contin": "CONTINUER",
+  "currencyUpdatedSuccessfully": "Devise mise à jour avec succès",
+  "changeCurrency": "Changer la devise",
+  "languageUpdatedSuccessfully": "Langue mise à jour avec succès",
+  "changeLanguage": "Changer la langue",
+  "themeAppliedSuccessfully": "Thème appliqué avec succès",
+  "chooseYourColor": "Choisissez votre couleur",
+  "selectColor": "Sélectionner une couleur",
+  "selectColorShade": "Sélectionner une nuance de couleur",
+  "changeYourStyle": "Changez votre style",
+  "chooseYourPreferredTheme": "Choisissez votre thème préféré",
+  "dark": "Sombre",
+  "originalDarkTheme": "Thème sombre original",
+  "light": "Clair",
+  "cleanLightTheme": "Thème clair épuré",
+  "applyTheme": "Appliquer le thème",
+  "custom": "Personnalisé",
+  "createYourOwnTheme": "Créez votre propre thème",
+  "timezoneUpdatedSuccessfully": "Fuseau horaire mis à jour avec succès",
+  "changeTimezone": "Changer le fuseau horaire",
+  "searchTimezone": "Rechercher un fuseau horaire...",
+  "couldntUpdateTransactions": "Impossible de mettre à jour les transactions :",
+  "couldntUpdateBalance": "Impossible de mettre à jour le solde :",
+  "showingBalanceType": "Affichage du solde {balanceType}",
+  "@showingBalanceType": {
+    "description": "Message affiché lors du changement de type de solde",
+    "placeholders": {
+      "balanceType": {
+        "type": "String",
+        "example": "total"
+      }
+    }
+  },
+  "retry": "RÉESSAYER",
+  "pendingBalance": "Solde en attente",
+  "confirmedBalance": "Solde confirmé",
+  "totalBalance": "Solde total",
+  "errorLoadingBalance": "Erreur lors du chargement du solde",
+  "send": "ENVOYER",
+  "receive": "RECEVOIR",
+  "failedToCreateWallet": "Échec de la création du portefeuille",
+  "errorCreatingWallet": "Une erreur est survenue lors de la création de votre nouveau portefeuille. Veuillez réessayer.\n\nErreur : {error}",
+  "@errorCreatingWallet": {
+    "description": "Message d'erreur affiché lors de l'échec de la création du portefeuille",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Délai de connexion dépassé"
+      }
+    }
+  },
+  "failedToRestoreWallet": "Échec de la restauration du portefeuille",
+  "errorRestoringWallet": "Une erreur est survenue lors de la restauration de votre portefeuille. Veuillez vérifier votre nsec et réessayer.\n\nErreur : {error}",
+  "@errorRestoringWallet": {
+    "description": "Message d'erreur affiché lors de l'échec de la restauration du portefeuille",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Format nsec invalide"
+      }
+    }
+  },
+  "appTagline": "Le portefeuille qui vole sur Ark",
+  "@appTagline": {
+    "description": "Slogan de l'application"
+  },
+  "ok": "OK",
+  "chooseAnOption": "Choisissez une option :",
+  "createNewWallet": "Créer un nouveau portefeuille",
+  "generateANewSecureWallet": "Générer un nouveau portefeuille sécurisé",
+  "restoreExistingWallet": "Restaurer un portefeuille existant",
+  "useYourSecretKeyToAccessYourWallet": "Utilisez votre clé secrète pour accéder à votre portefeuille",
+  "enterYourNsec": "Entrez votre nsec :",
+  "pasteYourRecoveryNsec": "Collez votre nsec de récupération...",
+  "paymentMonitoringError": "Erreur de surveillance du paiement : {error}",
+  "@paymentMonitoringError": {
+    "description": "Message d'erreur affiché lors de l'échec de la surveillance du paiement",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Connexion réseau perdue"
+      }
+    }
+  },
+  "paymentReceived": "Paiement reçu !",
+  "addressCopiedToClipboard": "Adresse copiée dans le presse-papiers",
+  "shareWhichAddress": "Quelle adresse partager ?",
+  "address": "Adresse",
+  "lightningInvoice": "Facture Lightning",
+  "qrCodeImage": "Image du code QR",
+  "errorSharing": "Erreur lors du partage",
+  "myBitcoinAddressQrCode": "Code QR de mon adresse Bitcoin",
+  "requesting": "Demande : ",
+  "monitoringForIncomingPayment": "Surveillance des paiements entrants...",
+  "copyAddress": "Copier l'adresse",
+  "errorLoadingAddresses": "Erreur lors du chargement des adresses",
+  "share": "PARTAGER",
+  "pleaseEnterBothAddressAndAmount": "Veuillez entrer à la fois l'adresse et le montant",
+  "pleaseEnterAValidAmount": "Veuillez entrer un montant valide",
+  "insufficientFunds": "Fonds insuffisants",
+  "sendLower": "Envoyer",
+  "receiveLower": "Recevoir",
+  "recipientAddress": "Adresse du destinataire",
+  "bitcoinOrArkAddress": "Adresse Bitcoin ou Ark",
+  "available": "disponible",
+  "esploraUrlSavedWillOnlyTakeEffectAfterARestart": "URL Esplora enregistrée – prendra effet après un redémarrage",
+  "failedToSaveEsploraUrl": "Échec de l'enregistrement de l'URL Esplora",
+  "networkSavedWillOnlyTakeEffectAfterARestart": "Réseau enregistré – prendra effet après un redémarrage",
+  "arkServerUrlSavedWillOnlyTakeEffectAfterARestart": "URL du serveur Ark enregistrée – prendra effet après un redémarrage",
+  "failedToSaveArkServerUrl": "Échec de l'enregistrement de l'URL du serveur Ark",
+  "boltzUrlSavedWillOnlyTakeEffectAfterARestart": "URL Boltz enregistrée – prendra effet après un redémarrage",
+  "failedToSaveBoltzUrl": "Échec de l'enregistrement de l'URL Boltz",
+  "securityWarning": "Avertissement de sécurité",
+  "neverShareYourRecoveryKeyWithAnyone": "Ne partagez jamais votre clé de récupération avec qui que ce soit !",
+  "anyoneWithThisKeyCan": "Toute personne possédant cette clé peut accéder à votre portefeuille et voler vos fonds. Conservez-la dans un endroit sûr.",
+  "iUnderstand": "JE COMPRENDS",
+  "yourRecoveryPhrase": "Votre phrase de récupération",
+  "recoveryPhraseCopiedToClipboard": "Phrase de récupération copiée dans le presse-papiers",
+  "copyToClipboard": "COPIER DANS LE PRESSE-PAPIERS",
+  "close": "FERMER",
+  "resetWallet": "Réinitialiser le portefeuille",
+  "thisWillDeleteAllWalletData": "Cela supprimera toutes les données du portefeuille de cet appareil. Assurez-vous d'avoir sauvegardé votre phrase de récupération avant de continuer. Cette action est irréversible.",
+  "restartingApp": "Redémarrage de l'application",
+  "pleaseTapHereToOpenTheAppAgain": "Appuyez ici pour rouvrir l'application.",
+  "reset": "RÉINITIALISER",
+  "wallet": "Portefeuille",
+  "viewRecoveryKey": "Afficher la clé de récupération",
+  "backupYourWalletWithTheseKey": "Sauvegardez votre portefeuille avec cette clé",
+  "appearancePreferences": "Apparence et préférences",
+  "theme": "Thème",
+  "customizeAppAppearance": "Personnaliser l'apparence de l'application",
+  "language": "Langue",
+  "selectYourPreferredLanguage": "Sélectionnez votre langue préférée",
+  "timezone": "Fuseau horaire",
+  "chooseYourPreferredTimezone": "Choisissez votre fuseau horaire préféré",
+  "currency": "Devise",
+  "chooseYourPreferredCurrency": "Choisissez votre devise préférée",
+  "serverConfiguration": "Configuration du serveur",
+  "network": "Réseau",
+  "esploraUrl": "URL Esplora",
+  "arkServer": "Serveur Ark",
+  "boltzUrl": "URL Boltz",
+  "about": "À propos",
+  "loading": "chargement",
+  "dangerZone": "Zone de danger",
+  "deleteAllWalletDataFromThisDevice": "Supprimer toutes les données du portefeuille de cet appareil",
+  "transactionFailed": "Échec de la transaction :",
+  "signTransaction": "Signer la transaction",
+  "networkFees": "Frais de réseau",
+  "total": "Total",
+  "tapToSign": "APPUYEZ POUR SIGNER",
+  "settlingTransaction": "Finalisation de la transaction...",
+  "success": "Succès",
+  "transactionSettledSuccessfully": "Transaction finalisée avec succès !",
+  "goToHome": "Aller à l'accueil",
+  "error": "Erreur",
+  "failedToSettleTransaction": "Échec de la finalisation de la transaction :",
+  "pendingConfirmation": "En attente de confirmation",
+  "transactionId": "ID de transaction",
+  "status": "Statut",
+  "confirmed": "Confirmé",
+  "pending": "En attente",
+  "date": "Date",
+  "confirmedAt": "Confirmé le",
+  "transactionPendingFundsWillBeNonReversibleAfterSettlement": "Transaction en attente. Les fonds seront irréversibles après la finalisation.",
+  "settle": "FINALISER",
+  "transactionHistory": "Historique des transactions",
+  "errorLoadingTransactions": "Erreur lors du chargement des transactions",
+  "noTransactionHistoryYet": "Aucun historique de transactions pour le moment",
+  "boardingTransaction": "Transaction d'embarquement",
+  "roundTransaction": "Transaction d'arrondi",
+  "redeemTransaction": "Transaction de rachat",
+  "sent": "Envoyé",
+  "received": "Reçu",
+  "settled": "Finalisé",
+  "sentSuccessfully": "envoyé avec succès",
+  "returningToWalletAfterSuccessfulTransaction": "Retour au portefeuille après une transaction réussie",
+  "backToWallet": "RETOUR AU PORTEFEUILLE"
+}

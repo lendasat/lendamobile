@@ -1,0 +1,216 @@
+{
+  "@@locale": "en",
+  "appTitle": "Ark Flutter",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings page title"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Save button text"
+  },
+  "apply": "Apply",
+  "@apply": {
+    "description": "Apply button text"
+  },
+  "done": "Done",
+  "@done": {
+    "description": "Done button text"
+  },
+  "select": "Select",
+  "@select": {
+    "description": "Select button text"
+  },
+  "search": "Search",
+  "@search": {
+    "description": "Search placeholder text"
+  },
+  "enterAmount": "Enter Amount",
+  "amount": "Amount",
+  "skipAnyAmount": "SKIP (ANY AMOUNT)",
+  "contin": "CONTINUE",
+  "currencyUpdatedSuccessfully": "Currency updated successfully",
+  "changeCurrency": "Change Currency",
+  "languageUpdatedSuccessfully": "Language updated successfully",
+  "changeLanguage": "Change Language",
+  "themeAppliedSuccessfully": "Theme applied successfully",
+  "chooseYourColor": "Choose Your Color",
+  "selectColor": "Select color",
+  "selectColorShade": "Select color shade",
+  "changeYourStyle": "Change Your Style",
+  "chooseYourPreferredTheme": "Choose your preferred theme",
+  "dark": "Dark",
+  "originalDarkTheme": "Original dark theme",
+  "light": "Light",
+  "cleanLightTheme": "Clean light theme",
+  "applyTheme": "Apply Theme",
+  "custom": "Custom",
+  "createYourOwnTheme": "Create your own theme",
+  "timezoneUpdatedSuccessfully": "Timezone updated successfully",
+  "changeTimezone": "Change Timezone",
+  "searchTimezone": "Search timezone...",
+  "couldntUpdateTransactions": "Couldn't update transactions:",
+  "couldntUpdateBalance": "Couldn't update balance:",
+  "showingBalanceType": "Showing {balanceType} balance",
+  "@showingBalanceType": {
+    "description": "Message shown when toggling between balance types",
+    "placeholders": {
+      "balanceType": {
+        "type": "String",
+        "example": "total"
+      }
+    }
+  },
+  "retry": "RETRY",
+  "pendingBalance": "Pending Balance",
+  "confirmedBalance": "Confirmed Balance",
+  "totalBalance": "Total Balance",
+  "errorLoadingBalance": "Error loading balance",
+  "send": "SEND",
+  "receive": "RECEIVE",
+  "failedToCreateWallet": "Failed to create wallet",
+  "errorCreatingWallet": "There was an error creating your new wallet. Please try again.\n\nError: {error}",
+  "@errorCreatingWallet": {
+    "description": "Error message shown when wallet creation fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Connection timeout"
+      }
+    }
+  },
+  "failedToRestoreWallet": "Failed to restore wallet",
+  "errorRestoringWallet": "There was an error restoring your wallet. Please check your nsec and try again.\n\nError: {error}",
+  "@errorRestoringWallet": {
+    "description": "Error message shown when wallet restoration fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Invalid nsec format"
+      }
+    }
+  },
+  "appTagline": "Wallet That Flies on Ark",
+  "@appTagline": {
+    "description": "App tagline with first letter of each word bolded"
+  },
+  "ok": "OK",
+  "chooseAnOption": "Choose an option:",
+  "createNewWallet": "Create New Wallet",
+  "generateANewSecureWallet": "Generate a new secure wallet",
+  "restoreExistingWallet": "Restore Existing Wallet",
+  "useYourSecretKeyToAccessYourWallet": "Use your secret key to access your wallet",
+  "enterYourNsec": "Enter your nsec:",
+  "pasteYourRecoveryNsec": "Paste your recovery nsec...",
+  "paymentMonitoringError": "Payment monitoring error: {error}",
+  "@paymentMonitoringError": {
+    "description": "Error message shown when payment monitoring fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network connection lost"
+      }
+    }
+  },
+  "paymentReceived": "Payment Received!",
+  "addressCopiedToClipboard": " address copied to clipboard",
+  "shareWhichAddress": "Share Which Address?",
+  "address": "Address",
+  "lightningInvoice": "Lightning Invoice",
+  "qrCodeImage": "QR Code Image",
+  "errorSharing": "Error sharing",
+  "myBitcoinAddressQrCode": "My Bitcoin Address QR Code",
+  "requesting": "Requesting: ",
+  "monitoringForIncomingPayment": "Monitoring for incoming payment...",
+  "copyAddress": "Copy address",
+  "errorLoadingAddresses": "Error loading addresses",
+  "share": "SHARE",
+  "pleaseEnterBothAddressAndAmount": "Please enter both address and amount",
+  "pleaseEnterAValidAmount": "Please enter a valid amount",
+  "insufficientFunds": "Insufficient funds",
+  "sendLower": "Send",
+  "receiveLower": "Receive",
+  "recipientAddress": "Recipient address",
+  "bitcoinOrArkAddress": "Bitcoin or Ark address",
+  "available": "available",
+  "esploraUrlSavedWillOnlyTakeEffectAfterARestart": "Esplora URL saved  - will only take effect after a restart",
+  "failedToSaveEsploraUrl": "Failed to save Esplora URL",
+  "networkSavedWillOnlyTakeEffectAfterARestart": "Network saved - will only take effect after a restart",
+  "arkServerUrlSavedWillOnlyTakeEffectAfterARestart": "Ark Server URL saved - will only take effect after a restart",
+  "failedToSaveArkServerUrl": "Failed to save Ark Server URL",
+  "boltzUrlSavedWillOnlyTakeEffectAfterARestart": "Boltz URL saved - will only take effect after a restart",
+  "failedToSaveBoltzUrl": "Failed to save Boltz URL",
+  "securityWarning": "Security Warning",
+  "neverShareYourRecoveryKeyWithAnyone": "Never share your recovery key with anyone!",
+  "anyoneWithThisKeyCan": "Anyone with this key can access your wallet and steal your funds. Store it in a secure place.",
+  "iUnderstand": "I UNDERSTAND",
+  "yourRecoveryPhrase": "Your Recovery Phrase",
+  "recoveryPhraseCopiedToClipboard": "Recovery phrase copied to clipboard",
+  "copyToClipboard": "COPY TO CLIPBOARD",
+  "close": "CLOSE",
+  "resetWallet": "Reset Wallet",
+  "thisWillDeleteAllWalletData": "This will delete all wallet data from this device. Make sure you have backed up your recovery phrase before proceeding. This action cannot be undone.",
+  "restartingApp": "Restarting App",
+  "pleaseTapHereToOpenTheAppAgain": "Please tap here to open the app again.",
+  "reset": "RESET",
+  "wallet": "Wallet",
+  "viewRecoveryKey": "View Recovery Key",
+  "backupYourWalletWithTheseKey": "Backup your wallet with these key",
+  "appearancePreferences": "Appearance & Preferences",
+  "theme": "Theme",
+  "customizeAppAppearance": "Customize app appearance",
+  "language": "Language",
+  "selectYourPreferredLanguage": "Select your preferred language",
+  "timezone": "Timezone",
+  "chooseYourPreferredTimezone": "Choose your preferred timezone",
+  "currency": "Currency",
+  "chooseYourPreferredCurrency": "Choose your preferred currency",
+  "serverConfiguration": "Server Configuration",
+  "network": "Network",
+  "esploraUrl": "Esplora URL",
+  "arkServer": "Ark Server",
+  "boltzUrl": "Boltz URL",
+  "about": "About",
+  "loading": "loading",
+  "dangerZone": "Danger Zone",
+  "deleteAllWalletDataFromThisDevice": "Delete all wallet data from this device",
+  "transactionFailed": "Transaction failed:",
+  "signTransaction": "Sign transaction",
+  "networkFees": "Network fees",
+  "total": "Total",
+  "tapToSign": "TAP TO SIGN",
+  "settlingTransaction": "Settling transaction...",
+  "success": "Success",
+  "transactionSettledSuccessfully": "Transaction settled successfully!",
+  "goToHome": "Go to Home",
+  "error": "Error",
+  "failedToSettleTransaction": "Failed to settle transaction:",
+  "pendingConfirmation": "Pending confirmation",
+  "transactionId": "Transaction ID",
+  "status": "Status",
+  "confirmed": "Confirmed",
+  "pending": "Pending",
+  "date": "Date",
+  "confirmedAt": "Confirmed At",
+  "transactionPendingFundsWillBeNonReversibleAfterSettlement": "Transaction pending. Funds will be non-reversible after settlement.",
+  "settle": "SETTLE",
+  "transactionHistory": "Transaction History",
+  "errorLoadingTransactions": "Error loading transactions",
+  "noTransactionHistoryYet": "No transaction history yet",
+  "boardingTransaction": "Boarding Transaction",
+  "roundTransaction": "Round Transaction",
+  "redeemTransaction": "Redeem Transaction",
+  "sent": "Sent",
+  "received": "Received",
+  "settled": "Settled",
+  "sentSuccessfully": "sent successfully",
+  "returningToWalletAfterSuccessfulTransaction": "Returning to wallet after successful transaction",
+  "backToWallet": "BACK TO WALLET"
+}

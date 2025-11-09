@@ -100,6 +100,7 @@ checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 [[package]]
 name = "ark-bdk-wallet"
 version = "0.7.0"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=8028a#8028a59b6b4fc9292f5269174b9228daa5052f3e"
 dependencies = [
  "anyhow",
  "ark-client",
@@ -118,6 +119,7 @@ dependencies = [
 [[package]]
 name = "ark-client"
 version = "0.7.0"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=8028a#8028a59b6b4fc9292f5269174b9228daa5052f3e"
 dependencies = [
  "ark-core",
  "ark-grpc",
@@ -154,6 +156,7 @@ dependencies = [
 [[package]]
 name = "ark-core"
 version = "0.7.0"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=8028a#8028a59b6b4fc9292f5269174b9228daa5052f3e"
 dependencies = [
  "ark-secp256k1",
  "bech32",
@@ -170,6 +173,7 @@ dependencies = [
 [[package]]
 name = "ark-grpc"
 version = "0.7.0"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=8028a#8028a59b6b4fc9292f5269174b9228daa5052f3e"
 dependencies = [
  "ark-core",
  "async-stream",
@@ -187,6 +191,7 @@ dependencies = [
 [[package]]
 name = "ark-secp256k1"
 version = "0.31.0"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=8028a#8028a59b6b4fc9292f5269174b9228daa5052f3e"
 dependencies = [
  "bitcoin_hashes 0.14.0",
  "rand 0.9.1",
@@ -2801,7 +2806,9 @@ dependencies = [
  "openssl",
  "parking_lot",
  "rand 0.8.5",
+ "reqwest 0.12.15",
  "rustls",
+ "serde",
  "serde_json",
  "state",
  "tokio",
@@ -2982,6 +2989,7 @@ dependencies = [
 [[package]]
 name = "secp256k1-sys"
 version = "0.11.0"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=8028a#8028a59b6b4fc9292f5269174b9228daa5052f3e"
 dependencies = [
  "cc",
 ]

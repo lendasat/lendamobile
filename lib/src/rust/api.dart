@@ -5,6 +5,19 @@
 
 import 'frb_generated.dart';
 import 'logger.dart';
+import 'models/exchange_rates.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 Stream<LogEntry> initLogging() => RustLib.instance.api.crateApiInitLogging();
+
+/// Fetch current exchange rates from USD to various fiat currencies
+Future<ExchangeRates> fetchExchangeRates() =>
+    RustLib.instance.api.crateApiFetchExchangeRates();
+
+/// Get all supported fiat currencies
+List<FiatCurrency> getSupportedCurrencies() =>
+    RustLib.instance.api.crateApiGetSupportedCurrencies();
+
+/// Get currency code for a given currency
+String currencyCode({required FiatCurrency currency}) =>
+    RustLib.instance.api.crateApiCurrencyCode(currency: currency);

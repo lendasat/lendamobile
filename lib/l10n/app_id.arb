@@ -1,0 +1,216 @@
+{
+  "@@locale": "id",
+  "appTitle": "Ark Flutter",
+  "@appTitle": {
+    "description": "Judul aplikasi"
+  },
+  "settings": "Pengaturan",
+  "@settings": {
+    "description": "Judul halaman pengaturan"
+  },
+  "cancel": "Batal",
+  "@cancel": {
+    "description": "Teks tombol batal"
+  },
+  "save": "Simpan",
+  "@save": {
+    "description": "Teks tombol simpan"
+  },
+  "apply": "Terapkan",
+  "@apply": {
+    "description": "Teks tombol terapkan"
+  },
+  "done": "Selesai",
+  "@done": {
+    "description": "Teks tombol selesai"
+  },
+  "select": "Pilih",
+  "@select": {
+    "description": "Teks tombol pilih"
+  },
+  "search": "Cari",
+  "@search": {
+    "description": "Teks placeholder pencarian"
+  },
+  "enterAmount": "Masukkan Jumlah",
+  "amount": "Jumlah",
+  "skipAnyAmount": "LEWATI (JUMLAH APA SAJA)",
+  "contin": "LANJUTKAN",
+  "currencyUpdatedSuccessfully": "Mata uang berhasil diperbarui",
+  "changeCurrency": "Ubah Mata Uang",
+  "languageUpdatedSuccessfully": "Bahasa berhasil diperbarui",
+  "changeLanguage": "Ubah Bahasa",
+  "themeAppliedSuccessfully": "Tema berhasil diterapkan",
+  "chooseYourColor": "Pilih Warna Anda",
+  "selectColor": "Pilih warna",
+  "selectColorShade": "Pilih gradasi warna",
+  "changeYourStyle": "Ubah Gaya Anda",
+  "chooseYourPreferredTheme": "Pilih tema yang Anda sukai",
+  "dark": "Gelap",
+  "originalDarkTheme": "Tema gelap asli",
+  "light": "Terang",
+  "cleanLightTheme": "Tema terang bersih",
+  "applyTheme": "Terapkan Tema",
+  "custom": "Kustom",
+  "createYourOwnTheme": "Buat tema Anda sendiri",
+  "timezoneUpdatedSuccessfully": "Zona waktu berhasil diperbarui",
+  "changeTimezone": "Ubah Zona Waktu",
+  "searchTimezone": "Cari zona waktu...",
+  "couldntUpdateTransactions": "Tidak dapat memperbarui transaksi:",
+  "couldntUpdateBalance": "Tidak dapat memperbarui saldo:",
+  "showingBalanceType": "Menampilkan saldo {balanceType}",
+  "@showingBalanceType": {
+    "description": "Pesan yang ditampilkan saat beralih jenis saldo",
+    "placeholders": {
+      "balanceType": {
+        "type": "String",
+        "example": "total"
+      }
+    }
+  },
+  "retry": "COBA LAGI",
+  "pendingBalance": "Saldo Tertunda",
+  "confirmedBalance": "Saldo Terkonfirmasi",
+  "totalBalance": "Total Saldo",
+  "errorLoadingBalance": "Kesalahan saat memuat saldo",
+  "send": "KIRIM",
+  "receive": "TERIMA",
+  "failedToCreateWallet": "Gagal membuat dompet",
+  "errorCreatingWallet": "Terjadi kesalahan saat membuat dompet baru Anda. Silakan coba lagi.\n\nKesalahan: {error}",
+  "@errorCreatingWallet": {
+    "description": "Pesan kesalahan saat pembuatan dompet gagal",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Waktu koneksi habis"
+      }
+    }
+  },
+  "failedToRestoreWallet": "Gagal memulihkan dompet",
+  "errorRestoringWallet": "Terjadi kesalahan saat memulihkan dompet Anda. Silakan periksa nsec Anda dan coba lagi.\n\nKesalahan: {error}",
+  "@errorRestoringWallet": {
+    "description": "Pesan kesalahan saat pemulihan dompet gagal",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Format nsec tidak valid"
+      }
+    }
+  },
+  "appTagline": "Dompet yang Terbang di Ark",
+  "@appTagline": {
+    "description": "Slogan aplikasi"
+  },
+  "ok": "OK",
+  "chooseAnOption": "Pilih opsi:",
+  "createNewWallet": "Buat Dompet Baru",
+  "generateANewSecureWallet": "Buat dompet baru yang aman",
+  "restoreExistingWallet": "Pulihkan Dompet yang Ada",
+  "useYourSecretKeyToAccessYourWallet": "Gunakan kunci rahasia Anda untuk mengakses dompet Anda",
+  "enterYourNsec": "Masukkan nsec Anda:",
+  "pasteYourRecoveryNsec": "Tempel nsec pemulihan Anda...",
+  "paymentMonitoringError": "Kesalahan pemantauan pembayaran: {error}",
+  "@paymentMonitoringError": {
+    "description": "Pesan kesalahan saat pemantauan pembayaran gagal",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Koneksi jaringan terputus"
+      }
+    }
+  },
+  "paymentReceived": "Pembayaran Diterima!",
+  "addressCopiedToClipboard": "Alamat disalin ke clipboard",
+  "shareWhichAddress": "Bagikan alamat yang mana?",
+  "address": "Alamat",
+  "lightningInvoice": "Faktur Lightning",
+  "qrCodeImage": "Gambar Kode QR",
+  "errorSharing": "Kesalahan saat berbagi",
+  "myBitcoinAddressQrCode": "Kode QR Alamat Bitcoin Saya",
+  "requesting": "Meminta: ",
+  "monitoringForIncomingPayment": "Memantau pembayaran masuk...",
+  "copyAddress": "Salin alamat",
+  "errorLoadingAddresses": "Kesalahan saat memuat alamat",
+  "share": "BAGIKAN",
+  "pleaseEnterBothAddressAndAmount": "Silakan masukkan alamat dan jumlah",
+  "pleaseEnterAValidAmount": "Silakan masukkan jumlah yang valid",
+  "insufficientFunds": "Dana tidak mencukupi",
+  "sendLower": "Kirim",
+  "receiveLower": "Terima",
+  "recipientAddress": "Alamat penerima",
+  "bitcoinOrArkAddress": "Alamat Bitcoin atau Ark",
+  "available": "tersedia",
+  "esploraUrlSavedWillOnlyTakeEffectAfterARestart": "URL Esplora disimpan - akan berlaku setelah restart",
+  "failedToSaveEsploraUrl": "Gagal menyimpan URL Esplora",
+  "networkSavedWillOnlyTakeEffectAfterARestart": "Jaringan disimpan - akan berlaku setelah restart",
+  "arkServerUrlSavedWillOnlyTakeEffectAfterARestart": "URL Server Ark disimpan - akan berlaku setelah restart",
+  "failedToSaveArkServerUrl": "Gagal menyimpan URL Server Ark",
+  "boltzUrlSavedWillOnlyTakeEffectAfterARestart": "URL Boltz disimpan - akan berlaku setelah restart",
+  "failedToSaveBoltzUrl": "Gagal menyimpan URL Boltz",
+  "securityWarning": "Peringatan Keamanan",
+  "neverShareYourRecoveryKeyWithAnyone": "Jangan pernah membagikan kunci pemulihan Anda kepada siapa pun!",
+  "anyoneWithThisKeyCan": "Siapa pun yang memiliki kunci ini dapat mengakses dompet Anda dan mencuri dana Anda. Simpan di tempat yang aman.",
+  "iUnderstand": "SAYA MENGERTI",
+  "yourRecoveryPhrase": "Frasa Pemulihan Anda",
+  "recoveryPhraseCopiedToClipboard": "Frasa pemulihan disalin ke clipboard",
+  "copyToClipboard": "SALIN KE CLIPBOARD",
+  "close": "TUTUP",
+  "resetWallet": "Atur Ulang Dompet",
+  "thisWillDeleteAllWalletData": "Ini akan menghapus semua data dompet dari perangkat ini. Pastikan Anda telah mencadangkan frasa pemulihan Anda sebelum melanjutkan. Tindakan ini tidak dapat dibatalkan.",
+  "restartingApp": "Memulai ulang aplikasi",
+  "pleaseTapHereToOpenTheAppAgain": "Ketuk di sini untuk membuka aplikasi lagi.",
+  "reset": "ATUR ULANG",
+  "wallet": "Dompet",
+  "viewRecoveryKey": "Lihat Kunci Pemulihan",
+  "backupYourWalletWithTheseKey": "Cadangkan dompet Anda dengan kunci ini",
+  "appearancePreferences": "Tampilan & Preferensi",
+  "theme": "Tema",
+  "customizeAppAppearance": "Sesuaikan tampilan aplikasi",
+  "language": "Bahasa",
+  "selectYourPreferredLanguage": "Pilih bahasa yang Anda sukai",
+  "timezone": "Zona Waktu",
+  "chooseYourPreferredTimezone": "Pilih zona waktu yang Anda sukai",
+  "currency": "Mata Uang",
+  "chooseYourPreferredCurrency": "Pilih mata uang yang Anda sukai",
+  "serverConfiguration": "Konfigurasi Server",
+  "network": "Jaringan",
+  "esploraUrl": "URL Esplora",
+  "arkServer": "Server Ark",
+  "boltzUrl": "URL Boltz",
+  "about": "Tentang",
+  "loading": "memuat",
+  "dangerZone": "Zona Bahaya",
+  "deleteAllWalletDataFromThisDevice": "Hapus semua data dompet dari perangkat ini",
+  "transactionFailed": "Transaksi gagal:",
+  "signTransaction": "Tandatangani transaksi",
+  "networkFees": "Biaya jaringan",
+  "total": "Total",
+  "tapToSign": "KETUK UNTUK TANDA TANGAN",
+  "settlingTransaction": "Menyelesaikan transaksi...",
+  "success": "Berhasil",
+  "transactionSettledSuccessfully": "Transaksi berhasil diselesaikan!",
+  "goToHome": "Kembali ke Beranda",
+  "error": "Kesalahan",
+  "failedToSettleTransaction": "Gagal menyelesaikan transaksi:",
+  "pendingConfirmation": "Menunggu konfirmasi",
+  "transactionId": "ID Transaksi",
+  "status": "Status",
+  "confirmed": "Terkonfirmasi",
+  "pending": "Tertunda",
+  "date": "Tanggal",
+  "confirmedAt": "Dikonfirmasi Pada",
+  "transactionPendingFundsWillBeNonReversibleAfterSettlement": "Transaksi tertunda. Dana tidak dapat dibatalkan setelah penyelesaian.",
+  "settle": "SELESAIKAN",
+  "transactionHistory": "Riwayat Transaksi",
+  "errorLoadingTransactions": "Kesalahan memuat transaksi",
+  "noTransactionHistoryYet": "Belum ada riwayat transaksi",
+  "boardingTransaction": "Transaksi Boarding",
+  "roundTransaction": "Transaksi Pembulatan",
+  "redeemTransaction": "Transaksi Penebusan",
+  "sent": "Dikirim",
+  "received": "Diterima",
+  "settled": "Selesai",
+  "sentSuccessfully": "berhasil dikirim",
+  "returningToWalletAfterSuccessfulTransaction": "Kembali ke dompet setelah transaksi berhasil",
+  "backToWallet": "KEMBALI KE DOMPET"
+}

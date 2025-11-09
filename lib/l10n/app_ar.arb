@@ -1,0 +1,216 @@
+{
+  "@@locale": "ar",
+  "appTitle": "آرك فلاتر",
+  "@appTitle": {
+    "description": "عنوان التطبيق"
+  },
+  "settings": "الإعدادات",
+  "@settings": {
+    "description": "عنوان صفحة الإعدادات"
+  },
+  "cancel": "إلغاء",
+  "@cancel": {
+    "description": "نص زر الإلغاء"
+  },
+  "save": "حفظ",
+  "@save": {
+    "description": "نص زر الحفظ"
+  },
+  "apply": "تطبيق",
+  "@apply": {
+    "description": "نص زر التطبيق"
+  },
+  "done": "تم",
+  "@done": {
+    "description": "نص زر تم"
+  },
+  "select": "اختيار",
+  "@select": {
+    "description": "نص زر الاختيار"
+  },
+  "search": "بحث",
+  "@search": {
+    "description": "نص البحث"
+  },
+  "enterAmount": "أدخل المبلغ",
+  "amount": "المبلغ",
+  "skipAnyAmount": "تخطي (أي مبلغ)",
+  "contin": "استمرار",
+  "currencyUpdatedSuccessfully": "تم تحديث العملة بنجاح",
+  "changeCurrency": "تغيير العملة",
+  "languageUpdatedSuccessfully": "تم تحديث اللغة بنجاح",
+  "changeLanguage": "تغيير اللغة",
+  "themeAppliedSuccessfully": "تم تطبيق السمة بنجاح",
+  "chooseYourColor": "اختر لونك",
+  "selectColor": "اختر اللون",
+  "selectColorShade": "اختر درجة اللون",
+  "changeYourStyle": "غيّر نمطك",
+  "chooseYourPreferredTheme": "اختر السمة المفضلة لديك",
+  "dark": "داكن",
+  "originalDarkTheme": "السمة الداكنة الأصلية",
+  "light": "فاتح",
+  "cleanLightTheme": "السمة الفاتحة النظيفة",
+  "applyTheme": "تطبيق السمة",
+  "custom": "مخصص",
+  "createYourOwnTheme": "أنشئ سمتك الخاصة",
+  "timezoneUpdatedSuccessfully": "تم تحديث المنطقة الزمنية بنجاح",
+  "changeTimezone": "تغيير المنطقة الزمنية",
+  "searchTimezone": "ابحث عن المنطقة الزمنية...",
+  "couldntUpdateTransactions": "تعذر تحديث المعاملات:",
+  "couldntUpdateBalance": "تعذر تحديث الرصيد:",
+  "showingBalanceType": "عرض رصيد {balanceType}",
+  "@showingBalanceType": {
+    "description": "الرسالة المعروضة عند التبديل بين أنواع الأرصدة",
+    "placeholders": {
+      "balanceType": {
+        "type": "String",
+        "example": "الإجمالي"
+      }
+    }
+  },
+  "retry": "إعادة المحاولة",
+  "pendingBalance": "الرصيد المعلق",
+  "confirmedBalance": "الرصيد المؤكد",
+  "totalBalance": "إجمالي الرصيد",
+  "errorLoadingBalance": "خطأ في تحميل الرصيد",
+  "send": "إرسال",
+  "receive": "استلام",
+  "failedToCreateWallet": "فشل في إنشاء المحفظة",
+  "errorCreatingWallet": "حدث خطأ أثناء إنشاء المحفظة الجديدة. يرجى المحاولة مرة أخرى.\n\nالخطأ: {error}",
+  "@errorCreatingWallet": {
+    "description": "رسالة الخطأ عند فشل إنشاء المحفظة",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "انتهت مهلة الاتصال"
+      }
+    }
+  },
+  "failedToRestoreWallet": "فشل في استعادة المحفظة",
+  "errorRestoringWallet": "حدث خطأ أثناء استعادة المحفظة. يرجى التحقق من nsec والمحاولة مرة أخرى.\n\nالخطأ: {error}",
+  "@errorRestoringWallet": {
+    "description": "رسالة الخطأ عند فشل استعادة المحفظة",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "تنسيق nsec غير صالح"
+      }
+    }
+  },
+  "appTagline": "محفظة تطير على آرك",
+  "@appTagline": {
+    "description": "شعار التطبيق"
+  },
+  "ok": "موافق",
+  "chooseAnOption": "اختر خيارًا:",
+  "createNewWallet": "إنشاء محفظة جديدة",
+  "generateANewSecureWallet": "إنشاء محفظة جديدة آمنة",
+  "restoreExistingWallet": "استعادة محفظة موجودة",
+  "useYourSecretKeyToAccessYourWallet": "استخدم مفتاحك السري للوصول إلى محفظتك",
+  "enterYourNsec": "أدخل nsec الخاص بك:",
+  "pasteYourRecoveryNsec": "الصق nsec الاسترداد...",
+  "paymentMonitoringError": "خطأ في مراقبة الدفع: {error}",
+  "@paymentMonitoringError": {
+    "description": "رسالة الخطأ عند فشل مراقبة الدفع",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "انقطع الاتصال بالشبكة"
+      }
+    }
+  },
+  "paymentReceived": "تم استلام الدفعة!",
+  "addressCopiedToClipboard": "تم نسخ العنوان إلى الحافظة",
+  "shareWhichAddress": "أي عنوان ترغب بمشاركته؟",
+  "address": "العنوان",
+  "lightningInvoice": "فاتورة Lightning",
+  "qrCodeImage": "صورة رمز QR",
+  "errorSharing": "خطأ أثناء المشاركة",
+  "myBitcoinAddressQrCode": "رمز QR لعنوان البيتكوين الخاص بي",
+  "requesting": "جاري الطلب: ",
+  "monitoringForIncomingPayment": "مراقبة المدفوعات الواردة...",
+  "copyAddress": "نسخ العنوان",
+  "errorLoadingAddresses": "خطأ في تحميل العناوين",
+  "share": "مشاركة",
+  "pleaseEnterBothAddressAndAmount": "يرجى إدخال العنوان والمبلغ معًا",
+  "pleaseEnterAValidAmount": "يرجى إدخال مبلغ صالح",
+  "insufficientFunds": "رصيد غير كافٍ",
+  "sendLower": "إرسال",
+  "receiveLower": "استلام",
+  "recipientAddress": "عنوان المستلم",
+  "bitcoinOrArkAddress": "عنوان بيتكوين أو آرك",
+  "available": "متاح",
+  "esploraUrlSavedWillOnlyTakeEffectAfterARestart": "تم حفظ عنوان Esplora - سيسري بعد إعادة التشغيل",
+  "failedToSaveEsploraUrl": "فشل حفظ عنوان Esplora",
+  "networkSavedWillOnlyTakeEffectAfterARestart": "تم حفظ الشبكة - سيسري بعد إعادة التشغيل",
+  "arkServerUrlSavedWillOnlyTakeEffectAfterARestart": "تم حفظ عنوان خادم آرك - سيسري بعد إعادة التشغيل",
+  "failedToSaveArkServerUrl": "فشل حفظ عنوان خادم آرك",
+  "boltzUrlSavedWillOnlyTakeEffectAfterARestart": "تم حفظ عنوان Boltz - سيسري بعد إعادة التشغيل",
+  "failedToSaveBoltzUrl": "فشل حفظ عنوان Boltz",
+  "securityWarning": "تحذير أمني",
+  "neverShareYourRecoveryKeyWithAnyone": "لا تشارك مفتاح الاسترداد الخاص بك مع أي شخص!",
+  "anyoneWithThisKeyCan": "أي شخص يملك هذا المفتاح يمكنه الوصول إلى محفظتك وسرقة أموالك. احتفظ به في مكان آمن.",
+  "iUnderstand": "أفهم",
+  "yourRecoveryPhrase": "عبارة الاسترداد الخاصة بك",
+  "recoveryPhraseCopiedToClipboard": "تم نسخ عبارة الاسترداد إلى الحافظة",
+  "copyToClipboard": "نسخ إلى الحافظة",
+  "close": "إغلاق",
+  "resetWallet": "إعادة تعيين المحفظة",
+  "thisWillDeleteAllWalletData": "سيؤدي هذا إلى حذف جميع بيانات المحفظة من هذا الجهاز. تأكد من نسخ عبارة الاسترداد قبل المتابعة. لا يمكن التراجع عن هذا الإجراء.",
+  "restartingApp": "إعادة تشغيل التطبيق",
+  "pleaseTapHereToOpenTheAppAgain": "يرجى النقر هنا لفتح التطبيق مرة أخرى.",
+  "reset": "إعادة تعيين",
+  "wallet": "المحفظة",
+  "viewRecoveryKey": "عرض مفتاح الاسترداد",
+  "backupYourWalletWithTheseKey": "قم بعمل نسخة احتياطية لمحفظتك باستخدام هذا المفتاح",
+  "appearancePreferences": "المظهر والتفضيلات",
+  "theme": "السمة",
+  "customizeAppAppearance": "تخصيص مظهر التطبيق",
+  "language": "اللغة",
+  "selectYourPreferredLanguage": "اختر لغتك المفضلة",
+  "timezone": "المنطقة الزمنية",
+  "chooseYourPreferredTimezone": "اختر منطقتك الزمنية المفضلة",
+  "currency": "العملة",
+  "chooseYourPreferredCurrency": "اختر عملتك المفضلة",
+  "serverConfiguration": "إعدادات الخادم",
+  "network": "الشبكة",
+  "esploraUrl": "عنوان Esplora",
+  "arkServer": "خادم آرك",
+  "boltzUrl": "عنوان Boltz",
+  "about": "حول",
+  "loading": "جارٍ التحميل",
+  "dangerZone": "منطقة الخطر",
+  "deleteAllWalletDataFromThisDevice": "حذف جميع بيانات المحفظة من هذا الجهاز",
+  "transactionFailed": "فشلت المعاملة:",
+  "signTransaction": "توقيع المعاملة",
+  "networkFees": "رسوم الشبكة",
+  "total": "الإجمالي",
+  "tapToSign": "اضغط للتوقيع",
+  "settlingTransaction": "تسوية المعاملة...",
+  "success": "نجاح",
+  "transactionSettledSuccessfully": "تمت تسوية المعاملة بنجاح!",
+  "goToHome": "العودة إلى الرئيسية",
+  "error": "خطأ",
+  "failedToSettleTransaction": "فشل في تسوية المعاملة:",
+  "pendingConfirmation": "قيد التأكيد",
+  "transactionId": "معرّف المعاملة",
+  "status": "الحالة",
+  "confirmed": "مؤكد",
+  "pending": "معلق",
+  "date": "التاريخ",
+  "confirmedAt": "تم التأكيد في",
+  "transactionPendingFundsWillBeNonReversibleAfterSettlement": "المعاملة معلقة. ستصبح الأموال غير قابلة للاسترجاع بعد التسوية.",
+  "settle": "تسوية",
+  "transactionHistory": "سجل المعاملات",
+  "errorLoadingTransactions": "خطأ في تحميل المعاملات",
+  "noTransactionHistoryYet": "لا يوجد سجل معاملات بعد",
+  "boardingTransaction": "معاملة الانضمام",
+  "roundTransaction": "معاملة التقريب",
+  "redeemTransaction": "معاملة الاسترداد",
+  "sent": "تم الإرسال",
+  "received": "تم الاستلام",
+  "settled": "تمت التسوية",
+  "sentSuccessfully": "تم الإرسال بنجاح",
+  "returningToWalletAfterSuccessfulTransaction": "العودة إلى المحفظة بعد المعاملة الناجحة",
+  "backToWallet": "العودة إلى المحفظة"
+}

@@ -1,0 +1,216 @@
+{
+  "@@locale": "ur",
+  "appTitle": "Ark Flutter",
+  "@appTitle": {
+    "description": "ایپلیکیشن کا عنوان"
+  },
+  "settings": "ترتیبات",
+  "@settings": {
+    "description": "ترتیبات کے صفحہ کا عنوان"
+  },
+  "cancel": "منسوخ کریں",
+  "@cancel": {
+    "description": "منسوخ بٹن کا متن"
+  },
+  "save": "محفوظ کریں",
+  "@save": {
+    "description": "محفوظ بٹن کا متن"
+  },
+  "apply": "لاگو کریں",
+  "@apply": {
+    "description": "لاگو بٹن کا متن"
+  },
+  "done": "مکمل",
+  "@done": {
+    "description": "مکمل بٹن کا متن"
+  },
+  "select": "منتخب کریں",
+  "@select": {
+    "description": "منتخب بٹن کا متن"
+  },
+  "search": "تلاش کریں",
+  "@search": {
+    "description": "تلاش کا پلیس ہولڈر متن"
+  },
+  "enterAmount": "رقم درج کریں",
+  "amount": "رقم",
+  "skipAnyAmount": "چھوڑیں (کوئی بھی رقم)",
+  "contin": "جاری رکھیں",
+  "currencyUpdatedSuccessfully": "کرنسی کامیابی سے اپ ڈیٹ ہو گئی",
+  "changeCurrency": "کرنسی تبدیل کریں",
+  "languageUpdatedSuccessfully": "زبان کامیابی سے اپ ڈیٹ ہو گئی",
+  "changeLanguage": "زبان تبدیل کریں",
+  "themeAppliedSuccessfully": "تھیم کامیابی سے لاگو ہو گیا",
+  "chooseYourColor": "اپنا رنگ منتخب کریں",
+  "selectColor": "رنگ منتخب کریں",
+  "selectColorShade": "رنگ کی شیڈ منتخب کریں",
+  "changeYourStyle": "اپنا انداز تبدیل کریں",
+  "chooseYourPreferredTheme": "اپنی پسندیدہ تھیم منتخب کریں",
+  "dark": "تاریک",
+  "originalDarkTheme": "اصل تاریک تھیم",
+  "light": "روشن",
+  "cleanLightTheme": "صاف روشن تھیم",
+  "applyTheme": "تھیم لاگو کریں",
+  "custom": "مرضی کے مطابق",
+  "createYourOwnTheme": "اپنی تھیم بنائیں",
+  "timezoneUpdatedSuccessfully": "ٹائم زون کامیابی سے اپ ڈیٹ ہو گیا",
+  "changeTimezone": "ٹائم زون تبدیل کریں",
+  "searchTimezone": "ٹائم زون تلاش کریں...",
+  "couldntUpdateTransactions": "ٹرانزیکشنز اپ ڈیٹ نہیں ہو سکیں:",
+  "couldntUpdateBalance": "بیلنس اپ ڈیٹ نہیں ہو سکا:",
+  "showingBalanceType": "{balanceType} بیلنس دکھایا جا رہا ہے",
+  "@showingBalanceType": {
+    "description": "بیلنس کی اقسام کے درمیان سوئچ کرتے وقت ظاہر ہونے والا پیغام",
+    "placeholders": {
+      "balanceType": {
+        "type": "String",
+        "example": "کل"
+      }
+    }
+  },
+  "retry": "دوبارہ کوشش کریں",
+  "pendingBalance": "زیر التواء بیلنس",
+  "confirmedBalance": "تصدیق شدہ بیلنس",
+  "totalBalance": "کل بیلنس",
+  "errorLoadingBalance": "بیلنس لوڈ کرنے میں خرابی",
+  "send": "بھیجیں",
+  "receive": "وصول کریں",
+  "failedToCreateWallet": "والیٹ بنانے میں ناکامی",
+  "errorCreatingWallet": "آپ کا نیا والیٹ بنانے میں خرابی پیش آئی۔ براہ کرم دوبارہ کوشش کریں۔\n\nغلطی: {error}",
+  "@errorCreatingWallet": {
+    "description": "والیٹ بننے میں ناکامی پر دکھایا جانے والا پیغام",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "کنکشن ٹائم آؤٹ"
+      }
+    }
+  },
+  "failedToRestoreWallet": "والیٹ بحال کرنے میں ناکامی",
+  "errorRestoringWallet": "والیٹ بحال کرنے میں خرابی پیش آئی۔ براہ کرم اپنا nsec چیک کریں اور دوبارہ کوشش کریں۔\n\nغلطی: {error}",
+  "@errorRestoringWallet": {
+    "description": "والیٹ بحالی میں ناکامی پر ظاہر ہونے والا پیغام",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "غلط nsec فارمیٹ"
+      }
+    }
+  },
+  "appTagline": "Ark پر اڑنے والا والیٹ",
+  "@appTagline": {
+    "description": "ایپ کا نعرہ"
+  },
+  "ok": "ٹھیک ہے",
+  "chooseAnOption": "ایک آپشن منتخب کریں:",
+  "createNewWallet": "نیا والیٹ بنائیں",
+  "generateANewSecureWallet": "نیا محفوظ والیٹ تیار کریں",
+  "restoreExistingWallet": "موجودہ والیٹ بحال کریں",
+  "useYourSecretKeyToAccessYourWallet": "اپنی خفیہ کلید سے والیٹ تک رسائی حاصل کریں",
+  "enterYourNsec": "اپنا nsec درج کریں:",
+  "pasteYourRecoveryNsec": "اپنا بحالی nsec چسپاں کریں...",
+  "paymentMonitoringError": "ادائیگی کی نگرانی میں خرابی: {error}",
+  "@paymentMonitoringError": {
+    "description": "ادائیگی کی نگرانی ناکام ہونے پر ظاہر ہونے والا پیغام",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "نیٹ ورک کنکشن ختم ہوگیا"
+      }
+    }
+  },
+  "paymentReceived": "ادائیگی موصول ہو گئی!",
+  "addressCopiedToClipboard": "پتہ کلپ بورڈ پر کاپی ہو گیا",
+  "shareWhichAddress": "کون سا پتہ شیئر کریں؟",
+  "address": "پتہ",
+  "lightningInvoice": "لائٹننگ انوائس",
+  "qrCodeImage": "QR کوڈ تصویر",
+  "errorSharing": "شیئر کرنے میں خرابی",
+  "myBitcoinAddressQrCode": "میرا بٹ کوائن پتہ QR کوڈ",
+  "requesting": "درخواست کر رہے ہیں: ",
+  "monitoringForIncomingPayment": "موصول ہونے والی ادائیگی کی نگرانی...",
+  "copyAddress": "پتہ کاپی کریں",
+  "errorLoadingAddresses": "پتوں کو لوڈ کرنے میں خرابی",
+  "share": "شیئر کریں",
+  "pleaseEnterBothAddressAndAmount": "براہ کرم پتہ اور رقم دونوں درج کریں",
+  "pleaseEnterAValidAmount": "براہ کرم درست رقم درج کریں",
+  "insufficientFunds": "ناکافی رقم",
+  "sendLower": "بھیجیں",
+  "receiveLower": "وصول کریں",
+  "recipientAddress": "وصول کنندہ کا پتہ",
+  "bitcoinOrArkAddress": "بٹ کوائن یا Ark پتہ",
+  "available": "دستیاب",
+  "esploraUrlSavedWillOnlyTakeEffectAfterARestart": "Esplora URL محفوظ ہو گیا - دوبارہ شروع کرنے کے بعد مؤثر ہوگا",
+  "failedToSaveEsploraUrl": "Esplora URL محفوظ کرنے میں ناکامی",
+  "networkSavedWillOnlyTakeEffectAfterARestart": "نیٹ ورک محفوظ ہو گیا - دوبارہ شروع کرنے کے بعد مؤثر ہوگا",
+  "arkServerUrlSavedWillOnlyTakeEffectAfterARestart": "Ark سرور URL محفوظ ہو گیا - دوبارہ شروع کرنے کے بعد مؤثر ہوگا",
+  "failedToSaveArkServerUrl": "Ark سرور URL محفوظ کرنے میں ناکامی",
+  "boltzUrlSavedWillOnlyTakeEffectAfterARestart": "Boltz URL محفوظ ہو گیا - دوبارہ شروع کرنے کے بعد مؤثر ہوگا",
+  "failedToSaveBoltzUrl": "Boltz URL محفوظ کرنے میں ناکامی",
+  "securityWarning": "سیکیورٹی انتباہ",
+  "neverShareYourRecoveryKeyWithAnyone": "اپنی بحالی کلید کسی کے ساتھ شیئر نہ کریں!",
+  "anyoneWithThisKeyCan": "جس کے پاس یہ کلید ہوگی وہ آپ کے والیٹ تک رسائی حاصل کر سکتا ہے اور رقم چرا سکتا ہے۔ اسے محفوظ جگہ پر رکھیں۔",
+  "iUnderstand": "میں سمجھ گیا",
+  "yourRecoveryPhrase": "آپ کا بحالی فقرہ",
+  "recoveryPhraseCopiedToClipboard": "بحالی فقرہ کلپ بورڈ پر کاپی ہو گیا",
+  "copyToClipboard": "کلپ بورڈ پر کاپی کریں",
+  "close": "بند کریں",
+  "resetWallet": "والیٹ ری سیٹ کریں",
+  "thisWillDeleteAllWalletData": "اس سے اس آلہ سے تمام والیٹ ڈیٹا حذف ہو جائے گا۔ جاری رکھنے سے پہلے اپنا بحالی فقرہ محفوظ کر لیں۔ یہ عمل واپس نہیں ہو سکتا۔",
+  "restartingApp": "ایپ دوبارہ شروع ہو رہی ہے",
+  "pleaseTapHereToOpenTheAppAgain": "ایپ دوبارہ کھولنے کے لیے یہاں ٹیپ کریں۔",
+  "reset": "ری سیٹ",
+  "wallet": "والیٹ",
+  "viewRecoveryKey": "بحالی کلید دیکھیں",
+  "backupYourWalletWithTheseKey": "ان کلیدوں سے اپنا والیٹ بیک اپ کریں",
+  "appearancePreferences": "ظاہری شکل اور ترجیحات",
+  "theme": "تھیم",
+  "customizeAppAppearance": "ایپ کی ظاہری شکل حسب ضرورت بنائیں",
+  "language": "زبان",
+  "selectYourPreferredLanguage": "اپنی پسندیدہ زبان منتخب کریں",
+  "timezone": "ٹائم زون",
+  "chooseYourPreferredTimezone": "اپنا پسندیدہ ٹائم زون منتخب کریں",
+  "currency": "کرنسی",
+  "chooseYourPreferredCurrency": "اپنی پسندیدہ کرنسی منتخب کریں",
+  "serverConfiguration": "سرور کی ترتیب",
+  "network": "نیٹ ورک",
+  "esploraUrl": "Esplora URL",
+  "arkServer": "Ark سرور",
+  "boltzUrl": "Boltz URL",
+  "about": "کے بارے میں",
+  "loading": "لوڈ ہو رہا ہے",
+  "dangerZone": "خطرناک زون",
+  "deleteAllWalletDataFromThisDevice": "اس آلے سے تمام والیٹ ڈیٹا حذف کریں",
+  "transactionFailed": "ٹرانزیکشن ناکام ہوئی:",
+  "signTransaction": "ٹرانزیکشن پر دستخط کریں",
+  "networkFees": "نیٹ ورک فیس",
+  "total": "کل",
+  "tapToSign": "دستخط کرنے کے لیے ٹیپ کریں",
+  "settlingTransaction": "ٹرانزیکشن مکمل کی جا رہی ہے...",
+  "success": "کامیابی",
+  "transactionSettledSuccessfully": "ٹرانزیکشن کامیابی سے مکمل ہو گئی!",
+  "goToHome": "ہوم پر جائیں",
+  "error": "خرابی",
+  "failedToSettleTransaction": "ٹرانزیکشن مکمل کرنے میں ناکامی:",
+  "pendingConfirmation": "تصدیق زیر التواء",
+  "transactionId": "ٹرانزیکشن آئی ڈی",
+  "status": "حالت",
+  "confirmed": "تصدیق شدہ",
+  "pending": "زیر التواء",
+  "date": "تاریخ",
+  "confirmedAt": "تصدیق کی گئی تاریخ",
+  "transactionPendingFundsWillBeNonReversibleAfterSettlement": "ٹرانزیکشن زیر التواء ہے۔ مکمل ہونے کے بعد رقم واپس نہیں کی جا سکے گی۔",
+  "settle": "مکمل کریں",
+  "transactionHistory": "ٹرانزیکشن کی تاریخ",
+  "errorLoadingTransactions": "ٹرانزیکشن لوڈ کرنے میں خرابی",
+  "noTransactionHistoryYet": "ابھی تک کوئی ٹرانزیکشن تاریخ نہیں",
+  "boardingTransaction": "بورڈنگ ٹرانزیکشن",
+  "roundTransaction": "راؤنڈ ٹرانزیکشن",
+  "redeemTransaction": "ری ڈیم ٹرانزیکشن",
+  "sent": "بھیجی گئی",
+  "received": "وصول شدہ",
+  "settled": "مکمل شدہ",
+  "sentSuccessfully": "کامیابی سے بھیجا گیا",
+  "returningToWalletAfterSuccessfulTransaction": "کامیاب ٹرانزیکشن کے بعد والیٹ پر واپس جا رہے ہیں",
+  "backToWallet": "والیٹ پر واپس جائیں"
+}

@@ -1,0 +1,216 @@
+{
+  "@@locale": "it",
+  "appTitle": "Ark Flutter",
+  "@appTitle": {
+    "description": "Il titolo dell'applicazione"
+  },
+  "settings": "Impostazioni",
+  "@settings": {
+    "description": "Titolo della pagina delle impostazioni"
+  },
+  "cancel": "Annulla",
+  "@cancel": {
+    "description": "Testo del pulsante Annulla"
+  },
+  "save": "Salva",
+  "@save": {
+    "description": "Testo del pulsante Salva"
+  },
+  "apply": "Applica",
+  "@apply": {
+    "description": "Testo del pulsante Applica"
+  },
+  "done": "Fatto",
+  "@done": {
+    "description": "Testo del pulsante Fatto"
+  },
+  "select": "Seleziona",
+  "@select": {
+    "description": "Testo del pulsante Seleziona"
+  },
+  "search": "Cerca",
+  "@search": {
+    "description": "Testo segnaposto per la ricerca"
+  },
+  "enterAmount": "Inserisci Importo",
+  "amount": "Importo",
+  "skipAnyAmount": "SALTA (QUALSIASI IMPORTO)",
+  "contin": "CONTINUA",
+  "currencyUpdatedSuccessfully": "Valuta aggiornata con successo",
+  "changeCurrency": "Cambia Valuta",
+  "languageUpdatedSuccessfully": "Lingua aggiornata con successo",
+  "changeLanguage": "Cambia Lingua",
+  "themeAppliedSuccessfully": "Tema applicato con successo",
+  "chooseYourColor": "Scegli il tuo colore",
+  "selectColor": "Seleziona colore",
+  "selectColorShade": "Seleziona tonalità colore",
+  "changeYourStyle": "Cambia il tuo stile",
+  "chooseYourPreferredTheme": "Scegli il tema preferito",
+  "dark": "Scuro",
+  "originalDarkTheme": "Tema scuro originale",
+  "light": "Chiaro",
+  "cleanLightTheme": "Tema chiaro pulito",
+  "applyTheme": "Applica Tema",
+  "custom": "Personalizzato",
+  "createYourOwnTheme": "Crea il tuo tema",
+  "timezoneUpdatedSuccessfully": "Fuso orario aggiornato con successo",
+  "changeTimezone": "Cambia Fuso Orario",
+  "searchTimezone": "Cerca fuso orario...",
+  "couldntUpdateTransactions": "Impossibile aggiornare le transazioni:",
+  "couldntUpdateBalance": "Impossibile aggiornare il saldo:",
+  "showingBalanceType": "Mostrando saldo {balanceType}",
+  "@showingBalanceType": {
+    "description": "Messaggio mostrato durante il cambio tipo di saldo",
+    "placeholders": {
+      "balanceType": {
+        "type": "String",
+        "example": "totale"
+      }
+    }
+  },
+  "retry": "RIPROVA",
+  "pendingBalance": "Saldo in sospeso",
+  "confirmedBalance": "Saldo confermato",
+  "totalBalance": "Saldo totale",
+  "errorLoadingBalance": "Errore nel caricamento del saldo",
+  "send": "INVIA",
+  "receive": "RICEVI",
+  "failedToCreateWallet": "Creazione del portafoglio non riuscita",
+  "errorCreatingWallet": "Si è verificato un errore durante la creazione del nuovo portafoglio. Riprova.\n\nErrore: {error}",
+  "@errorCreatingWallet": {
+    "description": "Messaggio di errore mostrato quando la creazione del portafoglio fallisce",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Timeout connessione"
+      }
+    }
+  },
+  "failedToRestoreWallet": "Ripristino del portafoglio non riuscito",
+  "errorRestoringWallet": "Si è verificato un errore durante il ripristino del portafoglio. Controlla il tuo nsec e riprova.\n\nErrore: {error}",
+  "@errorRestoringWallet": {
+    "description": "Messaggio di errore mostrato quando il ripristino del portafoglio fallisce",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Formato nsec non valido"
+      }
+    }
+  },
+  "appTagline": "Il Portafoglio che Vola su Ark",
+  "@appTagline": {
+    "description": "Slogan dell'app"
+  },
+  "ok": "OK",
+  "chooseAnOption": "Scegli un'opzione:",
+  "createNewWallet": "Crea Nuovo Portafoglio",
+  "generateANewSecureWallet": "Genera un nuovo portafoglio sicuro",
+  "restoreExistingWallet": "Ripristina Portafoglio Esistente",
+  "useYourSecretKeyToAccessYourWallet": "Usa la tua chiave segreta per accedere al portafoglio",
+  "enterYourNsec": "Inserisci il tuo nsec:",
+  "pasteYourRecoveryNsec": "Incolla il tuo nsec di recupero...",
+  "paymentMonitoringError": "Errore monitoraggio pagamento: {error}",
+  "@paymentMonitoringError": {
+    "description": "Messaggio di errore mostrato quando il monitoraggio del pagamento fallisce",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Connessione di rete persa"
+      }
+    }
+  },
+  "paymentReceived": "Pagamento Ricevuto!",
+  "addressCopiedToClipboard": "Indirizzo copiato negli appunti",
+  "shareWhichAddress": "Condividere quale indirizzo?",
+  "address": "Indirizzo",
+  "lightningInvoice": "Fattura Lightning",
+  "qrCodeImage": "Immagine Codice QR",
+  "errorSharing": "Errore nella condivisione",
+  "myBitcoinAddressQrCode": "Codice QR del mio indirizzo Bitcoin",
+  "requesting": "Richiesta: ",
+  "monitoringForIncomingPayment": "Monitoraggio pagamento in arrivo...",
+  "copyAddress": "Copia indirizzo",
+  "errorLoadingAddresses": "Errore nel caricamento degli indirizzi",
+  "share": "CONDIVIDI",
+  "pleaseEnterBothAddressAndAmount": "Inserisci sia l'indirizzo che l'importo",
+  "pleaseEnterAValidAmount": "Inserisci un importo valido",
+  "insufficientFunds": "Fondi insufficienti",
+  "sendLower": "Invia",
+  "receiveLower": "Ricevi",
+  "recipientAddress": "Indirizzo del destinatario",
+  "bitcoinOrArkAddress": "Indirizzo Bitcoin o Ark",
+  "available": "disponibile",
+  "esploraUrlSavedWillOnlyTakeEffectAfterARestart": "URL Esplora salvato - avrà effetto dopo il riavvio",
+  "failedToSaveEsploraUrl": "Salvataggio URL Esplora non riuscito",
+  "networkSavedWillOnlyTakeEffectAfterARestart": "Rete salvata - avrà effetto dopo il riavvio",
+  "arkServerUrlSavedWillOnlyTakeEffectAfterARestart": "URL Server Ark salvato - avrà effetto dopo il riavvio",
+  "failedToSaveArkServerUrl": "Salvataggio URL Server Ark non riuscito",
+  "boltzUrlSavedWillOnlyTakeEffectAfterARestart": "URL Boltz salvato - avrà effetto dopo il riavvio",
+  "failedToSaveBoltzUrl": "Salvataggio URL Boltz non riuscito",
+  "securityWarning": "Avviso di Sicurezza",
+  "neverShareYourRecoveryKeyWithAnyone": "Non condividere mai la tua chiave di recupero con nessuno!",
+  "anyoneWithThisKeyCan": "Chiunque abbia questa chiave può accedere al tuo portafoglio e rubare i tuoi fondi. Conservala in un luogo sicuro.",
+  "iUnderstand": "HO CAPITO",
+  "yourRecoveryPhrase": "La tua Frase di Recupero",
+  "recoveryPhraseCopiedToClipboard": "Frase di recupero copiata negli appunti",
+  "copyToClipboard": "COPIA NEGLI APPUNTI",
+  "close": "CHIUDI",
+  "resetWallet": "Reimposta Portafoglio",
+  "thisWillDeleteAllWalletData": "Questo eliminerà tutti i dati del portafoglio da questo dispositivo. Assicurati di aver eseguito il backup della frase di recupero prima di procedere. Questa azione non può essere annullata.",
+  "restartingApp": "Riavvio dell'app",
+  "pleaseTapHereToOpenTheAppAgain": "Tocca qui per aprire di nuovo l'app.",
+  "reset": "REIMPOSTA",
+  "wallet": "Portafoglio",
+  "viewRecoveryKey": "Visualizza Chiave di Recupero",
+  "backupYourWalletWithTheseKey": "Esegui il backup del portafoglio con questa chiave",
+  "appearancePreferences": "Aspetto e Preferenze",
+  "theme": "Tema",
+  "customizeAppAppearance": "Personalizza l'aspetto dell'app",
+  "language": "Lingua",
+  "selectYourPreferredLanguage": "Seleziona la lingua preferita",
+  "timezone": "Fuso Orario",
+  "chooseYourPreferredTimezone": "Scegli il fuso orario preferito",
+  "currency": "Valuta",
+  "chooseYourPreferredCurrency": "Scegli la valuta preferita",
+  "serverConfiguration": "Configurazione Server",
+  "network": "Rete",
+  "esploraUrl": "URL Esplora",
+  "arkServer": "Server Ark",
+  "boltzUrl": "URL Boltz",
+  "about": "Informazioni",
+  "loading": "caricamento",
+  "dangerZone": "Zona Pericolosa",
+  "deleteAllWalletDataFromThisDevice": "Elimina tutti i dati del portafoglio da questo dispositivo",
+  "transactionFailed": "Transazione fallita:",
+  "signTransaction": "Firma transazione",
+  "networkFees": "Commissioni di rete",
+  "total": "Totale",
+  "tapToSign": "TOCCA PER FIRMARE",
+  "settlingTransaction": "Elaborazione transazione...",
+  "success": "Successo",
+  "transactionSettledSuccessfully": "Transazione completata con successo!",
+  "goToHome": "Vai alla Home",
+  "error": "Errore",
+  "failedToSettleTransaction": "Impossibile completare la transazione:",
+  "pendingConfirmation": "In attesa di conferma",
+  "transactionId": "ID Transazione",
+  "status": "Stato",
+  "confirmed": "Confermato",
+  "pending": "In sospeso",
+  "date": "Data",
+  "confirmedAt": "Confermato il",
+  "transactionPendingFundsWillBeNonReversibleAfterSettlement": "Transazione in sospeso. I fondi non saranno reversibili dopo il completamento.",
+  "settle": "COMPLETA",
+  "transactionHistory": "Storico Transazioni",
+  "errorLoadingTransactions": "Errore nel caricamento delle transazioni",
+  "noTransactionHistoryYet": "Nessuna cronologia transazioni",
+  "boardingTransaction": "Transazione di Imbarco",
+  "roundTransaction": "Transazione Arrotondata",
+  "redeemTransaction": "Transazione di Riscatto",
+  "sent": "Inviato",
+  "received": "Ricevuto",
+  "settled": "Completato",
+  "sentSuccessfully": "inviato con successo",
+  "returningToWalletAfterSuccessfulTransaction": "Ritorno al portafoglio dopo una transazione riuscita",
+  "backToWallet": "TORNA AL PORTAFOGLIO"
+}
