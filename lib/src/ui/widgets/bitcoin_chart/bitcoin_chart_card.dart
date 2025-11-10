@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ark_flutter/src/ui/bitcoin_chart/cards/bitcoin_price_chart.dart';
+import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:intl/intl.dart';
 

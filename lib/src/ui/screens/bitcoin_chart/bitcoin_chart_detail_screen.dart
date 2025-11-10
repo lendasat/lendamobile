@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'cards/bitcoin_chart_card.dart';
+import '../../widgets/bitcoin_chart/bitcoin_chart_card.dart';
 
 class BitcoinChartDetailScreen extends StatelessWidget {
   const BitcoinChartDetailScreen({

@@ -1,7 +1,7 @@
 import 'package:ark_flutter/src/rust/api/bitcoin_api.dart' as bitcoin_api;
 import 'package:ark_flutter/src/services/settings_service.dart';
-import 'package:ark_flutter/src/ui/bitcoin_chart/cards/bitcoin_price_chart.dart';
-import 'package:ark_flutter/src/ui/bitcoin_chart/cards/bitcoin_chart_card.dart';
+import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart';
+import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 
 /// Fetches Bitcoin price data from the backend historical price service
 Future<List<PriceData>> fetchBitcoinPriceData(TimeRange timeRange) async {
@@ -11,7 +11,7 @@ Future<List<PriceData>> fetchBitcoinPriceData(TimeRange timeRange) async {
 
   try {
     final response = await bitcoin_api.fetchHistoricalPrices(
-      serverUrl: "http://192.168.1.125:7337",
+      serverUrl: serverUrl,
       timeRange: timeRangeParam,
     );
 
