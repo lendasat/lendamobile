@@ -7,12 +7,14 @@ class TransactionHistoryWidget extends StatefulWidget {
   final String aspId;
   final List<Transaction> transactions;
   final bool loading;
+  final bool hideAmounts;
 
   const TransactionHistoryWidget({
     super.key,
     required this.aspId,
     required this.transactions,
     required this.loading,
+    this.hideAmounts = false,
   });
 
   @override
@@ -169,7 +171,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
-            '₿${amountBtc.toStringAsFixed(8)}',
+            widget.hideAmounts
+                ? '₿********'
+                : '₿${amountBtc.toStringAsFixed(8)}',
             style: TextStyle(
               color: isSettled
                   ? amountSats.isNegative

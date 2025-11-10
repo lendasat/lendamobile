@@ -16,6 +16,8 @@ class SettingsService {
   static String get defaultArkNetwork => dotenv.env['ARK_NETWORK'] ?? 'regtest';
   static String get defaultBoltzUrl =>
       dotenv.env['BOLTZ_URL'] ?? 'http://localhost:9001';
+  static String get defaultHistoricalPricesServerUrl =>
+      dotenv.env['HISTORICAL_PRICES_SERVER_URL'] ?? 'http://localhost:7337';
 
   // Singleton instance
   static final SettingsService _instance = SettingsService._internal();
@@ -72,6 +74,11 @@ class SettingsService {
   Future<bool> saveBoltzUrl(String url) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.setString(_boltzUrlKey, url);
+  }
+
+  // Get Historical Prices Server URL
+  Future<String> getHistoricalPricesServerUrl() async {
+    return defaultHistoricalPricesServerUrl;
   }
 
   // Reset to defaults
