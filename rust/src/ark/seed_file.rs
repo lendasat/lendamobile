@@ -1,5 +1,5 @@
-use anyhow::Result;
 use anyhow::anyhow;
+use anyhow::Result;
 use bitcoin::secp256k1::SecretKey;
 use std::fs;
 use std::fs::File;

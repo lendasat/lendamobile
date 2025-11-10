@@ -38,10 +38,7 @@ pub async fn track_mempool_block(
         .await
         .context("Failed to send track-mempool-block message")?;
 
-    tracing::info!(
-        "Sent track-mempool-block message for index {}",
-        block_index
-    );
+    tracing::info!("Sent track-mempool-block message for index {}", block_index);
 
     // Listen for projected transactions
     while let Some(msg) = read.next().await {
@@ -82,8 +79,7 @@ fn handle_projected_transactions(
         let index = projected
             .get("index")
             .and_then(|v| v.as_u64())
-            .ok_or_else(|| anyhow::anyhow!("Missing or invalid index"))?
-            as u32;
+            .ok_or_else(|| anyhow::anyhow!("Missing or invalid index"))? as u32;
 
         if index == expected_index {
             let mut transactions = Vec::new();
