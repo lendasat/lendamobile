@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/sign_transaction_screen.dart';
+import 'package:ark_flutter/src/ui/utility/amount_widget.dart';
+import 'package:ark_flutter/src/services/amount_widget_service.dart';
 
 class SendScreen extends StatefulWidget {
   final String aspId;
@@ -18,48 +20,33 @@ class SendScreen extends StatefulWidget {
 
 class SendScreenState extends State<SendScreen> {
   final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _amountController = TextEditingController();
-  double _usdAmount = 0.0;
+  final TextEditingController _btcController = TextEditingController();
+  final TextEditingController _satController = TextEditingController();
+  final TextEditingController _currController = TextEditingController();
+  final FocusNode _amountFocusNode = FocusNode();
+
   // Mock BTC to USD conversion rate - would be fetched from an API
   final double _btcToUsdRate = 60000.0;
 
   @override
   void dispose() {
     _addressController.dispose();
-    _amountController.dispose();
+    _btcController.dispose();
+    _satController.dispose();
+    _currController.dispose();
+    _amountFocusNode.dispose();
     super.dispose();
   }
 
-  void _updateUsdAmount(String satsAmount) {
-    if (satsAmount.isEmpty) {
-      setState(() {
-        _usdAmount = 0.0;
-      });
-      return;
-    }
-
-    try {
-      final double sats = double.parse(satsAmount);
-      final double btc = sats / 100000000;
-      setState(() {
-        _usdAmount = btc * _btcToUsdRate;
-      });
-    } catch (e) {
-      setState(() {
-        _usdAmount = 0.0;
-      });
-    }
-  }
-
   void _handleContinue() {
-    if (_addressController.text.isEmpty || _amountController.text.isEmpty) {
+    if (_addressController.text.isEmpty || _satController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter both address and amount')),
       );
       return;
     }
 
-    double? amount = double.tryParse(_amountController.text);
+    double? amount = double.tryParse(_satController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a valid amount')),
@@ -115,6 +102,49 @@ class SendScreenState extends State<SendScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SizedBox(height: 16),
+
+            // Amount section with available balance
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Amount',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  '${widget.availableSats.toStringAsFixed(0)} SATS available',
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+
+            // Centered Amount Widget
+            Center(
+              child: AmountWidget(
+                enabled: () => true,
+                btcController: _btcController,
+                satController: _satController,
+                currController: _currController,
+                focusNode: _amountFocusNode,
+                bitcoinUnit: CurrencyType.sats,
+                swapped: false,
+                autoConvert: true,
+                bitcoinPrice: _btcToUsdRate,
+                lowerBound: 0,
+                upperBound: widget.availableSats.toInt(),
+                boundType: CurrencyType.sats,
+              ),
+            ),
+
+            const SizedBox(height: 16),
             // Recipient address
             const Text(
               'Recipient address',
@@ -154,76 +184,6 @@ class SendScreenState extends State<SendScreen> {
                 ],
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            // Amount
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Amount',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(
-                  '${widget.availableSats.toStringAsFixed(0)} SATS available',
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[850],
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 16),
-                  const Text(
-                    'SATS',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: _amountController,
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.right,
-                      onChanged: _updateUsdAmount,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 16),
-                        hintText: '0',
-                        hintStyle: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: Text(
-                      _usdAmount.toStringAsFixed(2),
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
             const Spacer(),
 
             // Continue button

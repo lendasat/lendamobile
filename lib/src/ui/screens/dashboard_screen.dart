@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/settings_screen.dart';
 import 'package:ark_flutter/src/ui/screens/send_screen.dart';
-import 'package:ark_flutter/src/ui/screens/amount_input_screen.dart';
+import 'package:ark_flutter/src/ui/screens/receive_screen.dart';
 import 'package:ark_flutter/src/ui/screens/bitcoin_chart/bitcoin_chart_detail_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
@@ -232,13 +232,14 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _handleReceive() async {
-    // Navigate to amount input screen
+    // Navigate directly to receive screen
     logger.i("Receive button pressed");
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AmountInputScreen(
+        builder: (context) => ReceiveScreen(
           aspId: widget.aspId,
+          amount: 0,
         ),
       ),
     );
