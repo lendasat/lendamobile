@@ -5,6 +5,47 @@
 
 import 'frb_generated.dart';
 import 'logger.dart';
+import 'models/mempool.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 Stream<LogEntry> initLogging() => RustLib.instance.api.crateApiInitLogging();
+
+/// Get the latest 15 Bitcoin blocks
+Future<List<Block>> getBlocks() => RustLib.instance.api.crateApiGetBlocks();
+
+/// Get blocks starting from a specific height
+Future<List<Block>> getBlocksAtHeight({required BigInt height}) =>
+    RustLib.instance.api.crateApiGetBlocksAtHeight(height: height);
+
+/// Get detailed block information by hash
+Future<Block> getBlockByHash({required String hash}) =>
+    RustLib.instance.api.crateApiGetBlockByHash(hash: hash);
+
+/// Get paginated block transactions
+/// start_index should be multiples of 25 (0, 25, 50, etc.)
+Future<List<BitcoinTransaction>> getBlockTransactions(
+        {required String hash, required int startIndex}) =>
+    RustLib.instance.api
+        .crateApiGetBlockTransactions(hash: hash, startIndex: startIndex);
+
+/// Get recommended fee rates for different confirmation targets
+Future<RecommendedFees> getRecommendedFees() =>
+    RustLib.instance.api.crateApiGetRecommendedFees();
+
+/// Get mining hashrate data for a specific time period
+/// period: "1M", "3M", "6M", "1Y", "3Y"
+Future<HashrateData> getHashrateData({required String period}) =>
+    RustLib.instance.api.crateApiGetHashrateData(period: period);
+
+/// Get detailed transaction information by transaction ID
+Future<BitcoinTransaction> getTransaction({required String txid}) =>
+    RustLib.instance.api.crateApiGetTransaction(txid: txid);
+
+/// Subscribe to real-time mempool updates via WebSocket
+Stream<MempoolWsMessage> subscribeMempoolUpdates() =>
+    RustLib.instance.api.crateApiSubscribeMempoolUpdates();
+
+/// Track a specific mempool block to receive its projected transactions.
+Stream<ProjectedBlockTransactions> trackMempoolBlock(
+        {required int blockIndex}) =>
+    RustLib.instance.api.crateApiTrackMempoolBlock(blockIndex: blockIndex);

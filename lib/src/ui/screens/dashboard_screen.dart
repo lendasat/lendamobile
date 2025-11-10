@@ -10,6 +10,7 @@ import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/ui/screens/mempool/mempool_home.dart';
 
 enum BalanceType { pending, confirmed, total }
 
@@ -253,6 +254,17 @@ class DashboardScreenState extends State<DashboardScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => const BitcoinChartDetailScreen(),
+      ),
+    );
+  }
+
+  void _handleMempool() {
+    // Navigate to mempool screen
+    logger.i("Mempool button pressed");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MempoolHome(),
       ),
     );
   }
@@ -695,13 +707,64 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildActionButtons() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _handleSend,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[800],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.arrow_upward),
+                label: const Text(
+                  'SEND',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _handleReceive,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber[500],
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.arrow_downward),
+                label: const Text(
+                  'RECEIVE',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: _handleSend,
+            onPressed: _handleMempool,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[800],
+              backgroundColor: Colors.orange[700],
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -709,32 +772,9 @@ class DashboardScreenState extends State<DashboardScreen> {
               ),
               elevation: 0,
             ),
-            icon: const Icon(Icons.arrow_upward),
+            icon: const Icon(Icons.analytics_outlined),
             label: const Text(
-              'SEND',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _handleReceive,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber[500],
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-            ),
-            icon: const Icon(Icons.arrow_downward),
-            label: const Text(
-              'RECEIVE',
+              'MEMPOOL',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,

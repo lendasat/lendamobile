@@ -6,12 +6,16 @@
 import 'api.dart';
 import 'api/ark_api.dart';
 import 'api/bitcoin_api.dart';
+import 'api/mempool_api.dart';
+import 'api/mempool_block_tracker.dart';
+import 'api/mempool_ws.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'frb_generated.dart';
 import 'logger.dart';
 import 'models/historical_prices.dart';
+import 'models/mempool.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
@@ -29,6 +33,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Sse(dynamic raw);
 
   @protected
+  RustStreamSink<MempoolWsMessage> dco_decode_StreamSink_mempool_ws_message_Sse(
+      dynamic raw);
+
+  @protected
+  RustStreamSink<ProjectedBlockTransactions>
+      dco_decode_StreamSink_projected_block_transactions_Sse(dynamic raw);
+
+  @protected
   String dco_decode_String(dynamic raw);
 
   @protected
@@ -38,19 +50,74 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Balance dco_decode_balance(dynamic raw);
 
   @protected
+  BitcoinTransaction dco_decode_bitcoin_transaction(dynamic raw);
+
+  @protected
+  Block dco_decode_block(dynamic raw);
+
+  @protected
+  BlockExtras dco_decode_block_extras(dynamic raw);
+
+  @protected
   BoltzSwap dco_decode_boltz_swap(dynamic raw);
 
   @protected
   bool dco_decode_bool(dynamic raw);
 
   @protected
+  BlockExtras dco_decode_box_autoadd_block_extras(dynamic raw);
+
+  @protected
   BoltzSwap dco_decode_box_autoadd_boltz_swap(dynamic raw);
+
+  @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw);
+
+  @protected
+  Conversions dco_decode_box_autoadd_conversions(dynamic raw);
+
+  @protected
+  DifficultyAdjustment dco_decode_box_autoadd_difficulty_adjustment(
+      dynamic raw);
+
+  @protected
+  double dco_decode_box_autoadd_f_64(dynamic raw);
 
   @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
   @protected
+  MiningPool dco_decode_box_autoadd_mining_pool(dynamic raw);
+
+  @protected
+  RecommendedFees dco_decode_box_autoadd_recommended_fees(dynamic raw);
+
+  @protected
+  TxOutput dco_decode_box_autoadd_tx_output(dynamic raw);
+
+  @protected
+  int dco_decode_box_autoadd_u_32(dynamic raw);
+
+  @protected
   BigInt dco_decode_box_autoadd_u_64(dynamic raw);
+
+  @protected
+  Conversions dco_decode_conversions(dynamic raw);
+
+  @protected
+  DifficultyAdjustment dco_decode_difficulty_adjustment(dynamic raw);
+
+  @protected
+  DifficultyPoint dco_decode_difficulty_point(dynamic raw);
+
+  @protected
+  double dco_decode_f_64(dynamic raw);
+
+  @protected
+  HashrateData dco_decode_hashrate_data(dynamic raw);
+
+  @protected
+  HashratePoint dco_decode_hashrate_point(dynamic raw);
 
   @protected
   HistoricalPriceData dco_decode_historical_price_data(dynamic raw);
@@ -65,16 +132,55 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Info dco_decode_info(dynamic raw);
 
   @protected
+  List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<BitcoinTransaction> dco_decode_list_bitcoin_transaction(dynamic raw);
+
+  @protected
+  List<Block> dco_decode_list_block(dynamic raw);
+
+  @protected
+  List<DifficultyPoint> dco_decode_list_difficulty_point(dynamic raw);
+
+  @protected
+  List<HashratePoint> dco_decode_list_hashrate_point(dynamic raw);
+
+  @protected
   List<HistoricalPriceData> dco_decode_list_historical_price_data(dynamic raw);
+
+  @protected
+  List<MempoolBlock> dco_decode_list_mempool_block(dynamic raw);
+
+  @protected
+  Float64List dco_decode_list_prim_f_64_strict(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<ProjectedTransaction> dco_decode_list_projected_transaction(dynamic raw);
+
+  @protected
   List<Transaction> dco_decode_list_transaction(dynamic raw);
 
   @protected
+  List<TxInput> dco_decode_list_tx_input(dynamic raw);
+
+  @protected
+  List<TxOutput> dco_decode_list_tx_output(dynamic raw);
+
+  @protected
   LogEntry dco_decode_log_entry(dynamic raw);
+
+  @protected
+  MempoolBlock dco_decode_mempool_block(dynamic raw);
+
+  @protected
+  MempoolWsMessage dco_decode_mempool_ws_message(dynamic raw);
+
+  @protected
+  MiningPool dco_decode_mining_pool(dynamic raw);
 
   @protected
   OffchainBalance dco_decode_offchain_balance(dynamic raw);
@@ -83,19 +189,78 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
+  BlockExtras? dco_decode_opt_box_autoadd_block_extras(dynamic raw);
+
+  @protected
   BoltzSwap? dco_decode_opt_box_autoadd_boltz_swap(dynamic raw);
+
+  @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
+  Conversions? dco_decode_opt_box_autoadd_conversions(dynamic raw);
+
+  @protected
+  DifficultyAdjustment? dco_decode_opt_box_autoadd_difficulty_adjustment(
+      dynamic raw);
+
+  @protected
+  double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
 
   @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
 
   @protected
+  MiningPool? dco_decode_opt_box_autoadd_mining_pool(dynamic raw);
+
+  @protected
+  RecommendedFees? dco_decode_opt_box_autoadd_recommended_fees(dynamic raw);
+
+  @protected
+  TxOutput? dco_decode_opt_box_autoadd_tx_output(dynamic raw);
+
+  @protected
+  int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
+
+  @protected
   BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
+
+  @protected
+  List<String>? dco_decode_opt_list_String(dynamic raw);
+
+  @protected
+  List<Block>? dco_decode_opt_list_block(dynamic raw);
+
+  @protected
+  List<MempoolBlock>? dco_decode_opt_list_mempool_block(dynamic raw);
 
   @protected
   PaymentReceived dco_decode_payment_received(dynamic raw);
 
   @protected
+  ProjectedBlockTransactions dco_decode_projected_block_transactions(
+      dynamic raw);
+
+  @protected
+  ProjectedTransaction dco_decode_projected_transaction(dynamic raw);
+
+  @protected
+  RecommendedFees dco_decode_recommended_fees(dynamic raw);
+
+  @protected
   Transaction dco_decode_transaction(dynamic raw);
+
+  @protected
+  TxInput dco_decode_tx_input(dynamic raw);
+
+  @protected
+  TxOutput dco_decode_tx_output(dynamic raw);
+
+  @protected
+  TxStatus dco_decode_tx_status(dynamic raw);
+
+  @protected
+  int dco_decode_u_32(dynamic raw);
 
   @protected
   BigInt dco_decode_u_64(dynamic raw);
@@ -114,6 +279,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       SseDeserializer deserializer);
 
   @protected
+  RustStreamSink<MempoolWsMessage> sse_decode_StreamSink_mempool_ws_message_Sse(
+      SseDeserializer deserializer);
+
+  @protected
+  RustStreamSink<ProjectedBlockTransactions>
+      sse_decode_StreamSink_projected_block_transactions_Sse(
+          SseDeserializer deserializer);
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
@@ -123,19 +297,77 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Balance sse_decode_balance(SseDeserializer deserializer);
 
   @protected
+  BitcoinTransaction sse_decode_bitcoin_transaction(
+      SseDeserializer deserializer);
+
+  @protected
+  Block sse_decode_block(SseDeserializer deserializer);
+
+  @protected
+  BlockExtras sse_decode_block_extras(SseDeserializer deserializer);
+
+  @protected
   BoltzSwap sse_decode_boltz_swap(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  BlockExtras sse_decode_box_autoadd_block_extras(SseDeserializer deserializer);
+
+  @protected
   BoltzSwap sse_decode_box_autoadd_boltz_swap(SseDeserializer deserializer);
+
+  @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  Conversions sse_decode_box_autoadd_conversions(SseDeserializer deserializer);
+
+  @protected
+  DifficultyAdjustment sse_decode_box_autoadd_difficulty_adjustment(
+      SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
+  MiningPool sse_decode_box_autoadd_mining_pool(SseDeserializer deserializer);
+
+  @protected
+  RecommendedFees sse_decode_box_autoadd_recommended_fees(
+      SseDeserializer deserializer);
+
+  @protected
+  TxOutput sse_decode_box_autoadd_tx_output(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
   BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
+
+  @protected
+  Conversions sse_decode_conversions(SseDeserializer deserializer);
+
+  @protected
+  DifficultyAdjustment sse_decode_difficulty_adjustment(
+      SseDeserializer deserializer);
+
+  @protected
+  DifficultyPoint sse_decode_difficulty_point(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  HashrateData sse_decode_hashrate_data(SseDeserializer deserializer);
+
+  @protected
+  HashratePoint sse_decode_hashrate_point(SseDeserializer deserializer);
 
   @protected
   HistoricalPriceData sse_decode_historical_price_data(
@@ -152,17 +384,61 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Info sse_decode_info(SseDeserializer deserializer);
 
   @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<BitcoinTransaction> sse_decode_list_bitcoin_transaction(
+      SseDeserializer deserializer);
+
+  @protected
+  List<Block> sse_decode_list_block(SseDeserializer deserializer);
+
+  @protected
+  List<DifficultyPoint> sse_decode_list_difficulty_point(
+      SseDeserializer deserializer);
+
+  @protected
+  List<HashratePoint> sse_decode_list_hashrate_point(
+      SseDeserializer deserializer);
+
+  @protected
   List<HistoricalPriceData> sse_decode_list_historical_price_data(
       SseDeserializer deserializer);
+
+  @protected
+  List<MempoolBlock> sse_decode_list_mempool_block(
+      SseDeserializer deserializer);
+
+  @protected
+  Float64List sse_decode_list_prim_f_64_strict(SseDeserializer deserializer);
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  List<ProjectedTransaction> sse_decode_list_projected_transaction(
+      SseDeserializer deserializer);
+
+  @protected
   List<Transaction> sse_decode_list_transaction(SseDeserializer deserializer);
 
   @protected
+  List<TxInput> sse_decode_list_tx_input(SseDeserializer deserializer);
+
+  @protected
+  List<TxOutput> sse_decode_list_tx_output(SseDeserializer deserializer);
+
+  @protected
   LogEntry sse_decode_log_entry(SseDeserializer deserializer);
+
+  @protected
+  MempoolBlock sse_decode_mempool_block(SseDeserializer deserializer);
+
+  @protected
+  MempoolWsMessage sse_decode_mempool_ws_message(SseDeserializer deserializer);
+
+  @protected
+  MiningPool sse_decode_mining_pool(SseDeserializer deserializer);
 
   @protected
   OffchainBalance sse_decode_offchain_balance(SseDeserializer deserializer);
@@ -171,20 +447,85 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
+  BlockExtras? sse_decode_opt_box_autoadd_block_extras(
+      SseDeserializer deserializer);
+
+  @protected
   BoltzSwap? sse_decode_opt_box_autoadd_boltz_swap(
       SseDeserializer deserializer);
+
+  @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  Conversions? sse_decode_opt_box_autoadd_conversions(
+      SseDeserializer deserializer);
+
+  @protected
+  DifficultyAdjustment? sse_decode_opt_box_autoadd_difficulty_adjustment(
+      SseDeserializer deserializer);
+
+  @protected
+  double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
+  MiningPool? sse_decode_opt_box_autoadd_mining_pool(
+      SseDeserializer deserializer);
+
+  @protected
+  RecommendedFees? sse_decode_opt_box_autoadd_recommended_fees(
+      SseDeserializer deserializer);
+
+  @protected
+  TxOutput? sse_decode_opt_box_autoadd_tx_output(SseDeserializer deserializer);
+
+  @protected
+  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
   BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
+
+  @protected
+  List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<Block>? sse_decode_opt_list_block(SseDeserializer deserializer);
+
+  @protected
+  List<MempoolBlock>? sse_decode_opt_list_mempool_block(
+      SseDeserializer deserializer);
 
   @protected
   PaymentReceived sse_decode_payment_received(SseDeserializer deserializer);
 
   @protected
+  ProjectedBlockTransactions sse_decode_projected_block_transactions(
+      SseDeserializer deserializer);
+
+  @protected
+  ProjectedTransaction sse_decode_projected_transaction(
+      SseDeserializer deserializer);
+
+  @protected
+  RecommendedFees sse_decode_recommended_fees(SseDeserializer deserializer);
+
+  @protected
   Transaction sse_decode_transaction(SseDeserializer deserializer);
+
+  @protected
+  TxInput sse_decode_tx_input(SseDeserializer deserializer);
+
+  @protected
+  TxOutput sse_decode_tx_output(SseDeserializer deserializer);
+
+  @protected
+  TxStatus sse_decode_tx_status(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer);
 
   @protected
   BigInt sse_decode_u_64(SseDeserializer deserializer);
@@ -207,6 +548,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       RustStreamSink<LogEntry> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_StreamSink_mempool_ws_message_Sse(
+      RustStreamSink<MempoolWsMessage> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_StreamSink_projected_block_transactions_Sse(
+      RustStreamSink<ProjectedBlockTransactions> self,
+      SseSerializer serializer);
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
@@ -216,21 +566,84 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_balance(Balance self, SseSerializer serializer);
 
   @protected
+  void sse_encode_bitcoin_transaction(
+      BitcoinTransaction self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_block(Block self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_block_extras(BlockExtras self, SseSerializer serializer);
+
+  @protected
   void sse_encode_boltz_swap(BoltzSwap self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_block_extras(
+      BlockExtras self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_boltz_swap(
       BoltzSwap self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_conversions(
+      Conversions self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_difficulty_adjustment(
+      DifficultyAdjustment self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_i_64(
       PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_mining_pool(
+      MiningPool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_recommended_fees(
+      RecommendedFees self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_tx_output(
+      TxOutput self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_conversions(Conversions self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_difficulty_adjustment(
+      DifficultyAdjustment self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_difficulty_point(
+      DifficultyPoint self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_hashrate_data(HashrateData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_hashrate_point(HashratePoint self, SseSerializer serializer);
 
   @protected
   void sse_encode_historical_price_data(
@@ -247,19 +660,65 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_info(Info self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_bitcoin_transaction(
+      List<BitcoinTransaction> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_block(List<Block> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_difficulty_point(
+      List<DifficultyPoint> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_hashrate_point(
+      List<HashratePoint> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_historical_price_data(
       List<HistoricalPriceData> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_mempool_block(
+      List<MempoolBlock> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_prim_f_64_strict(
+      Float64List self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(
       Uint8List self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_projected_transaction(
+      List<ProjectedTransaction> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_transaction(
       List<Transaction> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_tx_input(List<TxInput> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_tx_output(List<TxOutput> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_mempool_block(MempoolBlock self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_mempool_ws_message(
+      MempoolWsMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_mining_pool(MiningPool self, SseSerializer serializer);
 
   @protected
   void sse_encode_offchain_balance(
@@ -269,22 +728,89 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_block_extras(
+      BlockExtras? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_box_autoadd_boltz_swap(
       BoltzSwap? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_conversions(
+      Conversions? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_difficulty_adjustment(
+      DifficultyAdjustment? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_i_64(
       PlatformInt64? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_mining_pool(
+      MiningPool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_recommended_fees(
+      RecommendedFees? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_tx_output(
+      TxOutput? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_block(List<Block>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_mempool_block(
+      List<MempoolBlock>? self, SseSerializer serializer);
 
   @protected
   void sse_encode_payment_received(
       PaymentReceived self, SseSerializer serializer);
 
   @protected
+  void sse_encode_projected_block_transactions(
+      ProjectedBlockTransactions self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_projected_transaction(
+      ProjectedTransaction self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_recommended_fees(
+      RecommendedFees self, SseSerializer serializer);
+
+  @protected
   void sse_encode_transaction(Transaction self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tx_input(TxInput self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tx_output(TxOutput self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tx_status(TxStatus self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_64(BigInt self, SseSerializer serializer);
