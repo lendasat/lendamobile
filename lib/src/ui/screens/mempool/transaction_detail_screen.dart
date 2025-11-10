@@ -365,12 +365,17 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                           if (_transaction!.status.blockTime != null)
                             {
                               'label': AppLocalizations.of(context)!.blockTime,
-                              'value': context.watch<TimezoneService>().toSelectedTimezone(
-                                DateTime.fromMillisecondsSinceEpoch(
-                                  _transaction!.status.blockTime!.toInt() * 1000,
-                                  isUtc: true,
-                                ),
-                              ).toString().split('.')[0],
+                              'value': context
+                                  .watch<TimezoneService>()
+                                  .toSelectedTimezone(
+                                    DateTime.fromMillisecondsSinceEpoch(
+                                      _transaction!.status.blockTime!.toInt() *
+                                          1000,
+                                      isUtc: true,
+                                    ),
+                                  )
+                                  .toString()
+                                  .split('.')[0],
                             },
                         ], theme),
                         theme,

@@ -15,7 +15,8 @@ class DifficultyAdjustmentCard extends StatelessWidget {
 
   String _formatDate(BigInt timestamp, BuildContext context) {
     final timezoneService = context.watch<TimezoneService>();
-    final dateUtc = DateTime.fromMillisecondsSinceEpoch(timestamp.toInt(), isUtc: true);
+    final dateUtc =
+        DateTime.fromMillisecondsSinceEpoch(timestamp.toInt(), isUtc: true);
     final date = timezoneService.toSelectedTimezone(dateUtc);
     return '${date.month}/${date.day}/${date.year}';
   }

@@ -148,7 +148,9 @@ class BlockCard extends StatelessWidget {
 
   String _formatTime(BigInt timestamp, BuildContext context) {
     final timezoneService = context.watch<TimezoneService>();
-    final dateUtc = DateTime.fromMillisecondsSinceEpoch(timestamp.toInt() * 1000, isUtc: true);
+    final dateUtc = DateTime.fromMillisecondsSinceEpoch(
+        timestamp.toInt() * 1000,
+        isUtc: true);
     final date = timezoneService.toSelectedTimezone(dateUtc);
     final now = timezoneService.now();
     final difference = now.difference(date);

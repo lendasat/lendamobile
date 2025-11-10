@@ -175,30 +175,30 @@ class _AmountWidgetState extends State<AmountWidget> {
                       inBoundCallback: widget.inBoundFunc,
                     ),
                     decoration: InputDecoration(
-                      suffixIcon:
-                          _service.swapped
-                              ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    currencyService.symbol,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      color: theme.primaryWhite.withValues(alpha: 0.7),
-                                    ),
+                      suffixIcon: _service.swapped
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  currencyService.symbol,
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    color: theme.primaryWhite
+                                        .withValues(alpha: 0.7),
                                   ),
-                                ],
-                              )
-                              : _getCurrencyIcon(
-                                _service.currentUnit,
-                                size: 24.0,
-                                theme: theme,
-                              ),
-
+                                ),
+                              ],
+                            )
+                          : _getCurrencyIcon(
+                              _service.currentUnit,
+                              size: 24.0,
+                              theme: theme,
+                            ),
                       border: InputBorder.none,
                       counterText: "",
                       hintText: "0.0",
-                      hintStyle: TextStyle(color: theme.primaryWhite.withValues(alpha: 0.5)),
+                      hintStyle: TextStyle(
+                          color: theme.primaryWhite.withValues(alpha: 0.5)),
                     ),
                     controller: _service.getCurrentController(),
                     autofocus: false,
@@ -212,10 +212,11 @@ class _AmountWidgetState extends State<AmountWidget> {
             const SizedBox(height: 8.0),
             // Conversion display
             Center(
-              child:
-                  !_service.swapped
-                      ? _buildBitcoinToMoneyWidget(context, bitcoinPrice, theme, currencyService)
-                      : _buildMoneyToBitcoinWidget(context, bitcoinPrice, theme, currencyService),
+              child: !_service.swapped
+                  ? _buildBitcoinToMoneyWidget(
+                      context, bitcoinPrice, theme, currencyService)
+                  : _buildMoneyToBitcoinWidget(
+                      context, bitcoinPrice, theme, currencyService),
             ),
           ],
         );
@@ -234,24 +235,24 @@ class _AmountWidgetState extends State<AmountWidget> {
     if (bitcoinPrice == null) {
       return Text(
         "≈ ${currencyService.formatAmount(0.0)}",
-        style: materialTheme.textTheme.bodyLarge?.copyWith(color: theme.primaryWhite.withValues(alpha: 0.7)),
+        style: materialTheme.textTheme.bodyLarge
+            ?.copyWith(color: theme.primaryWhite.withValues(alpha: 0.7)),
       );
     }
 
-    final amount =
-        _service.currentUnit == CurrencyType.bitcoin
-            ? double.tryParse(
-                  widget.btcController.text.isEmpty
-                      ? "0.0"
-                      : widget.btcController.text,
-                ) ??
-                0.0
-            : double.tryParse(
-                  widget.satController.text.isEmpty
-                      ? "0"
-                      : widget.satController.text,
-                ) ??
-                0.0;
+    final amount = _service.currentUnit == CurrencyType.bitcoin
+        ? double.tryParse(
+              widget.btcController.text.isEmpty
+                  ? "0.0"
+                  : widget.btcController.text,
+            ) ??
+            0.0
+        : double.tryParse(
+              widget.satController.text.isEmpty
+                  ? "0"
+                  : widget.satController.text,
+            ) ??
+            0.0;
 
     double btcAmount =
         _service.currentUnit == CurrencyType.sats ? amount / 100000000 : amount;
@@ -271,7 +272,8 @@ class _AmountWidgetState extends State<AmountWidget> {
 
     return Text(
       "≈ ${currencyService.formatAmount(usdAmount)}",
-      style: materialTheme.textTheme.bodyLarge?.copyWith(color: theme.primaryWhite.withValues(alpha: 0.7)),
+      style: materialTheme.textTheme.bodyLarge
+          ?.copyWith(color: theme.primaryWhite.withValues(alpha: 0.7)),
     );
   }
 
@@ -298,8 +300,7 @@ class _AmountWidgetState extends State<AmountWidget> {
       );
     }
 
-    final currAmount =
-        double.tryParse(
+    final currAmount = double.tryParse(
           widget.currController.text.isEmpty
               ? "0.0"
               : widget.currController.text,
@@ -314,20 +315,19 @@ class _AmountWidgetState extends State<AmountWidget> {
     }
 
     if (widget.autoConvert) {
-      final amount =
-          _service.currentUnit == CurrencyType.bitcoin
-              ? double.tryParse(
-                    widget.btcController.text.isEmpty
-                        ? "0.0"
-                        : widget.btcController.text,
-                  ) ??
-                  0.0
-              : double.tryParse(
-                    widget.satController.text.isEmpty
-                        ? "0"
-                        : widget.satController.text,
-                  ) ??
-                  0.0;
+      final amount = _service.currentUnit == CurrencyType.bitcoin
+          ? double.tryParse(
+                widget.btcController.text.isEmpty
+                    ? "0.0"
+                    : widget.btcController.text,
+              ) ??
+              0.0
+          : double.tryParse(
+                widget.satController.text.isEmpty
+                    ? "0"
+                    : widget.satController.text,
+              ) ??
+              0.0;
 
       final unitEquivalent = _service.convertToBitcoinUnit(
         amount,
@@ -345,17 +345,17 @@ class _AmountWidgetState extends State<AmountWidget> {
       });
     }
 
-    final displayAmount =
-        _service.currentUnit == CurrencyType.bitcoin
-            ? widget.btcController.text
-            : widget.satController.text;
+    final displayAmount = _service.currentUnit == CurrencyType.bitcoin
+        ? widget.btcController.text
+        : widget.satController.text;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           "≈ $displayAmount",
-          style: materialTheme.textTheme.bodyLarge?.copyWith(color: theme.primaryWhite.withValues(alpha: 0.7)),
+          style: materialTheme.textTheme.bodyLarge
+              ?.copyWith(color: theme.primaryWhite.withValues(alpha: 0.7)),
         ),
         const SizedBox(width: 4),
         _getCurrencyIcon(_service.currentUnit, theme: theme),
@@ -368,13 +368,20 @@ class _AmountWidgetState extends State<AmountWidget> {
       case CurrencyType.bitcoin:
         return Icon(
           Icons.currency_bitcoin,
-          color: theme?.primaryWhite.withValues(alpha: 0.7) ?? const Color(0xFFFFFFFF).withValues(alpha: 0.7),
+          color: theme?.primaryWhite.withValues(alpha: 0.7) ??
+              const Color(0xFFFFFFFF).withValues(alpha: 0.7),
           size: size,
         );
       case CurrencyType.sats:
-        return Text("sat", style: TextStyle(fontSize: size, color: theme?.primaryWhite.withValues(alpha: 0.7)));
+        return Text("sat",
+            style: TextStyle(
+                fontSize: size,
+                color: theme?.primaryWhite.withValues(alpha: 0.7)));
       case CurrencyType.usd:
-        return Icon(Icons.attach_money, color: theme?.primaryWhite.withValues(alpha: 0.7) ?? const Color(0xFFFFFFFF).withValues(alpha: 0.7), size: size);
+        return Icon(Icons.attach_money,
+            color: theme?.primaryWhite.withValues(alpha: 0.7) ??
+                const Color(0xFFFFFFFF).withValues(alpha: 0.7),
+            size: size);
     }
   }
 }

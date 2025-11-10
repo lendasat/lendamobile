@@ -74,9 +74,12 @@ class AppThemeModel {
     final g = ((color.g * 255.0).round() & 0xff) / 255.0;
     final b = ((color.b * 255.0).round() & 0xff) / 255.0;
 
-    final rLinear = r <= 0.03928 ? r / 12.92 : math.pow((r + 0.055) / 1.055, 2.4);
-    final gLinear = g <= 0.03928 ? g / 12.92 : math.pow((g + 0.055) / 1.055, 2.4);
-    final bLinear = b <= 0.03928 ? b / 12.92 : math.pow((b + 0.055) / 1.055, 2.4);
+    final rLinear =
+        r <= 0.03928 ? r / 12.92 : math.pow((r + 0.055) / 1.055, 2.4);
+    final gLinear =
+        g <= 0.03928 ? g / 12.92 : math.pow((g + 0.055) / 1.055, 2.4);
+    final bLinear =
+        b <= 0.03928 ? b / 12.92 : math.pow((b + 0.055) / 1.055, 2.4);
 
     return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
   }
@@ -138,11 +141,14 @@ class AppThemeModel {
 
     // Generate background shades
     final primaryBg = baseColor;
-    final secondaryBg = isLight ? _darken(baseColor, 0.05) : _lighten(baseColor, 0.05);
-    final tertiaryBg = isLight ? _darken(baseColor, 0.1) : _lighten(baseColor, 0.1);
+    final secondaryBg =
+        isLight ? _darken(baseColor, 0.05) : _lighten(baseColor, 0.05);
+    final tertiaryBg =
+        isLight ? _darken(baseColor, 0.1) : _lighten(baseColor, 0.1);
 
     // Determine text colors based on background luminance
-    final textColor = isLight ? const Color(0xFF0A0A0A) : const Color(0xFFFFFFFF);
+    final textColor =
+        isLight ? const Color(0xFF0A0A0A) : const Color(0xFFFFFFFF);
     final mutedTextColor = isLight
         ? const Color(0xFF424242) // Dark gray for better contrast
         : const Color(0xFFBDBDBD); // Light gray
@@ -159,8 +165,10 @@ class AppThemeModel {
         : const Color(0xFF2A2A2A); // Very dark gray border
 
     // Gradient colors - create complementary shades
-    final gradStart = isLight ? _darken(baseColor, 0.2) : _lighten(baseColor, 0.15);
-    final gradEnd = isLight ? _darken(baseColor, 0.3) : _lighten(baseColor, 0.25);
+    final gradStart =
+        isLight ? _darken(baseColor, 0.2) : _lighten(baseColor, 0.15);
+    final gradEnd =
+        isLight ? _darken(baseColor, 0.3) : _lighten(baseColor, 0.25);
 
     return AppThemeModel(
       primaryBackground: primaryBg,

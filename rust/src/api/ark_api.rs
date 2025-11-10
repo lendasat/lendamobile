@@ -86,7 +86,7 @@ pub async fn address(amount: Option<u64>) -> Result<Addresses> {
     let amount = match amount {
         None => "".to_string(),
         Some(a) => {
-            format!("&amount={}", a.to_string())
+            format!("&amount={}", a)
         }
     };
 

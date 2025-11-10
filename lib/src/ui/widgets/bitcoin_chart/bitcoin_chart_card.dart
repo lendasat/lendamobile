@@ -75,7 +75,8 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
 
   String _formatDate(int milliseconds, BuildContext context) {
     final timezoneService = context.watch<TimezoneService>();
-    final dateUtc = DateTime.fromMillisecondsSinceEpoch(milliseconds, isUtc: true);
+    final dateUtc =
+        DateTime.fromMillisecondsSinceEpoch(milliseconds, isUtc: true);
     final date = timezoneService.toSelectedTimezone(dateUtc);
 
     switch (_selectedTimeRange) {

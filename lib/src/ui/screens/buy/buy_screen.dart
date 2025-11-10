@@ -191,7 +191,8 @@ class _BuyScreenState extends State<BuyScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${AppLocalizations.of(context)!.failedToLaunchMoonpay}: ${e.toString()}'),
+            content: Text(
+                '${AppLocalizations.of(context)!.failedToLaunchMoonpay}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );

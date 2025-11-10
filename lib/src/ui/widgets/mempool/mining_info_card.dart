@@ -14,7 +14,9 @@ class MiningInfoCard extends StatelessWidget {
 
   String _formatTimestamp(BigInt timestamp, BuildContext context) {
     final timezoneService = context.watch<TimezoneService>();
-    final dateUtc = DateTime.fromMillisecondsSinceEpoch(timestamp.toInt() * 1000, isUtc: true);
+    final dateUtc = DateTime.fromMillisecondsSinceEpoch(
+        timestamp.toInt() * 1000,
+        isUtc: true);
     final date = timezoneService.toSelectedTimezone(dateUtc);
     final now = timezoneService.now();
     final difference = now.difference(date);
@@ -85,24 +87,22 @@ class MiningInfoCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16.0),
-
           if (pool != null) ...[
-            _buildInfoRow(AppLocalizations.of(context)!.miningPool, pool.name, Icons.groups, theme),
+            _buildInfoRow(AppLocalizations.of(context)!.miningPool, pool.name,
+                Icons.groups, theme),
             const SizedBox(height: 8.0),
           ],
-
           _buildInfoRow(
             AppLocalizations.of(context)!.mined,
             _formatTimestamp(block.timestamp, context),
             Icons.access_time,
             theme,
           ),
-
           if (reward != null) ...[
             const SizedBox(height: 8.0),
-            _buildInfoRow(AppLocalizations.of(context)!.blockReward, _formatReward(reward, context), Icons.paid, theme),
+            _buildInfoRow(AppLocalizations.of(context)!.blockReward,
+                _formatReward(reward, context), Icons.paid, theme),
           ],
-
           if (block.extras?.totalFees != null) ...[
             const SizedBox(height: 8.0),
             _buildInfoRow(
@@ -117,7 +117,8 @@ class MiningInfoCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, IconData icon, AppTheme theme) {
+  Widget _buildInfoRow(
+      String label, String value, IconData icon, AppTheme theme) {
     return Row(
       children: [
         Icon(icon, color: theme.mutedText, size: 16),

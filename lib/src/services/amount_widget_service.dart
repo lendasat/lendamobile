@@ -33,8 +33,7 @@ class AmountWidgetService extends ChangeNotifier {
   bool get enabled => _enabled;
   CurrencyType get currentUnit => _currentUnit;
 
-  AmountWidgetService({double? bitcoinPrice})
-    : _bitcoinPrice = bitcoinPrice;
+  AmountWidgetService({double? bitcoinPrice}) : _bitcoinPrice = bitcoinPrice;
 
   void initialize({
     required TextEditingController btcController,
@@ -85,19 +84,16 @@ class AmountWidgetService extends ChangeNotifier {
     }
 
     if (_swapped) {
-      final btcAmount =
-          _currentUnit == CurrencyType.bitcoin
-              ? double.tryParse(
-                    _btcController!.text.isEmpty ? "0.0" : _btcController!.text,
+      final btcAmount = _currentUnit == CurrencyType.bitcoin
+          ? double.tryParse(
+                _btcController!.text.isEmpty ? "0.0" : _btcController!.text,
+              ) ??
+              0.0
+          : (int.tryParse(
+                    _satController!.text.isEmpty ? "0" : _satController!.text,
                   ) ??
-                  0.0
-              : (int.tryParse(
-                        _satController!.text.isEmpty
-                            ? "0"
-                            : _satController!.text,
-                      ) ??
-                      0)
-                  .toDouble();
+                  0)
+              .toDouble();
 
       if (bitcoinPrice != null) {
         final currencyEquivalent = _convertCurrency(
@@ -112,8 +108,7 @@ class AmountWidgetService extends ChangeNotifier {
         ).toStringAsFixed(2);
       }
     } else {
-      final currAmount =
-          double.tryParse(
+      final currAmount = double.tryParse(
             _currController!.text.isEmpty ? "0.0" : _currController!.text,
           ) ??
           0.0;
@@ -279,10 +274,9 @@ class AmountWidgetService extends ChangeNotifier {
     formatters.add(
       NumericalRangeFormatter(
         min: 0,
-        max:
-            (upperBound != null && upperBound > 99999999999)
-                ? upperBound.toDouble()
-                : 99999999999,
+        max: (upperBound != null && upperBound > 99999999999)
+            ? upperBound.toDouble()
+            : 99999999999,
       ),
     );
 
@@ -354,8 +348,7 @@ class BoundInputFormatter extends TextInputFormatter {
       }
     } else {
       // Convert USD to bound type for comparison
-      convertedNewValue =
-          (convertedNewValue / bitcoinPrice) *
+      convertedNewValue = (convertedNewValue / bitcoinPrice) *
           (boundType == CurrencyType.sats ? 100000000 : 1);
 
       if (convertedNewValue < lowerBound) {
