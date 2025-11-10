@@ -1,4 +1,6 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 
 class TransactionFeeCard extends StatelessWidget {
@@ -11,28 +13,30 @@ class TransactionFeeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.paid,
-                color: Colors.white,
+                color: theme.primaryWhite,
                 size: 20,
               ),
               const SizedBox(width: 8.0),
-              const Text(
-                'Transaction Fees',
+              Text(
+                AppLocalizations.of(context)!.transactionFees,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: theme.primaryWhite,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -40,19 +44,19 @@ class TransactionFeeCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16.0),
-          _buildFeeRow('Fastest (~10 min)', fees.fastestFee, Colors.green),
+          _buildFeeRow(AppLocalizations.of(context)!.fastest10Min, fees.fastestFee, Colors.green, theme),
           const SizedBox(height: 8.0),
-          _buildFeeRow('Half Hour', fees.halfHourFee, Colors.blue),
+          _buildFeeRow(AppLocalizations.of(context)!.halfHour, fees.halfHourFee, Colors.blue, theme),
           const SizedBox(height: 8.0),
-          _buildFeeRow('One Hour', fees.hourFee, Colors.orange),
+          _buildFeeRow(AppLocalizations.of(context)!.oneHour, fees.hourFee, Colors.orange, theme),
           const SizedBox(height: 8.0),
-          _buildFeeRow('Economy', fees.economyFee, Colors.grey),
+          _buildFeeRow(AppLocalizations.of(context)!.economy, fees.economyFee, Colors.grey, theme),
         ],
       ),
     );
   }
 
-  Widget _buildFeeRow(String label, int feeRate, Color color) {
+  Widget _buildFeeRow(String label, int feeRate, Color color, AppTheme theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -69,8 +73,8 @@ class TransactionFeeCard extends StatelessWidget {
             const SizedBox(width: 8.0),
             Text(
               label,
-              style: const TextStyle(
-                color: const Color(0xFFC6C6C6),
+              style: TextStyle(
+                color: theme.mutedText,
                 fontSize: 14,
               ),
             ),
@@ -78,8 +82,8 @@ class TransactionFeeCard extends StatelessWidget {
         ),
         Text(
           '$feeRate sat/vB',
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: theme.primaryWhite,
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),

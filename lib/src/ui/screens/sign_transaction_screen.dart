@@ -1,7 +1,9 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_success_screen.dart';
+import 'package:ark_flutter/app_theme.dart';
 
 class SignTransactionScreen extends StatefulWidget {
   final String aspId;
@@ -50,34 +52,39 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
       setState(() {
         _isLoading = false;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Transaction failed: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  '${AppLocalizations.of(context)!.transactionFailed} ${e.toString()}')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
-        title: const Text(
-          'Sign transaction',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context)!.signTransaction,
+          style: TextStyle(color: theme.primaryWhite),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: _isLoading
             ? null
             : IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
                 onPressed: () => Navigator.pop(context),
               ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: Colors.grey[800],
+            color: theme.secondaryBlack,
             height: 1.0,
           ),
         ),
@@ -96,43 +103,31 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
                   // Transaction details
                   _buildDetailRow(
                     Icons.account_balance_wallet_outlined,
-                    'Address',
+                    AppLocalizations.of(context)!.address,
                     widget.address.length > 20
                         ? '${widget.address.substring(0, 10)}...${widget.address.substring(widget.address.length - 10)}'
                         : widget.address,
-                    iconColor: Colors.grey,
-                    labelColor: Colors.grey,
-                    valueColor: Colors.white,
                   ),
                   _buildDivider(),
 
                   _buildDetailRow(
                     Icons.attach_money_outlined,
-                    'Amount',
+                    AppLocalizations.of(context)!.amount,
                     '${widget.amount.toInt()} SATS',
-                    iconColor: Colors.grey,
-                    labelColor: Colors.grey,
-                    valueColor: Colors.white,
                   ),
                   _buildDivider(),
 
                   _buildDetailRow(
                     Icons.account_balance_outlined,
-                    'Network fees',
+                    AppLocalizations.of(context)!.networkFees,
                     '0 SATS',
-                    iconColor: Colors.grey,
-                    labelColor: Colors.grey,
-                    valueColor: Colors.white,
                   ),
                   _buildDivider(),
 
                   _buildDetailRow(
                     Icons.summarize_outlined,
-                    'Total',
+                    AppLocalizations.of(context)!.total,
                     '${widget.amount.toInt()} SATS',
-                    iconColor: Colors.grey,
-                    labelColor: Colors.grey,
-                    valueColor: Colors.white,
                     isLast: true,
                   ),
 
@@ -150,9 +145,9 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'TAP TO SIGN',
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(context)!.tapToSign,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -169,21 +164,22 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
     String label,
     String value, {
     bool isLast = false,
-    Color iconColor = Colors.grey,
-    Color labelColor = Colors.grey,
-    Color valueColor = Colors.black,
+    Color? iconColor,
+    Color? labelColor,
+    Color? valueColor,
   }) {
+    final theme = AppTheme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Row(
         children: [
-          Icon(icon, size: 22, color: iconColor),
+          Icon(icon, size: 22, color: iconColor ?? theme.mutedText),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
               style: TextStyle(
-                color: labelColor,
+                color: labelColor ?? theme.mutedText,
                 fontSize: 16,
               ),
             ),
@@ -191,7 +187,7 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
           Text(
             value,
             style: TextStyle(
-              color: valueColor,
+              color: valueColor ?? theme.primaryWhite,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -202,9 +198,10 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
   }
 
   Widget _buildDivider() {
+    final theme = AppTheme.of(context);
     return Container(
       height: 1,
-      color: Colors.grey[800],
+      color: theme.secondaryBlack,
     );
   }
 }

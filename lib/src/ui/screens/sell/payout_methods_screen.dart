@@ -1,4 +1,6 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 
 class PayoutMethodsScreen extends StatefulWidget {
   const PayoutMethodsScreen({super.key});
@@ -47,52 +49,52 @@ class _PayoutMethodsScreenState extends State<PayoutMethodsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: theme.primaryBlack,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Payout Methods',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context)!.payoutMethods,
+          style: TextStyle(color: theme.primaryWhite),
         ),
       ),
       body: ListView.separated(
         padding: const EdgeInsets.all(16.0),
         itemCount: _payoutMethods.length,
-        separatorBuilder:
-            (context, index) => const SizedBox(height: 8.0),
+        separatorBuilder: (context, index) => const SizedBox(height: 8.0),
         itemBuilder: (context, index) {
           final method = _payoutMethods[index];
           final isSelected = _selectedMethodId == method.id;
 
           return Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
+              color: theme.secondaryBlack,
               borderRadius: BorderRadius.circular(12.0),
               border: Border.all(
                 color: isSelected
                     ? Colors.orange
-                    : const Color(0xFFFFFFFF).withOpacity(0.1),
+                    : theme.primaryWhite.withValues(alpha: 0.1),
                 width: isSelected ? 2 : 1,
               ),
             ),
             child: ListTile(
-              leading: Icon(method.icon, color: Colors.white),
+              leading: Icon(method.icon, color: theme.primaryWhite),
               title: Text(
                 method.name,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: theme.primaryWhite,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              trailing:
-                  isSelected
-                      ? const Icon(Icons.check_circle, color: Colors.orange)
-                      : null,
+              trailing: isSelected
+                  ? const Icon(Icons.check_circle, color: Colors.orange)
+                  : null,
               onTap: () async {
                 setState(() {
                   _selectedMethodId = method.id;

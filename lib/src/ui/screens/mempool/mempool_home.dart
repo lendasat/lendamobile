@@ -1,4 +1,6 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/rust/api.dart' as rust_api;
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
@@ -272,15 +274,16 @@ class _MempoolHomeState extends State<MempoolHome> {
   }
 
   void _showSearchDialog() {
+    final theme = AppTheme.of(context);
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A),
-          title: const Text(
-            'Search Blockchain',
+          backgroundColor: theme.secondaryBlack,
+          title: Text(
+            AppLocalizations.of(context)!.searchBlockchain,
             style: TextStyle(
-              color: Colors.white,
+              color: theme.primaryWhite,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -300,15 +303,15 @@ class _MempoolHomeState extends State<MempoolHome> {
                         ),
                         decoration: BoxDecoration(
                           color: _searchType == 'block'
-                              ? Colors.white
-                              : const Color(0xFF0A0A0A),
+                              ? theme.primaryWhite
+                              : theme.primaryBlack,
                           borderRadius: BorderRadius.circular(
                             8.0,
                           ),
                           border: Border.all(
                             color: _searchType == 'block'
-                                ? Colors.white
-                                : Colors.white.withOpacity(0.1),
+                                ? theme.primaryWhite
+                                : theme.primaryWhite.withValues(alpha: 0.1),
                           ),
                         ),
                         child: Text(
@@ -316,8 +319,8 @@ class _MempoolHomeState extends State<MempoolHome> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: _searchType == 'block'
-                                ? const Color(0xFF0A0A0A)
-                                : Colors.white,
+                                ? theme.primaryBlack
+                                : theme.primaryWhite,
                             fontSize: 14,
                             fontWeight: _searchType == 'block'
                                 ? FontWeight.bold
@@ -339,24 +342,24 @@ class _MempoolHomeState extends State<MempoolHome> {
                         ),
                         decoration: BoxDecoration(
                           color: _searchType == 'transaction'
-                              ? Colors.white
-                              : const Color(0xFF0A0A0A),
+                              ? theme.primaryWhite
+                              : theme.primaryBlack,
                           borderRadius: BorderRadius.circular(
                             8.0,
                           ),
                           border: Border.all(
                             color: _searchType == 'transaction'
-                                ? Colors.white
-                                : Colors.white.withOpacity(0.1),
+                                ? theme.primaryWhite
+                                : theme.primaryWhite.withValues(alpha: 0.1),
                           ),
                         ),
                         child: Text(
-                          'Transaction',
+                          AppLocalizations.of(context)!.transaction,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: _searchType == 'transaction'
-                                ? const Color(0xFF0A0A0A)
-                                : Colors.white,
+                                ? theme.primaryBlack
+                                : theme.primaryWhite,
                             fontSize: 14,
                             fontWeight: _searchType == 'transaction'
                                 ? FontWeight.bold
@@ -371,50 +374,50 @@ class _MempoolHomeState extends State<MempoolHome> {
               const SizedBox(height: 16.0),
               Text(
                 _searchType == 'block'
-                    ? 'Enter block height or block hash'
-                    : 'Enter transaction ID (TXID)',
-                style: const TextStyle(
-                  color: Color(0xFFC6C6C6),
+                    ? AppLocalizations.of(context)!.enterBlockHeightOrBlockHash
+                    : AppLocalizations.of(context)!.enterTransactionIdTxid,
+                style: TextStyle(
+                  color: theme.mutedText,
                   fontSize: 14,
                 ),
               ),
               const SizedBox(height: 16.0),
               TextField(
                 controller: _searchController,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: theme.primaryWhite,
                   fontSize: 14,
                 ),
                 decoration: InputDecoration(
                   hintText: _searchType == 'block'
                       ? 'e.g. 800000 or 000000...'
                       : 'e.g. abc123...',
-                  hintStyle: const TextStyle(
-                    color: Color(0xFFC6C6C6),
+                  hintStyle: TextStyle(
+                    color: theme.mutedText,
                     fontSize: 14,
                   ),
                   filled: true,
-                  fillColor: const Color(0xFF0A0A0A),
+                  fillColor: theme.primaryBlack,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(
                       8.0,
                     ),
-                    borderSide:
-                        BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(
+                        color: theme.primaryWhite.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(
                       8.0,
                     ),
-                    borderSide:
-                        BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(
+                        color: theme.primaryWhite.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(
                       8.0,
                     ),
-                    borderSide: const BorderSide(
-                      color: Colors.white,
+                    borderSide: BorderSide(
+                      color: theme.primaryWhite,
                     ),
                   ),
                 ),
@@ -432,9 +435,9 @@ class _MempoolHomeState extends State<MempoolHome> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Color(0xFFC6C6C6)),
+              child: Text(
+                AppLocalizations.of(context)!.cancel,
+                style: TextStyle(color: theme.mutedText),
               ),
             ),
             ElevatedButton(
@@ -447,19 +450,19 @@ class _MempoolHomeState extends State<MempoolHome> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF0A0A0A),
+                backgroundColor: theme.primaryWhite,
+                foregroundColor: theme.primaryBlack,
               ),
               child: _isSearching
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Color(0xFF0A0A0A),
+                        color: theme.primaryBlack,
                       ),
                     )
-                  : const Text('Search'),
+                  : Text(AppLocalizations.of(context)!.search),
             ),
           ],
         ),
@@ -502,33 +505,35 @@ class _MempoolHomeState extends State<MempoolHome> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0A),
+        backgroundColor: theme.primaryBlack,
         elevation: 0,
-        title: const Text(
-          'Blockchain',
+        title: Text(
+          AppLocalizations.of(context)!.blockchain,
           style: TextStyle(
-            color: Colors.white,
+            color: theme.primaryWhite,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
+            icon: Icon(Icons.search, color: theme.primaryWhite),
             onPressed: () => _showSearchDialog(),
           ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh, color: theme.primaryWhite),
             onPressed: _loadMempoolData,
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Colors.white),
+          ? Center(
+              child: CircularProgressIndicator(color: theme.primaryWhite),
             )
           : _error != null
               ? Center(
@@ -541,10 +546,10 @@ class _MempoolHomeState extends State<MempoolHome> {
                         size: 64,
                       ),
                       const SizedBox(height: 16.0),
-                      const Text(
-                        'Error loading data',
+                      Text(
+                        AppLocalizations.of(context)!.errorLoadingData,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: theme.primaryWhite,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -556,8 +561,8 @@ class _MempoolHomeState extends State<MempoolHome> {
                         ),
                         child: Text(
                           _error!,
-                          style: const TextStyle(
-                            color: Color(0xFFC6C6C6),
+                          style: TextStyle(
+                            color: theme.mutedText,
                             fontSize: 14,
                           ),
                           textAlign: TextAlign.center,
@@ -567,21 +572,21 @@ class _MempoolHomeState extends State<MempoolHome> {
                       ElevatedButton(
                         onPressed: _loadMempoolData,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1A1A1A),
+                          backgroundColor: theme.secondaryBlack,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24.0,
                             vertical: 16.0,
                           ),
                         ),
-                        child: const Text('Retry'),
+                        child: Text(AppLocalizations.of(context)!.retry),
                       ),
                     ],
                   ),
                 )
               : RefreshIndicator(
                   onRefresh: _loadMempoolData,
-                  backgroundColor: const Color(0xFF1A1A1A),
-                  color: Colors.white,
+                  backgroundColor: theme.secondaryBlack,
+                  color: theme.primaryWhite,
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Column(
@@ -621,7 +626,7 @@ class _MempoolHomeState extends State<MempoolHome> {
                               if (_hashrateData != null)
                                 HashrateChartCard(initialData: _hashrateData!),
                               const SizedBox(height: 16.0),
-                              _buildRecentTransactions(),
+                              _buildRecentTransactions(theme),
                               const SizedBox(height: 32.0),
                             ],
                           ),
@@ -633,12 +638,12 @@ class _MempoolHomeState extends State<MempoolHome> {
     );
   }
 
-  Widget _buildRecentTransactions() {
+  Widget _buildRecentTransactions(AppTheme theme) {
     if (_transactionsLoading) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(24.0),
-          child: CircularProgressIndicator(color: Colors.white),
+          padding: const EdgeInsets.all(24.0),
+          child: CircularProgressIndicator(color: theme.primaryWhite),
         ),
       );
     }
@@ -650,10 +655,10 @@ class _MempoolHomeState extends State<MempoolHome> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Recent Transactions',
+        Text(
+          AppLocalizations.of(context)!.recentTransactions,
           style: TextStyle(
-            color: Colors.white,
+            color: theme.primaryWhite,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -669,7 +674,8 @@ class _MempoolHomeState extends State<MempoolHome> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => TransactionDetailScreen(txid: tx.txid),
+                    builder: (context) =>
+                        TransactionDetailScreen(txid: tx.txid),
                   ),
                 );
               },
@@ -677,18 +683,18 @@ class _MempoolHomeState extends State<MempoolHome> {
                 margin: const EdgeInsets.only(bottom: 12.0),
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A1A),
+                  color: theme.secondaryBlack,
                   borderRadius: BorderRadius.circular(12.0),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: theme.primaryWhite.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.receipt,
-                      color: Color(0xFFC6C6C6),
+                      color: theme.mutedText,
                       size: 20,
                     ),
                     const SizedBox(width: 12.0),
@@ -700,8 +706,8 @@ class _MempoolHomeState extends State<MempoolHome> {
                             tx.txid.length > 16
                                 ? '${tx.txid.substring(0, 8)}...${tx.txid.substring(tx.txid.length - 8)}'
                                 : tx.txid,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: theme.primaryWhite,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               fontFamily: 'monospace',
@@ -709,9 +715,9 @@ class _MempoolHomeState extends State<MempoolHome> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Inputs: ${tx.vin.length} • Outputs: ${tx.vout.length}',
-                            style: const TextStyle(
-                              color: Color(0xFFC6C6C6),
+                            '${AppLocalizations.of(context)!.inputs}: ${tx.vin.length} • ${AppLocalizations.of(context)!.outputs}: ${tx.vout.length}',
+                            style: TextStyle(
+                              color: theme.mutedText,
                               fontSize: 12,
                             ),
                           ),
@@ -720,7 +726,7 @@ class _MempoolHomeState extends State<MempoolHome> {
                     ),
                     Icon(
                       Icons.chevron_right,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: theme.primaryWhite.withValues(alpha: 0.5),
                     ),
                   ],
                 ),

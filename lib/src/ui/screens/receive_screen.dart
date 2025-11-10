@@ -1,4 +1,6 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
@@ -9,8 +11,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:path_provider/path_provider.dart';
-import 'package:ark_flutter/src/ui/utility/amount_widget.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
+import 'package:ark_flutter/app_theme.dart';
 
 enum AddressType { bip21, btc, ark }
 
@@ -134,24 +136,28 @@ class ReceiveScreenState extends State<ReceiveScreen> {
       if (!e.toString().contains('timeout') &&
           !e.toString().contains('Timeout')) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Payment monitoring error: ${e.toString()}')),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!
+                  .paymentMonitoringError(e.toString()))),
         );
       }
     }
   }
 
   void _showPaymentReceivedDialog(PaymentReceived payment) {
+    final theme = AppTheme.of(context, listen: false);
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[850],
-          title: const Row(
+          backgroundColor: theme.secondaryBlack,
+          title: Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.amber, size: 32),
-              SizedBox(width: 12),
-              Text('Payment Received!', style: TextStyle(color: Colors.white)),
+              const Icon(Icons.check_circle, color: Colors.amber, size: 32),
+              const SizedBox(width: 12),
+              Text(AppLocalizations.of(context)!.paymentReceived,
+                  style: TextStyle(color: theme.primaryWhite)),
             ],
           ),
           content: Column(
@@ -159,16 +165,16 @@ class ReceiveScreenState extends State<ReceiveScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Amount: ${payment.amountSats} sats',
-                style: const TextStyle(
-                    color: Colors.white,
+                '${AppLocalizations.of(context)!.amount}: ${payment.amountSats} sats',
+                style: TextStyle(
+                    color: theme.primaryWhite,
                     fontSize: 18,
                     fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 'TXID: ${payment.txid}',
-                style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                style: TextStyle(color: theme.mutedText, fontSize: 12),
               ),
             ],
           ),
@@ -181,7 +187,8 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                 // Navigate back to dashboard (pop until we reach it)
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
-              child: const Text('OK', style: TextStyle(color: Colors.amber)),
+              child: Text(AppLocalizations.of(context)!.ok,
+                  style: const TextStyle(color: Colors.amber)),
             ),
           ],
         );
@@ -199,10 +206,14 @@ class ReceiveScreenState extends State<ReceiveScreen> {
   }
 
   void _copyCurrentAddress() {
+    final theme = AppTheme.of(context);
     String address = _getCurrentAddressData();
     Clipboard.setData(ClipboardData(text: address));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Address copied to clipboard')),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.addressCopiedToClipboard),
+        backgroundColor: theme.secondaryBlack,
+      ),
     );
     logger.i("Copied address: $address");
   }
@@ -257,6 +268,7 @@ class ReceiveScreenState extends State<ReceiveScreen> {
   }
 
   void _showAmountBottomSheet() {
+    final theme = AppTheme.of(context);
     // Initialize controllers with current amount if set
     _satController.text = _currentAmount?.toString() ?? '';
     _btcController.text = '';
@@ -265,7 +277,7 @@ class ReceiveScreenState extends State<ReceiveScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.primaryBlack,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -282,10 +294,10 @@ class ReceiveScreenState extends State<ReceiveScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Set Amount',
+                Text(
+                  AppLocalizations.of(context)!.setAmount,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: theme.primaryWhite,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -302,9 +314,9 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                       _fetchAddresses();
                       Navigator.pop(context);
                     },
-                    child: const Text(
-                      'Clear',
-                      style: TextStyle(color: Colors.red),
+                    child: Text(
+                      AppLocalizations.of(context)!.clear,
+                      style: const TextStyle(color: Colors.red),
                     ),
                   ),
               ],
@@ -335,11 +347,11 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                     },
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: const BorderSide(color: Colors.grey),
+                      side: BorderSide(color: theme.mutedText),
                     ),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: Colors.white),
+                    child: Text(
+                      AppLocalizations.of(context)!.cancel,
+                      style: TextStyle(color: theme.primaryWhite),
                     ),
                   ),
                 ),
@@ -367,10 +379,10 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.amber[500],
-                      foregroundColor: Colors.black,
+                      foregroundColor: theme.mutedText,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text('Apply'),
+                    child: Text(AppLocalizations.of(context)!.apply),
                   ),
                 ),
               ],
@@ -407,7 +419,9 @@ class ReceiveScreenState extends State<ReceiveScreen> {
       logger.e("Error sharing address: $e");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sharing: ${e.toString()}')),
+        SnackBar(
+            content: Text(
+                '${AppLocalizations.of(context)!.errorSharing}: ${e.toString()}')),
       );
     }
   }
@@ -435,41 +449,46 @@ class ReceiveScreenState extends State<ReceiveScreen> {
       final file = await File('${tempDir.path}/qr_code.png').create();
       await file.writeAsBytes(pngBytes);
 
-      // Share the image
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'My Bitcoin Address QR Code',
-      );
-
-      logger.i("Shared QR code image");
+      if (mounted) {
+        // Share the image
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          subject: AppLocalizations.of(context)!.myBitcoinAddressQrCode,
+        );
+        logger.i("Shared QR code image");
+      }
     } catch (e) {
       logger.e("Error sharing QR code image: $e");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sharing QR code: ${e.toString()}')),
+        SnackBar(
+            content: Text(
+                '${AppLocalizations.of(context)!.errorSharingQrCode} ${e.toString()}')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
-        title: const Text(
-          'Receive',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context)!.receiveLower,
+          style: TextStyle(color: theme.primaryWhite),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
           onPressed: () => Navigator.pop(context),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: Colors.grey[800],
+            color: theme.secondaryBlack,
             height: 1.0,
           ),
         ),
@@ -502,7 +521,8 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Monitoring for incoming payment...',
+                        AppLocalizations.of(context)!
+                            .monitoringForIncomingPayment,
                         style: TextStyle(
                           color: Colors.amber[300],
                           fontSize: 14,
@@ -543,16 +563,16 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                     onPressed: _handleShare,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.amber[500],
-                      foregroundColor: Colors.black,
+                      foregroundColor: theme.mutedText,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'Share',
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(context)!.share,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -566,17 +586,17 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _shareQrCodeImage,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
+                      foregroundColor: theme.primaryWhite,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      side: BorderSide(color: Colors.grey[700]!),
+                      side: BorderSide(color: theme.tertiaryBlack),
                     ),
                     icon: const Icon(Icons.qr_code, size: 20),
-                    label: const Text(
-                      'QR',
-                      style: TextStyle(
+                    label: Text(
+                      AppLocalizations.of(context)!.qr,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -591,41 +611,42 @@ class ReceiveScreenState extends State<ReceiveScreen> {
             // Three tiles with borders
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[800]!),
+                border: Border.all(color: theme.tertiaryBlack),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 children: [
                   // Address tile
                   _buildTile(
-                    label: 'Address',
+                    label: AppLocalizations.of(context)!.address,
                     value: _trimAddress(_getCurrentAddressData()),
                     trailing: IconButton(
-                      icon: const Icon(Icons.copy, color: Colors.grey),
+                      icon: Icon(Icons.copy, color: theme.mutedText),
                       onPressed: _copyCurrentAddress,
                     ),
                   ),
-                  Divider(height: 1, color: Colors.grey[800]),
+                  Divider(height: 1, color: theme.tertiaryBlack),
 
                   // Amount tile
                   _buildTile(
-                    label: 'Amount',
+                    label: AppLocalizations.of(context)!.amount,
                     value: _currentAmount != null
                         ? '$_currentAmount sats'
                         : 'Change Amount',
                     trailing: IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.grey),
+                      icon: Icon(Icons.edit, color: theme.mutedText),
                       onPressed: _showAmountBottomSheet,
                     ),
                     onTap: _showAmountBottomSheet,
                   ),
-                  Divider(height: 1, color: Colors.grey[800]),
+                  Divider(height: 1, color: theme.tertiaryBlack),
 
                   // Type tile
                   _buildTile(
-                    label: 'Type',
+                    label: AppLocalizations.of(context)!.type,
                     value: _getAddressTypeLabel(),
-                    leading: Icon(_getAddressTypeIcon(), color: Colors.grey),
+                    leading:
+                        Icon(_getAddressTypeIcon(), color: theme.mutedText),
                     onTap: _cycleAddressType,
                   ),
                 ],
@@ -633,11 +654,11 @@ class ReceiveScreenState extends State<ReceiveScreen> {
             ),
 
             if (_error != null)
-              const Padding(
-                padding: EdgeInsets.only(top: 16),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
                 child: Text(
-                  'Error loading addresses',
-                  style: TextStyle(
+                  AppLocalizations.of(context)!.errorLoadingAddresses,
+                  style: const TextStyle(
                     color: Colors.red,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -662,6 +683,7 @@ class ReceiveScreenState extends State<ReceiveScreen> {
     Widget? trailing,
     VoidCallback? onTap,
   }) {
+    final theme = AppTheme.of(context);
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -679,15 +701,15 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                   Text(
                     label,
                     style: TextStyle(
-                      color: Colors.grey[400],
+                      color: theme.mutedText,
                       fontSize: 12,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     value,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: theme.primaryWhite,
                       fontSize: 16,
                     ),
                   ),

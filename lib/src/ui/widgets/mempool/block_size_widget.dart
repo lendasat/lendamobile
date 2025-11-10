@@ -1,4 +1,6 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 
 class BlockSizeWidget extends StatelessWidget {
   final BigInt sizeBytes;
@@ -48,15 +50,16 @@ class BlockSizeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
     final fillPercentage = _getFillPercentage();
     final fillColor = _getFillColor(fillPercentage);
 
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,20 +69,20 @@ class BlockSizeWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0A0A0A),
+                  color: theme.primaryBlack,
                   borderRadius: BorderRadius.circular(8.0),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.data_usage,
-                  color: Colors.white,
+                  color: theme.primaryWhite,
                   size: 16,
                 ),
               ),
               const SizedBox(width: 8.0),
-              const Text(
-                'Block Size',
+              Text(
+                AppLocalizations.of(context)!.blockSize,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: theme.primaryWhite,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -87,7 +90,6 @@ class BlockSizeWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16.0),
-
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -96,8 +98,8 @@ class BlockSizeWidget extends StatelessWidget {
                 children: [
                   Text(
                     _formatSize(sizeBytes),
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: theme.primaryWhite,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -113,7 +115,6 @@ class BlockSizeWidget extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8.0),
-
               ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: Stack(
@@ -121,7 +122,7 @@ class BlockSizeWidget extends StatelessWidget {
                     Container(
                       height: 12,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0A0A0A),
+                        color: theme.primaryBlack,
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                     ),
@@ -145,17 +146,18 @@ class BlockSizeWidget extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 16.0),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatItem('Weight', _formatWeight(weightUnits)),
-              _buildStatItem('Transactions', txCount.toString()),
+              _buildStatItem(AppLocalizations.of(context)!.weight,
+                  _formatWeight(weightUnits), theme),
+              _buildStatItem(AppLocalizations.of(context)!.transactions,
+                  txCount.toString(), theme),
               _buildStatItem(
-                'Avg Size',
+                AppLocalizations.of(context)!.avgSize,
                 '${(sizeBytes.toInt() / txCount / 1000).toStringAsFixed(2)} KB',
+                theme,
               ),
             ],
           ),
@@ -164,19 +166,19 @@ class BlockSizeWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
+  Widget _buildStatItem(String label, String value, AppTheme theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(color: const Color(0xFFC6C6C6), fontSize: 11),
+          style: TextStyle(color: theme.mutedText, fontSize: 11),
         ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: theme.primaryWhite,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),

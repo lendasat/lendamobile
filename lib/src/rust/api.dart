@@ -5,6 +5,7 @@
 
 import 'frb_generated.dart';
 import 'logger.dart';
+import 'models/exchange_rates.dart';
 import 'models/mempool.dart';
 import 'models/moonpay.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
@@ -67,3 +68,12 @@ Future<MoonPayEncryptedData> moonpayEncryptData(
         {required String serverUrl, required String data}) =>
     RustLib.instance.api
         .crateApiMoonpayEncryptData(serverUrl: serverUrl, data: data);
+
+Future<ExchangeRates> fetchExchangeRates() =>
+    RustLib.instance.api.crateApiFetchExchangeRates();
+
+List<FiatCurrency> getSupportedCurrencies() =>
+    RustLib.instance.api.crateApiGetSupportedCurrencies();
+
+String currencyCode({required FiatCurrency currency}) =>
+    RustLib.instance.api.crateApiCurrencyCode(currency: currency);

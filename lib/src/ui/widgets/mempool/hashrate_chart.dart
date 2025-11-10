@@ -1,5 +1,7 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/rust/api.dart' as rust_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 
@@ -78,26 +80,27 @@ class _HashrateChartCardState extends State<HashrateChartCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
     final currentHashrate = _data.currentHashrate ?? 0.0;
 
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.speed, color: Colors.white, size: 20),
+              Icon(Icons.speed, color: theme.primaryWhite, size: 20),
               const SizedBox(width: 8.0),
-              const Text(
-                'Network Hashrate',
+              Text(
+                AppLocalizations.of(context)!.networkHashrate,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: theme.primaryWhite,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -105,34 +108,31 @@ class _HashrateChartCardState extends State<HashrateChartCard> {
             ],
           ),
           const SizedBox(height: 16.0),
-
           Center(
             child: Column(
               children: [
                 Text(
                   _formatHashrate(currentHashrate),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.primaryWhite,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Current Network Hashrate',
-                  style: TextStyle(color: const Color(0xFFC6C6C6), fontSize: 12),
+                  AppLocalizations.of(context)!.currentNetworkHashrate,
+                  style: TextStyle(color: theme.mutedText, fontSize: 12),
                 ),
               ],
             ),
           ),
-
           const SizedBox(height: 24.0),
-
           if (_isLoading)
-            const SizedBox(
+            SizedBox(
               height: 150,
               child: Center(
-                child: CircularProgressIndicator(color: Colors.white),
+                child: CircularProgressIndicator(color: theme.primaryWhite),
               ),
             )
           else
@@ -143,49 +143,40 @@ class _HashrateChartCardState extends State<HashrateChartCard> {
                 period: _selectedPeriod,
               ),
             ),
-
           const SizedBox(height: 16.0),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children:
-                _periods.map((period) {
-                  final isSelected = _selectedPeriod == period;
-                  return GestureDetector(
-                    onTap: () => _loadPeriodData(period),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            isSelected
-                                ? Colors.white
-                                : const Color(0xFF0A0A0A),
-                        borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(
-                          color:
-                              isSelected
-                                  ? Colors.white
-                                  : Colors.white.withOpacity(0.1),
-                        ),
-                      ),
-                      child: Text(
-                        period,
-                        style: TextStyle(
-                          color:
-                              isSelected
-                                  ? const Color(0xFF0A0A0A)
-                                  : Colors.white,
-                          fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
+            children: _periods.map((period) {
+              final isSelected = _selectedPeriod == period;
+              return GestureDetector(
+                onTap: () => _loadPeriodData(period),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected ? theme.primaryWhite : theme.primaryBlack,
+                    borderRadius: BorderRadius.circular(8.0),
+                    border: Border.all(
+                      color: isSelected
+                          ? theme.primaryWhite
+                          : theme.primaryWhite.withValues(alpha: 0.1),
                     ),
-                  );
-                }).toList(),
+                  ),
+                  child: Text(
+                    period,
+                    style: TextStyle(
+                      color:
+                          isSelected ? theme.primaryBlack : theme.primaryWhite,
+                      fontSize: 12,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -201,11 +192,13 @@ class HashrateChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     if (data.isEmpty) {
       return Center(
         child: Text(
-          'No data available',
-          style: TextStyle(color: const Color(0xFFC6C6C6), fontSize: 14),
+          AppLocalizations.of(context)!.noDataAvailable,
+          style: TextStyle(color: theme.mutedText, fontSize: 14),
         ),
       );
     }
@@ -214,31 +207,29 @@ class HashrateChart extends StatelessWidget {
       plotAreaBorderWidth: 0,
       backgroundColor: Colors.transparent,
       margin: const EdgeInsets.all(0),
-      primaryXAxis: DateTimeAxis(
+      primaryXAxis: const DateTimeAxis(
         isVisible: false,
-        majorGridLines: const MajorGridLines(width: 0),
+        majorGridLines: MajorGridLines(width: 0),
       ),
-      primaryYAxis: NumericAxis(
+      primaryYAxis: const NumericAxis(
         isVisible: false,
-        majorGridLines: const MajorGridLines(width: 0),
+        majorGridLines: MajorGridLines(width: 0),
       ),
       tooltipBehavior: TooltipBehavior(
         enable: true,
-        color: const Color(0xFF1A1A1A),
-        textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-        borderColor: Colors.white.withOpacity(0.1),
+        color: theme.secondaryBlack,
+        textStyle: TextStyle(color: theme.primaryWhite, fontSize: 12),
+        borderColor: theme.primaryWhite.withValues(alpha: 0.1),
         borderWidth: 1,
         format: 'point.y EH/s',
       ),
       series: <CartesianSeries<HashratePoint, DateTime>>[
         AreaSeries<HashratePoint, DateTime>(
           dataSource: data,
-          xValueMapper:
-              (HashratePoint point, _) =>
-                  DateTime.fromMillisecondsSinceEpoch(point.timestamp.toInt()),
-          yValueMapper:
-              (HashratePoint point, _) =>
-                  point.avgHashrate / 1000000000000000000,
+          xValueMapper: (HashratePoint point, _) =>
+              DateTime.fromMillisecondsSinceEpoch(point.timestamp.toInt()),
+          yValueMapper: (HashratePoint point, _) =>
+              point.avgHashrate / 1000000000000000000,
           color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
           borderColor: const Color(0xFF4CAF50),
           borderWidth: 2,

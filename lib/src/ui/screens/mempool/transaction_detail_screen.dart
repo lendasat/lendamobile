@@ -1,7 +1,11 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 import 'package:ark_flutter/src/rust/api.dart' as rust_api;
+import 'package:ark_flutter/src/services/timezone_service.dart';
+import 'package:provider/provider.dart';
 
 class TransactionDetailScreen extends StatefulWidget {
   final String txid;
@@ -44,13 +48,13 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     }
   }
 
-  void _copyToClipboard(String text) {
+  void _copyToClipboard(String text, AppTheme theme) {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: const Color(0xFF585858),
-        content: Text('Copied to clipboard'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        backgroundColor: theme.tertiaryBlack,
+        content: Text(AppLocalizations.of(context)!.copiedToClipboard),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -60,7 +64,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     return '${btc.toStringAsFixed(8)} BTC';
   }
 
-  Widget _buildSection(String title, Widget child) {
+  Widget _buildSection(String title, Widget child, AppTheme theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -71,8 +75,8 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
           ),
           child: Text(
             title,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: theme.primaryWhite,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -84,54 +88,52 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     );
   }
 
-  Widget _buildInfoCard(List<Map<String, String>> items) {
+  Widget _buildInfoCard(List<Map<String, String>> items, AppTheme theme) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
       ),
       child: Column(
-        children:
-            items
-                .map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 4.0,
+        children: items
+            .map(
+              (item) => Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 4.0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['label']!,
+                      style: TextStyle(
+                        color: theme.mutedText,
+                        fontSize: 14,
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item['label']!,
-                          style: TextStyle(
-                            color: const Color(0xFFC6C6C6),
-                            fontSize: 14,
-                          ),
+                    const SizedBox(width: 8.0),
+                    Flexible(
+                      child: Text(
+                        item['value']!,
+                        style: TextStyle(
+                          color: item['highlight'] == 'true'
+                              ? const Color(0xFF4CAF50)
+                              : theme.primaryWhite,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                         ),
-                        const SizedBox(width: 8.0),
-                        Flexible(
-                          child: Text(
-                            item['value']!,
-                            style: TextStyle(
-                              color:
-                                  item['highlight'] == 'true'
-                                      ? const Color(0xFF4CAF50)
-                                      : Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                      ],
+                        textAlign: TextAlign.right,
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -140,44 +142,43 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     String type,
     List<TxInput>? inputs,
     List<TxOutput>? outputs,
+    AppTheme theme,
   ) {
-    final items =
-        type == 'inputs'
-            ? (inputs ?? []).asMap().entries.map((entry) {
-              final i = entry.key;
-              final input = entry.value;
-              return {
-                'index': i.toString(),
-                'address': input.prevout?.scriptpubkeyAddress ?? 'Unknown',
-                'amount':
-                    input.prevout?.value != null
-                        ? _formatSats(input.prevout!.value.toInt())
-                        : 'Unknown',
-              };
-            }).toList()
-            : (outputs ?? []).asMap().entries.map((entry) {
-              final i = entry.key;
-              final output = entry.value;
-              return {
-                'index': i.toString(),
-                'address': output.scriptpubkeyAddress ?? 'Unknown',
-                'amount': _formatSats(output.value.toInt()),
-              };
-            }).toList();
+    final items = type == 'inputs'
+        ? (inputs ?? []).asMap().entries.map((entry) {
+            final i = entry.key;
+            final input = entry.value;
+            return {
+              'index': i.toString(),
+              'address': input.prevout?.scriptpubkeyAddress ?? 'Unknown',
+              'amount': input.prevout?.value != null
+                  ? _formatSats(input.prevout!.value.toInt())
+                  : 'Unknown',
+            };
+          }).toList()
+        : (outputs ?? []).asMap().entries.map((entry) {
+            final i = entry.key;
+            final output = entry.value;
+            return {
+              'index': i.toString(),
+              'address': output.scriptpubkeyAddress ?? 'Unknown',
+              'amount': _formatSats(output.value.toInt()),
+            };
+          }).toList();
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
       ),
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: items.length,
-        separatorBuilder:
-            (context, index) => Divider(height: 1, color: Colors.white.withOpacity(0.1)),
+        separatorBuilder: (context, index) => Divider(
+            height: 1, color: theme.primaryWhite.withValues(alpha: 0.1)),
         itemBuilder: (context, index) {
           final item = items[index];
           return Padding(
@@ -191,7 +192,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                     Text(
                       '${type == 'inputs' ? 'Input' : 'Output'} #${item['index']}',
                       style: TextStyle(
-                        color: const Color(0xFFC6C6C6),
+                        color: theme.mutedText,
                         fontSize: 12,
                       ),
                     ),
@@ -207,14 +208,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                 ),
                 const SizedBox(height: 4.0),
                 GestureDetector(
-                  onTap: () => _copyToClipboard(item['address']!),
+                  onTap: () => _copyToClipboard(item['address']!, theme),
                   child: Row(
                     children: [
                       Expanded(
                         child: Text(
                           item['address']!,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: theme.primaryWhite,
                             fontSize: 13,
                             fontFamily: 'monospace',
                           ),
@@ -222,10 +223,10 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                         ),
                       ),
                       const SizedBox(width: 4.0),
-                      const Icon(
+                      Icon(
                         Icons.copy,
                         size: 16,
-                        color: const Color(0xFFC6C6C6),
+                        color: theme.mutedText,
                       ),
                     ],
                   ),
@@ -240,176 +241,182 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0A),
+        backgroundColor: theme.primaryBlack,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Transaction Details',
+        title: Text(
+          AppLocalizations.of(context)!.transactionDetails,
           style: TextStyle(
-            color: Colors.white,
+            color: theme.primaryWhite,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-      body:
-          _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
-              )
-              : _error != null
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+            )
+          : _error != null
               ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 64,
+                        ),
+                        const SizedBox(height: 16.0),
+                        Text(
+                          AppLocalizations.of(context)!.errorLoadingTransaction,
+                          style: TextStyle(
+                            color: theme.primaryWhite,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8.0),
+                        Text(
+                          _error!,
+                          style: TextStyle(
+                            color: theme.mutedText,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : SingleChildScrollView(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: Colors.red,
-                        size: 64,
-                      ),
                       const SizedBox(height: 16.0),
-                      Text(
-                        'Error loading transaction',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      _buildSection(
+                        AppLocalizations.of(context)!.transactionId,
+                        Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                          ),
+                          padding: const EdgeInsets.all(16.0),
+                          decoration: BoxDecoration(
+                            color: theme.secondaryBlack,
+                            borderRadius: BorderRadius.circular(12.0),
+                            border: Border.all(
+                                color:
+                                    theme.primaryWhite.withValues(alpha: 0.1)),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  widget.txid,
+                                  style: TextStyle(
+                                    color: theme.primaryWhite,
+                                    fontSize: 13,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.copy,
+                                  color: theme.primaryWhite,
+                                  size: 20,
+                                ),
+                                onPressed: () =>
+                                    _copyToClipboard(widget.txid, theme),
+                              ),
+                            ],
+                          ),
                         ),
+                        theme,
                       ),
-                      const SizedBox(height: 8.0),
-                      Text(
-                        _error!,
-                        style: TextStyle(
-                          color: const Color(0xFFC6C6C6),
-                          fontSize: 14,
-                        ),
-                        textAlign: TextAlign.center,
+                      _buildSection(
+                        AppLocalizations.of(context)!.status,
+                        _buildInfoCard([
+                          {
+                            'label': AppLocalizations.of(context)!.confirmed,
+                            'value': _transaction!.status.confirmed
+                                ? 'Yes'
+                                : 'Pending',
+                            'highlight':
+                                _transaction!.status.confirmed.toString(),
+                          },
+                          if (_transaction!.status.blockHeight != null)
+                            {
+                              'label':
+                                  AppLocalizations.of(context)!.blockHeight,
+                              'value':
+                                  _transaction!.status.blockHeight.toString(),
+                            },
+                          if (_transaction!.status.blockTime != null)
+                            {
+                              'label': AppLocalizations.of(context)!.blockTime,
+                              'value': context.watch<TimezoneService>().toSelectedTimezone(
+                                DateTime.fromMillisecondsSinceEpoch(
+                                  _transaction!.status.blockTime!.toInt() * 1000,
+                                  isUtc: true,
+                                ),
+                              ).toString().split('.')[0],
+                            },
+                        ], theme),
+                        theme,
                       ),
+                      _buildSection(
+                        AppLocalizations.of(context)!.details,
+                        _buildInfoCard([
+                          {
+                            'label': AppLocalizations.of(context)!.fee,
+                            'value': _formatSats(_transaction!.fee.toInt()),
+                          },
+                          {
+                            'label': AppLocalizations.of(context)!.size,
+                            'value': '${_transaction!.size} bytes',
+                          },
+                          {
+                            'label': AppLocalizations.of(context)!.weight,
+                            'value': '${_transaction!.weight} WU',
+                          },
+                          {
+                            'label': AppLocalizations.of(context)!.version,
+                            'value': _transaction!.version.toString(),
+                          },
+                          {
+                            'label': AppLocalizations.of(context)!.locktime,
+                            'value': _transaction!.locktime.toString(),
+                          },
+                        ], theme),
+                        theme,
+                      ),
+                      _buildSection(
+                        '${AppLocalizations.of(context)!.inputs} (${_transaction!.vin.length})',
+                        _buildInputOutput(
+                            'inputs', _transaction!.vin, null, theme),
+                        theme,
+                      ),
+                      _buildSection(
+                        '${AppLocalizations.of(context)!.outputs} (${_transaction!.vout.length})',
+                        _buildInputOutput(
+                            'outputs', null, _transaction!.vout, theme),
+                        theme,
+                      ),
+                      const SizedBox(height: 32.0),
                     ],
                   ),
                 ),
-              )
-              : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16.0),
-
-                    _buildSection(
-                      'Transaction ID',
-                      Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16.0,
-                        ),
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1A1A1A),
-                          borderRadius: BorderRadius.circular(12.0),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                widget.txid,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontFamily: 'monospace',
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.copy,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              onPressed: () => _copyToClipboard(widget.txid),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    _buildSection(
-                      'Status',
-                      _buildInfoCard([
-                        {
-                          'label': 'Confirmed',
-                          'value':
-                              _transaction!.status.confirmed
-                                  ? 'Yes'
-                                  : 'Pending',
-                          'highlight':
-                              _transaction!.status.confirmed.toString(),
-                        },
-                        if (_transaction!.status.blockHeight != null)
-                          {
-                            'label': 'Block Height',
-                            'value':
-                                _transaction!.status.blockHeight.toString(),
-                          },
-                        if (_transaction!.status.blockTime != null)
-                          {
-                            'label': 'Block Time',
-                            'value':
-                                DateTime.fromMillisecondsSinceEpoch(
-                                  _transaction!.status.blockTime!.toInt() *
-                                      1000,
-                                ).toLocal().toString().split('.')[0],
-                          },
-                      ]),
-                    ),
-
-                    _buildSection(
-                      'Details',
-                      _buildInfoCard([
-                        {
-                          'label': 'Fee',
-                          'value': _formatSats(_transaction!.fee.toInt()),
-                        },
-                        {
-                          'label': 'Size',
-                          'value': '${_transaction!.size} bytes',
-                        },
-                        {
-                          'label': 'Weight',
-                          'value': '${_transaction!.weight} WU',
-                        },
-                        {
-                          'label': 'Version',
-                          'value': _transaction!.version.toString(),
-                        },
-                        {
-                          'label': 'Locktime',
-                          'value': _transaction!.locktime.toString(),
-                        },
-                      ]),
-                    ),
-
-                    _buildSection(
-                      'Inputs (${_transaction!.vin.length})',
-                      _buildInputOutput('inputs', _transaction!.vin, null),
-                    ),
-
-                    _buildSection(
-                      'Outputs (${_transaction!.vout.length})',
-                      _buildInputOutput('outputs', null, _transaction!.vout),
-                    ),
-
-                    const SizedBox(height: 32.0),
-                  ],
-                ),
-              ),
     );
   }
 }

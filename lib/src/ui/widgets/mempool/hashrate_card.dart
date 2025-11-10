@@ -1,4 +1,6 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 
 class HashrateCard extends StatelessWidget {
@@ -17,27 +19,28 @@ class HashrateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
     final currentHashrate = hashrateData.currentHashrate ?? 0.0;
     final currentDifficulty = hashrateData.currentDifficulty ?? 0.0;
 
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.speed, color: Colors.white, size: 20),
+              Icon(Icons.speed, color: theme.primaryWhite, size: 20),
               const SizedBox(width: 8.0),
-              const Text(
-                'Network Hashrate',
+              Text(
+                AppLocalizations.of(context)!.networkHashrate,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: theme.primaryWhite,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -45,51 +48,48 @@ class HashrateCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16.0),
-
           Center(
             child: Column(
               children: [
                 Text(
                   _formatHashrate(currentHashrate),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.primaryWhite,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8.0),
                 Text(
-                  'Current Network Hashrate',
-                  style: TextStyle(color: const Color(0xFFC6C6C6), fontSize: 12),
+                  AppLocalizations.of(context)!.currentNetworkHashrate,
+                  style: TextStyle(color: theme.mutedText, fontSize: 12),
                 ),
               ],
             ),
           ),
-
           const SizedBox(height: 16.0),
-
-          _buildStatRow('Difficulty', _formatDifficulty(currentDifficulty)),
-
+          _buildStatRow(AppLocalizations.of(context)!.difficulty,
+              _formatDifficulty(currentDifficulty), theme),
           const SizedBox(height: 8.0),
-
-          _buildStatRow('Data Points', '${hashrateData.hashrates.length}'),
+          _buildStatRow(AppLocalizations.of(context)!.dataPoints,
+              '${hashrateData.hashrates.length}', theme),
         ],
       ),
     );
   }
 
-  Widget _buildStatRow(String label, String value) {
+  Widget _buildStatRow(String label, String value, AppTheme theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: const TextStyle(color: const Color(0xFFC6C6C6), fontSize: 14),
+          style: TextStyle(color: theme.mutedText, fontSize: 14),
         ),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: theme.primaryWhite,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),

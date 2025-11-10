@@ -1,3 +1,5 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_history_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
@@ -13,6 +15,8 @@ import 'package:ark_flutter/src/ui/screens/buy/buy_screen.dart';
 import 'package:ark_flutter/src/ui/screens/sell/sell_screen.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/ui/screens/mempool/mempool_home.dart';
+import 'package:ark_flutter/app_theme.dart';
+import 'package:provider/provider.dart';
 
 enum BalanceType { pending, confirmed, total }
 
@@ -57,6 +61,11 @@ class DashboardScreenState extends State<DashboardScreen> {
     logger.i("Dashboard initialized with ASP ID: ${widget.aspId}");
     _loadBalanceVisibility();
     _fetchWalletData();
+
+    // Fetch exchange rates when dashboard initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CurrencyPreferenceService>().fetchExchangeRates();
+    });
     _loadBitcoinPriceData();
   }
 
@@ -129,7 +138,10 @@ class DashboardScreenState extends State<DashboardScreen> {
       logger.i("Fetched ${transactions.length} transactions");
     } catch (e) {
       logger.e("Error fetching transaction history: $e");
-      _showErrorSnackbar("Couldn't update transactions: ${e.toString()}");
+      if (mounted) {
+        _showErrorSnackbar(
+            "${AppLocalizations.of(context)!.couldntUpdateTransactions} ${e.toString()}");
+      }
     } finally {
       setState(() {
         _isTransactionFetching = false;
@@ -166,7 +178,8 @@ class DashboardScreenState extends State<DashboardScreen> {
         _isBalanceLoading = false;
       });
 
-      _showErrorSnackbar("Couldn't update balance: ${e.toString()}");
+      _showErrorSnackbar(
+          "${AppLocalizations.of(context)!.couldntUpdateBalance} ${e.toString()}");
     }
   }
 
@@ -189,9 +202,10 @@ class DashboardScreenState extends State<DashboardScreen> {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Showing ${_currentBalanceType.name} balance'),
+        content: Text(AppLocalizations.of(context)!
+            .showingBalanceType(_currentBalanceType.name)),
         duration: const Duration(seconds: 1),
-        backgroundColor: Colors.amber[700],
+        backgroundColor: Colors.amber,
       ),
     );
   }
@@ -206,9 +220,9 @@ class DashboardScreenState extends State<DashboardScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red[700],
+        backgroundColor: Colors.red,
         action: SnackBarAction(
-          label: 'RETRY',
+          label: AppLocalizations.of(context)!.retry,
           textColor: Colors.white,
           onPressed: _fetchWalletData,
         ),
@@ -309,25 +323,27 @@ class DashboardScreenState extends State<DashboardScreen> {
   String _getBalanceTypeText() {
     switch (_currentBalanceType) {
       case BalanceType.pending:
-        return 'Pending Balance';
+        return AppLocalizations.of(context)!.pendingBalance;
       case BalanceType.confirmed:
-        return 'Confirmed Balance';
+        return AppLocalizations.of(context)!.confirmedBalance;
       case BalanceType.total:
-        return 'Total Balance';
+        return AppLocalizations.of(context)!.totalBalance;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'WTFark',
           style: TextStyle(
-            color: Colors.white,
+            color: theme.primaryWhite,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -336,18 +352,26 @@ class DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(width: 8),
           IconButton(
             icon: Icon(
+              Icons.view_module_outlined,
+              color: theme.primaryWhite,
+            ),
+            onPressed: _handleMempool,
+            tooltip: 'Mempool',
+          ),
+          IconButton(
+            icon: Icon(
               _balancesVisible ? Icons.visibility_off : Icons.visibility,
-              color: Colors.white,
+              color: theme.primaryWhite,
             ),
             onPressed: _toggleBalanceVisibility,
             tooltip: _balancesVisible ? 'Hide balances' : 'Show balances',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh, color: theme.primaryWhite),
             onPressed: _fetchWalletData,
           ),
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
+            icon: Icon(Icons.settings, color: theme.primaryWhite),
             onPressed: () {
               // Navigate to settings
               logger.i("Settings button pressed");
@@ -387,6 +411,9 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBalanceCard() {
+    final theme = AppTheme.of(context);
+    final currencyService = context.watch<CurrencyPreferenceService>();
+
     return GestureDetector(
       onTap: _handleViewChart,
       behavior: HitTestBehavior.opaque,
@@ -394,8 +421,7 @@ class DashboardScreenState extends State<DashboardScreen> {
         width: double.infinity,
         height: 200,
         decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E),
-            borderRadius: BorderRadius.circular(16)),
+            color: theme.primaryGray, borderRadius: BorderRadius.circular(16)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Stack(
@@ -466,8 +492,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                                           _balancesVisible
                                               ? '₿ ${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}'
                                               : '₿ ********',
-                                          style: const TextStyle(
-                                            color: Colors.white,
+                                          style: TextStyle(
+                                            color: theme.primaryWhite,
                                             fontSize: 32,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -479,9 +505,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                                         onTap: _toggleDisplayUnit,
                                         behavior: HitTestBehavior.opaque,
                                         child: Text(
-                                          '≈ \$${(_getSelectedBalance() * _btcToUsdRate).toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                            color: Colors.white70,
+                                          '≈ ${currencyService.formatAmount(_getSelectedBalance() * _btcToUsdRate)}',
+                                          style: TextStyle(
+                                            color: theme.secondaryWhite,
                                             fontSize: 16,
                                           ),
                                         ),
@@ -495,10 +521,12 @@ class DashboardScreenState extends State<DashboardScreen> {
                                         behavior: HitTestBehavior.opaque,
                                         child: Text(
                                           _balancesVisible
-                                              ? '\$${(_getSelectedBalance() * _btcToUsdRate).toStringAsFixed(2)}'
-                                              : '\$****.**',
-                                          style: const TextStyle(
-                                            color: Colors.white,
+                                              ? currencyService.formatAmount(
+                                                  _getSelectedBalance() *
+                                                      _btcToUsdRate)
+                                              : '${currencyService.symbol}****.**',
+                                          style: TextStyle(
+                                            color: theme.primaryWhite,
                                             fontSize: 32,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -511,8 +539,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                                         behavior: HitTestBehavior.opaque,
                                         child: Text(
                                           '≈ ₿${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
-                                          style: const TextStyle(
-                                            color: Colors.white70,
+                                          style: TextStyle(
+                                            color: theme.secondaryWhite,
                                             fontSize: 16,
                                           ),
                                         ),
@@ -533,6 +561,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBalanceSkeleton() {
+    final theme = AppTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -540,7 +569,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           height: 32,
           width: 150,
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha((0.2 * 255).round()),
+            color: theme.mutedText.withOpacity(0.2),
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -549,7 +578,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           height: 16,
           width: 100,
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha((0.15 * 255).round()),
+            color: theme.mutedText.withOpacity(0.15),
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -732,6 +761,8 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildActionButtons() {
+    final theme = AppTheme.of(context);
+
     return Column(
       children: [
         Row(
@@ -740,8 +771,8 @@ class DashboardScreenState extends State<DashboardScreen> {
               child: ElevatedButton.icon(
                 onPressed: _handleSend,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[800],
-                  foregroundColor: Colors.white,
+                  backgroundColor: theme.tertiaryBlack,
+                  foregroundColor: theme.primaryWhite,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -749,9 +780,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                   elevation: 0,
                 ),
                 icon: const Icon(Icons.arrow_upward),
-                label: const Text(
-                  'SEND',
-                  style: TextStyle(
+                label: Text(
+                  AppLocalizations.of(context)!.send,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -764,7 +795,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                 onPressed: _handleReceive,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber[500],
-                  foregroundColor: Colors.black,
+                  foregroundColor: theme.primaryBlack,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -772,9 +803,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                   elevation: 0,
                 ),
                 icon: const Icon(Icons.arrow_downward),
-                label: const Text(
-                  'RECEIVE',
-                  style: TextStyle(
+                label: Text(
+                  AppLocalizations.of(context)!.receive,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -790,8 +821,8 @@ class DashboardScreenState extends State<DashboardScreen> {
               child: ElevatedButton.icon(
                 onPressed: _handleBuy,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[800],
-                  foregroundColor: Colors.white,
+                  backgroundColor: theme.tertiaryBlack,
+                  foregroundColor: theme.primaryWhite,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -814,7 +845,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                 onPressed: _handleSell,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber[500],
-                  foregroundColor: Colors.black,
+                  foregroundColor: theme.primaryBlack,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

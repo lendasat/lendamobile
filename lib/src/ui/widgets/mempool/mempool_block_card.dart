@@ -1,4 +1,6 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 
 class MempoolBlockCard extends StatelessWidget {
@@ -31,6 +33,8 @@ class MempoolBlockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return AnimatedBuilder(
       animation: flashController,
       builder: (context, child) {
@@ -46,14 +50,12 @@ class MempoolBlockCard extends StatelessWidget {
           margin: const EdgeInsets.only(right: 8.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            color:
-                isSelected ? const Color(0xFF2D2400) : const Color(0xFF1A1A1A),
+            color: isSelected ? const Color(0xFF2D2400) : theme.secondaryBlack,
             borderRadius: BorderRadius.circular(12.0),
             border: Border.all(
-              color:
-                  isSelected
-                      ? const Color(0xFFFFA500)
-                      : const Color(0xFF4D4D00),
+              color: isSelected
+                  ? const Color(0xFFFFA500)
+                  : const Color(0xFF4D4D00),
               width: isSelected ? 2 : 1,
             ),
             boxShadow: [
@@ -96,17 +98,15 @@ class MempoolBlockCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8.0),
-
               Text(
                 '${block.nTx} tx',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: theme.primaryWhite,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 4.0),
-
               Text(
                 _formatFees(block.totalFees),
                 style: const TextStyle(
@@ -116,22 +116,19 @@ class MempoolBlockCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4.0),
-
               Text(
                 '${block.medianFee.toStringAsFixed(1)} sat/vB',
-                style: const TextStyle(
-                  color: const Color(0xFFC6C6C6),
+                style: TextStyle(
+                  color: theme.mutedText,
                   fontSize: 11,
                 ),
               ),
               const SizedBox(height: 4.0),
-
               Text(
                 _formatSize(block.blockVsize),
-                style: TextStyle(color: const Color(0xFFC6C6C6), fontSize: 10),
+                style: TextStyle(color: theme.mutedText, fontSize: 10),
               ),
               const SizedBox(height: 8.0),
-
               Row(
                 children: [
                   const Icon(
@@ -141,7 +138,7 @@ class MempoolBlockCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '~${_estimateMinutes(index)} min',
+                    '~${_estimateMinutes(index)} ${AppLocalizations.of(context)!.min}',
                     style: const TextStyle(
                       color: Color(0xFFFFA500),
                       fontSize: 10,

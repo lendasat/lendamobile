@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/moonpay_service.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
@@ -234,17 +236,19 @@ class _SellScreenState extends State<SellScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: theme.primaryBlack,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Sell Bitcoin',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context)!.sellBitcoin,
+          style: TextStyle(color: theme.primaryWhite),
         ),
         actions: [
           Padding(
@@ -254,7 +258,7 @@ class _SellScreenState extends State<SellScreen> {
               child: Text(
                 '0:${_quoteTimer.toString().padLeft(2, '0')}',
                 style: TextStyle(
-                  color: Colors.grey[400],
+                  color: theme.mutedText,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -273,20 +277,20 @@ class _SellScreenState extends State<SellScreen> {
                       Icon(
                         Icons.error_outline,
                         size: 64,
-                        color: Colors.grey[600],
+                        color: theme.mutedText,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Error loading sell screen',
+                      Text(
+                        AppLocalizations.of(context)!.errorLoadingSellScreen,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: theme.primaryWhite,
                           fontSize: 18,
                         ),
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
                         onPressed: _initialize,
-                        child: const Text('Retry'),
+                        child: Text(AppLocalizations.of(context)!.retry),
                       ),
                     ],
                   ),
@@ -298,15 +302,15 @@ class _SellScreenState extends State<SellScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildBalanceInfo(),
+                          _buildBalanceInfo(theme),
                           const SizedBox(height: 24),
-                          _buildAmountInput(),
+                          _buildAmountInput(theme),
                           const SizedBox(height: 24),
-                          _buildPayoutMethodTile(),
+                          _buildPayoutMethodTile(theme),
                           const SizedBox(height: 16),
-                          _buildProviderTile(),
+                          _buildProviderTile(theme),
                           const SizedBox(height: 24),
-                          if (_limits != null) _buildLimitsInfo(),
+                          if (_limits != null) _buildLimitsInfo(theme),
                           const SizedBox(height: 80),
                         ],
                       ),
@@ -349,9 +353,9 @@ class _SellScreenState extends State<SellScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text(
-                                  'Sell Bitcoin',
-                                  style: TextStyle(
+                              : Text(
+                                  AppLocalizations.of(context)!.sellBitcoin,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -365,27 +369,27 @@ class _SellScreenState extends State<SellScreen> {
     );
   }
 
-  Widget _buildBalanceInfo() {
+  Widget _buildBalanceInfo(AppTheme theme) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: const Color(0xFFFFFFFF).withOpacity(0.1),
+          color: theme.primaryWhite.withValues(alpha: 0.1),
         ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Available Balance',
-            style: TextStyle(color: Colors.grey[400], fontSize: 14),
+            AppLocalizations.of(context)!.availableBalance,
+            style: TextStyle(color: theme.mutedText, fontSize: 14),
           ),
           Text(
             '${_bitcoinBalance.toStringAsFixed(8)} BTC',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: theme.primaryWhite,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -395,15 +399,15 @@ class _SellScreenState extends State<SellScreen> {
     );
   }
 
-  Widget _buildAmountInput() {
+  Widget _buildAmountInput(AppTheme theme) {
     if (_limits == null) {
       return Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: theme.secondaryBlack,
           borderRadius: BorderRadius.circular(12.0),
           border: Border.all(
-            color: const Color(0xFFFFFFFF).withOpacity(0.1),
+            color: theme.primaryWhite.withValues(alpha: 0.1),
           ),
         ),
         child: const Center(child: CircularProgressIndicator()),
@@ -420,19 +424,19 @@ class _SellScreenState extends State<SellScreen> {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: const Color(0xFFFFFFFF).withOpacity(0.1),
+          color: theme.primaryWhite.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Amount to Sell',
+            AppLocalizations.of(context)!.amountToSell,
             style: TextStyle(
-              color: Colors.grey[400],
+              color: theme.mutedText,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -473,30 +477,30 @@ class _SellScreenState extends State<SellScreen> {
     );
   }
 
-  Widget _buildPayoutMethodTile() {
+  Widget _buildPayoutMethodTile(AppTheme theme) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: const Color(0xFFFFFFFF).withOpacity(0.1),
+          color: theme.primaryWhite.withValues(alpha: 0.1),
         ),
       ),
       child: ListTile(
-        leading: const Icon(
+        leading: Icon(
           Icons.account_balance,
-          color: Colors.white,
+          color: theme.primaryWhite,
         ),
         title: Text(
           _payoutMethodName,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: theme.primaryWhite,
             fontWeight: FontWeight.w500,
           ),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios,
-          color: Colors.grey[600],
+          color: theme.mutedText,
           size: 16,
         ),
         onTap: () async {
@@ -518,13 +522,13 @@ class _SellScreenState extends State<SellScreen> {
     );
   }
 
-  Widget _buildProviderTile() {
+  Widget _buildProviderTile(AppTheme theme) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: const Color(0xFFFFFFFF).withOpacity(0.1),
+          color: theme.primaryWhite.withValues(alpha: 0.1),
         ),
       ),
       child: ListTile(
@@ -532,24 +536,24 @@ class _SellScreenState extends State<SellScreen> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.primaryWhite,
             borderRadius: BorderRadius.circular(8.0),
           ),
-          child: const Center(
+          child: Center(
             child: Text(
               'M',
               style: TextStyle(
-                color: Colors.black,
+                color: theme.mutedText,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
             ),
           ),
         ),
-        title: const Text(
+        title: Text(
           'MoonPay',
           style: TextStyle(
-            color: Colors.white,
+            color: theme.primaryWhite,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -557,7 +561,7 @@ class _SellScreenState extends State<SellScreen> {
             ? Text(
                 _currentQuote!.pricePerBtc,
                 style: TextStyle(
-                  color: Colors.grey[400],
+                  color: theme.mutedText,
                   fontSize: 14,
                 ),
               )
@@ -570,7 +574,7 @@ class _SellScreenState extends State<SellScreen> {
     );
   }
 
-  Widget _buildLimitsInfo() {
+  Widget _buildLimitsInfo(AppTheme theme) {
     bool insufficientBalance = false;
 
     if (_satController.text.isNotEmpty) {
@@ -589,45 +593,45 @@ class _SellScreenState extends State<SellScreen> {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E).withOpacity(0.5),
+        color: theme.secondaryBlack.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
           color: insufficientBalance
               ? Colors.red
-              : const Color(0xFFFFFFFF).withOpacity(0.1),
+              : theme.primaryWhite.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Sell Limits',
+            AppLocalizations.of(context)!.sellLimits,
             style: TextStyle(
-              color: Colors.grey[400],
+              color: theme.mutedText,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 8.0),
           Text(
-            'Min: ${_limits!.quoteCurrency.minBuyAmount.toStringAsFixed(8)} BTC',
+            '${AppLocalizations.of(context)!.min}: ${_limits!.quoteCurrency.minBuyAmount.toStringAsFixed(8)} BTC',
             style: TextStyle(
-              color: const Color(0xFFFFFFFF).withOpacity(0.7),
+              color: theme.primaryWhite.withValues(alpha: 0.7),
               fontSize: 13,
             ),
           ),
           Text(
-            'Max: ${_limits!.quoteCurrency.maxBuyAmount.toStringAsFixed(8)} BTC',
+            '${AppLocalizations.of(context)!.max}: ${_limits!.quoteCurrency.maxBuyAmount.toStringAsFixed(8)} BTC',
             style: TextStyle(
-              color: const Color(0xFFFFFFFF).withOpacity(0.7),
+              color: theme.primaryWhite.withValues(alpha: 0.7),
               fontSize: 13,
             ),
           ),
           if (insufficientBalance) ...[
             const SizedBox(height: 8.0),
-            const Text(
-              'Insufficient balance',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.insufficientBalance,
+              style: const TextStyle(
                 color: Colors.red,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,

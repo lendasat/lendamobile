@@ -1,7 +1,11 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_details_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:intl/intl.dart';
+import 'package:ark_flutter/app_theme.dart';
+import 'package:provider/provider.dart';
 
 class TransactionHistoryWidget extends StatefulWidget {
   final String aspId;
@@ -32,16 +36,18 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Transaction History',
+              AppLocalizations.of(context)!.transactionHistory,
               style: TextStyle(
-                color: Colors.white,
+                color: theme.primaryWhite,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -58,8 +64,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                   const Icon(Icons.error_outline, color: Colors.red, size: 48),
                   const SizedBox(height: 16),
                   Text(
-                    'Error loading transactions',
-                    style: TextStyle(color: Colors.grey[400]),
+                    AppLocalizations.of(context)!.errorLoadingTransactions,
+                    style: TextStyle(color: theme.mutedText),
                   ),
                 ],
               ),
@@ -80,11 +86,11 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               padding: const EdgeInsets.all(32.0),
               child: Column(
                 children: [
-                  const Icon(Icons.history, color: Colors.grey, size: 48),
+                  Icon(Icons.history, color: theme.mutedText, size: 48),
                   const SizedBox(height: 16),
                   Text(
-                    'No transaction history yet',
-                    style: TextStyle(color: Colors.grey[400]),
+                    AppLocalizations.of(context)!.noTransactionHistoryYet,
+                    style: TextStyle(color: theme.mutedText),
                   ),
                 ],
               ),
@@ -96,7 +102,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: widget.transactions.length,
             separatorBuilder: (context, index) =>
-                const Divider(color: Colors.grey),
+                Divider(color: theme.mutedText),
             itemBuilder: (context, index) =>
                 _buildTransactionItem(widget.transactions[index]),
           ),
@@ -107,7 +113,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   Widget _buildTransactionItem(Transaction transaction) {
     return transaction.map(
       boarding: (tx) => _buildTransactionDetailsItem(
-        "Boarding Transaction",
+        AppLocalizations.of(context)!.boardingTransaction,
         tx.txid,
         DateTime.now().second,
         tx.amountSats.toInt(),
@@ -115,10 +121,20 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         false,
         tx.confirmedAt,
       ),
-      round: (tx) => _buildTransactionDetailsItem("Round Transaction", tx.txid,
-          tx.createdAt, tx.amountSats, true, null),
-      redeem: (tx) => _buildTransactionDetailsItem("Redeem Transaction",
-          tx.txid, tx.createdAt, tx.amountSats, tx.isSettled, null),
+      round: (tx) => _buildTransactionDetailsItem(
+          AppLocalizations.of(context)!.roundTransaction,
+          tx.txid,
+          tx.createdAt,
+          tx.amountSats,
+          true,
+          null),
+      redeem: (tx) => _buildTransactionDetailsItem(
+          AppLocalizations.of(context)!.redeemTransaction,
+          tx.txid,
+          tx.createdAt,
+          tx.amountSats,
+          tx.isSettled,
+          null),
     );
   }
 
@@ -130,7 +146,12 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     bool isSettled,
     int? confirmedAt,
   ) {
-    final createdTime = DateTime.fromMillisecondsSinceEpoch(createdAt * 1000);
+    final theme = AppTheme.of(context);
+    final timezoneService = context.watch<TimezoneService>();
+
+    final createdTimeUtc =
+        DateTime.fromMillisecondsSinceEpoch(createdAt * 1000, isUtc: true);
+    final createdTime = timezoneService.toSelectedTimezone(createdTimeUtc);
     final formattedDate = DateFormat('MMM d, y').format(createdTime);
     final amountBtc = amountSats / 100000000;
 
@@ -152,19 +173,21 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                   ? Icons.upload
                   : Icons.download
               : Icons.watch_later,
-          color: Colors.white,
+          color: theme.primaryWhite,
         ),
       ),
       title: Text(
-        amountSats.isNegative ? 'Sent' : "Received",
-        style: const TextStyle(
-          color: Colors.white,
+        amountSats.isNegative
+            ? AppLocalizations.of(context)!.sent
+            : AppLocalizations.of(context)!.received,
+        style: TextStyle(
+          color: theme.primaryWhite,
           fontWeight: FontWeight.w500,
         ),
       ),
       subtitle: Text(
         '${txid.substring(0, 10)}... • $formattedDate',
-        style: TextStyle(color: Colors.grey[400], fontSize: 12),
+        style: TextStyle(color: theme.mutedText, fontSize: 12),
       ),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -179,14 +202,16 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                   ? amountSats.isNegative
                       ? Colors.purple[400]
                       : Colors.green[400]
-                  : Colors.grey[300],
+                  : theme.mutedText,
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
-            isSettled ? 'Settled' : 'Pending',
+            isSettled
+                ? AppLocalizations.of(context)!.settled
+                : AppLocalizations.of(context)!.pending,
             style: TextStyle(
-              color: isSettled ? Colors.grey[400] : Colors.amber[400],
+              color: isSettled ? theme.mutedText : Colors.amber[400],
               fontSize: 12,
             ),
           ),

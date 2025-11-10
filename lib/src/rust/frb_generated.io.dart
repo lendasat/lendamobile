@@ -15,6 +15,7 @@ import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'frb_generated.dart';
 import 'logger.dart';
+import 'models/exchange_rates.dart';
 import 'models/historical_prices.dart';
 import 'models/mempool.dart';
 import 'models/moonpay.dart';
@@ -30,6 +31,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
+
+  @protected
+  Map<String, double> dco_decode_Map_String_f_64_None(dynamic raw);
 
   @protected
   RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Sse(dynamic raw);
@@ -116,7 +120,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DifficultyPoint dco_decode_difficulty_point(dynamic raw);
 
   @protected
+  ExchangeRates dco_decode_exchange_rates(dynamic raw);
+
+  @protected
   double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FiatCurrency dco_decode_fiat_currency(dynamic raw);
 
   @protected
   HashrateData dco_decode_hashrate_data(dynamic raw);
@@ -129,6 +139,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   HistoricalPriceResponse dco_decode_historical_price_response(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
 
   @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
@@ -149,6 +162,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<DifficultyPoint> dco_decode_list_difficulty_point(dynamic raw);
 
   @protected
+  List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw);
+
+  @protected
   List<HashratePoint> dco_decode_list_hashrate_point(dynamic raw);
 
   @protected
@@ -165,6 +181,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ProjectedTransaction> dco_decode_list_projected_transaction(dynamic raw);
+
+  @protected
+  List<(String, double)> dco_decode_list_record_string_f_64(dynamic raw);
 
   @protected
   List<Transaction> dco_decode_list_transaction(dynamic raw);
@@ -262,6 +281,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RecommendedFees dco_decode_recommended_fees(dynamic raw);
 
   @protected
+  (String, double) dco_decode_record_string_f_64(dynamic raw);
+
+  @protected
   Transaction dco_decode_transaction(dynamic raw);
 
   @protected
@@ -287,6 +309,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+
+  @protected
+  Map<String, double> sse_decode_Map_String_f_64_None(
+      SseDeserializer deserializer);
 
   @protected
   RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Sse(
@@ -378,7 +404,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DifficultyPoint sse_decode_difficulty_point(SseDeserializer deserializer);
 
   @protected
+  ExchangeRates sse_decode_exchange_rates(SseDeserializer deserializer);
+
+  @protected
   double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FiatCurrency sse_decode_fiat_currency(SseDeserializer deserializer);
 
   @protected
   HashrateData sse_decode_hashrate_data(SseDeserializer deserializer);
@@ -393,6 +425,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   HistoricalPriceResponse sse_decode_historical_price_response(
       SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
@@ -415,6 +450,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       SseDeserializer deserializer);
 
   @protected
+  List<FiatCurrency> sse_decode_list_fiat_currency(
+      SseDeserializer deserializer);
+
+  @protected
   List<HashratePoint> sse_decode_list_hashrate_point(
       SseDeserializer deserializer);
 
@@ -434,6 +473,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ProjectedTransaction> sse_decode_list_projected_transaction(
+      SseDeserializer deserializer);
+
+  @protected
+  List<(String, double)> sse_decode_list_record_string_f_64(
       SseDeserializer deserializer);
 
   @protected
@@ -541,6 +584,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RecommendedFees sse_decode_recommended_fees(SseDeserializer deserializer);
 
   @protected
+  (String, double) sse_decode_record_string_f_64(SseDeserializer deserializer);
+
+  @protected
   Transaction sse_decode_transaction(SseDeserializer deserializer);
 
   @protected
@@ -565,11 +611,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
-
-  @protected
   void sse_encode_AnyhowException(
       AnyhowException self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_Map_String_f_64_None(
+      Map<String, double> self, SseSerializer serializer);
 
   @protected
   void sse_encode_StreamSink_log_entry_Sse(
@@ -668,7 +715,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       DifficultyPoint self, SseSerializer serializer);
 
   @protected
+  void sse_encode_exchange_rates(ExchangeRates self, SseSerializer serializer);
+
+  @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_fiat_currency(FiatCurrency self, SseSerializer serializer);
 
   @protected
   void sse_encode_hashrate_data(HashrateData self, SseSerializer serializer);
@@ -683,6 +736,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_historical_price_response(
       HistoricalPriceResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
@@ -703,6 +759,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_difficulty_point(
       List<DifficultyPoint> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_fiat_currency(
+      List<FiatCurrency> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_hashrate_point(
@@ -727,6 +787,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_projected_transaction(
       List<ProjectedTransaction> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_record_string_f_64(
+      List<(String, double)> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_transaction(
@@ -840,6 +904,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       RecommendedFees self, SseSerializer serializer);
 
   @protected
+  void sse_encode_record_string_f_64(
+      (String, double) self, SseSerializer serializer);
+
+  @protected
   void sse_encode_transaction(Transaction self, SseSerializer serializer);
 
   @protected
@@ -862,9 +930,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
 }
 
 // Section: wire_class

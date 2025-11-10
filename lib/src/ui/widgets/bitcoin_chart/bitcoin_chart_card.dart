@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
+import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 enum TimeRange { day, week, month, year, max }
 
@@ -69,8 +73,10 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
     }
   }
 
-  String _formatDate(int milliseconds) {
-    final date = DateTime.fromMillisecondsSinceEpoch(milliseconds);
+  String _formatDate(int milliseconds, BuildContext context) {
+    final timezoneService = context.watch<TimezoneService>();
+    final dateUtc = DateTime.fromMillisecondsSinceEpoch(milliseconds, isUtc: true);
+    final date = timezoneService.toSelectedTimezone(dateUtc);
 
     switch (_selectedTimeRange) {
       case TimeRange.day:
@@ -86,20 +92,22 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
     }
   }
 
-  String _formatPrice(double price) {
-    return '\$${price.toStringAsFixed(2)}';
+  String _formatPrice(double price, BuildContext context) {
+    final currencyService = context.watch<CurrencyPreferenceService>();
+    return currencyService.formatAmount(price);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
     final cachedData = _dataCache[_selectedTimeRange];
     final latestData = cachedData?.isNotEmpty == true ? cachedData!.last : null;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[800]!, width: 1),
+        border: Border.all(color: theme.tertiaryBlack, width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -109,10 +117,10 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Bitcoin',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: theme.primaryWhite,
                     fontSize: 20,
                     fontWeight: FontWeight.w500,
                   ),
@@ -128,17 +136,17 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            _formatPrice(displayData.price),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            _formatPrice(displayData.price, context),
+                            style: TextStyle(
+                              color: theme.primaryWhite,
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
-                            _formatDate(displayData.time),
+                            _formatDate(displayData.time, context),
                             style: TextStyle(
-                              color: Colors.grey[400],
+                              color: theme.mutedText,
                               fontSize: 12,
                             ),
                           ),
@@ -152,16 +160,16 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
             SizedBox(
               height: 250,
               child: _isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: Colors.white,
+                        color: theme.primaryWhite,
                       ),
                     )
                   : _errorMessage != null
                       ? Center(
                           child: Text(
                             'Error: $_errorMessage',
-                            style: TextStyle(color: Colors.grey[500]),
+                            style: TextStyle(color: theme.mutedText),
                           ),
                         )
                       : BitcoinPriceChart(
@@ -174,18 +182,18 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: Colors.grey[850],
+                color: theme.tertiaryBlack,
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: const EdgeInsets.all(4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildTimeRangeButton('1D', TimeRange.day),
-                  _buildTimeRangeButton('1W', TimeRange.week),
-                  _buildTimeRangeButton('1M', TimeRange.month),
-                  _buildTimeRangeButton('1Y', TimeRange.year),
-                  _buildTimeRangeButton('MAX', TimeRange.max),
+                  _buildTimeRangeButton('1D', TimeRange.day, theme),
+                  _buildTimeRangeButton('1W', TimeRange.week, theme),
+                  _buildTimeRangeButton('1M', TimeRange.month, theme),
+                  _buildTimeRangeButton('1Y', TimeRange.year, theme),
+                  _buildTimeRangeButton('MAX', TimeRange.max, theme),
                 ],
               ),
             ),
@@ -195,7 +203,7 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
     );
   }
 
-  Widget _buildTimeRangeButton(String label, TimeRange range) {
+  Widget _buildTimeRangeButton(String label, TimeRange range, AppTheme theme) {
     final isSelected = _selectedTimeRange == range;
 
     return Expanded(
@@ -210,14 +218,14 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.grey[800] : Colors.transparent,
+            color: isSelected ? theme.primaryBlack : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isSelected ? Colors.white : Colors.grey[500],
+              color: isSelected ? theme.primaryWhite : theme.mutedText,
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
             ),

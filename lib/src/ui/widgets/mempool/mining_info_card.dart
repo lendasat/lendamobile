@@ -1,5 +1,10 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/rust/models/mempool.dart';
+import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/timezone_service.dart';
+import 'package:provider/provider.dart';
 
 class MiningInfoCard extends StatelessWidget {
   final Block block;
@@ -7,32 +12,36 @@ class MiningInfoCard extends StatelessWidget {
 
   const MiningInfoCard({super.key, required this.block, this.conversions});
 
-  String _formatTimestamp(BigInt timestamp) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp.toInt() * 1000);
-    final now = DateTime.now();
+  String _formatTimestamp(BigInt timestamp, BuildContext context) {
+    final timezoneService = context.watch<TimezoneService>();
+    final dateUtc = DateTime.fromMillisecondsSinceEpoch(timestamp.toInt() * 1000, isUtc: true);
+    final date = timezoneService.toSelectedTimezone(dateUtc);
+    final now = timezoneService.now();
     final difference = now.difference(date);
 
     if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} minutes ago';
+      return '${difference.inMinutes} ${AppLocalizations.of(context)!.minutesAgo}';
     } else if (difference.inHours < 24) {
-      return '${difference.inHours} hours ago';
+      return '${difference.inHours} ${AppLocalizations.of(context)!.hoursAgo}';
     } else if (difference.inDays == 1) {
-      return '1 day ago';
+      return AppLocalizations.of(context)!.oneDayAgo;
     } else {
-      return '${difference.inDays} days ago';
+      return '${difference.inDays} ${AppLocalizations.of(context)!.daysAgo}';
     }
   }
 
-  String _formatReward(double rewardBtc) {
+  String _formatReward(double rewardBtc, BuildContext context) {
     if (conversions != null && conversions!.usd > 0) {
       final rewardUsd = rewardBtc * conversions!.usd;
-      return '\$${rewardUsd.toStringAsFixed(2)} USD';
+      final currencyService = context.watch<CurrencyPreferenceService>();
+      return currencyService.formatAmount(rewardUsd);
     }
     return '${rewardBtc.toStringAsFixed(8)} BTC';
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
     final pool = block.extras?.pool;
     final reward = block.extras?.reward;
 
@@ -43,9 +52,9 @@ class MiningInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,20 +64,20 @@ class MiningInfoCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0A0A0A),
+                  color: theme.primaryBlack,
                   borderRadius: BorderRadius.circular(8.0),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.architecture,
-                  color: Colors.white,
+                  color: theme.primaryWhite,
                   size: 16,
                 ),
               ),
               const SizedBox(width: 8.0),
-              const Text(
-                'Mining Information',
+              Text(
+                AppLocalizations.of(context)!.miningInformation,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: theme.primaryWhite,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -78,27 +87,29 @@ class MiningInfoCard extends StatelessWidget {
           const SizedBox(height: 16.0),
 
           if (pool != null) ...[
-            _buildInfoRow('Mining Pool', pool.name, Icons.groups),
+            _buildInfoRow(AppLocalizations.of(context)!.miningPool, pool.name, Icons.groups, theme),
             const SizedBox(height: 8.0),
           ],
 
           _buildInfoRow(
-            'Mined',
-            _formatTimestamp(block.timestamp),
+            AppLocalizations.of(context)!.mined,
+            _formatTimestamp(block.timestamp, context),
             Icons.access_time,
+            theme,
           ),
 
           if (reward != null) ...[
             const SizedBox(height: 8.0),
-            _buildInfoRow('Block Reward', _formatReward(reward), Icons.paid),
+            _buildInfoRow(AppLocalizations.of(context)!.blockReward, _formatReward(reward, context), Icons.paid, theme),
           ],
 
           if (block.extras?.totalFees != null) ...[
             const SizedBox(height: 8.0),
             _buildInfoRow(
-              'Total Fees',
+              AppLocalizations.of(context)!.totalFees,
               '${(block.extras!.totalFees!.toInt() / 100000000).toStringAsFixed(8)} BTC',
               Icons.account_balance_wallet,
+              theme,
             ),
           ],
         ],
@@ -106,10 +117,10 @@ class MiningInfoCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, IconData icon) {
+  Widget _buildInfoRow(String label, String value, IconData icon, AppTheme theme) {
     return Row(
       children: [
-        Icon(icon, color: const Color(0xFFC6C6C6), size: 16),
+        Icon(icon, color: theme.mutedText, size: 16),
         const SizedBox(width: 8.0),
         Expanded(
           child: Row(
@@ -117,16 +128,16 @@ class MiningInfoCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  color: const Color(0xFFC6C6C6),
+                style: TextStyle(
+                  color: theme.mutedText,
                   fontSize: 14,
                 ),
               ),
               Flexible(
                 child: Text(
                   value,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.primaryWhite,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class PriceData {
@@ -67,6 +68,8 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return SfCartesianChart(
       plotAreaBorderWidth: 0.7,
       primaryXAxis: const DateTimeAxis(
@@ -87,7 +90,7 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
               activationMode: widget.trackballActivationMode!,
               tooltipDisplayMode: TrackballDisplayMode.none,
               lineType: TrackballLineType.vertical,
-              lineColor: Colors.white,
+              lineColor: theme.primaryWhite,
               lineWidth: 1,
             )
           : null,
@@ -109,13 +112,13 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
           xValueMapper: (PriceData price, _) =>
               DateTime.fromMillisecondsSinceEpoch(price.time),
           yValueMapper: (PriceData price, _) => price.price,
-          color: Colors.grey.withAlpha(widget.alpha),
-          borderColor: Colors.grey.withAlpha(widget.alpha + 20),
+          color: theme.mutedText.withAlpha(widget.alpha),
+          borderColor: theme.mutedText.withAlpha(widget.alpha + 20),
           borderWidth: 2,
           gradient: LinearGradient(
             colors: [
-              Colors.grey.withAlpha(widget.alpha),
-              Colors.grey.withAlpha(0),
+              theme.mutedText.withAlpha(widget.alpha),
+              theme.mutedText.withAlpha(0),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,

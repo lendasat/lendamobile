@@ -1,4 +1,6 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/rust/api.dart' as rust_api;
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
@@ -156,36 +158,38 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0A),
+        backgroundColor: theme.primaryBlack,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Block #${widget.block.height}',
-              style: const TextStyle(
-                color: Colors.white,
+              '${AppLocalizations.of(context)!.block} #${widget.block.height}',
+              style: TextStyle(
+                color: theme.primaryWhite,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             Text(
-              '${widget.block.txCount} Transactions',
-              style: const TextStyle(color: Color(0xFFC6C6C6), fontSize: 12),
+              '${widget.block.txCount} ${AppLocalizations.of(context)!.transactions}',
+              style: TextStyle(color: theme.mutedText, fontSize: 12),
             ),
           ],
         ),
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Colors.white),
+          ? Center(
+              child: CircularProgressIndicator(color: theme.primaryWhite),
             )
           : _error != null
               ? Center(
@@ -198,10 +202,10 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
                         size: 64,
                       ),
                       const SizedBox(height: 16.0),
-                      const Text(
-                        'Error loading transactions',
+                      Text(
+                        AppLocalizations.of(context)!.errorLoadingTransactions,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: theme.primaryWhite,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -213,8 +217,8 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
                         ),
                         child: Text(
                           _error!,
-                          style: const TextStyle(
-                            color: Color(0xFFC6C6C6),
+                          style: TextStyle(
+                            color: theme.mutedText,
                             fontSize: 14,
                           ),
                           textAlign: TextAlign.center,
@@ -224,17 +228,17 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
                       ElevatedButton(
                         onPressed: _loadTransactions,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1A1A1A),
+                          backgroundColor: theme.secondaryBlack,
                         ),
-                        child: const Text('Retry'),
+                        child: Text(AppLocalizations.of(context)!.retry),
                       ),
                     ],
                   ),
                 )
               : RefreshIndicator(
                   onRefresh: _loadTransactions,
-                  backgroundColor: const Color(0xFF1A1A1A),
-                  color: Colors.white,
+                  backgroundColor: theme.secondaryBlack,
+                  color: theme.primaryWhite,
                   child: CustomScrollView(
                     controller: _scrollController,
                     slivers: [
@@ -261,10 +265,10 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
                                 timestamp: widget.block.timestamp,
                               ),
                               const SizedBox(height: 24.0),
-                              const Text(
-                                'Transactions',
+                              Text(
+                                AppLocalizations.of(context)!.transactions,
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: theme.primaryWhite,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -283,11 +287,11 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
                             (context, index) {
                               if (index == _transactions.length) {
                                 return _isLoadingMore
-                                    ? const Padding(
-                                        padding: EdgeInsets.all(16.0),
+                                    ? Padding(
+                                        padding: const EdgeInsets.all(16.0),
                                         child: Center(
                                           child: CircularProgressIndicator(
-                                            color: Colors.white,
+                                            color: theme.primaryWhite,
                                           ),
                                         ),
                                       )
@@ -299,6 +303,7 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
                               return TransactionCard(
                                 transaction: tx,
                                 isUserTransaction: isUserTx,
+                                theme: theme,
                               );
                             },
                             childCount:
@@ -319,11 +324,13 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
 class TransactionCard extends StatelessWidget {
   final BitcoinTransaction transaction;
   final bool isUserTransaction;
+  final AppTheme theme;
 
   const TransactionCard({
     super.key,
     required this.transaction,
     this.isUserTransaction = false,
+    required this.theme,
   });
 
   String _formatSats(BigInt value) {
@@ -357,12 +364,12 @@ class TransactionCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: isUserTransaction
               ? const Color(0xFF1B3A1B)
-              : const Color(0xFF1A1A1A),
+              : theme.secondaryBlack,
           borderRadius: BorderRadius.circular(12.0),
           border: Border.all(
             color: isUserTransaction
                 ? const Color(0xFF4CAF50)
-                : Colors.white.withValues(alpha: 0.1),
+                : theme.primaryWhite.withValues(alpha: 0.1),
             width: isUserTransaction ? 2 : 1,
           ),
         ),
@@ -371,9 +378,9 @@ class TransactionCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.receipt,
-                  color: Color(0xFFC6C6C6),
+                  color: theme.mutedText,
                   size: 16,
                 ),
                 const SizedBox(width: 8.0),
@@ -382,8 +389,8 @@ class TransactionCard extends StatelessWidget {
                     transaction.txid.length > 16
                         ? '${transaction.txid.substring(0, 8)}...${transaction.txid.substring(transaction.txid.length - 8)}'
                         : transaction.txid,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: theme.primaryWhite,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'monospace',
@@ -402,9 +409,9 @@ class TransactionCard extends StatelessWidget {
                       color: const Color(0xFF4CAF50),
                       borderRadius: BorderRadius.circular(8.0),
                     ),
-                    child: const Text(
-                      'Your TX',
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(context)!.yourTx,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -428,7 +435,9 @@ class TransactionCard extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    transaction.status.confirmed ? 'Confirmed' : 'Pending',
+                    transaction.status.confirmed
+                        ? AppLocalizations.of(context)!.confirmed
+                        : AppLocalizations.of(context)!.pending,
                     style: TextStyle(
                       color: transaction.status.confirmed
                           ? Colors.green
@@ -448,17 +457,17 @@ class TransactionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Inputs: ${transaction.vin.length}',
-                      style: const TextStyle(
-                        color: Color(0xFFC6C6C6),
+                      '${AppLocalizations.of(context)!.inputs}: ${transaction.vin.length}',
+                      style: TextStyle(
+                        color: theme.mutedText,
                         fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Outputs: ${transaction.vout.length}',
-                      style: const TextStyle(
-                        color: Color(0xFFC6C6C6),
+                      '${AppLocalizations.of(context)!.outputs}: ${transaction.vout.length}',
+                      style: TextStyle(
+                        color: theme.mutedText,
                         fontSize: 12,
                       ),
                     ),
@@ -469,17 +478,17 @@ class TransactionCard extends StatelessWidget {
                   children: [
                     Text(
                       _formatSats(BigInt.from(totalOutput)),
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: theme.primaryWhite,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Fee: ${_formatSats(BigInt.from(transaction.fee.toInt()))}',
-                      style: const TextStyle(
-                        color: Color(0xFFC6C6C6),
+                      '${AppLocalizations.of(context)!.fee}: ${_formatSats(BigInt.from(transaction.fee.toInt()))}',
+                      style: TextStyle(
+                        color: theme.mutedText,
                         fontSize: 12,
                       ),
                     ),

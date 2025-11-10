@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/moonpay_service.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
@@ -189,7 +191,7 @@ class _BuyScreenState extends State<BuyScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to launch MoonPay: ${e.toString()}'),
+            content: Text('${AppLocalizations.of(context)!.failedToLaunchMoonpay}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -213,17 +215,19 @@ class _BuyScreenState extends State<BuyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: theme.primaryBlack,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Buy Bitcoin',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context)!.buyBitcoin,
+          style: TextStyle(color: theme.primaryWhite),
         ),
         actions: [
           Padding(
@@ -233,7 +237,7 @@ class _BuyScreenState extends State<BuyScreen> {
               child: Text(
                 '0:${_quoteTimer.toString().padLeft(2, '0')}',
                 style: TextStyle(
-                  color: Colors.grey[400],
+                  color: theme.mutedText,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -252,20 +256,20 @@ class _BuyScreenState extends State<BuyScreen> {
                       Icon(
                         Icons.error_outline,
                         size: 64,
-                        color: Colors.grey[600],
+                        color: theme.mutedText,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Error loading buy screen',
+                      Text(
+                        AppLocalizations.of(context)!.errorLoadingBuyScreen,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: theme.primaryWhite,
                           fontSize: 18,
                         ),
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
                         onPressed: _initialize,
-                        child: const Text('Retry'),
+                        child: Text(AppLocalizations.of(context)!.retry),
                       ),
                     ],
                   ),
@@ -277,13 +281,13 @@ class _BuyScreenState extends State<BuyScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildAmountInput(),
+                          _buildAmountInput(theme),
                           const SizedBox(height: 24),
-                          _buildPaymentMethodTile(),
+                          _buildPaymentMethodTile(theme),
                           const SizedBox(height: 16),
-                          _buildProviderTile(),
+                          _buildProviderTile(theme),
                           const SizedBox(height: 24),
-                          if (_limits != null) _buildLimitsInfo(),
+                          if (_limits != null) _buildLimitsInfo(theme),
                           const SizedBox(height: 80),
                         ],
                       ),
@@ -295,10 +299,10 @@ class _BuyScreenState extends State<BuyScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(16.0),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF121212),
+                          color: theme.primaryBlack,
                           border: Border(
                             top: BorderSide(
-                              color: const Color(0xFFFFFFFF).withOpacity(0.1),
+                              color: theme.primaryWhite.withValues(alpha: 0.1),
                             ),
                           ),
                         ),
@@ -306,7 +310,7 @@ class _BuyScreenState extends State<BuyScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isValidAmount() && !_isProcessing
                                 ? Colors.blue
-                                : Colors.grey[800],
+                                : theme.tertiaryBlack,
                             padding: const EdgeInsets.symmetric(
                               vertical: 16.0,
                             ),
@@ -326,9 +330,9 @@ class _BuyScreenState extends State<BuyScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text(
-                                  'Buy Bitcoin',
-                                  style: TextStyle(
+                              : Text(
+                                  AppLocalizations.of(context)!.buyBitcoin,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -342,15 +346,15 @@ class _BuyScreenState extends State<BuyScreen> {
     );
   }
 
-  Widget _buildAmountInput() {
+  Widget _buildAmountInput(AppTheme theme) {
     if (_limits == null) {
       return Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: theme.secondaryBlack,
           borderRadius: BorderRadius.circular(12.0),
           border: Border.all(
-            color: const Color(0xFFFFFFFF).withOpacity(0.1),
+            color: theme.primaryWhite.withValues(alpha: 0.1),
           ),
         ),
         child: const Center(child: CircularProgressIndicator()),
@@ -363,19 +367,19 @@ class _BuyScreenState extends State<BuyScreen> {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: const Color(0xFFFFFFFF).withOpacity(0.1),
+          color: theme.primaryWhite.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Amount',
+            AppLocalizations.of(context)!.amount,
             style: TextStyle(
-              color: Colors.grey[400],
+              color: theme.mutedText,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -416,27 +420,27 @@ class _BuyScreenState extends State<BuyScreen> {
     );
   }
 
-  Widget _buildPaymentMethodTile() {
+  Widget _buildPaymentMethodTile(AppTheme theme) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: const Color(0xFFFFFFFF).withOpacity(0.1),
+          color: theme.primaryWhite.withValues(alpha: 0.1),
         ),
       ),
       child: ListTile(
-        leading: const Icon(Icons.credit_card, color: Colors.white),
+        leading: Icon(Icons.credit_card, color: theme.primaryWhite),
         title: Text(
           _paymentMethodName,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: theme.primaryWhite,
             fontWeight: FontWeight.w500,
           ),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios,
-          color: Colors.grey[600],
+          color: theme.mutedText,
           size: 16,
         ),
         onTap: () async {
@@ -458,13 +462,13 @@ class _BuyScreenState extends State<BuyScreen> {
     );
   }
 
-  Widget _buildProviderTile() {
+  Widget _buildProviderTile(AppTheme theme) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: const Color(0xFFFFFFFF).withOpacity(0.1),
+          color: theme.primaryWhite.withValues(alpha: 0.1),
         ),
       ),
       child: ListTile(
@@ -472,24 +476,24 @@ class _BuyScreenState extends State<BuyScreen> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.primaryWhite,
             borderRadius: BorderRadius.circular(8.0),
           ),
-          child: const Center(
+          child: Center(
             child: Text(
               'M',
               style: TextStyle(
-                color: Colors.black,
+                color: theme.mutedText,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
             ),
           ),
         ),
-        title: const Text(
+        title: Text(
           'MoonPay',
           style: TextStyle(
-            color: Colors.white,
+            color: theme.primaryWhite,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -497,7 +501,7 @@ class _BuyScreenState extends State<BuyScreen> {
             ? Text(
                 _currentQuote!.pricePerBtc,
                 style: TextStyle(
-                  color: Colors.grey[400],
+                  color: theme.mutedText,
                   fontSize: 14,
                 ),
               )
@@ -510,39 +514,39 @@ class _BuyScreenState extends State<BuyScreen> {
     );
   }
 
-  Widget _buildLimitsInfo() {
+  Widget _buildLimitsInfo(AppTheme theme) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E).withOpacity(0.5),
+        color: theme.secondaryBlack.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: const Color(0xFFFFFFFF).withOpacity(0.1),
+          color: theme.primaryWhite.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Buy Limits',
+            AppLocalizations.of(context)!.buyLimits,
             style: TextStyle(
-              color: Colors.grey[400],
+              color: theme.mutedText,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 8.0),
           Text(
-            'Min: ${_limits!.quoteCurrency.minBuyAmount.toStringAsFixed(8)} BTC',
+            '${AppLocalizations.of(context)!.min}: ${_limits!.quoteCurrency.minBuyAmount.toStringAsFixed(8)} BTC',
             style: TextStyle(
-              color: const Color(0xFFFFFFFF).withOpacity(0.7),
+              color: theme.primaryWhite.withValues(alpha: 0.7),
               fontSize: 13,
             ),
           ),
           Text(
-            'Max: ${_limits!.quoteCurrency.maxBuyAmount.toStringAsFixed(8)} BTC',
+            '${AppLocalizations.of(context)!.max}: ${_limits!.quoteCurrency.maxBuyAmount.toStringAsFixed(8)} BTC',
             style: TextStyle(
-              color: const Color(0xFFFFFFFF).withOpacity(0.7),
+              color: theme.primaryWhite.withValues(alpha: 0.7),
               fontSize: 13,
             ),
           ),

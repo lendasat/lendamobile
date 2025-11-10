@@ -1,4 +1,6 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 
 class BlockHealthWidget extends StatelessWidget {
   final int actualTxCount;
@@ -32,13 +34,13 @@ class BlockHealthWidget extends StatelessWidget {
     }
   }
 
-  String _getHealthLabel(double score) {
+  String _getHealthLabel(double score, BuildContext context) {
     if (score >= 80) {
-      return 'Healthy';
+      return AppLocalizations.of(context)!.healthy;
     } else if (score >= 50) {
-      return 'Fair';
+      return AppLocalizations.of(context)!.fair;
     } else {
-      return 'Low';
+      return AppLocalizations.of(context)!.low;
     }
   }
 
@@ -54,17 +56,18 @@ class BlockHealthWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
     final healthScore = _calculateHealthScore();
     final healthColor = _getHealthColor(healthScore);
-    final healthLabel = _getHealthLabel(healthScore);
+    final healthLabel = _getHealthLabel(healthScore, context);
     final healthIcon = _getHealthIcon(healthScore);
 
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,20 +77,20 @@ class BlockHealthWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0A0A0A),
+                  color: theme.primaryBlack,
                   borderRadius: BorderRadius.circular(8.0),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.favorite,
-                  color: Colors.white,
+                  color: theme.primaryWhite,
                   size: 16,
                 ),
               ),
               const SizedBox(width: 8.0),
-              const Text(
-                'Block Health',
+              Text(
+                AppLocalizations.of(context)!.blockHealth,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: theme.primaryWhite,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -95,7 +98,6 @@ class BlockHealthWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16.0),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -115,9 +117,9 @@ class BlockHealthWidget extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${healthScore.toStringAsFixed(0)}% Full',
-                        style: const TextStyle(
-                          color: const Color(0xFFC6C6C6),
+                        '${healthScore.toStringAsFixed(0)}% ${AppLocalizations.of(context)!.full}',
+                        style: TextStyle(
+                          color: theme.mutedText,
                           fontSize: 12,
                         ),
                       ),
@@ -125,7 +127,6 @@ class BlockHealthWidget extends StatelessWidget {
                   ),
                 ],
               ),
-
               SizedBox(
                 width: 60,
                 height: 60,
@@ -138,7 +139,7 @@ class BlockHealthWidget extends StatelessWidget {
                       child: CircularProgressIndicator(
                         value: healthScore / 100,
                         strokeWidth: 6,
-                        backgroundColor: const Color(0xFF0A0A0A),
+                        backgroundColor: theme.primaryBlack,
                         valueColor: AlwaysStoppedAnimation<Color>(healthColor),
                       ),
                     ),
@@ -155,38 +156,45 @@ class BlockHealthWidget extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 16.0),
-
           Container(
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
-              color: const Color(0xFF0A0A0A),
+              color: theme.primaryBlack,
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatColumn(
-                  'Actual',
+                  AppLocalizations.of(context)!.actual,
                   actualTxCount.toString(),
-                  Colors.white,
+                  theme.primaryWhite,
+                  theme,
                 ),
-                Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
+                Container(
+                    width: 1,
+                    height: 30,
+                    color: theme.primaryWhite.withValues(alpha: 0.1)),
                 _buildStatColumn(
-                  'Expected',
+                  AppLocalizations.of(context)!.expected,
                   '~$expectedTxCount',
-                  const Color(0xFFC6C6C6),
+                  theme.mutedText,
+                  theme,
                 ),
-                Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
+                Container(
+                    width: 1,
+                    height: 30,
+                    color: theme.primaryWhite.withValues(alpha: 0.1)),
                 _buildStatColumn(
-                  'Difference',
+                  AppLocalizations.of(context)!.difference,
                   actualTxCount >= expectedTxCount
                       ? '+${actualTxCount - expectedTxCount}'
                       : '${actualTxCount - expectedTxCount}',
                   actualTxCount >= expectedTxCount
                       ? const Color(0xFF4CAF50)
                       : const Color(0xFFFF5252),
+                  theme,
                 ),
               ],
             ),
@@ -196,12 +204,13 @@ class BlockHealthWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStatColumn(String label, String value, Color valueColor) {
+  Widget _buildStatColumn(
+      String label, String value, Color valueColor, AppTheme theme) {
     return Column(
       children: [
         Text(
           label,
-          style: const TextStyle(color: const Color(0xFFC6C6C6), fontSize: 11),
+          style: TextStyle(color: theme.mutedText, fontSize: 11),
         ),
         const SizedBox(height: 4),
         Text(

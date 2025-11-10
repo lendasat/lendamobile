@@ -1,6 +1,10 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:ark_flutter/app_theme.dart';
+import 'package:provider/provider.dart';
 
 import '../../logger/logger.dart';
 
@@ -23,23 +27,24 @@ class TransactionDetailsDialog extends StatelessWidget {
   });
 
   Future<void> _handleSettlement(BuildContext context) async {
+    final theme = AppTheme.of(context, listen: false);
     try {
       // Show loading dialog
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[850],
-          content: const Column(
+          backgroundColor: theme.secondaryBlack,
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(
+              const CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
-                'Settling transaction...',
-                style: TextStyle(color: Colors.white),
+                AppLocalizations.of(context)!.settlingTransaction,
+                style: TextStyle(color: theme.primaryWhite),
               ),
             ],
           ),
@@ -56,14 +61,14 @@ class TransactionDetailsDialog extends StatelessWidget {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: Colors.grey[850],
-            title: const Text(
-              'Success',
-              style: TextStyle(color: Colors.white),
+            backgroundColor: theme.secondaryBlack,
+            title: Text(
+              AppLocalizations.of(context)!.success,
+              style: TextStyle(color: theme.primaryWhite),
             ),
-            content: const Text(
-              'Transaction settled successfully!',
-              style: TextStyle(color: Colors.white),
+            content: Text(
+              AppLocalizations.of(context)!.transactionSettledSuccessfully,
+              style: TextStyle(color: theme.primaryWhite),
             ),
             actions: [
               TextButton(
@@ -71,9 +76,9 @@ class TransactionDetailsDialog extends StatelessWidget {
                   Navigator.of(context).pop(); // Close success dialog
                   Navigator.of(context).pop(); // Close transaction details
                 },
-                child: const Text(
-                  'Go to Home',
-                  style: TextStyle(color: Colors.amber),
+                child: Text(
+                  AppLocalizations.of(context)!.goToHome,
+                  style: const TextStyle(color: Colors.amber),
                 ),
               ),
             ],
@@ -87,21 +92,21 @@ class TransactionDetailsDialog extends StatelessWidget {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: Colors.grey[850],
-            title: const Text(
-              'Error',
-              style: TextStyle(color: Colors.red),
+            backgroundColor: theme.secondaryBlack,
+            title: Text(
+              AppLocalizations.of(context)!.error,
+              style: const TextStyle(color: Colors.red),
             ),
             content: Text(
-              'Failed to settle transaction: ${e.toString()}',
-              style: const TextStyle(color: Colors.white),
+              '${AppLocalizations.of(context)!.failedToSettleTransaction} ${e.toString()}',
+              style: TextStyle(color: theme.primaryWhite),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text(
-                  'OK',
-                  style: TextStyle(color: Colors.amber),
+                child: Text(
+                  AppLocalizations.of(context)!.ok,
+                  style: const TextStyle(color: Colors.amber),
                 ),
               ),
             ],
@@ -114,19 +119,27 @@ class TransactionDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    final timezoneService = context.watch<TimezoneService>();
+
     final confirmedTime = confirmedAt != null
-        ? DateTime.fromMillisecondsSinceEpoch(confirmedAt! * 1000)
+        ? timezoneService.toSelectedTimezone(
+            DateTime.fromMillisecondsSinceEpoch(confirmedAt! * 1000,
+                isUtc: true))
         : null;
     final formattedDate = confirmedTime != null
         ? DateFormat('MMMM d, y - h:mm a').format(confirmedTime)
-        : 'Pending confirmation';
-    final createdTime = DateTime.fromMillisecondsSinceEpoch(createdAt * 1000);
+        : AppLocalizations.of(context)!.pendingConfirmation;
+
+    final createdTimeUtc =
+        DateTime.fromMillisecondsSinceEpoch(createdAt * 1000, isUtc: true);
+    final createdTime = timezoneService.toSelectedTimezone(createdTimeUtc);
     final formattedCreatedAtDate =
         DateFormat('MMMM d, y - h:mm a').format(createdTime);
     final amountBtc = amountSats.toDouble() / 100000000;
 
     return Dialog(
-      backgroundColor: Colors.grey[850],
+      backgroundColor: theme.secondaryBlack,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -138,31 +151,41 @@ class TransactionDetailsDialog extends StatelessWidget {
               children: [
                 Text(
                   dialogTitle,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.primaryWhite,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
+                  icon: Icon(Icons.close, color: theme.primaryWhite),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            const Divider(color: Colors.grey),
+            Divider(color: theme.mutedText),
             const SizedBox(height: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDetailRow('Transaction ID', txid),
-                _buildDetailRow('Status', isSettled ? 'Confirmed' : 'Pending'),
                 _buildDetailRow(
-                    'Amount (BTC)', '₿${amountBtc.toStringAsFixed(8)}'),
-                _buildDetailRow('Date', formattedCreatedAtDate),
+                    context, AppLocalizations.of(context)!.transactionId, txid),
+                _buildDetailRow(
+                    context,
+                    AppLocalizations.of(context)!.status,
+                    isSettled
+                        ? AppLocalizations.of(context)!.confirmed
+                        : AppLocalizations.of(context)!.pending),
+                _buildDetailRow(
+                    context,
+                    '${AppLocalizations.of(context)!.amount} (BTC)',
+                    '₿${amountBtc.toStringAsFixed(8)}'),
+                _buildDetailRow(context, AppLocalizations.of(context)!.date,
+                    formattedCreatedAtDate),
                 if (confirmedAt != null)
-                  _buildDetailRow('Confirmed At', formattedDate),
+                  _buildDetailRow(context,
+                      AppLocalizations.of(context)!.confirmedAt, formattedDate),
               ],
             ),
             const SizedBox(height: 24),
@@ -176,9 +199,10 @@ class TransactionDetailsDialog extends StatelessWidget {
                       color: Colors.amber.withAlpha((0.2 * 200).round()),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'Transaction pending. Funds will be non-reversible after settlement.',
-                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    child: Text(
+                      AppLocalizations.of(context)!
+                          .transactionPendingFundsWillBeNonReversibleAfterSettlement,
+                      style: TextStyle(color: theme.primaryWhite, fontSize: 14),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -192,8 +216,8 @@ class TransactionDetailsDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('SETTLE',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text(AppLocalizations.of(context)!.settle,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               )
@@ -203,7 +227,8 @@ class TransactionDetailsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(BuildContext context, String label, String value) {
+    final theme = AppTheme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Column(
@@ -212,15 +237,15 @@ class TransactionDetailsDialog extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey[400],
+              color: theme.mutedText,
               fontSize: 12,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: theme.primaryWhite,
               fontSize: 16,
             ),
           ),

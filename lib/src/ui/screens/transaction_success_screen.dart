@@ -1,5 +1,7 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/app_theme.dart';
 
 class TransactionSuccessScreen extends StatelessWidget {
   final String aspId;
@@ -13,13 +15,15 @@ class TransactionSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text(
-          'Success',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context)!.success,
+          style: TextStyle(color: theme.primaryWhite),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -27,7 +31,7 @@ class TransactionSuccessScreen extends StatelessWidget {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: Colors.grey[800],
+            color: theme.secondaryBlack,
             height: 1.0,
           ),
         ),
@@ -55,9 +59,9 @@ class TransactionSuccessScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.check,
-                      color: Colors.white,
+                      color: theme.primaryWhite,
                       size: 40,
                     ),
                   ),
@@ -65,9 +69,9 @@ class TransactionSuccessScreen extends StatelessWidget {
 
                   // Transaction details
                   Text(
-                    '${amount.toInt()} SATS sent successfully',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    '${amount.toInt()} SATS ${AppLocalizations.of(context)!.sentSuccessfully}',
+                    style: TextStyle(
+                      color: theme.primaryWhite,
                       fontSize: 16,
                     ),
                   ),
@@ -85,20 +89,21 @@ class TransactionSuccessScreen extends StatelessWidget {
                 onPressed: () {
                   // Navigate back to the dashboard/wallet
                   Navigator.of(context).popUntil((route) => route.isFirst);
-                  logger.i("Returning to wallet after successful transaction");
+                  logger.i(AppLocalizations.of(context)!
+                      .returningToWalletAfterSuccessfulTransaction);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[850],
-                  foregroundColor: Colors.white,
+                  backgroundColor: theme.secondaryBlack,
+                  foregroundColor: theme.primaryWhite,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
-                child: const Text(
-                  'BACK TO WALLET',
-                  style: TextStyle(
+                child: Text(
+                  AppLocalizations.of(context)!.backToWallet,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),

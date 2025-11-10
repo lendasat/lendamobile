@@ -1,5 +1,9 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/rust/models/mempool.dart';
+import 'package:ark_flutter/src/services/timezone_service.dart';
+import 'package:provider/provider.dart';
 import 'mempool_block_card.dart';
 
 class BlocksListView extends StatefulWidget {
@@ -61,7 +65,6 @@ class _BlocksListViewState extends State<BlocksListView>
         child: Row(
           children: [
             const SizedBox(width: 16.0),
-
             if (widget.mempoolBlocks.isNotEmpty)
               SizedBox(
                 height: 180,
@@ -89,7 +92,6 @@ class _BlocksListViewState extends State<BlocksListView>
                   },
                 ),
               ),
-
             if (widget.mempoolBlocks.isNotEmpty)
               Container(
                 width: 2,
@@ -110,7 +112,6 @@ class _BlocksListViewState extends State<BlocksListView>
                   ),
                 ),
               ),
-
             SizedBox(
               height: 180,
               child: ListView.builder(
@@ -131,7 +132,6 @@ class _BlocksListViewState extends State<BlocksListView>
                 },
               ),
             ),
-
             const SizedBox(width: 16.0),
           ],
         ),
@@ -146,31 +146,37 @@ class BlockCard extends StatelessWidget {
 
   const BlockCard({super.key, required this.block, required this.isSelected});
 
-  String _formatTime(BigInt timestamp) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp.toInt() * 1000);
-    final now = DateTime.now();
+  String _formatTime(BigInt timestamp, BuildContext context) {
+    final timezoneService = context.watch<TimezoneService>();
+    final dateUtc = DateTime.fromMillisecondsSinceEpoch(timestamp.toInt() * 1000, isUtc: true);
+    final date = timezoneService.toSelectedTimezone(dateUtc);
+    final now = timezoneService.now();
     final difference = now.difference(date);
 
     if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
+      return '${difference.inMinutes}${AppLocalizations.of(context)!.mAgo}';
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return '${difference.inHours}${AppLocalizations.of(context)!.hAgo}';
     } else {
-      return '${difference.inDays}d ago';
+      return '${difference.inDays}${AppLocalizations.of(context)!.dAgo}';
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Container(
       width: 140,
       margin: const EdgeInsets.only(right: 16.0),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF2A2A2A) : const Color(0xFF1A1A1A),
+        color: isSelected ? theme.tertiaryBlack : theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: isSelected ? Colors.white : Colors.white.withOpacity(0.1),
+          color: isSelected
+              ? theme.primaryWhite
+              : theme.primaryWhite.withValues(alpha: 0.1),
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -186,13 +192,13 @@ class BlockCard extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0A0A0A),
+                  color: theme.primaryBlack,
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Text(
                   '#${block.height}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.primaryWhite,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -200,22 +206,21 @@ class BlockCard extends StatelessWidget {
               ),
             ],
           ),
-
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.receipt_long,
-                    color: const Color(0xFFC6C6C6),
+                    color: theme.mutedText,
                     size: 14,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '${block.txCount} txs',
-                    style: const TextStyle(
-                      color: const Color(0xFFC6C6C6),
+                    style: TextStyle(
+                      color: theme.mutedText,
                       fontSize: 12,
                     ),
                   ),
@@ -225,16 +230,16 @@ class BlockCard extends StatelessWidget {
               if (block.extras?.totalFees != null)
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.attach_money,
-                      color: const Color(0xFFC6C6C6),
+                      color: theme.mutedText,
                       size: 14,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${(block.extras!.totalFees!.toInt() / 100000000).toStringAsFixed(4)} BTC',
-                      style: const TextStyle(
-                        color: const Color(0xFFC6C6C6),
+                      style: TextStyle(
+                        color: theme.mutedText,
                         fontSize: 12,
                       ),
                     ),
@@ -243,16 +248,16 @@ class BlockCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.access_time,
-                    color: const Color(0xFFC6C6C6),
+                    color: theme.mutedText,
                     size: 14,
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    _formatTime(block.timestamp),
-                    style: const TextStyle(
-                      color: const Color(0xFFC6C6C6),
+                    _formatTime(block.timestamp, context),
+                    style: TextStyle(
+                      color: theme.mutedText,
                       fontSize: 12,
                     ),
                   ),

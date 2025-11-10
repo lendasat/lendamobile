@@ -1,5 +1,7 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/bitcoin_chart/bitcoin_chart_card.dart';
+import 'package:ark_flutter/app_theme.dart';
 
 class BitcoinChartDetailScreen extends StatelessWidget {
   const BitcoinChartDetailScreen({
@@ -8,19 +10,21 @@ class BitcoinChartDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.black87,
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
-        backgroundColor: Colors.black87,
-        title: const Text(
-          'Bitcoin Price Chart',
+        backgroundColor: theme.primaryBlack,
+        title: Text(
+          AppLocalizations.of(context)!.bitcoinPriceChart,
           style: TextStyle(
-            color: Colors.white,
+            color: theme.primaryWhite,
             fontWeight: FontWeight.w600,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
           onPressed: () => Navigator.of(context).pop(),
         ),
         elevation: 0,
@@ -44,58 +48,67 @@ class BitcoinChartDetailScreen extends StatelessWidget {
   }
 
   Widget _buildInfoCard(BuildContext context) {
+    final theme = AppTheme.of(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[800]!, width: 1),
+        border: Border.all(color: theme.tertiaryBlack, width: 1),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'About Bitcoin Price Data',
+          Text(
+            AppLocalizations.of(context)!.aboutBitcoinPriceData,
             style: TextStyle(
-              color: Colors.white,
+              color: theme.primaryWhite,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'The price data shown is sourced from our backend service and updated in real-time. Select different time ranges to view historical price trends.',
+            AppLocalizations.of(context)!.thePriceDataShown,
             style: TextStyle(
-              color: Colors.grey[400],
+              color: theme.mutedText,
               fontSize: 14,
               height: 1.5,
             ),
           ),
           const SizedBox(height: 16),
-          _buildInfoRow('Data Source', 'Live Bitcoin Market Data'),
+          _buildInfoRow(AppLocalizations.of(context)!.dataSource,
+              AppLocalizations.of(context)!.liveBitcoinMarketData),
           const SizedBox(height: 8),
-          _buildInfoRow('Currency', 'USD'),
+          _buildInfoRow(AppLocalizations.of(context)!.currency, 'USD'),
           const SizedBox(height: 8),
-          _buildInfoRow('Update Frequency', 'Real-time'),
+          _buildInfoRow(AppLocalizations.of(context)!.updateFrequency,
+              AppLocalizations.of(context)!.realTime),
         ],
       ),
     );
   }
 
   Widget _buildInfoRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+    return Builder(
+      builder: (context) {
+        final theme = AppTheme.of(context);
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: TextStyle(color: theme.mutedText, fontSize: 14)),
+            Text(
+              value,
+              style: TextStyle(
+                color: theme.primaryWhite,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

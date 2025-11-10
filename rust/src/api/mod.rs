@@ -1,6 +1,7 @@
 use crate::frb_generated::StreamSink;
 use crate::logger;
 use crate::models;
+use crate::models::exchange_rates::{ExchangeRates, FiatCurrency};
 use anyhow::Result;
 
 pub mod ark_api;
@@ -93,4 +94,18 @@ pub async fn moonpay_encrypt_data(
     data: String,
 ) -> Result<models::moonpay::MoonPayEncryptedData> {
     moonpay_api::moonpay_encrypt_data(server_url, data).await
+}
+
+pub async fn fetch_exchange_rates() -> anyhow::Result<ExchangeRates> {
+    crate::models::exchange_rates::fetch_exchange_rates().await
+}
+
+#[flutter_rust_bridge::frb(sync)]
+pub fn get_supported_currencies() -> Vec<FiatCurrency> {
+    FiatCurrency::all()
+}
+
+#[flutter_rust_bridge::frb(sync)]
+pub fn currency_code(currency: FiatCurrency) -> String {
+    currency.code().to_string()
 }

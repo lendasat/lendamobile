@@ -1,4 +1,6 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 import 'package:ark_flutter/src/rust/api.dart' as rust_api;
 import 'transaction_detail_screen.dart';
@@ -97,40 +99,38 @@ class _UnacceptedBlockTransactionsScreenState
   }
 
   void _trackMempoolBlock() {
-    rust_api
-        .trackMempoolBlock(blockIndex: widget.blockIndex)
-        .listen(
-          (data) {
-            if (!mounted) return;
+    rust_api.trackMempoolBlock(blockIndex: widget.blockIndex).listen(
+      (data) {
+        if (!mounted) return;
 
-            if (data.transactions.isEmpty && !_isLoading) {
-              debugPrint(
-                'Ignoring empty transaction update for block ${data.index}',
-              );
-              return;
-            }
+        if (data.transactions.isEmpty && !_isLoading) {
+          debugPrint(
+            'Ignoring empty transaction update for block ${data.index}',
+          );
+          return;
+        }
 
-            setState(() {
-              _allTransactions = data.transactions;
-              final firstPageEnd = _pageSize.clamp(0, _allTransactions.length);
-              _displayedTransactions = _allTransactions.sublist(
-                0,
-                firstPageEnd,
-              );
-              _isLoading = false;
-              _error = null;
-            });
-          },
-          onError: (error) {
-            if (!mounted) return;
+        setState(() {
+          _allTransactions = data.transactions;
+          final firstPageEnd = _pageSize.clamp(0, _allTransactions.length);
+          _displayedTransactions = _allTransactions.sublist(
+            0,
+            firstPageEnd,
+          );
+          _isLoading = false;
+          _error = null;
+        });
+      },
+      onError: (error) {
+        if (!mounted) return;
 
-            setState(() {
-              _error = error.toString();
-              _isLoading = false;
-            });
-            debugPrint('Error tracking mempool block: $error');
-          },
-        );
+        setState(() {
+          _error = error.toString();
+          _isLoading = false;
+        });
+        debugPrint('Error tracking mempool block: $error');
+      },
+    );
   }
 
   String _formatFees(BigInt satoshis) {
@@ -157,119 +157,102 @@ class _UnacceptedBlockTransactionsScreenState
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final theme = AppTheme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: theme.primaryBlack,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0A),
+        backgroundColor: theme.primaryBlack,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Pending Block',
+            Text(
+              AppLocalizations.of(context)!.pendingBlock,
               style: TextStyle(
-                color: Colors.white,
+                color: theme.primaryWhite,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             Text(
-              'Next Block #${widget.blockIndex + 1}',
-              style: TextStyle(color: const Color(0xFFC6C6C6), fontSize: 12),
+              '${AppLocalizations.of(context)!.nextBlock} #${widget.blockIndex + 1}',
+              style: TextStyle(color: theme.mutedText, fontSize: 12),
             ),
           ],
         ),
       ),
-      body:
-          _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFFFFA500)),
-              )
-              : SingleChildScrollView(
-                controller: _scrollController,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.all(16.0),
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2D2400),
-                        borderRadius: BorderRadius.circular(12.0),
-                        border: Border.all(
-                          color: const Color(0xFFFFA500),
-                          width: 1,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          _buildInfoRow(
-                            'Status',
-                            'Pending Confirmation',
-                            const Color(0xFFFFA500),
-                          ),
-                          const SizedBox(height: 8.0),
-                          _buildInfoRow(
-                            'Transactions',
-                            '${widget.block.nTx}',
-                            Colors.white,
-                          ),
-                          const SizedBox(height: 8.0),
-                          _buildInfoRow(
-                            'Total Fees',
-                            _formatFees(widget.block.totalFees),
-                            Colors.white,
-                          ),
-                          const SizedBox(height: 8.0),
-                          _buildInfoRow(
-                            'Median Fee',
-                            '${widget.block.medianFee.toStringAsFixed(1)} sat/vB',
-                            Colors.white,
-                          ),
-                          const SizedBox(height: 8.0),
-                          _buildInfoRow(
-                            'Block Size',
-                            _formatSize(widget.block.blockVsize),
-                            Colors.white,
-                          ),
-                          const SizedBox(height: 8.0),
-                          _buildInfoRow(
-                            'Estimated Time',
-                            '~${_estimateMinutes()} minutes',
-                            const Color(0xFFFFA500),
-                          ),
-                        ],
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFFFA500)),
+            )
+          : SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2D2400),
+                      borderRadius: BorderRadius.circular(12.0),
+                      border: Border.all(
+                        color: const Color(0xFFFFA500),
+                        width: 1,
                       ),
                     ),
-
-                    if (widget.block.feeRange.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0,
+                    child: Column(
+                      children: [
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.status,
+                          AppLocalizations.of(context)!.pendingConfirmation,
+                          const Color(0xFFFFA500),
+                          theme,
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Fee Distribution',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8.0),
-                            _buildFeeDistribution(),
-                          ],
+                        const SizedBox(height: 8.0),
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.transactions,
+                          '${widget.block.nTx}',
+                          theme.primaryWhite,
+                          theme,
                         ),
-                      ),
-
-                    const SizedBox(height: 24.0),
-
+                        const SizedBox(height: 8.0),
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.totalFees,
+                          _formatFees(widget.block.totalFees),
+                          theme.primaryWhite,
+                          theme,
+                        ),
+                        const SizedBox(height: 8.0),
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.medianFee,
+                          '${widget.block.medianFee.toStringAsFixed(1)} sat/vB',
+                          theme.primaryWhite,
+                          theme,
+                        ),
+                        const SizedBox(height: 8.0),
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.blockSize,
+                          _formatSize(widget.block.blockVsize),
+                          theme.primaryWhite,
+                          theme,
+                        ),
+                        const SizedBox(height: 8.0),
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.estimatedTime,
+                          '~${_estimateMinutes()} ${AppLocalizations.of(context)!.minutes}',
+                          const Color(0xFFFFA500),
+                          theme,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (widget.block.feeRange.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16.0,
@@ -277,143 +260,167 @@ class _UnacceptedBlockTransactionsScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Transactions',
+                          Text(
+                            AppLocalizations.of(context)!.feeDistribution,
                             style: TextStyle(
-                              color: Colors.white,
+                              color: theme.primaryWhite,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 8.0),
-                          if (_error != null)
-                            Container(
-                              padding: const EdgeInsets.all(16.0),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF1A1A1A),
-                                borderRadius: BorderRadius.circular(
-                                  12.0,
-                                ),
-                                border: Border.all(color: Colors.red),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.error_outline,
-                                    color: Colors.red,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8.0),
-                                  Expanded(
-                                    child: Text(
-                                      _error!,
-                                      style: const TextStyle(
-                                        color: Colors.red,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          else if (_allTransactions.isEmpty && !_isLoading)
-                            Container(
-                              padding: const EdgeInsets.all(24.0),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF1A1A1A),
-                                borderRadius: BorderRadius.circular(
-                                  12.0,
-                                ),
-                                border: Border.all(color: Colors.white.withOpacity(0.1)),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'No transactions yet',
-                                  style: TextStyle(
-                                    color: const Color(0xFFC6C6C6),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            )
-                          else
-                            Column(
-                              children: [
-                                ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: _displayedTransactions.length,
-                                  itemBuilder: (context, index) {
-                                    final tx = _displayedTransactions[index];
-                                    return _buildTransactionCard(tx);
-                                  },
-                                ),
-                                if (_isLoadingMore)
-                                  Padding(
-                                    padding: const EdgeInsets.all(
-                                      16.0,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Color(0xFFFFA500),
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          width: 8.0,
-                                        ),
-                                        Text(
-                                          'Loading more transactions...',
-                                          style: TextStyle(
-                                            color: const Color(0xFFC6C6C6),
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                if (!_isLoadingMore &&
-                                    _displayedTransactions.length <
-                                        _allTransactions.length)
-                                  Padding(
-                                    padding: const EdgeInsets.all(
-                                      8.0,
-                                    ),
-                                    child: Text(
-                                      'Scroll down to load more',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: const Color(0xFFC6C6C6),
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
+                          _buildFeeDistribution(theme),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 32.0),
-                  ],
-                ),
+                  const SizedBox(height: 24.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.transactions,
+                          style: TextStyle(
+                            color: theme.primaryWhite,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8.0),
+                        if (_error != null)
+                          Container(
+                            padding: const EdgeInsets.all(16.0),
+                            decoration: BoxDecoration(
+                              color: theme.secondaryBlack,
+                              borderRadius: BorderRadius.circular(
+                                12.0,
+                              ),
+                              border: Border.all(color: Colors.red),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8.0),
+                                Expanded(
+                                  child: Text(
+                                    _error!,
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else if (_allTransactions.isEmpty && !_isLoading)
+                          Container(
+                            padding: const EdgeInsets.all(24.0),
+                            decoration: BoxDecoration(
+                              color: theme.secondaryBlack,
+                              borderRadius: BorderRadius.circular(
+                                12.0,
+                              ),
+                              border: Border.all(
+                                  color: theme.primaryWhite
+                                      .withValues(alpha: 0.1)),
+                            ),
+                            child: Center(
+                              child: Text(
+                                AppLocalizations.of(context)!.noTransactionsYet,
+                                style: TextStyle(
+                                  color: theme.mutedText,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          Column(
+                            children: [
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _displayedTransactions.length,
+                                itemBuilder: (context, index) {
+                                  final tx = _displayedTransactions[index];
+                                  return _buildTransactionCard(tx, theme);
+                                },
+                              ),
+                              if (_isLoadingMore)
+                                Padding(
+                                  padding: const EdgeInsets.all(
+                                    16.0,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Color(0xFFFFA500),
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        width: 8.0,
+                                      ),
+                                      Text(
+                                        AppLocalizations.of(context)!
+                                            .loadingMoreTransactions,
+                                        style: TextStyle(
+                                          color: theme.mutedText,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              if (!_isLoadingMore &&
+                                  _displayedTransactions.length <
+                                      _allTransactions.length)
+                                Padding(
+                                  padding: const EdgeInsets.all(
+                                    8.0,
+                                  ),
+                                  child: Text(
+                                    AppLocalizations.of(context)!
+                                        .scrollDownToLoadMore,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: theme.mutedText,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32.0),
+                ],
               ),
+            ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value, Color valueColor) {
+  Widget _buildInfoRow(
+      String label, String value, Color valueColor, AppTheme theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: TextStyle(color: const Color(0xFFC6C6C6), fontSize: 14),
+          style: TextStyle(color: theme.mutedText, fontSize: 14),
         ),
         Text(
           value,
@@ -427,16 +434,24 @@ class _UnacceptedBlockTransactionsScreenState
     );
   }
 
-  Widget _buildFeeDistribution() {
+  Widget _buildFeeDistribution(AppTheme theme) {
     final feeRange = widget.block.feeRange;
-    final labels = ['Min', '10%', '25%', 'Med', '75%', '90%', 'Max'];
+    final labels = [
+      AppLocalizations.of(context)!.min,
+      '10%',
+      '25%',
+      AppLocalizations.of(context)!.med,
+      '75%',
+      '90%',
+      AppLocalizations.of(context)!.max
+    ];
 
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: List.generate(feeRange.length, (index) {
@@ -453,7 +468,7 @@ class _UnacceptedBlockTransactionsScreenState
                   child: Text(
                     labels[index],
                     style: TextStyle(
-                      color: const Color(0xFFC6C6C6),
+                      color: theme.mutedText,
                       fontSize: 12,
                     ),
                   ),
@@ -465,7 +480,7 @@ class _UnacceptedBlockTransactionsScreenState
                       Container(
                         height: 20,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0A0A0A),
+                          color: theme.primaryBlack,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -487,8 +502,8 @@ class _UnacceptedBlockTransactionsScreenState
                   width: 60,
                   child: Text(
                     '${fee.toStringAsFixed(1)} s/vB',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: theme.primaryWhite,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -503,7 +518,7 @@ class _UnacceptedBlockTransactionsScreenState
     );
   }
 
-  Widget _buildTransactionCard(ProjectedTransaction tx) {
+  Widget _buildTransactionCard(ProjectedTransaction tx, AppTheme theme) {
     final hasFlag = tx.flags > 0;
 
     return GestureDetector(
@@ -518,10 +533,12 @@ class _UnacceptedBlockTransactionsScreenState
         margin: const EdgeInsets.only(bottom: 8.0),
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: hasFlag ? const Color(0xFF2D2400) : const Color(0xFF1A1A1A),
+          color: hasFlag ? const Color(0xFF2D2400) : theme.secondaryBlack,
           borderRadius: BorderRadius.circular(12.0),
           border: Border.all(
-            color: hasFlag ? const Color(0xFFFFA500) : Colors.white.withOpacity(0.1),
+            color: hasFlag
+                ? const Color(0xFFFFA500)
+                : theme.primaryWhite.withValues(alpha: 0.1),
           ),
         ),
         child: Column(
@@ -532,8 +549,8 @@ class _UnacceptedBlockTransactionsScreenState
                 Expanded(
                   child: Text(
                     '${tx.txid.substring(0, 16)}...${tx.txid.substring(tx.txid.length - 8)}',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: theme.primaryWhite,
                       fontSize: 13,
                       fontFamily: 'monospace',
                       fontWeight: FontWeight.w600,
@@ -566,13 +583,16 @@ class _UnacceptedBlockTransactionsScreenState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildTxDetail(
-                  'Fee Rate',
+                  AppLocalizations.of(context)!.feeRate,
                   '${tx.feeRate.toStringAsFixed(1)} sat/vB',
+                  theme,
                 ),
-                _buildTxDetail('Size', '${tx.vsize} vB'),
+                _buildTxDetail(AppLocalizations.of(context)!.size,
+                    '${tx.vsize} vB', theme),
                 _buildTxDetail(
-                  'Value',
+                  AppLocalizations.of(context)!.value,
                   '${(tx.value.toDouble() / 100000000).toStringAsFixed(5)} BTC',
+                  theme,
                 ),
               ],
             ),
@@ -582,19 +602,19 @@ class _UnacceptedBlockTransactionsScreenState
     );
   }
 
-  Widget _buildTxDetail(String label, String value) {
+  Widget _buildTxDetail(String label, String value, AppTheme theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextStyle(color: const Color(0xFFC6C6C6), fontSize: 11),
+          style: TextStyle(color: theme.mutedText, fontSize: 11),
         ),
         const SizedBox(height: 2),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: theme.primaryWhite,
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
