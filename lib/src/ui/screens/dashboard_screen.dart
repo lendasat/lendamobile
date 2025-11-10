@@ -9,6 +9,8 @@ import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dar
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
+import 'package:ark_flutter/src/ui/screens/buy/buy_screen.dart';
+import 'package:ark_flutter/src/ui/screens/sell/sell_screen.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/ui/screens/mempool/mempool_home.dart';
 
@@ -265,6 +267,28 @@ class DashboardScreenState extends State<DashboardScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => const MempoolHome(),
+      ),
+    );
+  }
+
+  void _handleBuy() {
+    // Navigate to buy screen
+    logger.i("Buy button pressed");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BuyScreen(),
+      ),
+    );
+  }
+
+  void _handleSell() {
+    // Navigate to sell screen
+    logger.i("Sell button pressed");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SellScreen(),
       ),
     );
   }
@@ -759,28 +783,54 @@ class DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: _handleMempool,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[700],
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _handleBuy,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[800],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.shopping_cart_outlined),
+                label: const Text(
+                  'BUY',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ),
-              elevation: 0,
             ),
-            icon: const Icon(Icons.analytics_outlined),
-            label: const Text(
-              'MEMPOOL',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _handleSell,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber[500],
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.sell_outlined),
+                label: const Text(
+                  'SELL',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ],
     );

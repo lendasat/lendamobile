@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 443143118;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1940174956;
 
 // Section: executor
 
@@ -821,6 +821,242 @@ fn wire__crate__api__ark_api__load_existing_wallet_impl(
         },
     )
 }
+fn wire__crate__api__moonpay_encrypt_data_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "moonpay_encrypt_data",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_server_url = <String>::sse_decode(&mut deserializer);
+            let api_data = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::moonpay_encrypt_data(api_server_url, api_data).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "moonpay_encrypt_data",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_server_url = <String>::sse_decode(&mut deserializer);
+            let api_data = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::moonpay_api::moonpay_encrypt_data(api_server_url, api_data)
+                                .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__moonpay_get_currency_limits_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "moonpay_get_currency_limits",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_server_url = <String>::sse_decode(&mut deserializer);
+            let api_base_currency_code = <String>::sse_decode(&mut deserializer);
+            let api_payment_method = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::moonpay_get_currency_limits(
+                            api_server_url,
+                            api_base_currency_code,
+                            api_payment_method,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "moonpay_get_currency_limits",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_server_url = <String>::sse_decode(&mut deserializer);
+            let api_base_currency_code = <String>::sse_decode(&mut deserializer);
+            let api_payment_method = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::moonpay_api::moonpay_get_currency_limits(
+                            api_server_url,
+                            api_base_currency_code,
+                            api_payment_method,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__moonpay_get_quote_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "moonpay_get_quote",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_server_url = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::moonpay_get_quote(api_server_url).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__moonpay_api__moonpay_get_quote_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "moonpay_get_quote",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_server_url = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::moonpay_api::moonpay_get_quote(api_server_url).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__ark_api__nsec_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1545,6 +1781,20 @@ impl SseDecode for crate::models::mempool::Conversions {
     }
 }
 
+impl SseDecode for crate::models::moonpay::CurrencyInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_code = <String>::sse_decode(deserializer);
+        let mut var_minBuyAmount = <f64>::sse_decode(deserializer);
+        let mut var_maxBuyAmount = <f64>::sse_decode(deserializer);
+        return crate::models::moonpay::CurrencyInfo {
+            code: var_code,
+            min_buy_amount: var_minBuyAmount,
+            max_buy_amount: var_maxBuyAmount,
+        };
+    }
+}
+
 impl SseDecode for crate::models::mempool::DifficultyAdjustment {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1910,6 +2160,49 @@ impl SseDecode for crate::models::mempool::MiningPool {
             id: var_id,
             name: var_name,
             slug: var_slug,
+        };
+    }
+}
+
+impl SseDecode for crate::models::moonpay::MoonPayCurrencyLimits {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_quoteCurrency =
+            <crate::models::moonpay::CurrencyInfo>::sse_decode(deserializer);
+        let mut var_baseCurrency = <crate::models::moonpay::CurrencyInfo>::sse_decode(deserializer);
+        return crate::models::moonpay::MoonPayCurrencyLimits {
+            quote_currency: var_quoteCurrency,
+            base_currency: var_baseCurrency,
+        };
+    }
+}
+
+impl SseDecode for crate::models::moonpay::MoonPayEncryptedData {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_ciphertext = <String>::sse_decode(deserializer);
+        let mut var_iv = <String>::sse_decode(deserializer);
+        return crate::models::moonpay::MoonPayEncryptedData {
+            ciphertext: var_ciphertext,
+            iv: var_iv,
+        };
+    }
+}
+
+impl SseDecode for crate::models::moonpay::MoonPayQuote {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_baseCurrencyAmount = <f64>::sse_decode(deserializer);
+        let mut var_quoteCurrencyAmount = <f64>::sse_decode(deserializer);
+        let mut var_baseCurrencyCode = <String>::sse_decode(deserializer);
+        let mut var_exchangeRate = <f64>::sse_decode(deserializer);
+        let mut var_timestamp = <String>::sse_decode(deserializer);
+        return crate::models::moonpay::MoonPayQuote {
+            base_currency_amount: var_baseCurrencyAmount,
+            quote_currency_amount: var_quoteCurrencyAmount,
+            base_currency_code: var_baseCurrencyCode,
+            exchange_rate: var_exchangeRate,
+            timestamp: var_timestamp,
         };
     }
 }
@@ -2372,29 +2665,47 @@ fn pde_ffi_dispatcher_primary_impl(
         21 => {
             wire__crate__api__ark_api__load_existing_wallet_impl(port, ptr, rust_vec_len, data_len)
         }
-        22 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
-        23 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
-        24 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
-        25 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
-        26 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
-        27 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
-        29 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
+        22 => wire__crate__api__moonpay_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
+        23 => wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        30 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
-        31 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
+        24 => wire__crate__api__moonpay_get_currency_limits_impl(port, ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        32 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
-        33 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
-        34 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len),
+        27 => {
+            wire__crate__api__moonpay_api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len)
+        }
+        28 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
+        29 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
+        31 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
+        32 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
+        33 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
+        34 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
+        35 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        36 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        38 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -2576,6 +2887,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::models::mempool::Conversions>
     for crate::models::mempool::Conversions
 {
     fn into_into_dart(self) -> crate::models::mempool::Conversions {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::models::moonpay::CurrencyInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code.into_into_dart().into_dart(),
+            self.min_buy_amount.into_into_dart().into_dart(),
+            self.max_buy_amount.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::models::moonpay::CurrencyInfo
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::models::moonpay::CurrencyInfo>
+    for crate::models::moonpay::CurrencyInfo
+{
+    fn into_into_dart(self) -> crate::models::moonpay::CurrencyInfo {
         self
     }
 }
@@ -2819,6 +3152,72 @@ impl flutter_rust_bridge::IntoIntoDart<crate::models::mempool::MiningPool>
     for crate::models::mempool::MiningPool
 {
     fn into_into_dart(self) -> crate::models::mempool::MiningPool {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::models::moonpay::MoonPayCurrencyLimits {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.quote_currency.into_into_dart().into_dart(),
+            self.base_currency.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::models::moonpay::MoonPayCurrencyLimits
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::models::moonpay::MoonPayCurrencyLimits>
+    for crate::models::moonpay::MoonPayCurrencyLimits
+{
+    fn into_into_dart(self) -> crate::models::moonpay::MoonPayCurrencyLimits {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::models::moonpay::MoonPayEncryptedData {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.ciphertext.into_into_dart().into_dart(),
+            self.iv.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::models::moonpay::MoonPayEncryptedData
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::models::moonpay::MoonPayEncryptedData>
+    for crate::models::moonpay::MoonPayEncryptedData
+{
+    fn into_into_dart(self) -> crate::models::moonpay::MoonPayEncryptedData {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::models::moonpay::MoonPayQuote {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.base_currency_amount.into_into_dart().into_dart(),
+            self.quote_currency_amount.into_into_dart().into_dart(),
+            self.base_currency_code.into_into_dart().into_dart(),
+            self.exchange_rate.into_into_dart().into_dart(),
+            self.timestamp.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::models::moonpay::MoonPayQuote
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::models::moonpay::MoonPayQuote>
+    for crate::models::moonpay::MoonPayQuote
+{
+    fn into_into_dart(self) -> crate::models::moonpay::MoonPayQuote {
         self
     }
 }
@@ -3203,6 +3602,15 @@ impl SseEncode for crate::models::mempool::Conversions {
     }
 }
 
+impl SseEncode for crate::models::moonpay::CurrencyInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.code, serializer);
+        <f64>::sse_encode(self.min_buy_amount, serializer);
+        <f64>::sse_encode(self.max_buy_amount, serializer);
+    }
+}
+
 impl SseEncode for crate::models::mempool::DifficultyAdjustment {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -3463,6 +3871,33 @@ impl SseEncode for crate::models::mempool::MiningPool {
         <Option<u32>>::sse_encode(self.id, serializer);
         <String>::sse_encode(self.name, serializer);
         <Option<String>>::sse_encode(self.slug, serializer);
+    }
+}
+
+impl SseEncode for crate::models::moonpay::MoonPayCurrencyLimits {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::models::moonpay::CurrencyInfo>::sse_encode(self.quote_currency, serializer);
+        <crate::models::moonpay::CurrencyInfo>::sse_encode(self.base_currency, serializer);
+    }
+}
+
+impl SseEncode for crate::models::moonpay::MoonPayEncryptedData {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.ciphertext, serializer);
+        <String>::sse_encode(self.iv, serializer);
+    }
+}
+
+impl SseEncode for crate::models::moonpay::MoonPayQuote {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <f64>::sse_encode(self.base_currency_amount, serializer);
+        <f64>::sse_encode(self.quote_currency_amount, serializer);
+        <String>::sse_encode(self.base_currency_code, serializer);
+        <f64>::sse_encode(self.exchange_rate, serializer);
+        <String>::sse_encode(self.timestamp, serializer);
     }
 }
 

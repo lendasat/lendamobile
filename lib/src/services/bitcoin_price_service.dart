@@ -7,7 +7,7 @@ import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart
 Future<List<PriceData>> fetchBitcoinPriceData(TimeRange timeRange) async {
   final String timeRangeParam = _getTimeRangeParam(timeRange);
   final settingsService = SettingsService();
-  final serverUrl = await settingsService.getHistoricalPricesServerUrl();
+  final serverUrl = await settingsService.getBackendUrl();
 
   try {
     final response = await bitcoin_api.fetchHistoricalPrices(

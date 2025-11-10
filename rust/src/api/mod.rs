@@ -8,6 +8,7 @@ pub mod bitcoin_api;
 pub mod mempool_api;
 pub mod mempool_block_tracker;
 pub mod mempool_ws;
+pub mod moonpay_api;
 
 #[flutter_rust_bridge::frb(init)]
 pub fn init_app() {
@@ -73,4 +74,23 @@ pub async fn track_mempool_block(
     sink: StreamSink<models::mempool::ProjectedBlockTransactions>,
 ) -> Result<()> {
     mempool_block_tracker::track_mempool_block(block_index, sink).await
+}
+
+pub async fn moonpay_get_currency_limits(
+    server_url: String,
+    base_currency_code: String,
+    payment_method: String,
+) -> Result<models::moonpay::MoonPayCurrencyLimits> {
+    moonpay_api::moonpay_get_currency_limits(server_url, base_currency_code, payment_method).await
+}
+
+pub async fn moonpay_get_quote(server_url: String) -> Result<models::moonpay::MoonPayQuote> {
+    moonpay_api::moonpay_get_quote(server_url).await
+}
+
+pub async fn moonpay_encrypt_data(
+    server_url: String,
+    data: String,
+) -> Result<models::moonpay::MoonPayEncryptedData> {
+    moonpay_api::moonpay_encrypt_data(server_url, data).await
 }
