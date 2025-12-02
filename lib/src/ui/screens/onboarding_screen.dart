@@ -77,6 +77,18 @@ class OnboardingScreenState extends State<OnboardingScreen> {
     final dataDir = await getApplicationSupportDirectory();
 
     try {
+      // Debug mode - skip backend entirely
+      if (_selectedOption == 'debug') {
+        logger.i('Entering debug mode - skipping wallet setup');
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+                builder: (context) => const DashboardScreen(aspId: 'debug-mode')),
+          );
+        }
+        return;
+      }
+
       if (_selectedOption == 'new') {
         logger.i('Creating new wallet');
 
@@ -269,6 +281,14 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                           .useYourSecretKeyToAccessYourWallet,
                       option: 'existing',
                     ),
+                    const SizedBox(height: 16),
+
+                    // Debug Mode Option (only in debug builds)
+                    _buildOptionCard(
+                      title: 'Debug Mode',
+                      subtitle: 'Skip wallet setup and enter app directly',
+                      option: 'debug',
+                    ),
                     const SizedBox(height: 24),
 
                     // Secret Key Input (shown only when "Existing Wallet" is selected)
@@ -311,7 +331,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                   onPressed: _isLoading
                       ? null
                       : (_selectedOption == 'new' ||
-                              _selectedOption == 'existing'
+                              _selectedOption == 'existing' ||
+                              _selectedOption == 'debug'
                           ? _handleContinue
                           : null),
                   style: ElevatedButton.styleFrom(
