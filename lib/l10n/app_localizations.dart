@@ -1403,7 +1403,7 @@ abstract class AppLocalizations {
   /// No description provided for @med.
   ///
   /// In en, this message translates to:
-  /// **', \"Med\", '**
+  /// **'Med'**
   String get med;
 
   /// No description provided for @feeRate.

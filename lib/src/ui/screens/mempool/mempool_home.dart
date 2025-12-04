@@ -126,8 +126,8 @@ class _MempoolHomeState extends State<MempoolHome> {
       return;
     }
 
-    // Calculate width: each card is ~148px (140px + 8px margin)
-    const cardWidth = 148.0;
+    // Calculate width: each card is ~196px (180px + 16px margin)
+    const cardWidth = 196.0;
     final mempoolWidth = _mempoolBlocks.length * cardWidth;
 
     // Calculate position to center divider in viewport
@@ -204,6 +204,14 @@ class _MempoolHomeState extends State<MempoolHome> {
       },
       onError: (error) {
         debugPrint('WebSocket error: $error');
+        if (mounted) {
+          setState(() {
+            _error = 'WebSocket connection error: $error';
+          });
+        }
+      },
+      onDone: () {
+        debugPrint('WebSocket connection closed');
       },
     );
   }
@@ -274,7 +282,7 @@ class _MempoolHomeState extends State<MempoolHome> {
   }
 
   void _showSearchDialog() {
-    final theme = AppTheme.of(context);
+    final theme = AppTheme.of(context, listen: false);
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(

@@ -1,18 +1,21 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/models/app_theme_model.dart';
+import 'package:ark_flutter/src/providers/theme_provider.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/services.dart';
-import 'package:qr_flutter/qr_flutter.dart';
+import 'package:pretty_qr_code/pretty_qr_code.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:async';
-import 'dart:io';
-import 'dart:ui' as ui;
-import 'package:path_provider/path_provider.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/app_theme.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/qr_border_painter.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 
 enum AddressType { bip21, btc, ark }
 
@@ -259,7 +262,7 @@ class ReceiveScreenState extends State<ReceiveScreen> {
   IconData _getAddressTypeIcon() {
     switch (_currentAddressType) {
       case AddressType.bip21:
-        return Icons.qr_code_2;
+        return Icons.currency_bitcoin;
       case AddressType.btc:
         return Icons.currency_bitcoin;
       case AddressType.ark:
@@ -268,131 +271,111 @@ class ReceiveScreenState extends State<ReceiveScreen> {
   }
 
   void _showAmountBottomSheet() {
-    final theme = AppTheme.of(context);
+    final theme = AppTheme.of(context, listen: false);
     // Initialize controllers with current amount if set
     _satController.text = _currentAmount?.toString() ?? '';
     _btcController.text = '';
     _currController.text = '';
 
-    showModalBottomSheet(
+    arkBottomSheet(
       context: context,
-      isScrollControlled: true,
+      height: MediaQuery.of(context).size.height * 0.5,
       backgroundColor: theme.primaryBlack,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 16,
-          right: 16,
-          top: 16,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+          title: Text(
+            AppLocalizations.of(context)!.setAmount,
+            style: TextStyle(
+              color: theme.primaryWhite,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.close, color: theme.primaryWhite),
+              onPressed: () {
+                // Reset controllers on cancel
+                _satController.text = _currentAmount?.toString() ?? '';
+                _btcController.clear();
+                _currController.clear();
+                Navigator.pop(context);
+              },
+            ),
+          ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.setAmount,
-                  style: TextStyle(
-                    color: theme.primaryWhite,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Amount Widget
+              Padding(
+                padding: const EdgeInsetsGeometry.symmetric(
+                    vertical: 32, horizontal: 24),
+                child: AmountWidget(
+                  enabled: () => true,
+                  btcController: _btcController,
+                  satController: _satController,
+                  currController: _currController,
+                  focusNode: _amountFocusNode,
+                  bitcoinUnit: CurrencyType.sats,
+                  swapped: false,
+                  autoConvert: true,
+                  bitcoinPrice: 60000.0,
                 ),
-                if (_currentAmount != null)
-                  TextButton(
-                    onPressed: () {
+              ),
+
+              const SizedBox(height: 16),
+
+              // Apply Button
+              SizedBox(
+                width: 24 * 12,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final amountText = _satController.text.trim();
+                    if (amountText.isEmpty) {
                       setState(() {
                         _currentAmount = null;
-                        _satController.clear();
-                        _btcController.clear();
-                        _currController.clear();
                       });
                       _fetchAddresses();
-                      Navigator.pop(context);
-                    },
-                    child: Text(
-                      AppLocalizations.of(context)!.clear,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            AmountWidget(
-              enabled: () => true,
-              btcController: _btcController,
-              satController: _satController,
-              currController: _currController,
-              focusNode: _amountFocusNode,
-              bitcoinUnit: CurrencyType.sats,
-              swapped: false,
-              autoConvert: false,
-              bitcoinPrice: 60000.0,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      // Reset controllers on cancel
-                      _satController.text = _currentAmount?.toString() ?? '';
-                      _btcController.clear();
-                      _currController.clear();
-                      Navigator.pop(context);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: theme.mutedText),
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context)!.cancel,
-                      style: TextStyle(color: theme.primaryWhite),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      final amountText = _satController.text.trim();
-                      if (amountText.isEmpty) {
-                        // Clear amount
+                    } else {
+                      final amount = int.tryParse(amountText);
+                      if (amount != null && amount > 0) {
                         setState(() {
-                          _currentAmount = null;
+                          _currentAmount = amount;
                         });
                         _fetchAddresses();
-                      } else {
-                        final amount = int.tryParse(amountText);
-                        if (amount != null && amount > 0) {
-                          setState(() {
-                            _currentAmount = amount;
-                          });
-                          _fetchAddresses(); // Refetch with new amount
-                        }
                       }
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber[500],
-                      foregroundColor: theme.mutedText,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    }
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber[600],
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
                     ),
-                    child: Text(AppLocalizations.of(context)!.apply),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.apply,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     ).then((_) {
-      // Clean up controllers when bottom sheet closes
       _satController.text = '';
       _btcController.clear();
       _currController.clear();
@@ -403,8 +386,6 @@ class ReceiveScreenState extends State<ReceiveScreen> {
 
   Future<void> _handleShare() async {
     try {
-      logger.i("Share button pressed");
-
       String addressToShare = _getCurrentAddressData();
       String addressType = _getAddressTypeLabel();
 
@@ -413,8 +394,6 @@ class ReceiveScreenState extends State<ReceiveScreen> {
         addressToShare,
         subject: 'My $addressType',
       );
-
-      logger.i("Shared $addressType: $addressToShare");
     } catch (e) {
       logger.e("Error sharing address: $e");
       if (!mounted) return;
@@ -426,58 +405,21 @@ class ReceiveScreenState extends State<ReceiveScreen> {
     }
   }
 
-  Future<void> _shareQrCodeImage() async {
-    try {
-      // Capture the QR code as an image
-      RenderRepaintBoundary? boundary =
-          _qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) {
-        throw Exception("Could not find QR code widget");
-      }
-
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) {
-        throw Exception("Could not convert QR code to image");
-      }
-
-      Uint8List pngBytes = byteData.buffer.asUint8List();
-
-      // Save image to temporary directory
-      final tempDir = await getTemporaryDirectory();
-      final file = await File('${tempDir.path}/qr_code.png').create();
-      await file.writeAsBytes(pngBytes);
-
-      if (mounted) {
-        // Share the image
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          subject: AppLocalizations.of(context)!.myBitcoinAddressQrCode,
-        );
-        logger.i("Shared QR code image");
-      }
-    } catch (e) {
-      logger.e("Error sharing QR code image: $e");
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                '${AppLocalizations.of(context)!.errorSharingQrCode} ${e.toString()}')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
-
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDarkTheme = themeProvider.currentThemeType == ThemeType.dark;
     return Scaffold(
       backgroundColor: theme.primaryBlack,
       appBar: AppBar(
+        centerTitle: true,
         title: Text(
           AppLocalizations.of(context)!.receiveLower,
-          style: TextStyle(color: theme.primaryWhite),
+          style: TextStyle(
+              color: theme.primaryWhite,
+              fontSize: 22,
+              fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -533,124 +475,123 @@ class ReceiveScreenState extends State<ReceiveScreen> {
                 ),
               ),
 
-            // QR Code
-            RepaintBoundary(
-              key: _qrKey,
-              child: Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: QrImageView(
-                  data: _getCurrentAddressData(),
-                  version: QrVersions.auto,
-                  size: 280.0,
+            Center(
+              child: RepaintBoundary(
+                key: _qrKey,
+                child: Column(
+                  children: [
+                    CustomPaint(
+                      foregroundPainter:
+                          isDarkTheme ? BorderPainter() : BorderPainterBlack(),
+                      child: Container(
+                        margin: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: PrettyQrView.data(
+                            data: _getCurrentAddressData(),
+                            decoration: const PrettyQrDecoration(
+                              shape: PrettyQrSmoothSymbol(roundFactor: 1),
+                              // TODO: Add logo here
+                              // Example: image: PrettyQrDecorationImage(
+                              //   image: AssetImage('assets/images/ark_logo.png'),
+                              // ),
+                            ),
+                            errorCorrectLevel: QrErrorCorrectLevel.H,
+                          ),
+                        ),
+                      ),
+                    ),
+                    GlassContainer(
+                      opacity: 0.2,
+                      borderRadius: BorderRadius.circular(24),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 0,
+                        vertical: 0,
+                      ),
+                      child: InkWell(
+                        onTap: _handleShare,
+                        borderRadius: BorderRadius.circular(24),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.share_rounded,
+                                color: theme.primaryWhite,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                AppLocalizations.of(context)!.share,
+                                style: TextStyle(
+                                  color: theme.primaryWhite,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
 
             const SizedBox(height: 24),
 
-            // Share buttons (centered)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Share text button
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.35,
-                  child: ElevatedButton(
-                    onPressed: _handleShare,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber[500],
-                      foregroundColor: theme.mutedText,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context)!.share,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Share QR code image button
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.35,
-                  child: OutlinedButton.icon(
-                    onPressed: _shareQrCodeImage,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: theme.primaryWhite,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      side: BorderSide(color: theme.tertiaryBlack),
-                    ),
-                    icon: const Icon(Icons.qr_code, size: 20),
-                    label: Text(
-                      AppLocalizations.of(context)!.qr,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Three tiles with borders
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: theme.tertiaryBlack),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
+            ArkListTile(
+              text: AppLocalizations.of(context)!.address,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Address tile
-                  _buildTile(
-                    label: AppLocalizations.of(context)!.address,
-                    value: _trimAddress(_getCurrentAddressData()),
-                    trailing: IconButton(
-                      icon: Icon(Icons.copy, color: theme.mutedText),
-                      onPressed: _copyCurrentAddress,
-                    ),
-                  ),
-                  Divider(height: 1, color: theme.tertiaryBlack),
+                  Icon(Icons.copy, color: theme.mutedText),
+                  Text(_trimAddress(_getCurrentAddressData())),
+                ],
+              ),
+              onTap: _copyCurrentAddress,
+            ),
 
-                  // Amount tile
-                  _buildTile(
-                    label: AppLocalizations.of(context)!.amount,
-                    value: _currentAmount != null
+            ArkListTile(
+              text: AppLocalizations.of(context)!.amount,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.edit, color: theme.mutedText),
+                  const SizedBox(width: 8),
+                  Text(
+                    _currentAmount != null
                         ? '$_currentAmount sats'
                         : 'Change Amount',
-                    trailing: IconButton(
-                      icon: Icon(Icons.edit, color: theme.mutedText),
-                      onPressed: _showAmountBottomSheet,
-                    ),
-                    onTap: _showAmountBottomSheet,
-                  ),
-                  Divider(height: 1, color: theme.tertiaryBlack),
-
-                  // Type tile
-                  _buildTile(
-                    label: AppLocalizations.of(context)!.type,
-                    value: _getAddressTypeLabel(),
-                    leading:
-                        Icon(_getAddressTypeIcon(), color: theme.mutedText),
-                    onTap: _cycleAddressType,
+                    style: TextStyle(color: theme.primaryWhite),
                   ),
                 ],
               ),
+              onTap: _showAmountBottomSheet,
+            ),
+
+            ArkListTile(
+              text: AppLocalizations.of(context)!.type,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(_getAddressTypeIcon(), color: theme.mutedText),
+                  Text(
+                    _getAddressTypeLabel(),
+                    style: TextStyle(color: theme.primaryWhite),
+                  ),
+                ],
+              ),
+              onTap: _cycleAddressType,
             ),
 
             if (_error != null)
@@ -674,52 +615,5 @@ class ReceiveScreenState extends State<ReceiveScreen> {
   String _trimAddress(String address) {
     if (address.length <= 20) return address;
     return '${address.substring(0, 10)}...${address.substring(address.length - 10)}';
-  }
-
-  Widget _buildTile({
-    required String label,
-    required String value,
-    Widget? leading,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
-    final theme = AppTheme.of(context);
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            if (leading != null) ...[
-              leading,
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: theme.mutedText,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      color: theme.primaryWhite,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (trailing != null) trailing,
-          ],
-        ),
-      ),
-    );
   }
 }

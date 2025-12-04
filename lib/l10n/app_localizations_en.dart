@@ -676,7 +676,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scrollDownToLoadMore => 'Scroll down to load more';
 
   @override
-  String get med => ', \"Med\", ';
+  String get med => 'Med';
 
   @override
   String get feeRate => 'Fee Rate';

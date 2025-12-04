@@ -26,7 +26,7 @@
 // Section: imports
 
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
-use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
+use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
 
 // Section: boilerplate
@@ -2629,11 +2629,11 @@ impl SseDecode for crate::models::mempool::ProjectedTransaction {
 impl SseDecode for crate::models::mempool::RecommendedFees {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_fastestFee = <u32>::sse_decode(deserializer);
-        let mut var_halfHourFee = <u32>::sse_decode(deserializer);
-        let mut var_hourFee = <u32>::sse_decode(deserializer);
-        let mut var_economyFee = <u32>::sse_decode(deserializer);
-        let mut var_minimumFee = <u32>::sse_decode(deserializer);
+        let mut var_fastestFee = <f64>::sse_decode(deserializer);
+        let mut var_halfHourFee = <f64>::sse_decode(deserializer);
+        let mut var_hourFee = <f64>::sse_decode(deserializer);
+        let mut var_economyFee = <f64>::sse_decode(deserializer);
+        let mut var_minimumFee = <f64>::sse_decode(deserializer);
         return crate::models::mempool::RecommendedFees {
             fastest_fee: var_fastestFee,
             half_hour_fee: var_halfHourFee,
@@ -4402,11 +4402,11 @@ impl SseEncode for crate::models::mempool::ProjectedTransaction {
 impl SseEncode for crate::models::mempool::RecommendedFees {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.fastest_fee, serializer);
-        <u32>::sse_encode(self.half_hour_fee, serializer);
-        <u32>::sse_encode(self.hour_fee, serializer);
-        <u32>::sse_encode(self.economy_fee, serializer);
-        <u32>::sse_encode(self.minimum_fee, serializer);
+        <f64>::sse_encode(self.fastest_fee, serializer);
+        <f64>::sse_encode(self.half_hour_fee, serializer);
+        <f64>::sse_encode(self.hour_fee, serializer);
+        <f64>::sse_encode(self.economy_fee, serializer);
+        <f64>::sse_encode(self.minimum_fee, serializer);
     }
 }
 
@@ -4533,7 +4533,7 @@ mod io {
     use flutter_rust_bridge::for_generated::byteorder::{
         NativeEndian, ReadBytesExt, WriteBytesExt,
     };
-    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
+    use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate
@@ -4557,7 +4557,7 @@ mod web {
     };
     use flutter_rust_bridge::for_generated::wasm_bindgen;
     use flutter_rust_bridge::for_generated::wasm_bindgen::prelude::*;
-    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
+    use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate

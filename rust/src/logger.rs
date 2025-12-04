@@ -7,14 +7,14 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::sync::Once;
 use tracing_log::LogTracer;
+use tracing_subscriber::EnvFilter;
+use tracing_subscriber::Layer;
 use tracing_subscriber::filter::Directive;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::fmt::time;
 use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::EnvFilter;
-use tracing_subscriber::Layer;
 
 const RUST_LOG_ENV: &str = "RUST_LOG";
 static INIT_LOGGER_ONCE: Once = Once::new();

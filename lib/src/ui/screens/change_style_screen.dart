@@ -1,6 +1,7 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/models/app_theme_model.dart';
 import 'package:ark_flutter/src/providers/theme_provider.dart';
+import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
@@ -41,6 +42,10 @@ class _ChangeStyleScreenState extends State<ChangeStyleScreen> {
         themeProvider.setCustomTheme(_selectedCustomColor);
         break;
     }
+    Navigator.of(context).pop();
+
+    final settingsController = context.read<SettingsController>();
+    settingsController.resetToMain();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -103,14 +108,27 @@ class _ChangeStyleScreenState extends State<ChangeStyleScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final settingsController = context.read<SettingsController>();
 
     return Scaffold(
-      backgroundColor: theme.primaryBlack,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
-        title: Text(AppLocalizations.of(context)!.changeYourStyle,
-            style: TextStyle(color: theme.primaryWhite)),
-        iconTheme: IconThemeData(color: theme.primaryWhite),
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
+          onPressed: () => settingsController.resetToMain(),
+        ),
+        title: Text(
+          AppLocalizations.of(context)!.changeYourStyle,
+          style: TextStyle(
+            color: theme.primaryWhite,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

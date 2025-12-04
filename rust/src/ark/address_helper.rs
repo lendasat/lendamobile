@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use ark_core::ArkAddress;
 use bitcoin::address::NetworkUnchecked;
 use bitcoin::{Address, Amount};

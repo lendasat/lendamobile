@@ -1,5 +1,5 @@
 use crate::models::historical_prices::{HistoricalPriceResponse, TimeRange};
-use anyhow::{bail, Context as AnyhowContext, Result};
+use anyhow::{Context as AnyhowContext, Result, bail};
 
 /// Fetch historical Bitcoin prices for a given time range.
 pub async fn fetch_historical_prices(

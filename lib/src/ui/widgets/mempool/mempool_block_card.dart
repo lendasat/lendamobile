@@ -21,14 +21,11 @@ class MempoolBlockCard extends StatelessWidget {
     this.difficultyAdjustment,
   });
 
-  String _formatFees(BigInt satoshis) {
-    final btc = satoshis.toInt() / 100000000;
-    return '${btc.toStringAsFixed(4)} BTC';
-  }
+  List<Color> _getGradientColors() {
+    Color startColor = const Color.fromARGB(255, 62, 182, 68);
+    Color endColor = const Color.fromARGB(255, 218, 182, 66);
 
-  String _formatSize(double bytes) {
-    final mb = bytes / 1000000;
-    return '${mb.toStringAsFixed(2)} MB';
+    return [startColor, endColor];
   }
 
   @override
@@ -39,113 +36,96 @@ class MempoolBlockCard extends StatelessWidget {
       animation: flashController,
       builder: (context, child) {
         return Opacity(
-          opacity: 0.3 + (flashController.value * 0.7),
+          opacity: 0.8 + (flashController.value * 0.2),
           child: child,
         );
       },
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          width: 140,
-          margin: const EdgeInsets.only(right: 8.0),
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF2D2400) : theme.secondaryBlack,
-            borderRadius: BorderRadius.circular(12.0),
-            border: Border.all(
-              color: isSelected
-                  ? const Color(0xFFFFA500)
-                  : const Color(0xFF4D4D00),
-              width: isSelected ? 2 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFFA500).withValues(alpha: 0.3),
-                blurRadius: 8,
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          width: 180,
+          height: 180,
+          margin: const EdgeInsets.only(right: 16.0),
+          child: Stack(
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0,
-                      vertical: 2,
+              Positioned(
+                top: 0,
+                left: 0,
+                child: Container(
+                  width: 140,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24.0),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: _getGradientColors()
+                          .map((c) => c.withValues(alpha: c.a * 0.4))
+                          .toList(),
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFA500),
-                      borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 16,
+                left: 16,
+                child: Container(
+                  width: 160,
+                  height: 160,
+                  padding: const EdgeInsets.all(12.0),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24.0),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: _getGradientColors(),
                     ),
-                    child: Text(
-                      '#${index + 1}',
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                    border: Border.all(
+                      color: isSelected
+                          ? const Color(0xFF81C784)
+                          : const Color(0xFF4CAF50).withValues(alpha: 0.5),
+                      width: isSelected ? 2 : 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 4.0),
-                  const Icon(
-                    Icons.pending_outlined,
-                    color: Color(0xFFFFA500),
-                    size: 14,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Pending',
+                        style: TextStyle(
+                          color: theme.primaryWhite,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${block.medianFee.toStringAsFixed(1)} sat/vB',
+                        style: TextStyle(
+                          color: theme.primaryWhite,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'In ~${_estimateMinutes(index)} ${AppLocalizations.of(context)!.min}',
+                        style: TextStyle(
+                          color: theme.primaryWhite.withValues(alpha: 0.9),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 8.0),
-              Text(
-                '${block.nTx} tx',
-                style: TextStyle(
-                  color: theme.primaryWhite,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
                 ),
-              ),
-              const SizedBox(height: 4.0),
-              Text(
-                _formatFees(block.totalFees),
-                style: const TextStyle(
-                  color: Color(0xFFFFA500),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 4.0),
-              Text(
-                '${block.medianFee.toStringAsFixed(1)} sat/vB',
-                style: TextStyle(
-                  color: theme.mutedText,
-                  fontSize: 11,
-                ),
-              ),
-              const SizedBox(height: 4.0),
-              Text(
-                _formatSize(block.blockVsize),
-                style: TextStyle(color: theme.mutedText, fontSize: 10),
-              ),
-              const SizedBox(height: 8.0),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.access_time,
-                    color: Color(0xFFFFA500),
-                    size: 12,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '~${_estimateMinutes(index)} ${AppLocalizations.of(context)!.min}',
-                    style: const TextStyle(
-                      color: Color(0xFFFFA500),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),

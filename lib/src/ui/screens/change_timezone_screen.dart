@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,7 @@ class _ChangeTimezoneScreenState extends State<ChangeTimezoneScreen> {
     if (_selectedTimezone == null) return;
 
     final timezoneService = context.read<TimezoneService>();
+    final settingsController = context.read<SettingsController>();
     await timezoneService.setTimezone(_selectedTimezone!);
 
     if (mounted) {
@@ -36,13 +38,14 @@ class _ChangeTimezoneScreenState extends State<ChangeTimezoneScreen> {
           duration: const Duration(seconds: 2),
         ),
       );
-      Navigator.of(context).pop();
+      settingsController.resetToMain();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final settingsController = context.read<SettingsController>();
     final timezoneService = context.watch<TimezoneService>();
     final allTimezones = TimezoneService.allTimezones;
 
@@ -54,12 +57,24 @@ class _ChangeTimezoneScreenState extends State<ChangeTimezoneScreen> {
             .toList();
 
     return Scaffold(
-      backgroundColor: theme.primaryBlack,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
-        title: Text(AppLocalizations.of(context)!.changeTimezone,
-            style: TextStyle(color: theme.primaryWhite)),
-        iconTheme: IconThemeData(color: theme.primaryWhite),
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
+          onPressed: () => settingsController.resetToMain(),
+        ),
+        title: Text(
+          AppLocalizations.of(context)!.changeTimezone,
+          style: TextStyle(
+            color: theme.primaryWhite,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: Column(
         children: [

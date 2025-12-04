@@ -3,7 +3,7 @@ use crate::models::mempool::MempoolWsMessage;
 use anyhow::{Context, Result};
 use futures_util::{SinkExt, StreamExt};
 use serde_json;
-use tokio::time::{interval, Duration};
+use tokio::time::{Duration, interval};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
 const MEMPOOL_WS_URL: &str = "wss://mempool.space/api/v1/ws";

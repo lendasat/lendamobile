@@ -107,22 +107,13 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
       },
       margin: EdgeInsets.zero,
       series: <CartesianSeries<PriceData, DateTime>>[
-        SplineAreaSeries<PriceData, DateTime>(
+        SplineSeries<PriceData, DateTime>(
           dataSource: widget.data,
           xValueMapper: (PriceData price, _) =>
               DateTime.fromMillisecondsSinceEpoch(price.time),
           yValueMapper: (PriceData price, _) => price.price,
           color: theme.mutedText.withAlpha(widget.alpha),
-          borderColor: theme.mutedText.withAlpha(widget.alpha + 20),
-          borderWidth: 2,
-          gradient: LinearGradient(
-            colors: [
-              theme.mutedText.withAlpha(widget.alpha),
-              theme.mutedText.withAlpha(0),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+          width: 3,
           splineType: SplineType.natural,
         ),
       ],

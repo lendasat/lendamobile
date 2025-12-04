@@ -60,7 +60,8 @@ class TransactionFeeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFeeRow(String label, int feeRate, Color color, AppTheme theme) {
+  Widget _buildFeeRow(
+      String label, double feeRate, Color color, AppTheme theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

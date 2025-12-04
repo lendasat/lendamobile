@@ -2085,11 +2085,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 5)
       throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return RecommendedFees(
-      fastestFee: dco_decode_u_32(arr[0]),
-      halfHourFee: dco_decode_u_32(arr[1]),
-      hourFee: dco_decode_u_32(arr[2]),
-      economyFee: dco_decode_u_32(arr[3]),
-      minimumFee: dco_decode_u_32(arr[4]),
+      fastestFee: dco_decode_f_64(arr[0]),
+      halfHourFee: dco_decode_f_64(arr[1]),
+      hourFee: dco_decode_f_64(arr[2]),
+      economyFee: dco_decode_f_64(arr[3]),
+      minimumFee: dco_decode_f_64(arr[4]),
     );
   }
 
@@ -3098,11 +3098,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   RecommendedFees sse_decode_recommended_fees(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_fastestFee = sse_decode_u_32(deserializer);
-    var var_halfHourFee = sse_decode_u_32(deserializer);
-    var var_hourFee = sse_decode_u_32(deserializer);
-    var var_economyFee = sse_decode_u_32(deserializer);
-    var var_minimumFee = sse_decode_u_32(deserializer);
+    var var_fastestFee = sse_decode_f_64(deserializer);
+    var var_halfHourFee = sse_decode_f_64(deserializer);
+    var var_hourFee = sse_decode_f_64(deserializer);
+    var var_economyFee = sse_decode_f_64(deserializer);
+    var var_minimumFee = sse_decode_f_64(deserializer);
     return RecommendedFees(
         fastestFee: var_fastestFee,
         halfHourFee: var_halfHourFee,
@@ -3982,11 +3982,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_recommended_fees(
       RecommendedFees self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_32(self.fastestFee, serializer);
-    sse_encode_u_32(self.halfHourFee, serializer);
-    sse_encode_u_32(self.hourFee, serializer);
-    sse_encode_u_32(self.economyFee, serializer);
-    sse_encode_u_32(self.minimumFee, serializer);
+    sse_encode_f_64(self.fastestFee, serializer);
+    sse_encode_f_64(self.halfHourFee, serializer);
+    sse_encode_f_64(self.hourFee, serializer);
+    sse_encode_f_64(self.economyFee, serializer);
+    sse_encode_f_64(self.minimumFee, serializer);
   }
 
   @protected

@@ -199,7 +199,7 @@ class _UnacceptedBlockTransactionsScreenState
                     margin: const EdgeInsets.all(16.0),
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2D2400),
+                      color: theme.secondaryBlack,
                       borderRadius: BorderRadius.circular(12.0),
                       border: Border.all(
                         color: const Color(0xFFFFA500),
@@ -533,7 +533,7 @@ class _UnacceptedBlockTransactionsScreenState
         margin: const EdgeInsets.only(bottom: 8.0),
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: hasFlag ? const Color(0xFF2D2400) : theme.secondaryBlack,
+          color: theme.secondaryBlack,
           borderRadius: BorderRadius.circular(12.0),
           border: Border.all(
             color: hasFlag

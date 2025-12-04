@@ -4,6 +4,11 @@ import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/rust/api.dart' as rust_api;
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
+import 'package:ark_flutter/src/services/transaction_filter_service.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
+import 'package:ark_flutter/src/ui/screens/transaction_filter_screen.dart';
+import 'package:provider/provider.dart';
 import '../../widgets/mempool/mining_info_card.dart';
 import '../../widgets/mempool/block_size_widget.dart';
 import '../../widgets/mempool/block_health_widget.dart';
@@ -28,7 +33,10 @@ class BlockTransactionsScreen extends StatefulWidget {
 
 class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _searchFocusNode = FocusNode();
   final List<BitcoinTransaction> _transactions = [];
+  final List<BitcoinTransaction> _allTransactions = [];
+  String _searchQuery = '';
   int _currentPage = 0;
   bool _isLoading = false;
   bool _isLoadingMore = false;
@@ -55,6 +63,12 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
     _scrollController.addListener(_onScroll);
     _loadUserTransactions();
     _loadTransactions();
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        _searchFocusNode.requestFocus();
+      }
+    });
   }
 
   Future<void> _loadUserTransactions() async {
@@ -80,6 +94,7 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -106,8 +121,9 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
 
       if (mounted) {
         setState(() {
-          _transactions.clear();
-          _transactions.addAll(transactions);
+          _allTransactions.clear();
+          _allTransactions.addAll(transactions);
+          _applyFilters();
           _currentPage = 0;
           _hasMore = transactions.length >= 25;
           _isLoading = false;
@@ -140,7 +156,8 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
 
       if (mounted) {
         setState(() {
-          _transactions.addAll(transactions);
+          _allTransactions.addAll(transactions);
+          _applyFilters();
           _currentPage = nextPage;
           _hasMore = transactions.length >= 25;
           _isLoadingMore = false;
@@ -153,6 +170,44 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
         });
       }
       debugPrint('Error loading more transactions: $e');
+    }
+  }
+
+  void _applyFilters() {
+    final filterService = context.read<TransactionFilterService>();
+
+    _transactions.clear();
+    _transactions.addAll(
+      _allTransactions.where((tx) {
+        bool matchesSearch = _searchQuery.isEmpty ||
+            tx.txid.toLowerCase().contains(_searchQuery.toLowerCase());
+
+        bool matchesDate = filterService.isInDateRange(tx.locktime.toInt());
+
+        return matchesSearch && matchesDate;
+      }),
+    );
+  }
+
+  void _handleSearch(String query) {
+    setState(() {
+      _searchQuery = query;
+      _applyFilters();
+    });
+  }
+
+  void _openFilterDialog() async {
+    await arkBottomSheet(
+      context: context,
+      height: MediaQuery.of(context).size.height * 0.4,
+      backgroundColor: AppTheme.of(context, listen: false).primaryBlack,
+      child: const TransactionFilterScreen(showFilterPills: false),
+    );
+
+    if (mounted) {
+      setState(() {
+        _applyFilters();
+      });
     }
   }
 
@@ -265,13 +320,35 @@ class _BlockTransactionsScreenState extends State<BlockTransactionsScreen> {
                                 timestamp: widget.block.timestamp,
                               ),
                               const SizedBox(height: 24.0),
-                              Text(
-                                AppLocalizations.of(context)!.transactions,
-                                style: TextStyle(
-                                  color: theme.primaryWhite,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    AppLocalizations.of(context)!.transactions,
+                                    style: TextStyle(
+                                      color: theme.primaryWhite,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.filter_list,
+                                      color: theme.primaryWhite,
+                                    ),
+                                    onPressed: _openFilterDialog,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16.0),
+                              SearchFieldWidget(
+                                hintText:
+                                    '${widget.block.txCount} ${AppLocalizations.of(context)!.transactions}',
+                                isSearchEnabled: true,
+                                node: _searchFocusNode,
+                                onChanged: _handleSearch,
+                                handleSearch: _handleSearch,
                               ),
                               const SizedBox(height: 16.0),
                             ],

@@ -5,7 +5,9 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/language_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
+import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
+import 'package:ark_flutter/src/services/transaction_filter_service.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
@@ -124,6 +126,12 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => CurrencyPreferenceService()..loadSavedCurrency(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => TransactionFilterService(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SettingsController(),
         ),
       ],
       child: Consumer2<ThemeProvider, LanguageService>(

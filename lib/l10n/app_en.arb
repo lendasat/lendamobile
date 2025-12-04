@@ -277,7 +277,7 @@
   "noTransactionsYet": "No transactions yet",
   "loadingMoreTransactions": "Loading more transactions...",
   "scrollDownToLoadMore": "Scroll down to load more",
-  "med": ", \"Med\", ",
+  "med": "Med",
   "feeRate": "Fee Rate",
   "size": "Size",
   "value": "Value",

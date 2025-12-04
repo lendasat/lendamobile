@@ -509,11 +509,11 @@ class ProjectedTransaction {
 
 /// Recommended fee rates for different confirmation targets
 class RecommendedFees {
-  final int fastestFee;
-  final int halfHourFee;
-  final int hourFee;
-  final int economyFee;
-  final int minimumFee;
+  final double fastestFee;
+  final double halfHourFee;
+  final double hourFee;
+  final double economyFee;
+  final double minimumFee;
 
   const RecommendedFees({
     required this.fastestFee,

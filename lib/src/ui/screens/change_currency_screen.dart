@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +28,7 @@ class _ChangeCurrencyScreenState extends State<ChangeCurrencyScreen> {
     if (_selectedCurrency == null) return;
 
     final currencyService = context.read<CurrencyPreferenceService>();
+    final settingsController = context.read<SettingsController>();
     await currencyService.setCurrency(_selectedCurrency!);
 
     if (mounted) {
@@ -37,7 +39,7 @@ class _ChangeCurrencyScreenState extends State<ChangeCurrencyScreen> {
           duration: const Duration(seconds: 2),
         ),
       );
-      Navigator.of(context).pop();
+      settingsController.resetToMain();
     }
   }
 
@@ -102,15 +104,28 @@ class _ChangeCurrencyScreenState extends State<ChangeCurrencyScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final settingsController = context.read<SettingsController>();
     final currencies = rust.getSupportedCurrencies();
 
     return Scaffold(
-      backgroundColor: theme.primaryBlack,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
-        title: Text(AppLocalizations.of(context)!.changeCurrency,
-            style: TextStyle(color: theme.primaryWhite)),
-        iconTheme: IconThemeData(color: theme.primaryWhite),
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
+          onPressed: () => settingsController.resetToMain(),
+        ),
+        title: Text(
+          AppLocalizations.of(context)!.changeCurrency,
+          style: TextStyle(
+            color: theme.primaryWhite,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: Column(
         children: [

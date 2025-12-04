@@ -1,5 +1,5 @@
 use crate::models::mempool::{BitcoinTransaction, Block, HashrateData, RecommendedFees};
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 /// Get the latest 15 Bitcoin blocks
 pub async fn get_blocks() -> Result<Vec<Block>> {

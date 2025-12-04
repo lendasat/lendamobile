@@ -61,13 +61,29 @@ class BlockHealthWidget extends StatelessWidget {
     final healthColor = _getHealthColor(healthScore);
     final healthLabel = _getHealthLabel(healthScore, context);
     final healthIcon = _getHealthIcon(healthScore);
+    final isLight = Theme.of(context).brightness == Brightness.light;
 
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: theme.secondaryBlack,
+        color: isLight
+            ? Colors.white.withValues(alpha: 0.5)
+            : theme.secondaryBlack,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: isLight
+              ? Colors.black.withValues(alpha: 0.1)
+              : theme.primaryWhite.withValues(alpha: 0.1),
+        ),
+        boxShadow: isLight
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  offset: const Offset(0, 2),
+                  blurRadius: 8,
+                ),
+              ]
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,8 +93,16 @@ class BlockHealthWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
-                  color: theme.primaryBlack,
+                  color: isLight
+                      ? Colors.black.withValues(alpha: 0.04)
+                      : theme.primaryBlack,
                   borderRadius: BorderRadius.circular(8.0),
+                  border: isLight
+                      ? Border.all(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          width: 1,
+                        )
+                      : null,
                 ),
                 child: Icon(
                   Icons.favorite,
@@ -139,7 +163,9 @@ class BlockHealthWidget extends StatelessWidget {
                       child: CircularProgressIndicator(
                         value: healthScore / 100,
                         strokeWidth: 6,
-                        backgroundColor: theme.primaryBlack,
+                        backgroundColor: isLight
+                            ? Colors.black.withValues(alpha: 0.08)
+                            : theme.primaryBlack,
                         valueColor: AlwaysStoppedAnimation<Color>(healthColor),
                       ),
                     ),
@@ -160,8 +186,16 @@ class BlockHealthWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
-              color: theme.primaryBlack,
+              color: isLight
+                  ? Colors.black.withValues(alpha: 0.04)
+                  : theme.primaryBlack,
               borderRadius: BorderRadius.circular(8.0),
+              border: isLight
+                  ? Border.all(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      width: 1,
+                    )
+                  : null,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,

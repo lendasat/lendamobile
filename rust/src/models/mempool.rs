@@ -96,15 +96,15 @@ pub struct TxOutput {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecommendedFees {
     #[serde(rename = "fastestFee")]
-    pub fastest_fee: u32,
+    pub fastest_fee: f64,
     #[serde(rename = "halfHourFee")]
-    pub half_hour_fee: u32,
+    pub half_hour_fee: f64,
     #[serde(rename = "hourFee")]
-    pub hour_fee: u32,
+    pub hour_fee: f64,
     #[serde(rename = "economyFee")]
-    pub economy_fee: u32,
+    pub economy_fee: f64,
     #[serde(rename = "minimumFee")]
-    pub minimum_fee: u32,
+    pub minimum_fee: f64,
 }
 
 /// Difficulty adjustment information

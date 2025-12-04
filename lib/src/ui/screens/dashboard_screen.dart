@@ -1,11 +1,13 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_history_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
-import 'package:ark_flutter/src/ui/screens/settings_screen.dart';
+import 'package:ark_flutter/src/ui/screens/settings/settings.dart';
 import 'package:ark_flutter/src/ui/screens/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/receive_screen.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/screens/bitcoin_chart/bitcoin_chart_detail_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
@@ -331,262 +333,197 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  String _formatBitcoinAmount(double amount) {
+    String formatted = amount.toStringAsFixed(8);
+    formatted = formatted.replaceAll(RegExp(r'0+$'), '');
+
+    int decimalIndex = formatted.indexOf('.');
+    if (decimalIndex == -1) {
+      formatted = '$formatted.00';
+    } else {
+      int decimalPlaces = formatted.length - decimalIndex - 1;
+      if (decimalPlaces < 2) {
+        formatted = formatted.padRight(decimalIndex + 3, '0');
+      }
+    }
+
+    return formatted;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
 
     return Scaffold(
       backgroundColor: theme.primaryBlack,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'WTFark',
-          style: TextStyle(
-            color: theme.primaryWhite,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          _buildTimeRangeSelector(),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: Icon(
-              Icons.view_module_outlined,
-              color: theme.primaryWhite,
-            ),
-            onPressed: _handleMempool,
-            tooltip: 'Mempool',
-          ),
-          IconButton(
-            icon: Icon(
-              _balancesVisible ? Icons.visibility_off : Icons.visibility,
-              color: theme.primaryWhite,
-            ),
-            onPressed: _toggleBalanceVisibility,
-            tooltip: _balancesVisible ? 'Hide balances' : 'Show balances',
-          ),
-          IconButton(
-            icon: Icon(Icons.refresh, color: theme.primaryWhite),
-            onPressed: _fetchWalletData,
-          ),
-          IconButton(
-            icon: Icon(Icons.settings, color: theme.primaryWhite),
-            onPressed: () {
-              // Navigate to settings
-              logger.i("Settings button pressed");
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => SettingsScreen(aspId: widget.aspId)),
-              );
-            },
-          ),
-        ],
-      ),
       body: RefreshIndicator(
         onRefresh: _fetchWalletData,
-        child: SingleChildScrollView(
+        child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildBalanceCard(),
-
-              const SizedBox(height: 24),
-
-              // Action Buttons
-              _buildActionButtons(),
-
-              const SizedBox(height: 24),
-
-              // Recent Transactions
-              _buildRecentTransactions(),
-            ],
-          ),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Stack(
+                children: [
+                  _buildDynamicGradient(),
+                  Opacity(
+                    opacity: 0.1,
+                    child: _buildChartWidget(),
+                  ),
+                  SafeArea(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 16),
+                        _buildTopBar(),
+                        const SizedBox(height: 40),
+                        _buildBalanceDisplay(),
+                        const SizedBox(height: 24),
+                        _buildPriceChangeIndicators(),
+                        const SizedBox(height: 32),
+                        _buildActionButtons(),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
+                child: _buildRecentTransactions(),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildBalanceCard() {
-    final theme = AppTheme.of(context);
-    final currencyService = context.watch<CurrencyPreferenceService>();
+  static const Color _successColor = Color(0xFF5DE165);
+  static const Color _successColorGradient = Color(0xFF148C1A);
+  static const Color _errorColor = Color(0xFFFF6363);
+  static const Color _errorColorGradient = Color(0xFFC54545);
 
-    return GestureDetector(
-      onTap: _handleViewChart,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: double.infinity,
-        height: 200,
-        decoration: BoxDecoration(
-            color: theme.primaryGray, borderRadius: BorderRadius.circular(16)),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
+  bool _isPriceChangePositive() {
+    if (_bitcoinPriceData.isEmpty) return true;
+
+    final firstPrice = _bitcoinPriceData.first.price;
+    final lastPrice = _bitcoinPriceData.last.price;
+    final diff = lastPrice - firstPrice;
+
+    return diff >= 0 || diff.abs() < 0.001;
+  }
+
+  Widget _buildDynamicGradient() {
+    final isPositive = _isPriceChangePositive();
+
+    return Container(
+      height: 320,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          stops: const [0.0, 0.75, 1.0],
+          colors: [
+            isPositive
+                ? _successColor.withValues(alpha: 0.3)
+                : _errorColor.withValues(alpha: 0.3),
+            isPositive
+                ? _successColorGradient.withValues(alpha: 0.15)
+                : _errorColorGradient.withValues(alpha: 0.15),
+            Colors.transparent,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChartWidget() {
+    if (_bitcoinPriceData.isEmpty || _isBalanceLoading) {
+      return const SizedBox(height: 320);
+    }
+
+    return SizedBox(
+      height: 320,
+      child: BitcoinPriceChart(
+        data: _bitcoinPriceData,
+        alpha: 255,
+        trackballActivationMode: null,
+      ),
+    );
+  }
+
+  Widget _buildTopBar() {
+    final theme = AppTheme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Profile picture icon (decorative)
+          GestureDetector(
+            onTap: () {},
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: theme.tertiaryBlack.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(40 / 3),
+              ),
+              child: Icon(
+                Icons.person,
+                color: theme.primaryWhite,
+                size: 24,
+              ),
+            ),
+          ),
+
+          Row(
             children: [
-              if (_bitcoinPriceData.isNotEmpty && !_isBalanceLoading)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: BitcoinPriceChart(
-                      data: _bitcoinPriceData,
-                      alpha: 30,
-                      trackballActivationMode: null,
-                    ),
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _getBalanceTypeText(),
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
-                          ),
-                        ),
-                        if (_isBalanceLoading)
-                          const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          ),
-                      ],
-                    ),
-                    if (_balanceError != null)
-                      const Text(
-                        'Error loading balance',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    else if (_isBalanceLoading)
-                      _buildBalanceSkeleton()
-                    else
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: _showBtcAsMain
-                                ? [
-                                    // BTC as main, USD as secondary
-                                    Expanded(
-                                      child: GestureDetector(
-                                        onTap: _toggleBalanceType,
-                                        behavior: HitTestBehavior.opaque,
-                                        child: Text(
-                                          _balancesVisible
-                                              ? '₿ ${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}'
-                                              : '₿ ********',
-                                          style: TextStyle(
-                                            color: theme.primaryWhite,
-                                            fontSize: 32,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    if (_balancesVisible)
-                                      GestureDetector(
-                                        onTap: _toggleDisplayUnit,
-                                        behavior: HitTestBehavior.opaque,
-                                        child: Text(
-                                          '≈ ${currencyService.formatAmount(_getSelectedBalance() * _btcToUsdRate)}',
-                                          style: TextStyle(
-                                            color: theme.secondaryWhite,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                  ]
-                                : [
-                                    // USD as main, BTC as secondary
-                                    Expanded(
-                                      child: GestureDetector(
-                                        onTap: _toggleBalanceType,
-                                        behavior: HitTestBehavior.opaque,
-                                        child: Text(
-                                          _balancesVisible
-                                              ? currencyService.formatAmount(
-                                                  _getSelectedBalance() *
-                                                      _btcToUsdRate)
-                                              : '${currencyService.symbol}****.**',
-                                          style: TextStyle(
-                                            color: theme.primaryWhite,
-                                            fontSize: 32,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    if (_balancesVisible)
-                                      GestureDetector(
-                                        onTap: _toggleDisplayUnit,
-                                        behavior: HitTestBehavior.opaque,
-                                        child: Text(
-                                          '≈ ₿${_getSelectedBalance().toStringAsFixed(_getSelectedBalance() < 0.001 ? 8 : 5)}',
-                                          style: TextStyle(
-                                            color: theme.secondaryWhite,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                          ),
-                        ],
-                      ),
-                    const SizedBox(height: 1)
-                  ],
-                ),
+              _buildTimeRangeCycleButton(),
+              const SizedBox(width: 8),
+              _buildGlassIconButton(
+                icon: Icons.view_module_outlined,
+                onPressed: _handleMempool,
+              ),
+              const SizedBox(width: 8),
+              _buildGlassIconButton(
+                icon:
+                    _balancesVisible ? Icons.visibility_off : Icons.visibility,
+                onPressed: _toggleBalanceVisibility,
+              ),
+              const SizedBox(width: 8),
+              _buildGlassIconButton(
+                icon: Icons.refresh,
+                onPressed: _fetchWalletData,
+              ),
+              const SizedBox(width: 8),
+              _buildGlassIconButton(
+                icon: Icons.settings,
+                onPressed: () {
+                  final settingsController = context.read<SettingsController>();
+                  settingsController.resetToMain();
+
+                  arkBottomSheet(
+                    context: context,
+                    height: MediaQuery.of(context).size.height * 0.85,
+                    backgroundColor: theme.primaryBlack,
+                    child: Settings(aspId: widget.aspId),
+                  );
+                },
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildBalanceSkeleton() {
+  Widget _buildTimeRangeCycleButton() {
     final theme = AppTheme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          height: 32,
-          width: 150,
-          decoration: BoxDecoration(
-            color: theme.mutedText.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          height: 16,
-          width: 100,
-          decoration: BoxDecoration(
-            color: theme.mutedText.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-      ],
-    );
-  }
+    final isLight = Theme.of(context).brightness == Brightness.light;
 
-  Widget _buildTimeRangeSelector() {
     String getTimeRangeLabel(TimeRange range) {
       switch (range) {
         case TimeRange.day:
@@ -602,157 +539,229 @@ class DashboardScreenState extends State<DashboardScreen> {
       }
     }
 
-    return PopupMenuButton<TimeRange>(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      color: Colors.grey[850]!.withOpacity(0.95),
-      elevation: 8,
-      offset: const Offset(0, 45),
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: TimeRange.day,
-          child: Container(
-            decoration: BoxDecoration(
-              color: _selectedTimeRange == TimeRange.day
-                  ? Colors.amber[500]!.withOpacity(0.2)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Text(
-              '1D',
-              style: TextStyle(
-                color: _selectedTimeRange == TimeRange.day
-                    ? Colors.amber[500]
-                    : Colors.white,
-                fontWeight: _selectedTimeRange == TimeRange.day
-                    ? FontWeight.w600
-                    : FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        PopupMenuItem(
-          value: TimeRange.week,
-          child: Container(
-            decoration: BoxDecoration(
-              color: _selectedTimeRange == TimeRange.week
-                  ? Colors.amber[500]!.withOpacity(0.2)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Text(
-              '1W',
-              style: TextStyle(
-                color: _selectedTimeRange == TimeRange.week
-                    ? Colors.amber[500]
-                    : Colors.white,
-                fontWeight: _selectedTimeRange == TimeRange.week
-                    ? FontWeight.w600
-                    : FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        PopupMenuItem(
-          value: TimeRange.month,
-          child: Container(
-            decoration: BoxDecoration(
-              color: _selectedTimeRange == TimeRange.month
-                  ? Colors.amber[500]!.withOpacity(0.2)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Text(
-              '1M',
-              style: TextStyle(
-                color: _selectedTimeRange == TimeRange.month
-                    ? Colors.amber[500]
-                    : Colors.white,
-                fontWeight: _selectedTimeRange == TimeRange.month
-                    ? FontWeight.w600
-                    : FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        PopupMenuItem(
-          value: TimeRange.year,
-          child: Container(
-            decoration: BoxDecoration(
-              color: _selectedTimeRange == TimeRange.year
-                  ? Colors.amber[500]!.withOpacity(0.2)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Text(
-              '1Y',
-              style: TextStyle(
-                color: _selectedTimeRange == TimeRange.year
-                    ? Colors.amber[500]
-                    : Colors.white,
-                fontWeight: _selectedTimeRange == TimeRange.year
-                    ? FontWeight.w600
-                    : FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        PopupMenuItem(
-          value: TimeRange.max,
-          child: Container(
-            decoration: BoxDecoration(
-              color: _selectedTimeRange == TimeRange.max
-                  ? Colors.amber[500]!.withOpacity(0.2)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Text(
-              'Max',
-              style: TextStyle(
-                color: _selectedTimeRange == TimeRange.max
-                    ? Colors.amber[500]
-                    : Colors.white,
-                fontWeight: _selectedTimeRange == TimeRange.max
-                    ? FontWeight.w600
-                    : FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-      ],
-      onSelected: (TimeRange range) {
-        _changeTimeRange(range);
-      },
+    return GestureDetector(
+      onTap: _cycleTimeRange,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.grey[800]!.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(12),
-          border:
-              Border.all(color: Colors.grey[700]!.withOpacity(0.5), width: 1),
+          color: isLight
+              ? Colors.black.withValues(alpha: 0.04)
+              : Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(40 / 3),
+          border: isLight
+              ? Border.all(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  width: 1,
+                )
+              : null,
+          boxShadow: isLight
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    offset: const Offset(0, 2),
+                    blurRadius: 8,
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              getTimeRangeLabel(_selectedTimeRange),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                getTimeRangeLabel(_selectedTimeRange),
+                style: TextStyle(
+                  color: theme.primaryWhite,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _cycleTimeRange() {
+    setState(() {
+      switch (_selectedTimeRange) {
+        case TimeRange.day:
+          _selectedTimeRange = TimeRange.week;
+          break;
+        case TimeRange.week:
+          _selectedTimeRange = TimeRange.month;
+          break;
+        case TimeRange.month:
+          _selectedTimeRange = TimeRange.year;
+          break;
+        case TimeRange.year:
+          _selectedTimeRange = TimeRange.max;
+          break;
+        case TimeRange.max:
+          _selectedTimeRange = TimeRange.day;
+          break;
+      }
+    });
+    _loadBitcoinPriceData();
+  }
+
+  Widget _buildGlassIconButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    final theme = AppTheme.of(context);
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: isLight
+              ? Colors.black.withValues(alpha: 0.04)
+              : Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(40 / 3),
+          border: isLight
+              ? Border.all(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  width: 1,
+                )
+              : null,
+          boxShadow: isLight
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    offset: const Offset(0, 2),
+                    blurRadius: 8,
+                  ),
+                ]
+              : null,
+        ),
+        child: Icon(
+          icon,
+          color: theme.primaryWhite,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBalanceDisplay() {
+    final theme = AppTheme.of(context);
+    final currencyService = context.watch<CurrencyPreferenceService>();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (_isBalanceLoading)
+            const SizedBox(
+              height: 16,
+              width: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+          else if (_balanceError != null)
+            const Text(
+              'Error loading balance',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          else
+            GestureDetector(
+              onTap: _toggleDisplayUnit,
+              behavior: HitTestBehavior.opaque,
+              child: _showBtcAsMain
+                  ? Text(
+                      _balancesVisible
+                          ? '₿ ${_formatBitcoinAmount(_getSelectedBalance())}'
+                          : '₿ ********',
+                      style: TextStyle(
+                        color: theme.primaryWhite,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : Text(
+                      _balancesVisible
+                          ? currencyService.formatAmount(
+                              _getSelectedBalance() * _btcToUsdRate)
+                          : '${currencyService.symbol}****.**',
+                      style: TextStyle(
+                        color: theme.primaryWhite,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceChangeIndicators() {
+    if (_bitcoinPriceData.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final currencyService = context.watch<CurrencyPreferenceService>();
+
+    final firstPrice = _bitcoinPriceData.first.price;
+    final lastPrice = _bitcoinPriceData.last.price;
+    final diff = lastPrice - firstPrice;
+    final percentChange = firstPrice != 0 ? (diff / firstPrice) * 100 : 0.0;
+    final isPositive = diff >= 0;
+
+    final balanceChange = _getSelectedBalance() * (diff / firstPrice);
+    final balanceChangeInFiat = balanceChange * _btcToUsdRate;
+
+    return GestureDetector(
+      onTap: _toggleDisplayUnit,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isPositive ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+              color: isPositive ? _successColor : _errorColor,
+              size: 16,
+            ),
             const SizedBox(width: 4),
-            const Icon(
-              Icons.arrow_drop_down,
-              color: Colors.white,
-              size: 20,
+            Text(
+              _showBtcAsMain
+                  ? '${_formatBitcoinAmount(balanceChange.abs())} ₿'
+                  : currencyService.formatAmount(balanceChangeInFiat.abs()),
+              style: TextStyle(
+                color: isPositive ? _successColor : _errorColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              decoration: BoxDecoration(
+                  color: isPositive ? _successColor : _errorColor,
+                  borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  '${isPositive ? '+' : ''}${percentChange.toStringAsFixed(2)}%',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -761,110 +770,110 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildActionButtons() {
-    final theme = AppTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Send button
+          _buildActionButton(
+            label: AppLocalizations.of(context)!.send,
+            icon: Icons.arrow_upward_rounded,
+            onTap: _handleSend,
+          ),
+          const SizedBox(width: 12),
 
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _handleSend,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.tertiaryBlack,
-                  foregroundColor: theme.primaryWhite,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                icon: const Icon(Icons.arrow_upward),
-                label: Text(
-                  AppLocalizations.of(context)!.send,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+          // Receive button
+          _buildActionButton(
+            label: AppLocalizations.of(context)!.receive,
+            icon: Icons.arrow_downward_rounded,
+            onTap: _handleReceive,
+          ),
+          const SizedBox(width: 12),
+
+          // Sell button
+          _buildActionButton(
+            label: 'Sell',
+            icon: Icons.sell_outlined,
+            onTap: _handleSell,
+          ),
+          const SizedBox(width: 12),
+
+          // Buy button
+          _buildActionButton(
+            label: 'Buy',
+            icon: Icons.shopping_cart_outlined,
+            onTap: _handleBuy,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    final theme = AppTheme.of(context);
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    const double buttonSize = 60.0;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: buttonSize,
+            height: buttonSize,
+            decoration: BoxDecoration(
+              color: isLight
+                  ? Colors.black.withValues(alpha: 0.04)
+                  : Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(buttonSize / 3),
+              border: isLight
+                  ? Border.all(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      width: 1,
+                    )
+                  : null,
+              boxShadow: isLight
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        offset: const Offset(0, 2),
+                        blurRadius: 8,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Center(
+              child: Icon(
+                icon,
+                color: theme.primaryWhite,
+                size: 28,
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _handleReceive,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber[500],
-                  foregroundColor: theme.primaryBlack,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                icon: const Icon(Icons.arrow_downward),
-                label: Text(
-                  AppLocalizations.of(context)!.receive,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: buttonSize * 1.2,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: theme.primaryWhite,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _handleBuy,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.tertiaryBlack,
-                  foregroundColor: theme.primaryWhite,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                icon: const Icon(Icons.shopping_cart_outlined),
-                label: const Text(
-                  'BUY',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _handleSell,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber[500],
-                  foregroundColor: theme.primaryBlack,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                icon: const Icon(Icons.sell_outlined),
-                label: const Text(
-                  'SELL',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -873,6 +882,7 @@ class DashboardScreenState extends State<DashboardScreen> {
         aspId: widget.aspId,
         transactions: _transactions,
         loading: _isTransactionFetching,
-        hideAmounts: !_balancesVisible);
+        hideAmounts: !_balancesVisible,
+        showBtcAsMain: _showBtcAsMain);
   }
 }

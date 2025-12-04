@@ -94,22 +94,14 @@ class _BlocksListViewState extends State<BlocksListView>
               ),
             if (widget.mempoolBlocks.isNotEmpty)
               Container(
-                width: 2,
-                height: 140,
+                width: 3,
+                height: 160,
                 margin: const EdgeInsets.symmetric(
                   horizontal: 16.0,
                 ),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8.0),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFFFFA500).withValues(alpha: 0.1),
-                      const Color(0xFFFFA500).withValues(alpha: 0.5),
-                      const Color(0xFFFFA500).withValues(alpha: 0.1),
-                    ],
-                  ),
+                  borderRadius: BorderRadius.circular(2.0),
+                  color: Colors.grey.withValues(alpha: 0.3),
                 ),
               ),
             SizedBox(
@@ -164,108 +156,112 @@ class BlockCard extends StatelessWidget {
     }
   }
 
+  List<Color> _getGradientColors() {
+    Color startColor = const Color.fromARGB(255, 30, 32, 204);
+    Color endColor = const Color(0xFF9C27B0);
+
+    return [startColor, endColor];
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
 
     return Container(
-      width: 140,
+      width: 180,
+      height: 180,
       margin: const EdgeInsets.only(right: 16.0),
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: isSelected ? theme.tertiaryBlack : theme.secondaryBlack,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: isSelected
-              ? theme.primaryWhite
-              : theme.primaryWhite.withValues(alpha: 0.1),
-          width: isSelected ? 2 : 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Stack(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: theme.primaryBlack,
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: Text(
-                  '#${block.height}',
-                  style: TextStyle(
-                    color: theme.primaryWhite,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Positioned(
+            top: 0,
+            left: 0,
+            child: Container(
+              width: 140,
+              height: 160,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24.0),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: _getGradientColors()
+                      .map((c) => c.withValues(alpha: c.a * 0.4))
+                      .toList(),
                 ),
               ),
-            ],
+            ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.receipt_long,
-                    color: theme.mutedText,
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${block.txCount} txs',
-                    style: TextStyle(
-                      color: theme.mutedText,
-                      fontSize: 12,
-                    ),
+          Positioned(
+            top: 16,
+            left: 16,
+            child: Container(
+              width: 160,
+              height: 160,
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24.0),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: _getGradientColors(),
+                ),
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFFBA68C8)
+                      : const Color(0xFF9C27B0).withValues(alpha: 0.5),
+                  width: isSelected ? 2 : 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF9C27B0).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
-              if (block.extras?.totalFees != null)
-                Row(
-                  children: [
-                    Icon(
-                      Icons.attach_money,
-                      color: theme.mutedText,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${(block.extras!.totalFees!.toInt() / 100000000).toStringAsFixed(4)} BTC',
-                      style: TextStyle(
-                        color: theme.mutedText,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              const SizedBox(height: 4),
-              Row(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.access_time,
-                    color: theme.mutedText,
-                    size: 14,
+                  Text(
+                    '${block.height}',
+                    style: TextStyle(
+                      color: theme.primaryWhite,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(height: 8),
+                  if (block.extras?.avgFeeRate != null)
+                    Text(
+                      '${block.extras!.avgFeeRate!.toStringAsFixed(1)} sat/vB',
+                      style: TextStyle(
+                        color: theme.primaryWhite,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    )
+                  else if (block.extras?.medianFee != null)
+                    Text(
+                      '${block.extras!.medianFee!.toStringAsFixed(1)} sat/vB',
+                      style: TextStyle(
+                        color: theme.primaryWhite,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  const SizedBox(height: 6),
                   Text(
                     _formatTime(block.timestamp, context),
                     style: TextStyle(
-                      color: theme.mutedText,
-                      fontSize: 12,
+                      color: theme.primaryWhite.withValues(alpha: 0.9),
+                      fontSize: 13,
                     ),
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ],
       ),
