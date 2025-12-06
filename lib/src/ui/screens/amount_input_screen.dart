@@ -1,6 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/ui/screens/receivescreen.dart';
 import 'package:flutter/material.dart';
-import 'package:ark_flutter/src/ui/screens/receive_screen.dart';
 import 'package:ark_flutter/app_theme.dart';
 
 class AmountInputScreen extends StatefulWidget {

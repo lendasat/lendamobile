@@ -1,15 +1,17 @@
 import 'dart:async';
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/ui/screens/mempool/single_transaction_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
+import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:intl/intl.dart';
-import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:provider/provider.dart';
-import 'package:ark_flutter/src/ui/screens/mempool/transaction_detail_screen.dart';
 import 'package:ark_flutter/src/services/transaction_filter_service.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_filter_screen.dart';
 
@@ -178,16 +180,12 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         Padding(
           key: ValueKey('header_$category'),
           padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.paddingM,
-            vertical: AppTheme.paddingS,
+            horizontal: BitNetTheme.cardPadding,
+            vertical: BitNetTheme.elementSpacing,
           ),
           child: Text(
             category,
-            style: TextStyle(
-              color: AppTheme.of(context).mutedText,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(context).textTheme.titleSmall,
           ),
         ),
       );
@@ -227,30 +225,31 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingM),
+          padding:
+              const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 AppLocalizations.of(context)!.transactionHistory,
-                style: TextStyle(
-                  color: theme.primaryWhite,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ],
           ),
         ),
-        const SizedBox(height: AppTheme.paddingM),
+        const SizedBox(height: BitNetTheme.elementSpacing),
         if (!widget.loading && widget.transactions.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingM),
+            padding: const EdgeInsets.symmetric(
+              horizontal: BitNetTheme.cardPadding,
+              vertical: BitNetTheme.elementSpacing,
+            ),
             child: SearchFieldWidget(
               hintText: AppLocalizations.of(context)!.search,
               isSearchEnabled: true,
@@ -269,8 +268,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               suffixIcon: IconButton(
                 icon: Icon(
                   Icons.filter_list,
-                  color: theme.mutedText,
-                  size: AppTheme.paddingL * 0.75,
+                  color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
+                  size: BitNetTheme.cardPadding * 0.75,
                 ),
                 onPressed: () async {
                   await arkBottomSheet(
@@ -284,7 +283,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               ),
             ),
           ),
-        const SizedBox(height: AppTheme.paddingS),
+        const SizedBox(height: BitNetTheme.elementSpacing),
         if (_error != null)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -295,7 +294,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                   const SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context)!.errorLoadingTransactions,
-                    style: TextStyle(color: theme.mutedText),
+                    style: TextStyle(
+                      color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
+                    ),
                   ),
                 ],
               ),
@@ -316,11 +317,17 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               padding: const EdgeInsets.all(32.0),
               child: Column(
                 children: [
-                  Icon(Icons.history, color: theme.mutedText, size: 48),
+                  Icon(
+                    Icons.history,
+                    color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
+                    size: 48,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context)!.noTransactionHistoryYet,
-                    style: TextStyle(color: theme.mutedText),
+                    style: TextStyle(
+                      color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
+                    ),
                   ),
                 ],
               ),
@@ -332,11 +339,17 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               padding: const EdgeInsets.all(32.0),
               child: Column(
                 children: [
-                  Icon(Icons.search_off, color: theme.mutedText, size: 48),
+                  Icon(
+                    Icons.search_off,
+                    color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
+                    size: 48,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No matching transactions',
-                    style: TextStyle(color: theme.mutedText),
+                    style: TextStyle(
+                      color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
+                    ),
                   ),
                 ],
               ),
@@ -368,7 +381,7 @@ class _TransactionContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingM),
+      padding: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
       child: Column(
         children: [
           GlassContainer(
@@ -384,7 +397,7 @@ class _TransactionContainer extends StatelessWidget {
                   .toList(),
             ),
           ),
-          const SizedBox(height: AppTheme.paddingS),
+          const SizedBox(height: BitNetTheme.cardPadding * 0.5),
         ],
       ),
     );
@@ -408,7 +421,7 @@ class _TransactionItem extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TransactionDetailScreen(txid: txid),
+        builder: (context) => SingleTransactionScreen(txid: txid),
       ),
     );
   }
@@ -463,8 +476,8 @@ class _TransactionItem extends StatelessWidget {
     bool showBtcAsMain,
     bool hideAmounts,
   ) {
-    final theme = AppTheme.of(context);
     final currencyService = context.watch<CurrencyPreferenceService>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final amountBtc = amountSats / 100000000;
 
@@ -473,139 +486,134 @@ class _TransactionItem extends StatelessWidget {
         (exchangeRates?.rates[currencyService.code] ?? 1) * 93000.0;
     final amountFiat = amountBtc * btcToFiatRate;
 
-    final showAsSatoshi = amountSats.abs() < 100000;
-
     Color statusColor;
     if (isSettled) {
-      statusColor = Colors.green;
+      statusColor = BitNetTheme.successColor;
     } else if (confirmedAt != null) {
-      statusColor = Colors.amber;
+      statusColor = BitNetTheme.colorBitcoin;
     } else {
-      statusColor = Colors.red;
+      statusColor = BitNetTheme.errorColor;
     }
 
     String transactionType = dialogTitle.replaceAll(' Transaction', '');
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _navigateToTransactionDetail(context, txid),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: AppTheme.paddingS,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(
-              left: AppTheme.paddingS * 0.75,
-              right: AppTheme.paddingS,
+    return RepaintBoundary(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToTransactionDetail(context, txid),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              vertical: BitNetTheme.elementSpacing,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: AppTheme.paddingL,
-                      backgroundColor: theme.secondaryBlack,
-                      child: Icon(
-                        Icons.person,
-                        color: theme.mutedText,
-                        size: AppTheme.paddingL,
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.paddingS * 0.75),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: AppTheme.paddingL * 6.5,
-                          child: Text(
-                            txid.length > 20
-                                ? '${txid.substring(0, 8)}...${txid.substring(txid.length - 8)}'
-                                : txid,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: theme.primaryWhite,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.paddingS / 2),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: AppTheme.paddingS / 2,
-                              ),
-                              child: Icon(
-                                Icons.currency_bitcoin,
-                                size: AppTheme.paddingM,
-                                color: Colors.amber,
-                              ),
-                            ),
-                            Text(
-                              transactionType,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: theme.mutedText,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.paddingS / 2),
-                            Icon(
-                              Icons.circle,
-                              color: statusColor,
-                              size: AppTheme.paddingS,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  width: 125,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.end,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: BitNetTheme.elementSpacing * 0.75,
+                right: BitNetTheme.elementSpacing * 1,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // LEFT SIDE
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Flexible(
-                        child: Text(
-                          hideAmounts
-                              ? '****'
-                              : showBtcAsMain
-                                  ? showAsSatoshi
-                                      ? '${amountSats.isNegative ? "" : "+"}${amountSats.abs()}'
-                                      : '${amountSats.isNegative ? "" : "+"}${amountBtc.toString()}'
-                                  : '${amountSats.isNegative ? "-" : "+"}${currencyService.formatAmount(amountFiat.abs())}',
-                          style: TextStyle(
-                            color: theme.primaryWhite,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      const Avatar(
+                        size: BitNetTheme.cardPadding * 2,
+                        isNft: false,
                       ),
-                      if (!hideAmounts) ...[
-                        const SizedBox(width: 4),
-                        if (showBtcAsMain)
-                          showAsSatoshi
-                              ? const Text("SAT")
-                              : Icon(
-                                  Icons.currency_bitcoin,
-                                  color: theme.mutedText,
-                                  size: showAsSatoshi ? 12 : 18,
-                                )
-                      ],
+                      const SizedBox(width: BitNetTheme.elementSpacing * 0.75),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: BitNetTheme.cardPadding * 6.5,
+                            child: Text(
+                              txid,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall!
+                                  .copyWith(
+                                    color: isDark
+                                        ? BitNetTheme.white90
+                                        : BitNetTheme.black90,
+                                  ),
+                            ),
+                          ),
+                          const SizedBox(
+                              height: BitNetTheme.elementSpacing / 2),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: BitNetTheme.elementSpacing / 2,
+                                ),
+                                child: Image.asset(
+                                  "assets/images/bitcoin.png",
+                                  width: BitNetTheme.cardPadding * 0.6,
+                                  height: BitNetTheme.cardPadding * 0.6,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.currency_bitcoin,
+                                      size: BitNetTheme.cardPadding * 0.6,
+                                      color: BitNetTheme.colorBitcoin,
+                                    );
+                                  },
+                                ),
+                              ),
+                              Text(
+                                transactionType,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                              const SizedBox(
+                                width: BitNetTheme.elementSpacing / 2,
+                              ),
+                              Icon(
+                                Icons.circle,
+                                color: statusColor,
+                                size: BitNetTheme.cardPadding * 0.4,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ),
-              ],
+                  // RIGHT SIDE
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      hideAmounts
+                          ? Text(
+                              '*****',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            )
+                          : Row(
+                              children: [
+                                Text(
+                                  showBtcAsMain
+                                      ? '${amountSats.isNegative ? "" : "+"}${amountSats.abs()}'
+                                      : '${amountSats.isNegative ? "-" : "+"}${currencyService.formatAmount(amountFiat.abs())}',
+                                  overflow: TextOverflow.ellipsis,
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
+                                ),
+                                if (showBtcAsMain)
+                                  Icon(
+                                    BitNetTheme.satoshiIcon,
+                                  ),
+                              ],
+                            ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

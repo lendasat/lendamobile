@@ -1,269 +1,265 @@
-import 'package:ark_flutter/l10n/app_localizations.dart';
-import 'package:flutter/material.dart';
-import 'package:ark_flutter/app_theme.dart';
-import 'package:ark_flutter/src/rust/models/mempool.dart';
+import 'package:animate_do/animate_do.dart';
+import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
+import 'package:ark_flutter/src/ui/widgets/mempool/data_widget.dart';
+import 'package:ark_flutter/src/models/mempool_new/bitcoin_data.dart';
+import 'package:ark_flutter/src/rust/models/mempool.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'mempool_block_card.dart';
 
-class BlocksListView extends StatefulWidget {
-  final List<MempoolBlock> mempoolBlocks;
-  final List<Block> confirmedBlocks;
-  final int selectedMempoolIndex;
-  final int selectedConfirmedIndex;
+/// Horizontal scrollable list view that displays both mempool blocks
+/// and confirmed blocks
+class BlocksListView extends StatelessWidget {
+  final ScrollController scrollController;
   final Function(int) onMempoolBlockTap;
   final Function(int) onConfirmedBlockTap;
-  final ScrollController? scrollController;
+  final bool isLoading;
+  final bool Function(String) hasUserTxs;
+
+  // Data to display
+  final List<MempoolBlock> mempoolBlocks;
+  final List<Block> confirmedBlocks;
   final DifficultyAdjustment? difficultyAdjustment;
+  final int selectedMempoolIndex;
+  final int selectedConfirmedIndex;
+  final String? selectedBlockId;
+  final double currentUSD;
+  final String Function(DateTime) formatTimeAgo;
+
+  // Back button state
+  final int? blockHeight;
+  final VoidCallback? onBackPressed;
 
   const BlocksListView({
     super.key,
-    required this.mempoolBlocks,
-    required this.confirmedBlocks,
-    required this.selectedMempoolIndex,
-    required this.selectedConfirmedIndex,
+    required this.scrollController,
     required this.onMempoolBlockTap,
     required this.onConfirmedBlockTap,
-    this.scrollController,
-    this.difficultyAdjustment,
+    required this.isLoading,
+    required this.hasUserTxs,
+    required this.mempoolBlocks,
+    required this.confirmedBlocks,
+    required this.difficultyAdjustment,
+    required this.selectedMempoolIndex,
+    required this.selectedConfirmedIndex,
+    this.selectedBlockId,
+    required this.currentUSD,
+    required this.formatTimeAgo,
+    this.blockHeight,
+    this.onBackPressed,
   });
 
-  @override
-  State<BlocksListView> createState() => _BlocksListViewState();
-}
-
-class _BlocksListViewState extends State<BlocksListView>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _masterFlashController;
-
-  @override
-  void initState() {
-    super.initState();
-    _masterFlashController = AnimationController(
-      duration: const Duration(seconds: 1),
-      vsync: this,
+  /// Convert Rust Block model to BlockData model for the DataWidget
+  BlockData _convertBlockToBlockData(Block block) {
+    return BlockData(
+      id: block.id,
+      height: block.height.toInt(),
+      version: block.version,
+      timestamp: block.timestamp.toInt(),
+      bits: block.bits,
+      nonce: block.nonce,
+      difficulty: block.difficulty,
+      merkleRoot: block.merkleRoot,
+      txCount: block.txCount,
+      size: block.size.toInt(),
+      weight: block.weight.toInt(),
+      previousblockhash: block.previousblockhash,
+      mediantime: block.mediantime?.toInt(),
+      stale: block.stale,
+      extras: block.extras != null
+          ? Extras(
+              medianFee: block.extras!.medianFee,
+              totalFees: block.extras!.totalFees?.toInt(),
+              avgFee: block.extras!.avgFee?.toInt(),
+              avgFeeRate: block.extras!.avgFeeRate?.toInt(),
+              pool: block.extras!.pool != null
+                  ? Pool(
+                      id: block.extras!.pool!.id?.toInt(),
+                      name: block.extras!.pool!.name,
+                      slug: block.extras!.pool!.slug,
+                    )
+                  : null,
+            )
+          : null,
     );
-
-    _masterFlashController.repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _masterFlashController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 180,
-      margin: const EdgeInsets.only(top: 16.0),
-      child: SingleChildScrollView(
-        controller: widget.scrollController,
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: Row(
-          children: [
-            const SizedBox(width: 16.0),
-            if (widget.mempoolBlocks.isNotEmpty)
-              SizedBox(
-                height: 180,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  reverse: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: widget.mempoolBlocks.length,
-                  itemBuilder: (context, index) {
-                    final block = widget.mempoolBlocks[index];
+    final loc = Provider.of<TimezoneService>(
+      context,
+      listen: false,
+    ).location;
 
-                    return GestureDetector(
-                      onTap: () => widget.onMempoolBlockTap(index),
-                      child: MempoolBlockCard(
-                        key: ValueKey('mempool_$index'),
-                        block: block,
-                        index: index,
-                        isSelected: index == widget.selectedMempoolIndex,
-                        onTap: () => widget.onMempoolBlockTap(index),
-                        flashController: _masterFlashController,
-                        difficultyAdjustment: widget.difficultyAdjustment,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            if (widget.mempoolBlocks.isNotEmpty)
+    return Stack(
+      alignment: Alignment.centerLeft,
+      children: [
+        SingleChildScrollView(
+          primary: false,
+          controller: scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              // Mempool blocks section
+              _buildMempoolBlocks(context),
+
+              // Divider between sections
               Container(
-                width: 3,
-                height: 160,
                 margin: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
+                  horizontal: BitNetTheme.elementSpacing,
                 ),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(2.0),
-                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BitNetTheme.cardRadiusCircular,
+                  color: Colors.grey,
                 ),
+                height: BitNetTheme.cardPadding * 6,
+                width: BitNetTheme.elementSpacing / 3,
               ),
-            SizedBox(
-              height: 180,
-              child: ListView.builder(
-                shrinkWrap: true,
-                scrollDirection: Axis.horizontal,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: widget.confirmedBlocks.length,
-                itemBuilder: (context, index) {
-                  final block = widget.confirmedBlocks[index];
-                  return GestureDetector(
-                    onTap: () => widget.onConfirmedBlockTap(index),
-                    child: BlockCard(
-                      key: ValueKey('confirmed_${block.id}'),
-                      block: block,
-                      isSelected: index == widget.selectedConfirmedIndex,
-                    ),
-                  );
-                },
+
+              // Confirmed blocks section
+              _buildConfirmedBlocks(context, loc),
+            ],
+          ),
+        ),
+
+        // Back button for blockHeight navigation
+        _buildBackButton(),
+      ],
+    );
+  }
+
+  Widget _buildMempoolBlocks(BuildContext context) {
+    if (isLoading) {
+      return const CircularProgressIndicator(color: BitNetTheme.colorBitcoin);
+    }
+
+    if (mempoolBlocks.isEmpty) {
+      return const Text(
+        'Something went wrong!',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 22,
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 255,
+      child: ListView.builder(
+        primary: false,
+        shrinkWrap: true,
+        reverse: true,
+        physics: const NeverScrollableScrollPhysics(),
+        scrollDirection: Axis.horizontal,
+        itemCount: mempoolBlocks.length,
+        itemBuilder: (context, index) {
+          final timeAvg = difficultyAdjustment?.timeAvg.toInt() ?? 600000;
+          var min = (index + 1) * (timeAvg / 60000);
+
+          return GestureDetector(
+            onTap: () => onMempoolBlockTap(index),
+            child: Flash(
+              infinite: true,
+              delay: const Duration(seconds: 10),
+              duration: const Duration(seconds: 5),
+              child: DataWidget.notAccepted(
+                key: GlobalKey(),
+                mempoolBlocks: mempoolBlocks[index],
+                mins: min.toStringAsFixed(0),
+                index: selectedMempoolIndex == index ? 1 : 0,
+                singleTx: false,
+                hasUserTxs: false,
+                currentUSD: currentUSD,
               ),
             ),
-            const SizedBox(width: 16.0),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
-}
 
-class BlockCard extends StatelessWidget {
-  final Block block;
-  final bool isSelected;
-
-  const BlockCard({super.key, required this.block, required this.isSelected});
-
-  String _formatTime(BigInt timestamp, BuildContext context) {
-    final timezoneService = context.watch<TimezoneService>();
-    final dateUtc = DateTime.fromMillisecondsSinceEpoch(
-        timestamp.toInt() * 1000,
-        isUtc: true);
-    final date = timezoneService.toSelectedTimezone(dateUtc);
-    final now = timezoneService.now();
-    final difference = now.difference(date);
-
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}${AppLocalizations.of(context)!.mAgo}';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}${AppLocalizations.of(context)!.hAgo}';
-    } else {
-      return '${difference.inDays}${AppLocalizations.of(context)!.dAgo}';
+  Widget _buildConfirmedBlocks(
+    BuildContext context,
+    dynamic loc,
+  ) {
+    if (isLoading) {
+      return const CircularProgressIndicator(color: BitNetTheme.colorBitcoin);
     }
+
+    if (confirmedBlocks.isEmpty) {
+      return const Text(
+        'Something went wrong!',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 22,
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 255,
+      child: ListView.builder(
+        shrinkWrap: true,
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: confirmedBlocks.length,
+        itemBuilder: (context, index) {
+          final block = confirmedBlocks[index];
+          final blockData = _convertBlockToBlockData(block);
+          double size = block.size.toInt() / 1000000;
+
+          return GestureDetector(
+            onTap: () => onConfirmedBlockTap(index),
+            child: DataWidget.accepted(
+              blockData: blockData,
+              txId: block.id,
+              size: size,
+              time: formatTimeAgo(
+                DateTime.fromMillisecondsSinceEpoch(
+                  (block.timestamp.toInt() * 1000),
+                ).toUtc().add(
+                      Duration(
+                        milliseconds: loc.currentTimeZone.offset,
+                      ),
+                    ),
+              ),
+              index: selectedConfirmedIndex == index ? 1 : 0,
+              singleTx: false,
+              hasUserTxs: hasUserTxs(block.id),
+              currentUSD: currentUSD,
+            ),
+          );
+        },
+      ),
+    );
   }
 
-  List<Color> _getGradientColors() {
-    Color startColor = const Color.fromARGB(255, 30, 32, 204);
-    Color endColor = const Color(0xFF9C27B0);
+  Widget _buildBackButton() {
+    if (blockHeight == null || onBackPressed == null) {
+      return const SizedBox();
+    }
 
-    return [startColor, endColor];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-
-    return Container(
-      width: 180,
-      height: 180,
-      margin: const EdgeInsets.only(right: 16.0),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            child: Container(
-              width: 140,
-              height: 160,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24.0),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: _getGradientColors()
-                      .map((c) => c.withValues(alpha: c.a * 0.4))
-                      .toList(),
-                ),
-              ),
+    return Align(
+      alignment: Alignment.bottomLeft,
+      child: GestureDetector(
+        onTap: onBackPressed,
+        child: Opacity(
+          opacity: 0.75,
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: BitNetTheme.white60,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_back,
+              color: BitNetTheme.colorBackground,
             ),
           ),
-          Positioned(
-            top: 16,
-            left: 16,
-            child: Container(
-              width: 160,
-              height: 160,
-              padding: const EdgeInsets.all(12.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24.0),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: _getGradientColors(),
-                ),
-                border: Border.all(
-                  color: isSelected
-                      ? const Color(0xFFBA68C8)
-                      : const Color(0xFF9C27B0).withValues(alpha: 0.5),
-                  width: isSelected ? 2 : 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF9C27B0).withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '${block.height}',
-                    style: TextStyle(
-                      color: theme.primaryWhite,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (block.extras?.avgFeeRate != null)
-                    Text(
-                      '${block.extras!.avgFeeRate!.toStringAsFixed(1)} sat/vB',
-                      style: TextStyle(
-                        color: theme.primaryWhite,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    )
-                  else if (block.extras?.medianFee != null)
-                    Text(
-                      '${block.extras!.medianFee!.toStringAsFixed(1)} sat/vB',
-                      style: TextStyle(
-                        color: theme.primaryWhite,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _formatTime(block.timestamp, context),
-                    style: TextStyle(
-                      color: theme.primaryWhite.withValues(alpha: 0.9),
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

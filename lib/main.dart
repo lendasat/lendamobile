@@ -8,10 +8,11 @@ import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/services/transaction_filter_service.dart';
+import 'package:ark_flutter/src/services/user_preferences_service.dart';
+import 'package:ark_flutter/src/ui/screens/walletscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
-import 'package:ark_flutter/src/ui/screens/dashboard_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -76,7 +77,7 @@ Future<Widget> determineStartScreen() async {
       logger.i("Wallet setup complete, ID: $aspId");
 
       // Return the dashboard screen with the ASP ID
-      return DashboardScreen(aspId: aspId);
+      return WalletScreen(aspId: aspId);
     } else {
       logger.i("No wallet found, showing onboarding screen");
       // Return the onboarding screen
@@ -132,6 +133,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => SettingsController(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => UserPreferencesService()..loadPreferences(),
         ),
       ],
       child: Consumer2<ThemeProvider, LanguageService>(

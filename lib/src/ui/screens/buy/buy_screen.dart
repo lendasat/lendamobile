@@ -1,15 +1,24 @@
 import 'dart:async';
+
 import 'package:ark_flutter/l10n/app_localizations.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
-import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
-import 'package:ark_flutter/src/services/moonpay_service.dart';
-import 'package:ark_flutter/src/services/amount_widget_service.dart';
-import 'package:ark_flutter/src/services/settings_service.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as rust_api;
 import 'package:ark_flutter/src/rust/models/moonpay.dart';
+import 'package:ark_flutter/src/services/amount_widget_service.dart';
+import 'package:ark_flutter/src/services/moonpay_service.dart';
+import 'package:ark_flutter/src/services/settings_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/theme.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import 'payment_methods_screen.dart';
 
 class BuyScreen extends StatefulWidget {
@@ -35,6 +44,10 @@ class _BuyScreenState extends State<BuyScreen> {
   String _paymentMethodName = 'Credit or Debit Card';
   String _paymentMethodId = 'credit_debit_card';
 
+  // Provider state
+  final String _providerName = 'MoonPay';
+  final String _providerId = 'moonpay';
+
   MoonPayCurrencyLimits? _limits;
 
   String? _walletAddress;
@@ -42,6 +55,7 @@ class _BuyScreenState extends State<BuyScreen> {
   bool _isProcessing = false;
 
   String _inputState = 'under';
+  int _allowedAmountDifference = 0;
 
   // Use fake price for now (matching dashboard_screen.dart pattern)
   final double _btcToUsdRate = 65000.0;
@@ -193,7 +207,7 @@ class _BuyScreenState extends State<BuyScreen> {
           SnackBar(
             content: Text(
                 '${AppLocalizations.of(context)!.failedToLaunchMoonpay}: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: BitNetTheme.errorColor,
           ),
         );
       }
@@ -202,6 +216,67 @@ class _BuyScreenState extends State<BuyScreen> {
         setState(() => _isProcessing = false);
       }
     }
+  }
+
+  Widget _getPaymentMethodIcon(String methodId) {
+    switch (methodId) {
+      case "credit_debit_card":
+        return const Icon(Icons.wallet_rounded);
+      case "google_pay":
+        return const Icon(FontAwesomeIcons.google);
+      case "apple_pay":
+        return const Icon(FontAwesomeIcons.applePay, size: 32);
+      case "paypal":
+        return const Icon(FontAwesomeIcons.paypal, size: 32);
+      case "stripe":
+        return const Icon(FontAwesomeIcons.stripe, size: 32);
+      case "sepa_bank_transfer":
+        return const Icon(Icons.account_balance);
+      default:
+        return const Icon(Icons.payment);
+    }
+  }
+
+  Widget _getProviderIcon(String providerId) {
+    switch (providerId) {
+      case "stripe":
+        return Image.asset('assets/images/stripe.png', width: 32, height: 32);
+      case "moonpay":
+        return Image.asset('assets/images/moonpay.png', width: 32, height: 32);
+      case "bringin":
+        return Image.asset('assets/images/bringinxyz_logo.webp',
+            width: 32, height: 32);
+      default:
+        return const Icon(Icons.account_balance);
+    }
+  }
+
+  Widget _buildProviderTrailing() {
+    // Check for MoonPay quotes
+    if (_providerId == "moonpay" && _currentQuote != null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '1 BTC',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+          Text(
+            '= \$${(_currentQuote!.exchangeRate).toStringAsFixed(2)}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      );
+    }
+
+    // Default arrow icon
+    return const Icon(Icons.arrow_forward_ios, size: 16);
   }
 
   @override
@@ -216,33 +291,29 @@ class _BuyScreenState extends State<BuyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: theme.primaryBlack,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBlack,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          AppLocalizations.of(context)!.buyBitcoin,
-          style: TextStyle(color: theme.primaryWhite),
-        ),
+    return ArkScaffold(
+      context: context,
+      appBar: ArkAppBar(
+        context: context,
+        hasBackButton: true,
+        text: l10n.buyBitcoin,
+        onTap: () => Navigator.of(context).pop(),
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TextButton(
-              onPressed: _refreshQuote,
-              child: Text(
-                '0:${_quoteTimer.toString().padLeft(2, '0')}',
-                style: TextStyle(
-                  color: theme.mutedText,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+            padding: const EdgeInsets.only(right: BitNetTheme.cardPadding),
+            child: LongButtonWidget(
+              buttonType: ButtonType.transparent,
+              customHeight: BitNetTheme.cardPadding * 1.5,
+              customWidth: BitNetTheme.cardPadding * 4,
+              leadingIcon: Icon(
+                FontAwesomeIcons.clockRotateLeft,
+                size: BitNetTheme.cardPadding * 0.75,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
+              title: "0:${_quoteTimer.toString().padLeft(2, '0')}",
+              onTap: _refreshQuote,
             ),
           ),
         ],
@@ -250,95 +321,50 @@ class _BuyScreenState extends State<BuyScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: theme.mutedText,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        AppLocalizations.of(context)!.errorLoadingBuyScreen,
-                        style: TextStyle(
-                          color: theme.primaryWhite,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _initialize,
-                        child: Text(AppLocalizations.of(context)!.retry),
-                      ),
-                    ],
-                  ),
-                )
+              ? _buildErrorState(l10n)
               : Stack(
                   children: [
                     SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.max,
                         children: [
-                          _buildAmountInput(theme),
-                          const SizedBox(height: 24),
-                          _buildPaymentMethodTile(theme),
-                          const SizedBox(height: 16),
-                          _buildProviderTile(theme),
-                          const SizedBox(height: 24),
-                          if (_limits != null) _buildLimitsInfo(theme),
-                          const SizedBox(height: 80),
+                          const SizedBox(height: BitNetTheme.cardPadding * 2.5),
+                          // Amount Widget
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: BitNetTheme.cardPadding,
+                            ),
+                            child: _buildAmountWidget(),
+                          ),
+                          const SizedBox(height: 15),
+                          // Limit warning message
+                          if (_allowedAmountDifference != 0 &&
+                              _limits != null &&
+                              _limits!.quoteCurrency.maxBuyAmount > 0)
+                            _buildLimitWarning(),
+                          const SizedBox(height: 15),
+                          // Payment Method Selection
+                          _buildPaymentMethodSection(l10n),
+                          // Provider Selection
+                          _buildProviderSection(l10n),
+                          const SizedBox(height: 100), // Space for button
                         ],
                       ),
                     ),
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: theme.primaryBlack,
-                          border: Border(
-                            top: BorderSide(
-                              color: theme.primaryWhite.withValues(alpha: 0.1),
-                            ),
-                          ),
-                        ),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _isValidAmount() && !_isProcessing
-                                ? Colors.blue
-                                : theme.tertiaryBlack,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 16.0,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                          ),
-                          onPressed: _isValidAmount() && !_isProcessing
-                              ? _processPurchase
-                              : null,
-                          child: _isProcessing
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  AppLocalizations.of(context)!.buyBitcoin,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                    // Bottom Buy Button
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20.0),
+                        child: LongButtonWidget(
+                          customWidth: MediaQuery.of(context).size.width * 0.9,
+                          title: l10n.buyBitcoin,
+                          isLoading: _isProcessing,
+                          enabled: _isValidAmount() &&
+                              !_isProcessing &&
+                              _allowedAmountDifference == 0,
+                          onTap: _processPurchase,
+                          buttonType: ButtonType.solid,
                         ),
                       ),
                     ),
@@ -347,208 +373,213 @@ class _BuyScreenState extends State<BuyScreen> {
     );
   }
 
-  Widget _buildAmountInput(AppTheme theme) {
-    if (_limits == null) {
-      return Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: theme.secondaryBlack,
-          borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(
-            color: theme.primaryWhite.withValues(alpha: 0.1),
-          ),
-        ),
-        child: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    final minSats = (_limits!.quoteCurrency.minBuyAmount * 100000000).toInt();
-    final maxSats = (_limits!.quoteCurrency.maxBuyAmount * 100000000).toInt();
-
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: theme.secondaryBlack,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: theme.primaryWhite.withValues(alpha: 0.1),
-        ),
-      ),
+  Widget _buildErrorState(AppLocalizations l10n) {
+    return Center(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            AppLocalizations.of(context)!.amount,
-            style: TextStyle(
-              color: theme.mutedText,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
-          const SizedBox(height: 16.0),
-          AmountWidget(
-            enabled: () => true,
-            btcController: _btcController,
-            satController: _satController,
-            currController: _currController,
-            focusNode: _focusNode,
-            bitcoinUnit: CurrencyType.bitcoin,
-            swapped: false,
-            autoConvert: true,
-            lowerBound: minSats,
-            upperBound: maxSats,
-            boundType: CurrencyType.sats,
-            bitcoinPrice: _btcToUsdRate,
-            underBoundFunc: (val) {
-              setState(() {
-                _inputState = 'under';
-              });
-            },
-            inBoundFunc: (val) {
-              setState(() {
-                _inputState = 'in';
-              });
-            },
-            overBoundFunc: (val) {
-              setState(() {
-                _inputState = 'over';
-              });
-            },
-            onInputStateChange: (state) {},
+          const SizedBox(height: 16),
+          Text(
+            l10n.errorLoadingBuyScreen,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 24),
+          LongButtonWidget(
+            title: l10n.retry,
+            onTap: _initialize,
+            buttonType: ButtonType.solid,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPaymentMethodTile(AppTheme theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.secondaryBlack,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: theme.primaryWhite.withValues(alpha: 0.1),
-        ),
-      ),
-      child: ListTile(
-        leading: Icon(Icons.credit_card, color: theme.primaryWhite),
-        title: Text(
-          _paymentMethodName,
-          style: TextStyle(
-            color: theme.primaryWhite,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          color: theme.mutedText,
-          size: 16,
-        ),
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const PaymentMethodsScreen(),
-            ),
-          );
-          if (result != null && result is Map<String, String>) {
-            setState(() {
-              _paymentMethodName = result['name']!;
-              _paymentMethodId = result['id']!;
+  Widget _buildAmountWidget() {
+    final minSats = _limits != null
+        ? (_limits!.quoteCurrency.minBuyAmount * 100000000).toInt()
+        : 0;
+    final maxSats = _limits != null
+        ? (_limits!.quoteCurrency.maxBuyAmount * 100000000).toInt()
+        : 0;
+
+    return AmountWidget(
+      enabled: () => true,
+      btcController: _btcController,
+      satController: _satController,
+      currController: _currController,
+      focusNode: _focusNode,
+      bitcoinUnit: CurrencyType.bitcoin,
+      swapped: false,
+      autoConvert: true,
+      lowerBound: minSats,
+      upperBound: maxSats,
+      boundType: _limits != null && _limits!.quoteCurrency.maxBuyAmount > 0
+          ? CurrencyType.sats
+          : null,
+      bitcoinPrice: _btcToUsdRate,
+      underBoundFunc: (currentVal) {
+        if (_limits == null ||
+            (_limits!.quoteCurrency.minBuyAmount == 0 &&
+                _limits!.quoteCurrency.maxBuyAmount == 0)) {
+          if (_allowedAmountDifference != 0) {
+            _allowedAmountDifference = 0;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() {});
             });
-            await _fetchLimits();
           }
-        },
+          return;
+        }
+        _allowedAmountDifference =
+            (_limits!.quoteCurrency.minBuyAmount * 100000000).toInt() -
+                currentVal.toInt();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() {});
+        });
+      },
+      overBoundFunc: (currentVal) {
+        if (_limits == null ||
+            (_limits!.quoteCurrency.minBuyAmount == 0 &&
+                _limits!.quoteCurrency.maxBuyAmount == 0)) {
+          if (_allowedAmountDifference != 0) {
+            _allowedAmountDifference = 0;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() {});
+            });
+          }
+          return;
+        }
+        _allowedAmountDifference =
+            (_limits!.quoteCurrency.maxBuyAmount * 100000000).toInt() -
+                currentVal.toInt();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() {});
+        });
+      },
+      inBoundFunc: (currentVal) {
+        if (_allowedAmountDifference != 0) {
+          _allowedAmountDifference = 0;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() {});
+          });
+        }
+      },
+      onInputStateChange: (state) {
+        _inputState = state;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() {});
+        });
+      },
+    );
+  }
+
+  Widget _buildLimitWarning() {
+    final minBtc = _limits!.quoteCurrency.minBuyAmount;
+    final maxBtc = _limits!.quoteCurrency.maxBuyAmount;
+
+    String message;
+    if (_allowedAmountDifference < 0) {
+      message = 'You are over the limit of ${maxBtc.toStringAsFixed(8)} BTC';
+    } else {
+      message = 'You are under the limit of ${minBtc.toStringAsFixed(8)} BTC';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      child: Text(
+        message,
+        style: const TextStyle(
+          color: BitNetTheme.errorColor,
+          fontSize: 14,
+        ),
       ),
     );
   }
 
-  Widget _buildProviderTile(AppTheme theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.secondaryBlack,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: theme.primaryWhite.withValues(alpha: 0.1),
-        ),
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: theme.primaryWhite,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Center(
-            child: Text(
-              'M',
-              style: TextStyle(
-                color: theme.mutedText,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          ),
-        ),
-        title: Text(
-          'MoonPay',
-          style: TextStyle(
-            color: theme.primaryWhite,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing: _currentQuote != null
-            ? Text(
-                _currentQuote!.pricePerBtc,
-                style: TextStyle(
-                  color: theme.mutedText,
-                  fontSize: 14,
-                ),
-              )
-            : const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-      ),
-    );
-  }
-
-  Widget _buildLimitsInfo(AppTheme theme) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: theme.secondaryBlack.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: theme.primaryWhite.withValues(alpha: 0.1),
-        ),
-      ),
+  Widget _buildPaymentMethodSection(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(BitNetTheme.elementSpacing * 1.5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)!.buyLimits,
-            style: TextStyle(
-              color: theme.mutedText,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+            l10n.paymentMethods,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: BitNetTheme.elementSpacing),
+          GlassContainer(
+            opacity: 0.05,
+            child: ArkListTile(
+              margin: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                bottom: 16.0,
+                top: 16.0,
+              ),
+              text: _paymentMethodName,
+              onTap: () async {
+                final result = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => PaymentMethodsScreen(
+                      initialMethodId: _paymentMethodId,
+                    ),
+                  ),
+                );
+                if (result != null && result is Map<String, String>) {
+                  setState(() {
+                    _paymentMethodName = result['name']!;
+                    _paymentMethodId = result['id']!;
+                  });
+                  await _fetchLimits();
+                }
+              },
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: _getPaymentMethodIcon(_paymentMethodId),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             ),
           ),
-          const SizedBox(height: 8.0),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProviderSection(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(BitNetTheme.elementSpacing * 1.5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text(
-            '${AppLocalizations.of(context)!.min}: ${_limits!.quoteCurrency.minBuyAmount.toStringAsFixed(8)} BTC',
-            style: TextStyle(
-              color: theme.primaryWhite.withValues(alpha: 0.7),
-              fontSize: 13,
-            ),
+            "Payment Provider",
+            style: Theme.of(context).textTheme.titleLarge,
           ),
-          Text(
-            '${AppLocalizations.of(context)!.max}: ${_limits!.quoteCurrency.maxBuyAmount.toStringAsFixed(8)} BTC',
-            style: TextStyle(
-              color: theme.primaryWhite.withValues(alpha: 0.7),
-              fontSize: 13,
+          const SizedBox(height: BitNetTheme.elementSpacing),
+          GlassContainer(
+            opacity: 0.05,
+            child: ArkListTile(
+              margin: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                bottom: 16.0,
+                top: 16.0,
+              ),
+              text: _providerName,
+              onTap: () {
+                // TODO: Navigate to providers screen when implemented
+              },
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: _getProviderIcon(_providerId),
+              ),
+              trailing: _buildProviderTrailing(),
             ),
           ),
         ],

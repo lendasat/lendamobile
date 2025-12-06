@@ -16,6 +16,7 @@ Future<List<Block>> getBlocksAtHeight({required BigInt height}) =>
     RustLib.instance.api.crateApiMempoolApiGetBlocksAtHeight(height: height);
 
 /// Get detailed block information by hash
+/// Uses the v1 API endpoint which includes extras (pool, reward, fees, etc.)
 Future<Block> getBlockByHash({required String hash}) =>
     RustLib.instance.api.crateApiMempoolApiGetBlockByHash(hash: hash);
 
@@ -38,3 +39,8 @@ Future<HashrateData> getHashrateData({required String period}) =>
 /// Get detailed transaction information by txid
 Future<BitcoinTransaction> getTransaction({required String txid}) =>
     RustLib.instance.api.crateApiMempoolApiGetTransaction(txid: txid);
+
+/// Get Fear & Greed Index from RapidAPI
+/// Returns the current fear and greed index along with historical comparisons
+Future<FearGreedIndex> getFearGreedIndex() =>
+    RustLib.instance.api.crateApiMempoolApiGetFearGreedIndex();

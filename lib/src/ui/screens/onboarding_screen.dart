@@ -1,9 +1,9 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
+import 'package:ark_flutter/src/ui/screens/walletscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
-import 'package:ark_flutter/src/ui/screens/dashboard_screen.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ark_flutter/app_theme.dart';
 
@@ -83,7 +83,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-                builder: (context) => const DashboardScreen(aspId: 'debug-mode')),
+                builder: (context) => const WalletScreen(aspId: 'debug-mode')),
           );
         }
         return;
@@ -105,7 +105,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           if (mounted) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                  builder: (context) => DashboardScreen(aspId: aspId)),
+                  builder: (context) => WalletScreen(aspId: aspId)),
             );
           }
         } catch (e) {
@@ -135,7 +135,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           if (mounted) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                  builder: (context) => DashboardScreen(aspId: aspId)),
+                  builder: (context) => WalletScreen(aspId: aspId)),
             );
           }
         } catch (e) {

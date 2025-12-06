@@ -1,16 +1,25 @@
 import 'dart:async';
+
 import 'package:ark_flutter/l10n/app_localizations.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
-import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
-import 'package:ark_flutter/src/services/moonpay_service.dart';
-import 'package:ark_flutter/src/services/amount_widget_service.dart';
-import 'package:ark_flutter/src/services/settings_service.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as rust_api;
 import 'package:ark_flutter/src/rust/models/moonpay.dart';
+import 'package:ark_flutter/src/services/amount_widget_service.dart';
+import 'package:ark_flutter/src/services/moonpay_service.dart';
+import 'package:ark_flutter/src/services/settings_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/theme.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:uuid/uuid.dart';
+
 import 'payout_methods_screen.dart';
 
 class SellScreen extends StatefulWidget {
@@ -36,6 +45,10 @@ class _SellScreenState extends State<SellScreen> {
   String _payoutMethodName = 'SEPA Bank Transfer';
   String _payoutMethodId = 'sepa_bank_transfer';
 
+  // Provider state
+  final String _providerName = 'MoonPay';
+  final String _providerId = 'moonpay';
+
   MoonPayCurrencyLimits? _limits;
 
   double _bitcoinBalance = 0.0;
@@ -43,6 +56,7 @@ class _SellScreenState extends State<SellScreen> {
   bool _isProcessing = false;
 
   String _inputState = 'under';
+  int _allowedAmountDifference = 0;
 
   // Use fake price for now (matching buy_screen.dart pattern)
   final double _btcToUsdRate = 65000.0;
@@ -61,7 +75,7 @@ class _SellScreenState extends State<SellScreen> {
       });
 
       final balance = await rust_api.balance();
-      _bitcoinBalance = 20000;
+      _bitcoinBalance = balance.offchain.totalSats.toDouble() / 100000000.0;
 
       await Future.wait([_fetchLimits(), _fetchQuote()]);
 
@@ -126,28 +140,8 @@ class _SellScreenState extends State<SellScreen> {
   }
 
   bool _isValidAmount() {
-    if (_limits == null) return false;
-
-    if (_satController.text.isEmpty && _btcController.text.isEmpty) {
-      return false;
-    }
-
-    try {
-      if (_satController.text.isNotEmpty) {
-        final sats = int.parse(_satController.text);
-        final btc = sats / 100000000.0;
-
-        return _inputState == 'in' && btc <= _bitcoinBalance;
-      } else if (_btcController.text.isNotEmpty) {
-        final btc = double.parse(_btcController.text);
-
-        return _inputState == 'in' && btc <= _bitcoinBalance;
-      }
-
-      return false;
-    } catch (e) {
-      return false;
-    }
+    return _inputState == 'in' &&
+        (_btcController.text.isNotEmpty || _satController.text.isNotEmpty);
   }
 
   Future<void> _processSell() async {
@@ -212,8 +206,9 @@ class _SellScreenState extends State<SellScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to launch MoonPay: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            content: Text(
+                '${AppLocalizations.of(context)!.failedToLaunchMoonpay}: ${e.toString()}'),
+            backgroundColor: BitNetTheme.errorColor,
           ),
         );
       }
@@ -222,6 +217,66 @@ class _SellScreenState extends State<SellScreen> {
         setState(() => _isProcessing = false);
       }
     }
+  }
+
+  Widget _getPayoutMethodIcon(String methodId) {
+    switch (methodId) {
+      case "sepa_bank_transfer":
+        return const Icon(Icons.account_balance);
+      case "gbp_bank_transfer":
+        return const Icon(Icons.account_balance);
+      case "gbp_open_banking_payment":
+        return const Icon(Icons.account_balance_outlined);
+      case "ach_bank_transfer":
+        return const Icon(Icons.account_balance);
+      case "credit_debit_card":
+        return const Icon(Icons.credit_card);
+      case "paypal":
+        return const Icon(FontAwesomeIcons.paypal, size: 24);
+      case "venmo":
+        return const Icon(Icons.payment);
+      case "moonpay_balance":
+        return const Icon(Icons.account_balance_wallet);
+      default:
+        return const Icon(Icons.payment);
+    }
+  }
+
+  Widget _getProviderIcon(String providerId) {
+    switch (providerId) {
+      case "moonpay":
+        return Image.asset('assets/images/moonpay.png', width: 32, height: 32);
+      default:
+        return const Icon(Icons.account_balance);
+    }
+  }
+
+  Widget _buildProviderTrailing() {
+    // Check for MoonPay quotes
+    if (_providerId == "moonpay" && _currentQuote != null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '1 BTC',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+          Text(
+            '= \$${(_currentQuote!.exchangeRate).toStringAsFixed(2)}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      );
+    }
+
+    // Default arrow icon
+    return const Icon(Icons.arrow_forward_ios, size: 16);
   }
 
   @override
@@ -236,33 +291,29 @@ class _SellScreenState extends State<SellScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: theme.primaryBlack,
-      appBar: AppBar(
-        backgroundColor: theme.primaryBlack,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          AppLocalizations.of(context)!.sellBitcoin,
-          style: TextStyle(color: theme.primaryWhite),
-        ),
+    return ArkScaffold(
+      context: context,
+      appBar: ArkAppBar(
+        context: context,
+        hasBackButton: true,
+        text: l10n.sellBitcoin,
+        onTap: () => Navigator.of(context).pop(),
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TextButton(
-              onPressed: _refreshQuote,
-              child: Text(
-                '0:${_quoteTimer.toString().padLeft(2, '0')}',
-                style: TextStyle(
-                  color: theme.mutedText,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+            padding: const EdgeInsets.only(right: BitNetTheme.cardPadding),
+            child: LongButtonWidget(
+              buttonType: ButtonType.transparent,
+              customHeight: BitNetTheme.cardPadding * 1.5,
+              customWidth: BitNetTheme.cardPadding * 4,
+              leadingIcon: Icon(
+                FontAwesomeIcons.clockRotateLeft,
+                size: BitNetTheme.cardPadding * 0.75,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
+              title: "0:${_quoteTimer.toString().padLeft(2, '0')}",
+              onTap: _refreshQuote,
             ),
           ),
         ],
@@ -270,97 +321,52 @@ class _SellScreenState extends State<SellScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: theme.mutedText,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        AppLocalizations.of(context)!.errorLoadingSellScreen,
-                        style: TextStyle(
-                          color: theme.primaryWhite,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _initialize,
-                        child: Text(AppLocalizations.of(context)!.retry),
-                      ),
-                    ],
-                  ),
-                )
+              ? _buildErrorState(l10n)
               : Stack(
                   children: [
                     SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.max,
                         children: [
-                          _buildBalanceInfo(theme),
-                          const SizedBox(height: 24),
-                          _buildAmountInput(theme),
-                          const SizedBox(height: 24),
-                          _buildPayoutMethodTile(theme),
-                          const SizedBox(height: 16),
-                          _buildProviderTile(theme),
-                          const SizedBox(height: 24),
-                          if (_limits != null) _buildLimitsInfo(theme),
-                          const SizedBox(height: 80),
+                          // Balance Info
+                          _buildBalanceInfo(l10n),
+                          const SizedBox(height: 15),
+                          // Amount Widget
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: BitNetTheme.cardPadding,
+                            ),
+                            child: _buildAmountWidget(),
+                          ),
+                          const SizedBox(height: 15),
+                          // Limit warning message
+                          if (_allowedAmountDifference != 0 &&
+                              _limits != null &&
+                              _limits!.quoteCurrency.maxBuyAmount > 0)
+                            _buildLimitWarning(),
+                          const SizedBox(height: 15),
+                          // Payout Method Selection
+                          _buildPayoutMethodSection(l10n),
+                          // Provider Selection
+                          _buildProviderSection(l10n),
+                          const SizedBox(height: 100), // Space for button
                         ],
                       ),
                     ),
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF121212),
-                          border: Border(
-                            top: BorderSide(
-                              color: const Color(0xFFFFFFFF).withOpacity(0.1),
-                            ),
-                          ),
-                        ),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _isValidAmount() && !_isProcessing
-                                ? Colors.orange
-                                : Colors.grey[800],
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 16.0,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                          ),
-                          onPressed: _isValidAmount() && !_isProcessing
-                              ? _processSell
-                              : null,
-                          child: _isProcessing
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  AppLocalizations.of(context)!.sellBitcoin,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                    // Bottom Sell Button
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20.0),
+                        child: LongButtonWidget(
+                          customWidth: MediaQuery.of(context).size.width * 0.9,
+                          title: l10n.sellBitcoin,
+                          isLoading: _isProcessing,
+                          enabled: _isValidAmount() &&
+                              !_isProcessing &&
+                              _allowedAmountDifference == 0,
+                          onTap: _processSell,
+                          buttonType: ButtonType.solid,
                         ),
                       ),
                     ),
@@ -369,275 +375,243 @@ class _SellScreenState extends State<SellScreen> {
     );
   }
 
-  Widget _buildBalanceInfo(AppTheme theme) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: theme.secondaryBlack,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: theme.primaryWhite.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildErrorState(AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            AppLocalizations.of(context)!.availableBalance,
-            style: TextStyle(color: theme.mutedText, fontSize: 14),
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
+          const SizedBox(height: 16),
           Text(
-            '${_bitcoinBalance.toStringAsFixed(8)} BTC',
-            style: TextStyle(
-              color: theme.primaryWhite,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            l10n.errorLoadingSellScreen,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 24),
+          LongButtonWidget(
+            title: l10n.retry,
+            onTap: _initialize,
+            buttonType: ButtonType.solid,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAmountInput(AppTheme theme) {
-    if (_limits == null) {
-      return Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: theme.secondaryBlack,
-          borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(
-            color: theme.primaryWhite.withValues(alpha: 0.1),
-          ),
+  Widget _buildBalanceInfo(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      child: GlassContainer(
+        opacity: 0.05,
+        padding: const EdgeInsets.all(BitNetTheme.cardPadding),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.availableBalance,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            Text(
+              '${_bitcoinBalance.toStringAsFixed(8)} BTC',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ],
         ),
-        child: const Center(child: CircularProgressIndicator()),
-      );
-    }
+      ),
+    );
+  }
 
-    final minSats = (_limits!.quoteCurrency.minBuyAmount * 100000000).toInt();
-    final maxFromLimits =
-        (_limits!.quoteCurrency.maxBuyAmount * 100000000).toInt();
+  Widget _buildAmountWidget() {
+    final minSats = _limits != null
+        ? (_limits!.quoteCurrency.minBuyAmount * 100000000).toInt()
+        : 0;
+    final maxFromLimits = _limits != null
+        ? (_limits!.quoteCurrency.maxBuyAmount * 100000000).toInt()
+        : 0;
     final maxFromBalance = (_bitcoinBalance * 100000000).toInt();
     final maxSats =
         maxFromBalance < maxFromLimits ? maxFromBalance : maxFromLimits;
 
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: theme.secondaryBlack,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: theme.primaryWhite.withValues(alpha: 0.1),
+    return AmountWidget(
+      enabled: () => true,
+      btcController: _btcController,
+      satController: _satController,
+      currController: _currController,
+      focusNode: _focusNode,
+      bitcoinUnit: CurrencyType.bitcoin,
+      swapped: false,
+      autoConvert: true,
+      lowerBound: minSats,
+      upperBound: maxSats,
+      boundType: _limits != null && _limits!.quoteCurrency.maxBuyAmount > 0
+          ? CurrencyType.sats
+          : null,
+      bitcoinPrice: _btcToUsdRate,
+      underBoundFunc: (currentVal) {
+        if (_limits == null ||
+            (_limits!.quoteCurrency.minBuyAmount == 0 &&
+                _limits!.quoteCurrency.maxBuyAmount == 0)) {
+          if (_allowedAmountDifference != 0) {
+            _allowedAmountDifference = 0;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() {});
+            });
+          }
+          return;
+        }
+        _allowedAmountDifference =
+            (_limits!.quoteCurrency.minBuyAmount * 100000000).toInt() -
+                currentVal.toInt();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() {});
+        });
+      },
+      overBoundFunc: (currentVal) {
+        if (_limits == null ||
+            (_limits!.quoteCurrency.minBuyAmount == 0 &&
+                _limits!.quoteCurrency.maxBuyAmount == 0)) {
+          if (_allowedAmountDifference != 0) {
+            _allowedAmountDifference = 0;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() {});
+            });
+          }
+          return;
+        }
+        _allowedAmountDifference =
+            (_limits!.quoteCurrency.maxBuyAmount * 100000000).toInt() -
+                currentVal.toInt();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() {});
+        });
+      },
+      inBoundFunc: (currentVal) {
+        if (_allowedAmountDifference != 0) {
+          _allowedAmountDifference = 0;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() {});
+          });
+        }
+      },
+      onInputStateChange: (state) {
+        _inputState = state;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() {});
+        });
+      },
+    );
+  }
+
+  Widget _buildLimitWarning() {
+    final minBtc = _limits!.quoteCurrency.minBuyAmount;
+    final maxBtc = _limits!.quoteCurrency.maxBuyAmount;
+
+    String message;
+    if (_allowedAmountDifference < 0) {
+      message = 'You are over the limit of ${maxBtc.toStringAsFixed(8)} BTC';
+    } else {
+      message = 'You are under the limit of ${minBtc.toStringAsFixed(8)} BTC';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      child: Text(
+        message,
+        style: const TextStyle(
+          color: BitNetTheme.errorColor,
+          fontSize: 14,
         ),
       ),
+    );
+  }
+
+  Widget _buildPayoutMethodSection(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(BitNetTheme.elementSpacing * 1.5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)!.amountToSell,
-            style: TextStyle(
-              color: theme.mutedText,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            l10n.payoutMethods,
+            style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 16.0),
-          AmountWidget(
-            enabled: () => true,
-            btcController: _btcController,
-            satController: _satController,
-            currController: _currController,
-            focusNode: _focusNode,
-            bitcoinUnit: CurrencyType.bitcoin,
-            swapped: false,
-            autoConvert: true,
-            lowerBound: minSats,
-            upperBound: maxSats,
-            boundType: CurrencyType.sats,
-            bitcoinPrice: _btcToUsdRate,
-            underBoundFunc: (val) {
-              setState(() {
-                _inputState = 'under';
-              });
-            },
-            inBoundFunc: (val) {
-              setState(() {
-                _inputState = 'in';
-              });
-            },
-            overBoundFunc: (val) {
-              setState(() {
-                _inputState = 'over';
-              });
-            },
-            onInputStateChange: (state) {},
+          const SizedBox(height: BitNetTheme.elementSpacing),
+          GlassContainer(
+            opacity: 0.05,
+            child: ArkListTile(
+              margin: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                bottom: 16.0,
+                top: 16.0,
+              ),
+              text: _payoutMethodName,
+              onTap: () async {
+                final result = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => PayoutMethodsScreen(
+                      initialMethodId: _payoutMethodId,
+                    ),
+                  ),
+                );
+                if (result != null && result is Map<String, String>) {
+                  setState(() {
+                    _payoutMethodName = result['name']!;
+                    _payoutMethodId = result['id']!;
+                  });
+                  await _fetchLimits();
+                }
+              },
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: _getPayoutMethodIcon(_payoutMethodId),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPayoutMethodTile(AppTheme theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.secondaryBlack,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: theme.primaryWhite.withValues(alpha: 0.1),
-        ),
-      ),
-      child: ListTile(
-        leading: Icon(
-          Icons.account_balance,
-          color: theme.primaryWhite,
-        ),
-        title: Text(
-          _payoutMethodName,
-          style: TextStyle(
-            color: theme.primaryWhite,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          color: theme.mutedText,
-          size: 16,
-        ),
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const PayoutMethodsScreen(),
-            ),
-          );
-          if (result != null && result is Map<String, String>) {
-            setState(() {
-              _payoutMethodName = result['name']!;
-              _payoutMethodId = result['id']!;
-            });
-            await _fetchLimits();
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildProviderTile(AppTheme theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.secondaryBlack,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: theme.primaryWhite.withValues(alpha: 0.1),
-        ),
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: theme.primaryWhite,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Center(
-            child: Text(
-              'M',
-              style: TextStyle(
-                color: theme.mutedText,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          ),
-        ),
-        title: Text(
-          'MoonPay',
-          style: TextStyle(
-            color: theme.primaryWhite,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing: _currentQuote != null
-            ? Text(
-                _currentQuote!.pricePerBtc,
-                style: TextStyle(
-                  color: theme.mutedText,
-                  fontSize: 14,
-                ),
-              )
-            : const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-      ),
-    );
-  }
-
-  Widget _buildLimitsInfo(AppTheme theme) {
-    bool insufficientBalance = false;
-
-    if (_satController.text.isNotEmpty) {
-      final sats = int.tryParse(_satController.text);
-      if (sats != null) {
-        final btc = sats / 100000000.0;
-        insufficientBalance = btc > _bitcoinBalance;
-      }
-    } else if (_btcController.text.isNotEmpty) {
-      final btc = double.tryParse(_btcController.text);
-      if (btc != null) {
-        insufficientBalance = btc > _bitcoinBalance;
-      }
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: theme.secondaryBlack.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: insufficientBalance
-              ? Colors.red
-              : theme.primaryWhite.withValues(alpha: 0.1),
-        ),
-      ),
+  Widget _buildProviderSection(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(BitNetTheme.elementSpacing * 1.5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)!.sellLimits,
-            style: TextStyle(
-              color: theme.mutedText,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            "Payment Provider",
+            style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 8.0),
-          Text(
-            '${AppLocalizations.of(context)!.min}: ${_limits!.quoteCurrency.minBuyAmount.toStringAsFixed(8)} BTC',
-            style: TextStyle(
-              color: theme.primaryWhite.withValues(alpha: 0.7),
-              fontSize: 13,
-            ),
-          ),
-          Text(
-            '${AppLocalizations.of(context)!.max}: ${_limits!.quoteCurrency.maxBuyAmount.toStringAsFixed(8)} BTC',
-            style: TextStyle(
-              color: theme.primaryWhite.withValues(alpha: 0.7),
-              fontSize: 13,
-            ),
-          ),
-          if (insufficientBalance) ...[
-            const SizedBox(height: 8.0),
-            Text(
-              AppLocalizations.of(context)!.insufficientBalance,
-              style: const TextStyle(
-                color: Colors.red,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+          const SizedBox(height: BitNetTheme.elementSpacing),
+          GlassContainer(
+            opacity: 0.05,
+            child: ArkListTile(
+              margin: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                bottom: 16.0,
+                top: 16.0,
               ),
+              text: _providerName,
+              onTap: () {
+                // TODO: Navigate to providers screen when implemented
+              },
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: _getProviderIcon(_providerId),
+              ),
+              trailing: _buildProviderTrailing(),
             ),
-          ],
+          ),
         ],
       ),
     );

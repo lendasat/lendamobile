@@ -1,34 +1,60 @@
 use serde::{Deserialize, Serialize};
 
 /// Block information from mempool.space
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Block {
+    #[serde(default)]
     pub id: String,
+    #[serde(default)]
     pub height: u64,
+    #[serde(default)]
     pub version: u32,
+    #[serde(default)]
     pub timestamp: u64,
+    #[serde(default)]
     pub bits: u32,
+    #[serde(default)]
     pub nonce: u32,
+    #[serde(default)]
     pub difficulty: f64,
+    #[serde(default)]
     pub merkle_root: String,
+    #[serde(default)]
     pub tx_count: u32,
+    #[serde(default)]
     pub size: u64,
+    #[serde(default)]
     pub weight: u64,
+    #[serde(default)]
     pub previousblockhash: Option<String>,
+    #[serde(default)]
     pub mediantime: Option<u64>,
+    #[serde(default)]
     pub stale: Option<bool>,
+    #[serde(default)]
     pub extras: Option<BlockExtras>,
 }
 
 /// Extended block information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BlockExtras {
+    #[serde(rename = "medianFee", default)]
     pub median_fee: Option<f64>,
+    #[serde(rename = "totalFees", default)]
     pub total_fees: Option<u64>,
+    #[serde(rename = "avgFee", default)]
     pub avg_fee: Option<f64>,
+    #[serde(rename = "avgFeeRate", default)]
     pub avg_fee_rate: Option<f64>,
-    pub reward: Option<f64>,
+    #[serde(default)]
+    pub reward: Option<u64>,
+    #[serde(default)]
     pub pool: Option<MiningPool>,
+    #[serde(rename = "matchRate", default)]
+    pub match_rate: Option<f64>,
+    #[serde(default)]
+    pub similarity: Option<f64>,
 }
 
 /// Mining pool information
@@ -226,4 +252,43 @@ pub struct ProjectedTransaction {
 pub struct ProjectedBlockTransactions {
     pub index: u32,
     pub transactions: Vec<ProjectedTransaction>,
+}
+
+/// Fear & Greed Index response from RapidAPI
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FearGreedIndex {
+    #[serde(rename = "lastUpdated")]
+    pub last_updated: Option<FearGreedLastUpdated>,
+    pub fgi: Option<FearGreedData>,
+}
+
+/// Last updated timestamp for Fear & Greed data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FearGreedLastUpdated {
+    #[serde(rename = "epochUnixSeconds")]
+    pub epoch_unix_seconds: Option<i64>,
+    #[serde(rename = "humanDate")]
+    pub human_date: Option<String>,
+}
+
+/// Fear & Greed data with current and historical values
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FearGreedData {
+    pub now: Option<FearGreedValue>,
+    #[serde(rename = "previousClose")]
+    pub previous_close: Option<FearGreedValue>,
+    #[serde(rename = "oneWeekAgo")]
+    pub one_week_ago: Option<FearGreedValue>,
+    #[serde(rename = "oneMonthAgo")]
+    pub one_month_ago: Option<FearGreedValue>,
+    #[serde(rename = "oneYearAgo")]
+    pub one_year_ago: Option<FearGreedValue>,
+}
+
+/// Single Fear & Greed value with numeric value and text description
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FearGreedValue {
+    pub value: Option<i32>,
+    #[serde(rename = "valueText")]
+    pub value_text: Option<String>,
 }

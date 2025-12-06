@@ -9,13 +9,16 @@ final _logger = Logger();
 /// Service for managing user's preferred display currency
 class CurrencyPreferenceService extends ChangeNotifier {
   static const String _currencyKey = 'selected_currency';
+  static const String _showCoinBalanceKey = 'show_coin_balance';
 
   FiatCurrency _currentCurrency = FiatCurrency.usd;
   ExchangeRates? _exchangeRates;
   DateTime? _lastFetch;
+  bool _showCoinBalance = true;
 
   FiatCurrency get currentCurrency => _currentCurrency;
   ExchangeRates? get exchangeRates => _exchangeRates;
+  bool get showCoinBalance => _showCoinBalance;
 
   Future<void> loadSavedCurrency() async {
     final prefs = await SharedPreferences.getInstance();
@@ -28,13 +31,33 @@ class CurrencyPreferenceService extends ChangeNotifier {
           (c) => rust.currencyCode(currency: c) == currencyCode,
           orElse: () => FiatCurrency.usd,
         );
-        notifyListeners();
       } catch (e) {
         _currentCurrency = FiatCurrency.usd;
       }
     }
 
+    _showCoinBalance = prefs.getBool(_showCoinBalanceKey) ?? true;
+
+    notifyListeners();
     await fetchExchangeRates();
+  }
+
+  Future<void> toggleShowCoinBalance() async {
+    _showCoinBalance = !_showCoinBalance;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_showCoinBalanceKey, _showCoinBalance);
+
+    notifyListeners();
+  }
+
+  Future<void> setShowCoinBalance(bool value) async {
+    _showCoinBalance = value;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_showCoinBalanceKey, _showCoinBalance);
+
+    notifyListeners();
   }
 
   Future<void> setCurrency(FiatCurrency currency) async {

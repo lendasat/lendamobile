@@ -1,99 +1,320 @@
+import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/src/models/mempool_new/chartline.dart';
+import 'package:ark_flutter/src/models/mempool_new/hash_chart_model.dart';
 import 'package:flutter/material.dart';
-import 'package:ark_flutter/app_theme.dart';
-import 'package:ark_flutter/src/rust/models/mempool.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 
+/// Card displaying Bitcoin network hashrate information
 class HashrateCard extends StatelessWidget {
-  final HashrateData hashrateData;
+  final List<ChartLine> hashrateChartData;
+  final List<Difficulty> hashrateChartDifficulty;
+  final bool isLoading;
+  final String currentHashrate;
+  final String changePercentage;
+  final bool isPositive;
+  final String selectedTimePeriod;
+  final Function(String) onTimePeriodChanged;
 
-  const HashrateCard({super.key, required this.hashrateData});
-
-  String _formatHashrate(double hashrate) {
-    final eh = hashrate / 1000000000000000000;
-    return '${eh.toStringAsFixed(2)} EH/s';
-  }
-
-  String _formatDifficulty(double difficulty) {
-    return '${(difficulty / 1000000000000).toStringAsFixed(2)}T';
-  }
+  const HashrateCard({
+    super.key,
+    required this.hashrateChartData,
+    required this.hashrateChartDifficulty,
+    required this.isLoading,
+    required this.currentHashrate,
+    required this.changePercentage,
+    required this.isPositive,
+    required this.selectedTimePeriod,
+    required this.onTimePeriodChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    final currentHashrate = hashrateData.currentHashrate ?? 0.0;
-    final currentDifficulty = hashrateData.currentDifficulty ?? 0.0;
-
     return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: theme.secondaryBlack,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      margin: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      child: GlassContainer(
+        child: Padding(
+          padding: const EdgeInsets.all(BitNetTheme.cardPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.speed, color: theme.primaryWhite, size: 20),
-              const SizedBox(width: 8.0),
-              Text(
-                AppLocalizations.of(context)!.networkHashrate,
-                style: TextStyle(
-                  color: theme.primaryWhite,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        FontAwesomeIcons.server,
+                        size: BitNetTheme.cardPadding * 0.75,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                      const SizedBox(width: BitNetTheme.elementSpacing),
+                      Text(
+                        AppLocalizations.of(context)!.networkHashrate,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Current hashrate display
+              _buildHashrateDisplay(context),
+
+              const SizedBox(height: 16),
+
+              // Time period selection
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildTimeButton(context, '1D'),
+                  const SizedBox(width: 4),
+                  _buildTimeButton(context, '1W'),
+                  const SizedBox(width: 4),
+                  _buildTimeButton(context, '1M'),
+                  const SizedBox(width: 4),
+                  _buildTimeButton(context, '1Y'),
+                  const SizedBox(width: 4),
+                  _buildTimeButton(context, 'MAX'),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Hashrate chart
+              _buildChartSection(context),
+
+              const SizedBox(height: 16),
+
+              // Hashrate explanation
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BitNetTheme.cardRadiusSmall,
+                  color: BitNetTheme.colorBitcoin.withValues(alpha: 0.1),
+                ),
+                child: Text(
+                  "Higher hashrate = stronger network security",
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall!
+                      .copyWith(color: BitNetTheme.colorBitcoin),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16.0),
-          Center(
-            child: Column(
-              children: [
-                Text(
-                  _formatHashrate(currentHashrate),
-                  style: TextStyle(
-                    color: theme.primaryWhite,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8.0),
-                Text(
-                  AppLocalizations.of(context)!.currentNetworkHashrate,
-                  style: TextStyle(color: theme.mutedText, fontSize: 12),
-                ),
-              ],
-            ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHashrateDisplay(BuildContext context) {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: BitNetTheme.colorBitcoin),
+      );
+    }
+
+    return Center(
+      child: Column(
+        children: [
+          Text(
+            currentHashrate,
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall!
+                .copyWith(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 16.0),
-          _buildStatRow(AppLocalizations.of(context)!.difficulty,
-              _formatDifficulty(currentDifficulty), theme),
-          const SizedBox(height: 8.0),
-          _buildStatRow(AppLocalizations.of(context)!.dataPoints,
-              '${hashrateData.hashrates.length}', theme),
+          if (hashrateChartData.isNotEmpty && changePercentage.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isPositive ? Icons.arrow_upward : Icons.arrow_downward,
+                    color: isPositive
+                        ? BitNetTheme.successColor
+                        : BitNetTheme.errorColor,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    changePercentage,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: isPositive
+                              ? BitNetTheme.successColor
+                              : BitNetTheme.errorColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildStatRow(String label, String value, AppTheme theme) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(color: theme.mutedText, fontSize: 14),
+  Widget _buildChartSection(BuildContext context) {
+    if (isLoading) {
+      return const Center(
+        child: SizedBox(
+          height: 180,
+          child: CircularProgressIndicator(color: BitNetTheme.colorBitcoin),
         ),
-        Text(
-          value,
+      );
+    }
+
+    if (hashrateChartData.isEmpty) {
+      return Center(
+        child: Text(
+          "Failed to load hashrate data",
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      );
+    }
+
+    return Container(
+      height: 180,
+      padding: const EdgeInsets.only(top: 8, right: 8),
+      decoration: BoxDecoration(
+        borderRadius: BitNetTheme.cardRadiusSmall,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? BitNetTheme.black70
+            : BitNetTheme.white70,
+      ),
+      child: _buildHashrateChart(context),
+    );
+  }
+
+  // Helper method to build time period buttons
+  Widget _buildTimeButton(BuildContext context, String period) {
+    final isActive = period == selectedTimePeriod;
+    return InkWell(
+      onTap: isLoading ? null : () => onTimePeriodChanged(period),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isActive
+              ? BitNetTheme.colorBitcoin.withValues(alpha: 0.2)
+              : Colors.transparent,
+          border: Border.all(
+            color: isActive ? BitNetTheme.colorBitcoin : BitNetTheme.white60,
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          period,
           style: TextStyle(
-            color: theme.primaryWhite,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+            color: isActive ? BitNetTheme.colorBitcoin : null,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
         ),
+      ),
+    );
+  }
+
+  // Helper method to build the hashrate chart
+  Widget _buildHashrateChart(BuildContext context) {
+    return SfCartesianChart(
+      plotAreaBorderWidth: 0,
+      margin: const EdgeInsets.only(left: 8, bottom: 8),
+      enableAxisAnimation: false,
+      trackballBehavior: TrackballBehavior(
+        lineColor: Colors.grey[400],
+        enable: true,
+        activationMode: ActivationMode.singleTap,
+        lineWidth: 2,
+        lineType: TrackballLineType.vertical,
+        tooltipSettings: const InteractiveTooltip(enable: false),
+        markerSettings: const TrackballMarkerSettings(
+          color: Colors.white,
+          borderColor: Colors.white,
+          markerVisibility: TrackballVisibilityMode.visible,
+        ),
+      ),
+      primaryXAxis: DateTimeAxis(
+        intervalType: DateTimeIntervalType.days,
+        edgeLabelPlacement: EdgeLabelPlacement.none,
+        majorGridLines: MajorGridLines(
+          width: 0.5,
+          color: BitNetTheme.white70,
+          dashArray: const [5, 5],
+        ),
+        axisLine: const AxisLine(width: 0),
+        labelStyle: TextStyle(color: BitNetTheme.white70, fontSize: 10),
+      ),
+      primaryYAxis: NumericAxis(
+        axisLine: const AxisLine(width: 0),
+        plotOffset: 0,
+        edgeLabelPlacement: EdgeLabelPlacement.none,
+        majorGridLines: MajorGridLines(
+          width: 0.5,
+          color: BitNetTheme.white70,
+          dashArray: const [5, 5],
+        ),
+        majorTickLines: const MajorTickLines(width: 0),
+        numberFormat: NumberFormat.compact(),
+        labelStyle: TextStyle(color: BitNetTheme.white60, fontSize: 10),
+      ),
+      series: <CartesianSeries>[
+        // Hashrate line
+        SplineSeries<ChartLine, DateTime>(
+          name: AppLocalizations.of(context)!.networkHashrate,
+          enableTooltip: true,
+          dataSource: hashrateChartData,
+          splineType: SplineType.cardinal,
+          cardinalSplineTension: 0.7,
+          animationDuration: 0,
+          width: 2,
+          color: BitNetTheme.colorBitcoin,
+          xValueMapper: (ChartLine sales, _) =>
+              DateTime.fromMillisecondsSinceEpoch(
+            sales.time.toInt() * 1000,
+            isUtc: true,
+          ),
+          yValueMapper: (ChartLine sales, _) => double.parse(
+            sales.price.toString().substring(
+                  0,
+                  sales.price.toString().length > 3
+                      ? 3
+                      : sales.price.toString().length,
+                ),
+          ),
+        ),
+        // Add difficulty markers as scatter series
+        if (hashrateChartDifficulty.isNotEmpty)
+          ScatterSeries<Difficulty, DateTime>(
+            name: AppLocalizations.of(context)!.difficulty,
+            enableTooltip: true,
+            dataSource: hashrateChartDifficulty,
+            color: Colors.white,
+            markerSettings: const MarkerSettings(
+              height: 6,
+              width: 6,
+              shape: DataMarkerType.circle,
+              borderColor: BitNetTheme.colorBitcoin,
+              borderWidth: 1,
+            ),
+            xValueMapper: (Difficulty diff, _) =>
+                DateTime.fromMillisecondsSinceEpoch(
+              diff.time!.toInt() * 1000,
+              isUtc: true,
+            ),
+            yValueMapper: (Difficulty diff, _) => double.parse(
+              (diff.difficulty! / 100000000000).toStringAsFixed(2),
+            ),
+          ),
       ],
     );
   }

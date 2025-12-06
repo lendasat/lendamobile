@@ -1,4 +1,4 @@
-use crate::models::mempool::{BitcoinTransaction, Block, HashrateData, RecommendedFees};
+use crate::models::mempool::{BitcoinTransaction, Block, FearGreedIndex, HashrateData, RecommendedFees};
 use anyhow::{Context, Result, bail};
 
 /// Get the latest 15 Bitcoin blocks
@@ -55,10 +55,12 @@ pub async fn get_blocks_at_height(height: u64) -> Result<Vec<Block>> {
 }
 
 /// Get detailed block information by hash
+/// Uses the v1 API endpoint which includes extras (pool, reward, fees, etc.)
 pub async fn get_block_by_hash(hash: &str) -> Result<Block> {
-    tracing::info!("Fetching block by hash {} from mempool.space", hash);
+    tracing::info!("Fetching block by hash {} from mempool.space v1 API", hash);
 
-    let url = format!("https://mempool.space/api/block/{}", hash);
+    // Use v1 API to get full block details including extras
+    let url = format!("https://mempool.space/api/v1/block/{}", hash);
 
     let client = reqwest::Client::new();
     let response = client
@@ -204,4 +206,35 @@ pub async fn get_transaction(txid: &str) -> Result<BitcoinTransaction> {
         .context("Failed to parse transaction response")?;
 
     Ok(transaction)
+}
+
+/// Get Fear & Greed Index from RapidAPI
+/// Returns the current fear and greed index along with historical comparisons
+pub async fn get_fear_greed_index() -> Result<FearGreedIndex> {
+    tracing::info!("Fetching Fear & Greed Index from RapidAPI");
+
+    let url = "https://fear-and-greed-index.p.rapidapi.com/v1/fgi";
+
+    let client = reqwest::Client::new();
+    let response = client
+        .get(url)
+        .header("X-RapidAPI-Key", "REDACTED_API_KEY")
+        .header("X-RapidAPI-Host", "fear-and-greed-index.p.rapidapi.com")
+        .send()
+        .await
+        .context("Failed to fetch Fear & Greed Index from RapidAPI")?;
+
+    if !response.status().is_success() {
+        bail!(
+            "Failed to fetch Fear & Greed Index: status {}",
+            response.status()
+        );
+    }
+
+    let fgi = response
+        .json::<FearGreedIndex>()
+        .await
+        .context("Failed to parse Fear & Greed Index response")?;
+
+    Ok(fgi)
 }

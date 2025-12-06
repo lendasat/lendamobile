@@ -144,8 +144,10 @@ class BlockExtras {
   final BigInt? totalFees;
   final double? avgFee;
   final double? avgFeeRate;
-  final double? reward;
+  final BigInt? reward;
   final MiningPool? pool;
+  final double? matchRate;
+  final double? similarity;
 
   const BlockExtras({
     this.medianFee,
@@ -154,6 +156,8 @@ class BlockExtras {
     this.avgFeeRate,
     this.reward,
     this.pool,
+    this.matchRate,
+    this.similarity,
   });
 
   @override
@@ -163,7 +167,9 @@ class BlockExtras {
       avgFee.hashCode ^
       avgFeeRate.hashCode ^
       reward.hashCode ^
-      pool.hashCode;
+      pool.hashCode ^
+      matchRate.hashCode ^
+      similarity.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -175,7 +181,9 @@ class BlockExtras {
           avgFee == other.avgFee &&
           avgFeeRate == other.avgFeeRate &&
           reward == other.reward &&
-          pool == other.pool;
+          pool == other.pool &&
+          matchRate == other.matchRate &&
+          similarity == other.similarity;
 }
 
 /// BTC price conversions
@@ -291,6 +299,108 @@ class DifficultyPoint {
           timestamp == other.timestamp &&
           difficulty == other.difficulty &&
           height == other.height;
+}
+
+/// Fear & Greed data with current and historical values
+class FearGreedData {
+  final FearGreedValue? now;
+  final FearGreedValue? previousClose;
+  final FearGreedValue? oneWeekAgo;
+  final FearGreedValue? oneMonthAgo;
+  final FearGreedValue? oneYearAgo;
+
+  const FearGreedData({
+    this.now,
+    this.previousClose,
+    this.oneWeekAgo,
+    this.oneMonthAgo,
+    this.oneYearAgo,
+  });
+
+  @override
+  int get hashCode =>
+      now.hashCode ^
+      previousClose.hashCode ^
+      oneWeekAgo.hashCode ^
+      oneMonthAgo.hashCode ^
+      oneYearAgo.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FearGreedData &&
+          runtimeType == other.runtimeType &&
+          now == other.now &&
+          previousClose == other.previousClose &&
+          oneWeekAgo == other.oneWeekAgo &&
+          oneMonthAgo == other.oneMonthAgo &&
+          oneYearAgo == other.oneYearAgo;
+}
+
+/// Fear & Greed Index response from RapidAPI
+class FearGreedIndex {
+  final FearGreedLastUpdated? lastUpdated;
+  final FearGreedData? fgi;
+
+  const FearGreedIndex({
+    this.lastUpdated,
+    this.fgi,
+  });
+
+  @override
+  int get hashCode => lastUpdated.hashCode ^ fgi.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FearGreedIndex &&
+          runtimeType == other.runtimeType &&
+          lastUpdated == other.lastUpdated &&
+          fgi == other.fgi;
+}
+
+/// Last updated timestamp for Fear & Greed data
+class FearGreedLastUpdated {
+  final PlatformInt64? epochUnixSeconds;
+  final String? humanDate;
+
+  const FearGreedLastUpdated({
+    this.epochUnixSeconds,
+    this.humanDate,
+  });
+
+  @override
+  int get hashCode => epochUnixSeconds.hashCode ^ humanDate.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FearGreedLastUpdated &&
+          runtimeType == other.runtimeType &&
+          epochUnixSeconds == other.epochUnixSeconds &&
+          humanDate == other.humanDate;
+}
+
+/// Single Fear & Greed value with numeric value and text description
+class FearGreedValue {
+  final int? value;
+  final String? valueText;
+
+  const FearGreedValue({
+    this.value,
+    this.valueText,
+  });
+
+  @override
+  int get hashCode => value.hashCode ^ valueText.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FearGreedValue &&
+          runtimeType == other.runtimeType &&
+          value == other.value &&
+          valueText == other.valueText;
 }
 
 /// Mining hashrate data

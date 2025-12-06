@@ -1615,6 +1615,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Real-time'**
   String get realTime;
+
+  /// No description provided for @sendBitcoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Bitcoin'**
+  String get sendBitcoin;
+
+  /// No description provided for @sendNow.
+  ///
+  /// In en, this message translates to:
+  /// **'SEND NOW'**
+  String get sendNow;
+
+  /// No description provided for @recipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient'**
+  String get recipient;
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// No description provided for @walletAddressCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet address copied'**
+  String get walletAddressCopied;
+
+  /// No description provided for @hashrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Hashrate'**
+  String get hashrate;
+
+  /// No description provided for @fearAndGreedIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Fear & Greed Index'**
+  String get fearAndGreedIndex;
+
+  /// No description provided for @health.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get health;
 }
 
 class _AppLocalizationsDelegate

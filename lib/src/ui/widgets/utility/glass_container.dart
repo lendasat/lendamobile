@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ark_flutter/app_theme.dart';
+import 'package:ark_flutter/theme.dart';
 
 class GlassContainer extends StatelessWidget {
   final Widget child;
@@ -40,47 +40,36 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Handle dynamic borderRadius - support both double and BorderRadius for backward compatibility
     BorderRadius radius;
     if (borderRadius == null) {
       radius = const BorderRadius.all(
-        Radius.circular(AppTheme.paddingL * 2.5 / 3),
-      );
+        Radius.circular(BitNetTheme.cardPadding * 2.5 / 3),
+      ); // Original default
     } else if (borderRadius is double) {
       radius = BorderRadius.circular(borderRadius);
     } else if (borderRadius is BorderRadius) {
       radius = borderRadius;
     } else {
+      // Fallback for any other type
       radius = const BorderRadius.all(
-        Radius.circular(AppTheme.paddingL * 2.5 / 3),
+        Radius.circular(BitNetTheme.cardPadding * 2.5 / 3),
       );
     }
 
-    final isLight = Theme.of(context).brightness == Brightness.light;
-
-    final defaultBoxShadow = BoxShadow(
-      color: Colors.black.withValues(alpha: 0.05),
-      offset: const Offset(0, 4),
-      blurRadius: 5,
-    );
-
-    final lightThemeShadow = BoxShadow(
-      color: Colors.black.withValues(alpha: 0.08),
-      offset: const Offset(0, 2),
-      blurRadius: 8,
-      spreadRadius: 0,
-    );
-
+    // Performance optimization: use RepaintBoundary to isolate repaints
     return RepaintBoundary(
       child: Container(
         margin: margin,
         decoration: BoxDecoration(
+          // Performance optimization: only apply shadows when needed
           boxShadow: customShadow != null
               ? customShadow!
               : boxShadow != null
                   ? boxShadow!
-                  : isLight
-                      ? [lightThemeShadow]
-                      : [defaultBoxShadow],
+                  : Theme.of(context).brightness == Brightness.light
+                      ? [] // No shadows in light mode
+                      : [BitNetTheme.boxShadowSuperSmall], // Minimal shadow in dark mode
         ),
         child: ClipRRect(
           borderRadius: radius,
@@ -88,18 +77,13 @@ class GlassContainer extends StatelessWidget {
             height: height,
             width: width,
             decoration: BoxDecoration(
+              // Simplified color calculation for better performance
               color: customColor ??
-                  (isLight
-                      ? Colors.black.withValues(alpha: 0.04)
+                  (Theme.of(context).brightness == Brightness.light
+                      ? Colors.white.withValues(alpha: 0.9)
                       : Colors.white.withValues(alpha: opacity)),
               borderRadius: radius,
-              border: border ??
-                  (isLight
-                      ? Border.all(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          width: 1,
-                        )
-                      : null),
+              // border: border,
             ),
             padding: padding,
             child: child,

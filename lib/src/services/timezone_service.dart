@@ -9,6 +9,9 @@ class TimezoneService extends ChangeNotifier {
 
   String get currentTimezone => _currentTimezone;
 
+  /// Get the current Location object for timezone calculations
+  tz.Location get location => tz.getLocation(_currentTimezone);
+
   static Map<String, List<String>> get timezonesByRegion {
     final allTimezones = tz.timeZoneDatabase.locations.keys.toList()..sort();
 

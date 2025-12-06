@@ -1,179 +1,144 @@
-import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:flutter/material.dart';
-import 'package:ark_flutter/app_theme.dart';
-import 'package:ark_flutter/src/rust/models/mempool.dart';
-import 'package:ark_flutter/src/services/currency_preference_service.dart';
-import 'package:ark_flutter/src/services/timezone_service.dart';
-import 'package:provider/provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 
+/// Card displaying mining information for a block
 class MiningInfoCard extends StatelessWidget {
-  final Block block;
-  final Conversions? conversions;
+  final DateTime timestamp;
+  final String poolName;
+  final double rewardAmount;
 
-  const MiningInfoCard({super.key, required this.block, this.conversions});
-
-  String _formatTimestamp(BigInt timestamp, BuildContext context) {
-    final timezoneService = context.watch<TimezoneService>();
-    final dateUtc = DateTime.fromMillisecondsSinceEpoch(
-        timestamp.toInt() * 1000,
-        isUtc: true);
-    final date = timezoneService.toSelectedTimezone(dateUtc);
-    final now = timezoneService.now();
-    final difference = now.difference(date);
-
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} ${AppLocalizations.of(context)!.minutesAgo}';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours} ${AppLocalizations.of(context)!.hoursAgo}';
-    } else if (difference.inDays == 1) {
-      return AppLocalizations.of(context)!.oneDayAgo;
-    } else {
-      return '${difference.inDays} ${AppLocalizations.of(context)!.daysAgo}';
-    }
-  }
-
-  String _formatReward(double rewardBtc, BuildContext context) {
-    if (conversions != null && conversions!.usd > 0) {
-      final rewardUsd = rewardBtc * conversions!.usd;
-      final currencyService = context.watch<CurrencyPreferenceService>();
-      return currencyService.formatAmount(rewardUsd);
-    }
-    return '${rewardBtc.toStringAsFixed(8)} BTC';
-  }
+  const MiningInfoCard({
+    super.key,
+    required this.timestamp,
+    required this.poolName,
+    required this.rewardAmount,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    final isLight = Theme.of(context).brightness == Brightness.light;
-    final pool = block.extras?.pool;
-    final reward = block.extras?.reward;
-
-    if (pool == null && reward == null) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: isLight
-            ? Colors.white.withValues(alpha: 0.5)
-            : theme.secondaryBlack,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: isLight
-              ? Colors.black.withValues(alpha: 0.1)
-              : theme.primaryWhite.withValues(alpha: 0.1),
-        ),
-        boxShadow: isLight
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  offset: const Offset(0, 2),
-                  blurRadius: 8,
-                ),
-              ]
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8.0),
-                decoration: BoxDecoration(
-                  color: isLight
-                      ? Colors.black.withValues(alpha: 0.04)
-                      : theme.primaryBlack,
-                  borderRadius: BorderRadius.circular(8.0),
-                  border: isLight
-                      ? Border.all(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          width: 1,
-                        )
-                      : null,
-                ),
-                child: Icon(
-                  Icons.architecture,
-                  color: theme.primaryWhite,
-                  size: 16,
-                ),
+    return GlassContainer(
+      child: Container(
+        padding: const EdgeInsets.all(BitNetTheme.elementSpacing * 1.5),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Miner Information text heading
+            Padding(
+              padding: const EdgeInsets.only(bottom: BitNetTheme.elementSpacing),
+              child: Row(
+                children: [
+                  const Icon(
+                    FontAwesomeIcons.truckPickup,
+                    size: BitNetTheme.cardPadding * 0.75,
+                  ),
+                  const SizedBox(width: BitNetTheme.elementSpacing),
+                  Text(
+                    "Miner Information",
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ],
               ),
-              const SizedBox(width: 8.0),
-              Text(
-                AppLocalizations.of(context)!.miningInformation,
-                style: TextStyle(
-                  color: theme.primaryWhite,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+            ),
+
+            // Header with timestamp and pool
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Timestamp
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: Color(0xFFA1A1AA), // zinc-400
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      DateFormat('yyyy-MM-dd HH:mm').format(timestamp),
+                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16.0),
-          if (pool != null) ...[
-            _buildInfoRow(AppLocalizations.of(context)!.miningPool, pool.name,
-                Icons.groups, theme),
-            const SizedBox(height: 8.0),
-          ],
-          _buildInfoRow(
-            AppLocalizations.of(context)!.mined,
-            _formatTimestamp(block.timestamp, context),
-            Icons.access_time,
-            theme,
-          ),
-          if (reward != null) ...[
-            const SizedBox(height: 8.0),
-            _buildInfoRow(AppLocalizations.of(context)!.blockReward,
-                _formatReward(reward, context), Icons.paid, theme),
-          ],
-          if (block.extras?.totalFees != null) ...[
-            const SizedBox(height: 8.0),
-            _buildInfoRow(
-              AppLocalizations.of(context)!.totalFees,
-              '${(block.extras!.totalFees!.toInt() / 100000000).toStringAsFixed(8)} BTC',
-              Icons.account_balance_wallet,
-              theme,
+                // Pool badge
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: BitNetTheme.colorBitcoin,
+                    borderRadius: BitNetTheme.cardRadiusSmall,
+                  ),
+                  child: Text(
+                    poolName,
+                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                          color: _darken(BitNetTheme.colorBitcoin, 95),
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: BitNetTheme.cardPadding * 0.75),
+
+            // Status indicator
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: BitNetTheme.successColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('Mined', style: Theme.of(context).textTheme.labelMedium),
+              ],
+            ),
+            const SizedBox(height: BitNetTheme.cardPadding * 0.75),
+
+            // Reward amount
+            Row(
+              children: [
+                const Icon(
+                  FontAwesomeIcons.bitcoin,
+                  color: BitNetTheme.colorBitcoin,
+                  size: 24,
+                ),
+                const SizedBox(width: BitNetTheme.elementSpacing),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Miner Reward (Subsidy + fees)',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                    Text(
+                      '\$${NumberFormat('#,##0').format(rewardAmount)}',
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                            color: BitNetTheme.successColor,
+                          ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildInfoRow(
-      String label, String value, IconData icon, AppTheme theme) {
-    return Row(
-      children: [
-        Icon(icon, color: theme.mutedText, size: 16),
-        const SizedBox(width: 8.0),
-        Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: theme.mutedText,
-                  fontSize: 14,
-                ),
-              ),
-              Flexible(
-                child: Text(
-                  value,
-                  style: TextStyle(
-                    color: theme.primaryWhite,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.right,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+  // Helper method to darken a color
+  Color _darken(Color color, [int amount = 10]) {
+    assert(amount >= 0 && amount <= 100);
+
+    final hsl = HSLColor.fromColor(color);
+    final lightness = (hsl.lightness - (amount / 100)).clamp(0.0, 1.0);
+
+    return hsl.withLightness(lightness).toColor();
   }
 }

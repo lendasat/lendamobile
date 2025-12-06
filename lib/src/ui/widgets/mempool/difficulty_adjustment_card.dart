@@ -1,151 +1,218 @@
-import 'package:ark_flutter/l10n/app_localizations.dart';
-import 'package:flutter/material.dart';
-import 'package:ark_flutter/app_theme.dart';
-import 'package:ark_flutter/src/rust/models/mempool.dart';
+import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/src/rust/models/mempool.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:timezone/timezone.dart';
 
+/// Card displaying Bitcoin network difficulty adjustment information
 class DifficultyAdjustmentCard extends StatelessWidget {
-  final DifficultyAdjustment difficultyAdjustment;
+  final DifficultyAdjustment? da;
+  final String? days;
+  final bool isLoading;
 
   const DifficultyAdjustmentCard({
-    super.key,
-    required this.difficultyAdjustment,
-  });
-
-  String _formatDate(BigInt timestamp, BuildContext context) {
-    final timezoneService = context.watch<TimezoneService>();
-    final dateUtc =
-        DateTime.fromMillisecondsSinceEpoch(timestamp.toInt(), isUtc: true);
-    final date = timezoneService.toSelectedTimezone(dateUtc);
-    return '${date.month}/${date.day}/${date.year}';
-  }
-
-  String _formatTimeRemaining(BigInt milliseconds, BuildContext context) {
-    final duration = Duration(milliseconds: milliseconds.toInt());
-    final days = duration.inDays;
-    final hours = duration.inHours % 24;
-
-    if (days > 0) {
-      return '$days ${AppLocalizations.of(context)!.days}, $hours ${AppLocalizations.of(context)!.hours}';
-    } else if (hours > 0) {
-      return '$hours ${AppLocalizations.of(context)!.hours}';
-    } else {
-      return '${duration.inMinutes} ${AppLocalizations.of(context)!.minutes}';
-    }
-  }
+    Key? key,
+    required this.da,
+    required this.days,
+    required this.isLoading,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    final progressPercent = difficultyAdjustment.progressPercent;
-    final difficultyChange = difficultyAdjustment.difficultyChange;
-    final isIncrease = difficultyChange >= 0;
+    if (isLoading) {
+      return Center(
+        child: CircularProgressIndicator(
+          color: BitNetTheme.colorBitcoin,
+        ),
+      );
+    }
+
+    if (da == null) {
+      return const SizedBox();
+    }
+
+    final loc = Provider.of<TimezoneService>(
+      context,
+      listen: false,
+    ).location;
 
     return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: theme.secondaryBlack,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: theme.primaryWhite.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      margin: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      child: GlassContainer(
+        child: Padding(
+          padding: const EdgeInsets.all(BitNetTheme.cardPadding),
+          child: Column(
             children: [
-              Icon(
-                Icons.bar_chart,
-                color: theme.primaryWhite,
-                size: 20,
-              ),
-              const SizedBox(width: 8.0),
-              Text(
-                AppLocalizations.of(context)!.difficultyAdjustment,
-                style: TextStyle(
-                  color: theme.primaryWhite,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16.0),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+              // Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '${progressPercent.toStringAsFixed(1)}% ${AppLocalizations.of(context)!.complete}',
-                    style: TextStyle(
-                      color: theme.mutedText,
-                      fontSize: 14,
-                    ),
+                  Icon(
+                    Icons.settings,
+                    size: BitNetTheme.cardPadding * 0.75,
                   ),
+                  SizedBox(width: BitNetTheme.elementSpacing),
                   Text(
-                    '${isIncrease ? '+' : ''}${difficultyChange.toStringAsFixed(2)}%',
-                    style: TextStyle(
-                      color: isIncrease ? Colors.green : Colors.red,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    "Bitcoin Network Difficulty",
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],
               ),
-              const SizedBox(height: 8.0),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progressPercent / 100,
-                  backgroundColor: theme.primaryBlack,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    isIncrease ? Colors.green : Colors.red,
+              SizedBox(height: BitNetTheme.cardPadding),
+
+              // Content
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Left side - Date information
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoRow(
+                        context,
+                        "Next adjustment in:",
+                        "~$days",
+                        Icons.calendar_today,
+                      ),
+                      SizedBox(height: BitNetTheme.elementSpacing * 1.5),
+                      _buildInfoRow(
+                        context,
+                        "Estimated date:",
+                        DateFormat.yMMMd().format(
+                          DateTime.fromMillisecondsSinceEpoch(
+                            da!.estimatedRetargetDate!.toInt(),
+                          ).toUtc().add(
+                            Duration(milliseconds: loc.currentTimeZone.offset),
+                          ),
+                        ),
+                        Icons.event,
+                      ),
+                      SizedBox(height: BitNetTheme.elementSpacing * 1.5),
+                      _buildInfoRow(
+                        context,
+                        "Estimated time:",
+                        DateFormat.jm().format(
+                          DateTime.fromMillisecondsSinceEpoch(
+                            da!.estimatedRetargetDate!.toInt(),
+                          ).toUtc().add(
+                            Duration(milliseconds: loc.currentTimeZone.offset),
+                          ),
+                        ),
+                        Icons.access_time,
+                      ),
+                    ],
                   ),
-                  minHeight: 8,
+
+                  // Right side - Difficulty change visualization
+                  _buildDifficultyChangeIndicator(context),
+                ],
+              ),
+
+              SizedBox(height: BitNetTheme.elementSpacing),
+              SizedBox(height: BitNetTheme.elementSpacing),
+
+              // Footer
+              Text(
+                "Difficulty adjusts every 2016 blocks (~2 weeks)",
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? BitNetTheme.white60
+                      : BitNetTheme.black60,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16.0),
-          _buildStatRow(
-            AppLocalizations.of(context)!.remainingBlocks,
-            '${difficultyAdjustment.remainingBlocks}',
-            theme,
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build the difficulty change indicator
+  Widget _buildDifficultyChangeIndicator(BuildContext context) {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: da!.difficultyChange!.isNegative
+              ? BitNetTheme.errorColor.withValues(alpha: 0.5)
+              : BitNetTheme.successColor.withValues(alpha: 0.5),
+          width: 3,
+        ),
+        color: da!.difficultyChange!.isNegative
+            ? BitNetTheme.errorColor.withValues(alpha: 0.1)
+            : BitNetTheme.successColor.withValues(alpha: 0.1),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            da!.difficultyChange!.isNegative
+                ? Icons.arrow_downward_rounded
+                : Icons.arrow_upward_rounded,
+            color: da!.difficultyChange!.isNegative
+                ? BitNetTheme.errorColor
+                : BitNetTheme.successColor,
+            size: 36,
           ),
-          const SizedBox(height: 8.0),
-          _buildStatRow(
-            AppLocalizations.of(context)!.estTime,
-            _formatTimeRemaining(difficultyAdjustment.remainingTime, context),
-            theme,
+          SizedBox(height: 8),
+          Text(
+            da!.difficultyChange!.isNegative
+                ? '${da!.difficultyChange!.abs().toStringAsFixed(2)}%'
+                : '${da!.difficultyChange!.toStringAsFixed(2)}%',
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              color: da!.difficultyChange!.isNegative
+                  ? BitNetTheme.errorColor
+                  : BitNetTheme.successColor,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 8.0),
-          _buildStatRow(
-            AppLocalizations.of(context)!.estDate,
-            _formatDate(difficultyAdjustment.estimatedRetargetDate, context),
-            theme,
+          SizedBox(height: 4),
+          Text(
+            da!.difficultyChange!.isNegative ? "Decrease" : "Increase",
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+              color: da!.difficultyChange!.isNegative
+                  ? BitNetTheme.errorColor
+                  : BitNetTheme.successColor,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatRow(String label, String value, AppTheme theme) {
+  // Helper method to build info rows
+  Widget _buildInfoRow(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(color: theme.mutedText, fontSize: 14),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: theme.primaryWhite,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+        Icon(icon, size: 16, color: BitNetTheme.white60),
+        SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? BitNetTheme.white60
+                    : BitNetTheme.black60,
+              ),
+            ),
+            Text(
+              value,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall!.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
       ],
     );

@@ -59,6 +59,10 @@ dependencies:
   timezone: ^0.9.4
   flex_color_picker: ^3.5.1
   mobile_scanner: ^7.0.1
+  google_fonts: ^6.2.1
+  font_awesome_flutter: ^10.8.0
+  gauge_indicator: ^0.4.3
+  syncfusion_flutter_gauges: ^31.1.19
 
 dev_dependencies:
   freezed: ^2.0.0
@@ -91,6 +95,7 @@ flutter:
 
   assets:
     - .env
+    - assets/images/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -120,5 +125,10 @@ flutter:
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
   #
+  fonts:
+    - family: SatoshiSymbol
+      fonts:
+        - asset: assets/fonts/Satoshi Symbol.ttf
+
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

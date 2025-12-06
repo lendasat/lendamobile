@@ -312,5 +312,13 @@
   "dataSource": "Data Source",
   "liveBitcoinMarketData": "Live Bitcoin Market Data",
   "updateFrequency": "Update Frequency",
-  "realTime": "Real-time"
+  "realTime": "Real-time",
+  "sendBitcoin": "Send Bitcoin",
+  "sendNow": "SEND NOW",
+  "recipient": "Recipient",
+  "unknown": "Unknown",
+  "walletAddressCopied": "Wallet address copied",
+  "hashrate": "Hashrate",
+  "fearAndGreedIndex": "Fear & Greed Index",
+  "health": "Health"
 }

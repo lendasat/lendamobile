@@ -783,4 +783,28 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get realTime => 'Real-time';
+
+  @override
+  String get sendBitcoin => 'Send Bitcoin';
+
+  @override
+  String get sendNow => 'SEND NOW';
+
+  @override
+  String get recipient => 'Recipient';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get walletAddressCopied => 'Wallet address copied';
+
+  @override
+  String get hashrate => 'Hashrate';
+
+  @override
+  String get fearAndGreedIndex => 'Fear & Greed Index';
+
+  @override
+  String get health => 'Health';
 }

@@ -26,7 +26,7 @@
 // Section: imports
 
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
-use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
+use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
 
 // Section: boilerplate
@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1460451312;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1647360938;
 
 // Section: executor
 
@@ -510,6 +510,41 @@ fn wire__crate__api__mempool_api__get_blocks_at_height_impl(
                     (move || async move {
                         let output_ok =
                             crate::api::mempool_api::get_blocks_at_height(api_height).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__mempool_api__get_fear_greed_index_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "get_fear_greed_index",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::mempool_api::get_fear_greed_index().await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -1836,8 +1871,10 @@ impl SseDecode for crate::models::mempool::BlockExtras {
         let mut var_totalFees = <Option<u64>>::sse_decode(deserializer);
         let mut var_avgFee = <Option<f64>>::sse_decode(deserializer);
         let mut var_avgFeeRate = <Option<f64>>::sse_decode(deserializer);
-        let mut var_reward = <Option<f64>>::sse_decode(deserializer);
+        let mut var_reward = <Option<u64>>::sse_decode(deserializer);
         let mut var_pool = <Option<crate::models::mempool::MiningPool>>::sse_decode(deserializer);
+        let mut var_matchRate = <Option<f64>>::sse_decode(deserializer);
+        let mut var_similarity = <Option<f64>>::sse_decode(deserializer);
         return crate::models::mempool::BlockExtras {
             median_fee: var_medianFee,
             total_fees: var_totalFees,
@@ -1845,6 +1882,8 @@ impl SseDecode for crate::models::mempool::BlockExtras {
             avg_fee_rate: var_avgFeeRate,
             reward: var_reward,
             pool: var_pool,
+            match_rate: var_matchRate,
+            similarity: var_similarity,
         };
     }
 }
@@ -1962,6 +2001,66 @@ impl SseDecode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_f64::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for crate::models::mempool::FearGreedData {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_now =
+            <Option<crate::models::mempool::FearGreedValue>>::sse_decode(deserializer);
+        let mut var_previousClose =
+            <Option<crate::models::mempool::FearGreedValue>>::sse_decode(deserializer);
+        let mut var_oneWeekAgo =
+            <Option<crate::models::mempool::FearGreedValue>>::sse_decode(deserializer);
+        let mut var_oneMonthAgo =
+            <Option<crate::models::mempool::FearGreedValue>>::sse_decode(deserializer);
+        let mut var_oneYearAgo =
+            <Option<crate::models::mempool::FearGreedValue>>::sse_decode(deserializer);
+        return crate::models::mempool::FearGreedData {
+            now: var_now,
+            previous_close: var_previousClose,
+            one_week_ago: var_oneWeekAgo,
+            one_month_ago: var_oneMonthAgo,
+            one_year_ago: var_oneYearAgo,
+        };
+    }
+}
+
+impl SseDecode for crate::models::mempool::FearGreedIndex {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_lastUpdated =
+            <Option<crate::models::mempool::FearGreedLastUpdated>>::sse_decode(deserializer);
+        let mut var_fgi = <Option<crate::models::mempool::FearGreedData>>::sse_decode(deserializer);
+        return crate::models::mempool::FearGreedIndex {
+            last_updated: var_lastUpdated,
+            fgi: var_fgi,
+        };
+    }
+}
+
+impl SseDecode for crate::models::mempool::FearGreedLastUpdated {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_epochUnixSeconds = <Option<i64>>::sse_decode(deserializer);
+        let mut var_humanDate = <Option<String>>::sse_decode(deserializer);
+        return crate::models::mempool::FearGreedLastUpdated {
+            epoch_unix_seconds: var_epochUnixSeconds,
+            human_date: var_humanDate,
+        };
+    }
+}
+
+impl SseDecode for crate::models::mempool::FearGreedValue {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_value = <Option<i32>>::sse_decode(deserializer);
+        let mut var_valueText = <Option<String>>::sse_decode(deserializer);
+        return crate::models::mempool::FearGreedValue {
+            value: var_value,
+            value_text: var_valueText,
+        };
     }
 }
 
@@ -2476,6 +2575,56 @@ impl SseDecode for Option<f64> {
     }
 }
 
+impl SseDecode for Option<crate::models::mempool::FearGreedData> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::models::mempool::FearGreedData>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::models::mempool::FearGreedLastUpdated> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::models::mempool::FearGreedLastUpdated>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::models::mempool::FearGreedValue> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::models::mempool::FearGreedValue>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<i32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<i32>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<i64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2819,68 +2968,74 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        14 => wire__crate__api__get_hashrate_data_impl(port, ptr, rust_vec_len, data_len),
-        15 => {
+        14 => wire__crate__api__mempool_api__get_fear_greed_index_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        15 => wire__crate__api__get_hashrate_data_impl(port, ptr, rust_vec_len, data_len),
+        16 => {
             wire__crate__api__mempool_api__get_hashrate_data_impl(port, ptr, rust_vec_len, data_len)
         }
-        16 => wire__crate__api__get_recommended_fees_impl(port, ptr, rust_vec_len, data_len),
-        17 => wire__crate__api__mempool_api__get_recommended_fees_impl(
+        17 => wire__crate__api__get_recommended_fees_impl(port, ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__mempool_api__get_recommended_fees_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        19 => wire__crate__api__get_transaction_impl(port, ptr, rust_vec_len, data_len),
-        20 => {
+        20 => wire__crate__api__get_transaction_impl(port, ptr, rust_vec_len, data_len),
+        21 => {
             wire__crate__api__mempool_api__get_transaction_impl(port, ptr, rust_vec_len, data_len)
         }
-        21 => wire__crate__api__ark_api__information_impl(port, ptr, rust_vec_len, data_len),
-        22 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
-        23 => wire__crate__api__init_logging_impl(port, ptr, rust_vec_len, data_len),
-        24 => {
+        22 => wire__crate__api__ark_api__information_impl(port, ptr, rust_vec_len, data_len),
+        23 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__init_logging_impl(port, ptr, rust_vec_len, data_len),
+        25 => {
             wire__crate__api__ark_api__load_existing_wallet_impl(port, ptr, rust_vec_len, data_len)
         }
-        25 => wire__crate__api__moonpay_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
-        26 => wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
+        26 => wire__crate__api__moonpay_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        27 => wire__crate__api__moonpay_get_currency_limits_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
+        28 => wire__crate__api__moonpay_get_currency_limits_impl(port, ptr, rust_vec_len, data_len),
+        29 => wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        29 => wire__crate__api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len),
-        30 => {
+        30 => wire__crate__api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len),
+        31 => {
             wire__crate__api__moonpay_api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len)
         }
-        31 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
-        32 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
-        33 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
-        34 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
-        35 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
-        36 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
+        32 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
+        33 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
+        34 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
+        35 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
+        36 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
+        38 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        39 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
-        40 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
+        40 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
+        41 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        41 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
-        43 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -2894,7 +3049,7 @@ fn pde_ffi_dispatcher_sync_impl(
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
         3 => wire__crate__api__currency_code_impl(ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__get_supported_currencies_impl(ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__get_supported_currencies_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3008,6 +3163,8 @@ impl flutter_rust_bridge::IntoDart for crate::models::mempool::BlockExtras {
             self.avg_fee_rate.into_into_dart().into_dart(),
             self.reward.into_into_dart().into_dart(),
             self.pool.into_into_dart().into_dart(),
+            self.match_rate.into_into_dart().into_dart(),
+            self.similarity.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -3161,6 +3318,93 @@ impl flutter_rust_bridge::IntoIntoDart<crate::models::exchange_rates::ExchangeRa
     for crate::models::exchange_rates::ExchangeRates
 {
     fn into_into_dart(self) -> crate::models::exchange_rates::ExchangeRates {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::models::mempool::FearGreedData {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.now.into_into_dart().into_dart(),
+            self.previous_close.into_into_dart().into_dart(),
+            self.one_week_ago.into_into_dart().into_dart(),
+            self.one_month_ago.into_into_dart().into_dart(),
+            self.one_year_ago.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::models::mempool::FearGreedData
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::models::mempool::FearGreedData>
+    for crate::models::mempool::FearGreedData
+{
+    fn into_into_dart(self) -> crate::models::mempool::FearGreedData {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::models::mempool::FearGreedIndex {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.last_updated.into_into_dart().into_dart(),
+            self.fgi.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::models::mempool::FearGreedIndex
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::models::mempool::FearGreedIndex>
+    for crate::models::mempool::FearGreedIndex
+{
+    fn into_into_dart(self) -> crate::models::mempool::FearGreedIndex {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::models::mempool::FearGreedLastUpdated {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.epoch_unix_seconds.into_into_dart().into_dart(),
+            self.human_date.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::models::mempool::FearGreedLastUpdated
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::models::mempool::FearGreedLastUpdated>
+    for crate::models::mempool::FearGreedLastUpdated
+{
+    fn into_into_dart(self) -> crate::models::mempool::FearGreedLastUpdated {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::models::mempool::FearGreedValue {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.value.into_into_dart().into_dart(),
+            self.value_text.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::models::mempool::FearGreedValue
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::models::mempool::FearGreedValue>
+    for crate::models::mempool::FearGreedValue
+{
+    fn into_into_dart(self) -> crate::models::mempool::FearGreedValue {
         self
     }
 }
@@ -3809,8 +4053,10 @@ impl SseEncode for crate::models::mempool::BlockExtras {
         <Option<u64>>::sse_encode(self.total_fees, serializer);
         <Option<f64>>::sse_encode(self.avg_fee, serializer);
         <Option<f64>>::sse_encode(self.avg_fee_rate, serializer);
-        <Option<f64>>::sse_encode(self.reward, serializer);
+        <Option<u64>>::sse_encode(self.reward, serializer);
         <Option<crate::models::mempool::MiningPool>>::sse_encode(self.pool, serializer);
+        <Option<f64>>::sse_encode(self.match_rate, serializer);
+        <Option<f64>>::sse_encode(self.similarity, serializer);
     }
 }
 
@@ -3888,6 +4134,50 @@ impl SseEncode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_f64::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for crate::models::mempool::FearGreedData {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<crate::models::mempool::FearGreedValue>>::sse_encode(self.now, serializer);
+        <Option<crate::models::mempool::FearGreedValue>>::sse_encode(
+            self.previous_close,
+            serializer,
+        );
+        <Option<crate::models::mempool::FearGreedValue>>::sse_encode(self.one_week_ago, serializer);
+        <Option<crate::models::mempool::FearGreedValue>>::sse_encode(
+            self.one_month_ago,
+            serializer,
+        );
+        <Option<crate::models::mempool::FearGreedValue>>::sse_encode(self.one_year_ago, serializer);
+    }
+}
+
+impl SseEncode for crate::models::mempool::FearGreedIndex {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<crate::models::mempool::FearGreedLastUpdated>>::sse_encode(
+            self.last_updated,
+            serializer,
+        );
+        <Option<crate::models::mempool::FearGreedData>>::sse_encode(self.fgi, serializer);
+    }
+}
+
+impl SseEncode for crate::models::mempool::FearGreedLastUpdated {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<i64>>::sse_encode(self.epoch_unix_seconds, serializer);
+        <Option<String>>::sse_encode(self.human_date, serializer);
+    }
+}
+
+impl SseEncode for crate::models::mempool::FearGreedValue {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<i32>>::sse_encode(self.value, serializer);
+        <Option<String>>::sse_encode(self.value_text, serializer);
     }
 }
 
@@ -4279,6 +4569,46 @@ impl SseEncode for Option<f64> {
     }
 }
 
+impl SseEncode for Option<crate::models::mempool::FearGreedData> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::models::mempool::FearGreedData>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::models::mempool::FearGreedLastUpdated> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::models::mempool::FearGreedLastUpdated>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::models::mempool::FearGreedValue> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::models::mempool::FearGreedValue>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<i32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <i32>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<i64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4533,7 +4863,7 @@ mod io {
     use flutter_rust_bridge::for_generated::byteorder::{
         NativeEndian, ReadBytesExt, WriteBytesExt,
     };
-    use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
+    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate
@@ -4557,7 +4887,7 @@ mod web {
     };
     use flutter_rust_bridge::for_generated::wasm_bindgen;
     use flutter_rust_bridge::for_generated::wasm_bindgen::prelude::*;
-    use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
+    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate
