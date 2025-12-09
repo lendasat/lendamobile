@@ -115,27 +115,27 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
               : SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.only(
-                      top: BitNetTheme.cardPadding * 3,
+                      top: AppTheme.cardPadding * 3,
                     ),
                     child: Column(
                       children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: BitNetTheme.elementSpacing,
+                            horizontal: AppTheme.elementSpacing,
                           ),
                           child: GlassContainer(
-                            borderRadius: BitNetTheme.cardRadiusBig,
+                            borderRadius: AppTheme.cardRadiusBig,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                vertical: BitNetTheme.elementSpacing,
-                                horizontal: BitNetTheme.elementSpacing,
+                                vertical: AppTheme.elementSpacing,
+                                horizontal: AppTheme.elementSpacing,
                               ),
                               child: Column(
                                 children: [
                                   // Transaction header with sender and receiver
                                   Container(
                                     margin: const EdgeInsets.symmetric(
-                                      vertical: BitNetTheme.cardPadding * 0.75,
+                                      vertical: AppTheme.cardPadding * 0.75,
                                     ),
                                     child: Column(
                                       children: [
@@ -147,7 +147,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               children: [
                                                 Avatar(
                                                   size:
-                                                      BitNetTheme.cardPadding *
+                                                      AppTheme.cardPadding *
                                                           4,
                                                   onTap: () {
                                                     _showInputsBottomSheet(
@@ -156,7 +156,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   isNft: false,
                                                 ),
                                                 const SizedBox(
-                                                  height: BitNetTheme
+                                                  height: AppTheme
                                                           .elementSpacing *
                                                       0.5,
                                                 ),
@@ -166,28 +166,28 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               ],
                                             ),
                                             const SizedBox(
-                                              width: BitNetTheme.cardPadding *
+                                              width: AppTheme.cardPadding *
                                                   0.75,
                                             ),
                                             Icon(
                                               Icons.double_arrow_rounded,
                                               size:
-                                                  BitNetTheme.cardPadding * 2.5,
+                                                  AppTheme.cardPadding * 2.5,
                                               color: Theme.of(context)
                                                           .brightness ==
                                                       Brightness.dark
-                                                  ? BitNetTheme.white80
-                                                  : BitNetTheme.black60,
+                                                  ? AppTheme.white80
+                                                  : AppTheme.black60,
                                             ),
                                             const SizedBox(
-                                              width: BitNetTheme.cardPadding *
+                                              width: AppTheme.cardPadding *
                                                   0.75,
                                             ),
                                             Column(
                                               children: [
                                                 Avatar(
                                                   size:
-                                                      BitNetTheme.cardPadding *
+                                                      AppTheme.cardPadding *
                                                           4,
                                                   isNft: false,
                                                   onTap: () {
@@ -196,7 +196,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   },
                                                 ),
                                                 const SizedBox(
-                                                  height: BitNetTheme
+                                                  height: AppTheme
                                                           .elementSpacing *
                                                       0.5,
                                                 ),
@@ -215,15 +215,15 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal:
-                                          BitNetTheme.elementSpacing * 0.5,
-                                      vertical: BitNetTheme.elementSpacing,
+                                          AppTheme.elementSpacing * 0.5,
+                                      vertical: AppTheme.elementSpacing,
                                     ),
                                     child: GlassContainer(
                                       opacity: 0.05,
-                                      borderRadius: BitNetTheme.cardRadiusSmall,
+                                      borderRadius: AppTheme.cardRadiusSmall,
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(
-                                          vertical: BitNetTheme.elementSpacing,
+                                          vertical: AppTheme.elementSpacing,
                                         ),
                                         child: Column(
                                           crossAxisAlignment:
@@ -237,10 +237,10 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               contentPadding:
                                                   const EdgeInsets.symmetric(
                                                 horizontal:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.75,
                                                 vertical:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.5,
                                               ),
                                               text: 'Transaction Volume',
@@ -265,10 +265,10 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               contentPadding:
                                                   const EdgeInsets.symmetric(
                                                 horizontal:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.75,
                                                 vertical:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.5,
                                               ),
                                               text: l10n.transactionId,
@@ -291,18 +291,18 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                 children: [
                                                   Icon(
                                                     Icons.copy,
-                                                    color: BitNetTheme.white60,
-                                                    size: BitNetTheme
+                                                    color: AppTheme.white60,
+                                                    size: AppTheme
                                                             .cardPadding *
                                                         0.75,
                                                   ),
                                                   const SizedBox(
-                                                    width: BitNetTheme
+                                                    width: AppTheme
                                                             .elementSpacing /
                                                         2,
                                                   ),
                                                   SizedBox(
-                                                    width: BitNetTheme
+                                                    width: AppTheme
                                                             .cardPadding *
                                                         5,
                                                     child: Text(
@@ -323,10 +323,10 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               contentPadding:
                                                   const EdgeInsets.symmetric(
                                                 horizontal:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.75,
                                                 vertical:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.5,
                                               ),
                                               text: l10n.block,
@@ -353,10 +353,10 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               contentPadding:
                                                   const EdgeInsets.symmetric(
                                                 horizontal:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.75,
                                                 vertical:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.5,
                                               ),
                                               text: l10n.status,
@@ -365,9 +365,9 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   BlinkingDot(
                                                     color: transactionModel!
                                                             .status.confirmed
-                                                        ? BitNetTheme
+                                                        ? AppTheme
                                                             .successColor
-                                                        : BitNetTheme
+                                                        : AppTheme
                                                             .errorColor,
                                                   ),
                                                   const SizedBox(width: 8),
@@ -383,9 +383,9 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                           color: transactionModel!
                                                                   .status
                                                                   .confirmed
-                                                              ? BitNetTheme
+                                                              ? AppTheme
                                                                   .successColor
-                                                              : BitNetTheme
+                                                              : AppTheme
                                                                   .errorColor,
                                                         ),
                                                   ),
@@ -398,10 +398,10 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               contentPadding:
                                                   const EdgeInsets.symmetric(
                                                 horizontal:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.75,
                                                 vertical:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.5,
                                               ),
                                               text: l10n.network,
@@ -409,23 +409,23 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                 children: [
                                                   Image.asset(
                                                     "assets/images/bitcoin.png",
-                                                    width: BitNetTheme
+                                                    width: AppTheme
                                                             .cardPadding *
                                                         1,
-                                                    height: BitNetTheme
+                                                    height: AppTheme
                                                             .cardPadding *
                                                         1,
                                                     errorBuilder: (context,
                                                         error, stackTrace) {
                                                       return const Icon(
                                                         Icons.currency_bitcoin,
-                                                        color: BitNetTheme
+                                                        color: AppTheme
                                                             .colorBitcoin,
                                                       );
                                                     },
                                                   ),
                                                   const SizedBox(
-                                                    width: BitNetTheme
+                                                    width: AppTheme
                                                             .elementSpacing /
                                                         2,
                                                   ),
@@ -448,10 +448,10 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               ArkListTile(
                                                 contentPadding:
                                                     const EdgeInsets.symmetric(
-                                                  horizontal: BitNetTheme
+                                                  horizontal: AppTheme
                                                           .elementSpacing *
                                                       0.75,
-                                                  vertical: BitNetTheme
+                                                  vertical: AppTheme
                                                           .elementSpacing *
                                                       0.5,
                                                 ),
@@ -459,13 +459,13 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                 leading: Icon(
                                                   Icons.access_time,
                                                   size:
-                                                      BitNetTheme.cardPadding *
+                                                      AppTheme.cardPadding *
                                                           0.75,
                                                   color: Theme.of(context)
                                                               .brightness ==
                                                           Brightness.dark
-                                                      ? BitNetTheme.white60
-                                                      : BitNetTheme.black60,
+                                                      ? AppTheme.white60
+                                                      : AppTheme.black60,
                                                 ),
                                                 trailing: Builder(
                                                   builder: (context) {
@@ -482,7 +482,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                             .currentTimeZone
                                                             .offset));
                                                     return SizedBox(
-                                                      width: BitNetTheme
+                                                      width: AppTheme
                                                               .cardPadding *
                                                           7,
                                                       child: Text(
@@ -507,10 +507,10 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               contentPadding:
                                                   const EdgeInsets.symmetric(
                                                 horizontal:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.75,
                                                 vertical:
-                                                    BitNetTheme.elementSpacing *
+                                                    AppTheme.elementSpacing *
                                                         0.5,
                                               ),
                                               text: l10n.fee,
@@ -576,11 +576,11 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
           builder: (context, setState) {
             return Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: BitNetTheme.cardPadding,
+                horizontal: AppTheme.cardPadding,
               ),
               child: Column(
                 children: [
-                  const SizedBox(height: BitNetTheme.cardPadding * 2.5),
+                  const SizedBox(height: AppTheme.cardPadding * 2.5),
                   SearchFieldWidget(
                     hintText: l10n.search,
                     handleSearch: (v) {
@@ -590,7 +590,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                     },
                     isSearchEnabled: true,
                   ),
-                  const SizedBox(height: BitNetTheme.elementSpacing),
+                  const SizedBox(height: AppTheme.elementSpacing),
                   Expanded(
                     child: MediaQuery.removePadding(
                       context: context,
@@ -661,11 +661,11 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
           builder: (context, setState) {
             return Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: BitNetTheme.cardPadding,
+                horizontal: AppTheme.cardPadding,
               ),
               child: Column(
                 children: [
-                  const SizedBox(height: BitNetTheme.cardPadding * 2.5),
+                  const SizedBox(height: AppTheme.cardPadding * 2.5),
                   SearchFieldWidget(
                     hintText: l10n.search,
                     handleSearch: (v) {
@@ -675,7 +675,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                     },
                     isSearchEnabled: true,
                   ),
-                  const SizedBox(height: BitNetTheme.elementSpacing),
+                  const SizedBox(height: AppTheme.elementSpacing),
                   Expanded(
                     child: MediaQuery.removePadding(
                       context: context,
@@ -727,8 +727,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(
-        vertical: BitNetTheme.elementSpacing,
-        horizontal: BitNetTheme.elementSpacing * 0.75,
+        vertical: AppTheme.elementSpacing,
+        horizontal: AppTheme.elementSpacing * 0.75,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -737,10 +737,10 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
             child: Row(
               children: [
                 const Avatar(
-                  size: BitNetTheme.cardPadding * 2,
+                  size: AppTheme.cardPadding * 2,
                   isNft: false,
                 ),
-                const SizedBox(width: BitNetTheme.elementSpacing * 0.75),
+                const SizedBox(width: AppTheme.elementSpacing * 0.75),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -757,14 +757,14 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                         children: [
                           Image.asset(
                             "assets/images/bitcoin.png",
-                            width: BitNetTheme.cardPadding * 0.75,
-                            height: BitNetTheme.cardPadding * 0.75,
+                            width: AppTheme.cardPadding * 0.75,
+                            height: AppTheme.cardPadding * 0.75,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
                               return const Icon(
                                 Icons.currency_bitcoin,
                                 size: 12,
-                                color: BitNetTheme.colorBitcoin,
+                                color: AppTheme.colorBitcoin,
                               );
                             },
                           ),
@@ -785,8 +785,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
             value.toStringAsFixed(8),
             style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   color: isInput
-                      ? BitNetTheme.errorColor
-                      : BitNetTheme.successColor,
+                      ? AppTheme.errorColor
+                      : AppTheme.successColor,
                 ),
           ),
         ],

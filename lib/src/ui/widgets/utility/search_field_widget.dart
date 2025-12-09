@@ -1,5 +1,5 @@
+import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 
 class SearchFieldWidget extends StatefulWidget {
@@ -37,7 +37,7 @@ class _SearchFieldWidgetState extends State<SearchFieldWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
 
     return GlassContainer(
       borderRadius: BorderRadius.circular(AppTheme.radiusL),
@@ -57,14 +57,14 @@ class _SearchFieldWidgetState extends State<SearchFieldWidget> {
             });
             widget.onChanged?.call(value);
           },
-          style: TextStyle(color: theme.primaryWhite),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.all(AppTheme.paddingL / 100),
-            hintStyle: TextStyle(color: theme.mutedText),
+            hintStyle: TextStyle(color: Theme.of(context).hintColor),
             hintText: widget.hintText,
             prefixIcon: Icon(
               Icons.search,
-              color: theme.mutedText,
+              color: Theme.of(context).hintColor,
             ),
             suffixIcon: _textFieldController.text.isEmpty ||
                     _textFieldController.text == ''
@@ -72,7 +72,7 @@ class _SearchFieldWidgetState extends State<SearchFieldWidget> {
                 : IconButton(
                     icon: Icon(
                       Icons.cancel,
-                      color: theme.mutedText,
+                      color: Theme.of(context).hintColor,
                     ),
                     onPressed: () {
                       if (widget.onSuffixTap != null) {

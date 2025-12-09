@@ -1,4 +1,3 @@
-import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -39,10 +38,10 @@ class Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
     final isLight = Theme.of(context).brightness == Brightness.light;
 
-    final avatarSize = size ?? BitNetTheme.cardPadding * 1.5;
+    final avatarSize = size ?? AppTheme.cardPadding * 1.5;
     final borderRadius = type == ProfilePictureType.square
         ? BorderRadius.circular(avatarSize / 4)
         : BorderRadius.circular(avatarSize / 3);
@@ -59,16 +58,16 @@ class Avatar extends StatelessWidget {
           height: avatarSize,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            return _buildFallbackAvatar(context, theme, avatarSize, isLight);
+            return _buildFallbackAvatar(context, avatarSize, isLight);
           },
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
-            return _buildFallbackAvatar(context, theme, avatarSize, isLight);
+            return _buildFallbackAvatar(context, avatarSize, isLight);
           },
         ),
       );
     } else {
-      avatarContent = _buildFallbackAvatar(context, theme, avatarSize, isLight);
+      avatarContent = _buildFallbackAvatar(context, avatarSize, isLight);
     }
 
     // Add NFT border if applicable
@@ -79,8 +78,8 @@ class Avatar extends StatelessWidget {
           borderRadius: borderRadius,
           gradient: const LinearGradient(
             colors: [
-              BitNetTheme.colorBitcoin,
-              BitNetTheme.colorPrimaryGradient,
+              AppTheme.colorBitcoin,
+              AppTheme.colorPrimaryGradient,
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -98,7 +97,6 @@ class Avatar extends StatelessWidget {
 
   Widget _buildFallbackAvatar(
     BuildContext context,
-    AppTheme theme,
     double size,
     bool isLight,
   ) {
@@ -109,7 +107,7 @@ class Avatar extends StatelessWidget {
         color: backgroundColor ??
             (isLight
                 ? Colors.black.withValues(alpha: 0.04)
-                : theme.tertiaryBlack.withValues(alpha: 0.5)),
+                : Theme.of(context).colorScheme.secondary.withValues(alpha: 0.5)),
         borderRadius: type == ProfilePictureType.square
             ? BorderRadius.circular(size / 4)
             : BorderRadius.circular(size / 3),
@@ -122,7 +120,7 @@ class Avatar extends StatelessWidget {
       ),
       child: Icon(
         fallbackIcon ?? Icons.person,
-        color: theme.primaryWhite,
+        color: Theme.of(context).colorScheme.onSurface,
         size: size * 0.6,
       ),
     );

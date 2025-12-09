@@ -44,7 +44,7 @@ class GlassContainer extends StatelessWidget {
     BorderRadius radius;
     if (borderRadius == null) {
       radius = const BorderRadius.all(
-        Radius.circular(BitNetTheme.cardPadding * 2.5 / 3),
+        Radius.circular(AppTheme.cardPadding * 2.5 / 3),
       ); // Original default
     } else if (borderRadius is double) {
       radius = BorderRadius.circular(borderRadius);
@@ -53,7 +53,7 @@ class GlassContainer extends StatelessWidget {
     } else {
       // Fallback for any other type
       radius = const BorderRadius.all(
-        Radius.circular(BitNetTheme.cardPadding * 2.5 / 3),
+        Radius.circular(AppTheme.cardPadding * 2.5 / 3),
       );
     }
 
@@ -69,7 +69,7 @@ class GlassContainer extends StatelessWidget {
                   ? boxShadow!
                   : Theme.of(context).brightness == Brightness.light
                       ? [] // No shadows in light mode
-                      : [BitNetTheme.boxShadowSuperSmall], // Minimal shadow in dark mode
+                      : [AppTheme.boxShadowSuperSmall], // Minimal shadow in dark mode
         ),
         child: ClipRRect(
           borderRadius: radius,

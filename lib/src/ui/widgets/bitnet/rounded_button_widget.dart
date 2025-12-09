@@ -1,4 +1,3 @@
-import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +27,7 @@ class RoundedButtonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     // Determine colors based on button type
@@ -38,7 +37,7 @@ class RoundedButtonWidget extends StatelessWidget {
 
     switch (buttonType) {
       case ButtonType.solid:
-        bgColor = backgroundColor ?? BitNetTheme.colorBitcoin;
+        bgColor = backgroundColor ?? AppTheme.colorBitcoin;
         fgColor = iconColor ?? Colors.white;
         border = null;
         break;
@@ -46,39 +45,39 @@ class RoundedButtonWidget extends StatelessWidget {
         bgColor = isLight
             ? Colors.black.withValues(alpha: 0.04)
             : Colors.white.withValues(alpha: 0.1);
-        fgColor = iconColor ?? theme.primaryWhite;
+        fgColor = iconColor ?? Theme.of(context).colorScheme.onSurface;
         border = isLight
             ? Border.all(color: Colors.black.withValues(alpha: 0.1), width: 1)
             : null;
         break;
       case ButtonType.outlined:
         bgColor = Colors.transparent;
-        fgColor = iconColor ?? theme.primaryWhite;
+        fgColor = iconColor ?? Theme.of(context).colorScheme.onSurface;
         border = Border.all(
-          color: theme.borderColor,
+          color: Theme.of(context).dividerColor,
           width: 1.5,
         );
         break;
       case ButtonType.primary:
-        bgColor = backgroundColor ?? BitNetTheme.colorBitcoin;
+        bgColor = backgroundColor ?? AppTheme.colorBitcoin;
         fgColor = iconColor ?? Colors.white;
         border = null;
         break;
       case ButtonType.secondary:
-        bgColor = backgroundColor ?? theme.secondaryBlack;
-        fgColor = iconColor ?? theme.primaryWhite;
+        bgColor = backgroundColor ?? Theme.of(context).colorScheme.surface;
+        fgColor = iconColor ?? Theme.of(context).colorScheme.onSurface;
         border = null;
         break;
       case ButtonType.disabled:
-        bgColor = theme.tertiaryBlack;
-        fgColor = theme.mutedText;
+        bgColor = Theme.of(context).colorScheme.secondary;
+        fgColor = Theme.of(context).hintColor;
         border = null;
         break;
     }
 
     if (!enabled) {
-      bgColor = theme.tertiaryBlack;
-      fgColor = theme.mutedText;
+      bgColor = Theme.of(context).colorScheme.secondary;
+      fgColor = Theme.of(context).hintColor;
     }
 
     return GestureDetector(

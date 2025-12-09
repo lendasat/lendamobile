@@ -58,13 +58,13 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
         (balanceValue / 100000000 * bitcoinPrice).toStringAsFixed(2);
 
     return GlassContainer(
-      height: BitNetTheme.cardPadding * 2.75,
-      borderRadius: BitNetTheme.cardPadding * 2.75 / 3,
+      height: AppTheme.cardPadding * 2.75,
+      borderRadius: AppTheme.cardPadding * 2.75 / 3,
       child: Stack(
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: BitNetTheme.elementSpacing,
+              horizontal: AppTheme.elementSpacing,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -75,12 +75,12 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
                     children: [
                       Flexible(
                         child: SizedBox(
-                          height: BitNetTheme.cardPadding * 1.75,
-                          width: BitNetTheme.cardPadding * 1.75,
+                          height: AppTheme.cardPadding * 1.75,
+                          width: AppTheme.cardPadding * 1.75,
                           child: ClipOval(child: widget.currency.icon),
                         ),
                       ),
-                      SizedBox(width: BitNetTheme.elementSpacing / 1.5),
+                      SizedBox(width: AppTheme.elementSpacing / 1.5),
                       Text(
                         widget.currency.name,
                         style: Theme.of(widget.context).textTheme.titleSmall!
@@ -88,8 +88,8 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
                               color:
                                   Theme.of(context).brightness ==
                                       Brightness.dark
-                                  ? BitNetTheme.white90
-                                  : BitNetTheme.black90,
+                                  ? AppTheme.white90
+                                  : AppTheme.black90,
                             ),
                       ),
                     ],
@@ -120,7 +120,7 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
                               ),
                         currencyService.showCoinBalance
                             ? Icon(
-                                BitNetTheme.satoshiIcon,
+                                AppTheme.satoshiIcon,
                               )
                             : const SizedBox.shrink(),
                       ],

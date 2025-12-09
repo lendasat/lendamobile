@@ -97,9 +97,9 @@
       }
     }
   },
-  "appTagline": "Wallet That Flies on Ark",
+  "appTagline": "The first Bitcoin wallet that doesn't suck.",
   "@appTagline": {
-    "description": "App tagline with first letter of each word bolded"
+    "description": "App tagline"
   },
   "ok": "OK",
   "chooseAnOption": "Choose an option:",

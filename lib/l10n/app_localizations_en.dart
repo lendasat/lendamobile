@@ -153,7 +153,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get appTagline => 'Wallet That Flies on Ark';
+  String get appTagline => 'The first Bitcoin wallet that doesn\'t suck.';
 
   @override
   String get ok => 'OK';

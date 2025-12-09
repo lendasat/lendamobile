@@ -1,5 +1,5 @@
+import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:provider/provider.dart';
@@ -93,7 +93,7 @@ class _AmountWidgetState extends State<AmountWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
     final materialTheme = Theme.of(context);
     final bitcoinPrice = widget.bitcoinPrice;
     final currencyService = context.watch<CurrencyPreferenceService>();
@@ -110,7 +110,7 @@ class _AmountWidgetState extends State<AmountWidget> {
               children: [
                 // Swap button
                 IconButton(
-                  icon: Icon(Icons.swap_vert, color: theme.primaryWhite),
+                  icon: Icon(Icons.swap_vert, color: Theme.of(context).colorScheme.onSurface),
                   onPressed: () {
                     _service.toggleSwapped(bitcoinPrice);
                     widget.focusNode.unfocus();
@@ -183,27 +183,27 @@ class _AmountWidgetState extends State<AmountWidget> {
                                   currencyService.symbol,
                                   style: TextStyle(
                                     fontSize: 24,
-                                    color: theme.primaryWhite
+                                    color: Theme.of(context).colorScheme.onSurface
                                         .withValues(alpha: 0.7),
                                   ),
                                 ),
                               ],
                             )
                           : _getCurrencyIcon(
+                              context,
                               _service.currentUnit,
                               size: 24.0,
-                              theme: theme,
                             ),
                       border: InputBorder.none,
                       counterText: "",
                       hintText: "0.0",
                       hintStyle: TextStyle(
-                          color: theme.primaryWhite.withValues(alpha: 0.5)),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                     ),
                     controller: _service.getCurrentController(),
                     autofocus: false,
                     style: materialTheme.textTheme.displayLarge?.copyWith(
-                      color: theme.primaryWhite,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -214,9 +214,9 @@ class _AmountWidgetState extends State<AmountWidget> {
             Center(
               child: !_service.swapped
                   ? _buildBitcoinToMoneyWidget(
-                      context, bitcoinPrice, theme, currencyService)
+                      context, bitcoinPrice, currencyService)
                   : _buildMoneyToBitcoinWidget(
-                      context, bitcoinPrice, theme, currencyService),
+                      context, bitcoinPrice, currencyService),
             ),
           ],
         );
@@ -227,7 +227,6 @@ class _AmountWidgetState extends State<AmountWidget> {
   Widget _buildBitcoinToMoneyWidget(
     BuildContext context,
     double? bitcoinPrice,
-    AppTheme theme,
     CurrencyPreferenceService currencyService,
   ) {
     final materialTheme = Theme.of(context);
@@ -236,7 +235,7 @@ class _AmountWidgetState extends State<AmountWidget> {
       return Text(
         "≈ ${currencyService.formatAmount(0.0)}",
         style: materialTheme.textTheme.bodyLarge
-            ?.copyWith(color: theme.primaryWhite.withValues(alpha: 0.7)),
+            ?.copyWith(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
       );
     }
 
@@ -273,14 +272,13 @@ class _AmountWidgetState extends State<AmountWidget> {
     return Text(
       "≈ ${currencyService.formatAmount(usdAmount)}",
       style: materialTheme.textTheme.bodyLarge
-          ?.copyWith(color: theme.primaryWhite.withValues(alpha: 0.7)),
+          ?.copyWith(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
     );
   }
 
   Widget _buildMoneyToBitcoinWidget(
     BuildContext context,
     double? bitcoinPrice,
-    AppTheme theme,
     CurrencyPreferenceService currencyService,
   ) {
     final materialTheme = Theme.of(context);
@@ -292,10 +290,10 @@ class _AmountWidgetState extends State<AmountWidget> {
           Text(
             "≈ 0.00",
             style: materialTheme.textTheme.bodyLarge?.copyWith(
-              color: theme.primaryWhite.withValues(alpha: 0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
-          _getCurrencyIcon(_service.currentUnit, theme: theme),
+          _getCurrencyIcon(context, _service.currentUnit),
         ],
       );
     }
@@ -355,32 +353,31 @@ class _AmountWidgetState extends State<AmountWidget> {
         Text(
           "≈ $displayAmount",
           style: materialTheme.textTheme.bodyLarge
-              ?.copyWith(color: theme.primaryWhite.withValues(alpha: 0.7)),
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
         ),
         const SizedBox(width: 4),
-        _getCurrencyIcon(_service.currentUnit, theme: theme),
+        _getCurrencyIcon(context, _service.currentUnit),
       ],
     );
   }
 
-  Widget _getCurrencyIcon(CurrencyType type, {double? size, AppTheme? theme}) {
+  Widget _getCurrencyIcon(BuildContext context, CurrencyType type, {double? size}) {
+    final color = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
     switch (type) {
       case CurrencyType.bitcoin:
         return Icon(
           Icons.currency_bitcoin,
-          color: theme?.primaryWhite.withValues(alpha: 0.7) ??
-              const Color(0xFFFFFFFF).withValues(alpha: 0.7),
+          color: color,
           size: size,
         );
       case CurrencyType.sats:
         return Text("sat",
             style: TextStyle(
                 fontSize: size,
-                color: theme?.primaryWhite.withValues(alpha: 0.7)));
+                color: color));
       case CurrencyType.usd:
         return Icon(Icons.attach_money,
-            color: theme?.primaryWhite.withValues(alpha: 0.7) ??
-                const Color(0xFFFFFFFF).withValues(alpha: 0.7),
+            color: color,
             size: size);
     }
   }

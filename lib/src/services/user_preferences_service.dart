@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Enum for chart time range
+enum ChartTimeRange { day, week, month, year, max }
+
 class UserPreferencesService extends ChangeNotifier {
   static const String _balancesVisibleKey = 'balances_visible';
+  static const String _chartTimeRangeKey = 'chart_time_range';
 
   bool _balancesVisible = true;
+  ChartTimeRange _chartTimeRange = ChartTimeRange.day;
 
   bool get balancesVisible => _balancesVisible;
+  ChartTimeRange get chartTimeRange => _chartTimeRange;
 
   Future<void> loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     _balancesVisible = prefs.getBool(_balancesVisibleKey) ?? true;
+    final rangeIndex = prefs.getInt(_chartTimeRangeKey) ?? 0;
+    _chartTimeRange = ChartTimeRange.values[rangeIndex.clamp(0, ChartTimeRange.values.length - 1)];
     notifyListeners();
   }
 
@@ -30,6 +38,30 @@ class UserPreferencesService extends ChangeNotifier {
     await prefs.setBool(_balancesVisibleKey, visible);
 
     notifyListeners();
+  }
+
+  Future<void> setChartTimeRange(ChartTimeRange range) async {
+    _chartTimeRange = range;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_chartTimeRangeKey, range.index);
+
+    notifyListeners();
+  }
+
+  String getChartTimeRangeLabel() {
+    switch (_chartTimeRange) {
+      case ChartTimeRange.day:
+        return '1D';
+      case ChartTimeRange.week:
+        return '1W';
+      case ChartTimeRange.month:
+        return '1M';
+      case ChartTimeRange.year:
+        return '1Y';
+      case ChartTimeRange.max:
+        return 'Max';
+    }
   }
 
   // Static methods for backward compatibility

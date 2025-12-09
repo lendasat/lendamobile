@@ -93,7 +93,7 @@ class ArkScaffold extends StatelessWidget {
                   : null,
               child: Padding(
                 padding: extendBodyBehindBottomNav
-                    ? const EdgeInsets.only(bottom: BitNetTheme.cardPadding * 3)
+                    ? const EdgeInsets.only(bottom: AppTheme.cardPadding * 3)
                     : EdgeInsets.zero,
                 child: Container(margin: margin, child: body),
               ),
@@ -101,7 +101,7 @@ class ArkScaffold extends StatelessWidget {
             if (extendBodyBehindAppBar && !removeGradientColor && useGradient)
               Container(
                 width: double.infinity,
-                height: BitNetTheme.cardPadding * 3,
+                height: AppTheme.cardPadding * 3,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -116,7 +116,7 @@ class ArkScaffold extends StatelessWidget {
         appBar: appBar,
         floatingActionButton: floatingActionButton != null
             ? Padding(
-                padding: const EdgeInsets.only(bottom: BitNetTheme.cardPadding),
+                padding: const EdgeInsets.only(bottom: AppTheme.cardPadding),
                 child: floatingActionButton,
               )
             : null,
@@ -182,7 +182,7 @@ class ArkScaffoldUnsafe extends StatelessWidget {
     final isLight = Theme.of(context).brightness == Brightness.light;
     final useGradient = gradientColor != null;
     final defaultBgColor =
-        isLight ? BitNetTheme.colorBackground : BitNetTheme.colorBackground;
+        isLight ? AppTheme.colorBackground : AppTheme.colorBackground;
 
     return Scaffold(
       bottomNavigationBar: bottomSheet,
@@ -224,7 +224,7 @@ class ArkScaffoldUnsafe extends StatelessWidget {
                 : null,
             child: Padding(
               padding: extendBodyBehindBottomNav
-                  ? const EdgeInsets.only(bottom: BitNetTheme.cardPadding * 3)
+                  ? const EdgeInsets.only(bottom: AppTheme.cardPadding * 3)
                   : EdgeInsets.zero,
               child: Container(margin: margin, child: body),
             ),
@@ -232,7 +232,7 @@ class ArkScaffoldUnsafe extends StatelessWidget {
           if (extendBodyBehindAppBar && !removeGradientColor && useGradient)
             Container(
               width: double.infinity,
-              height: BitNetTheme.cardPadding * 3,
+              height: AppTheme.cardPadding * 3,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -247,7 +247,7 @@ class ArkScaffoldUnsafe extends StatelessWidget {
       appBar: appBar,
       floatingActionButton: floatingActionButton != null
           ? Padding(
-              padding: const EdgeInsets.only(bottom: BitNetTheme.cardPadding),
+              padding: const EdgeInsets.only(bottom: AppTheme.cardPadding),
               child: floatingActionButton,
             )
           : null,

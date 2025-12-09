@@ -1,9 +1,9 @@
+import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:ark_flutter/app_theme.dart';
 import 'package:provider/provider.dart';
 
 import '../../logger/logger.dart';
@@ -27,14 +27,14 @@ class TransactionDetailsDialog extends StatelessWidget {
   });
 
   Future<void> _handleSettlement(BuildContext context) async {
-    final theme = AppTheme.of(context, listen: false);
+    
     try {
       // Show loading dialog
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          backgroundColor: theme.secondaryBlack,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -44,7 +44,7 @@ class TransactionDetailsDialog extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 AppLocalizations.of(context)!.settlingTransaction,
-                style: TextStyle(color: theme.primaryWhite),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               ),
             ],
           ),
@@ -61,14 +61,14 @@ class TransactionDetailsDialog extends StatelessWidget {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: theme.secondaryBlack,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             title: Text(
               AppLocalizations.of(context)!.success,
-              style: TextStyle(color: theme.primaryWhite),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             content: Text(
               AppLocalizations.of(context)!.transactionSettledSuccessfully,
-              style: TextStyle(color: theme.primaryWhite),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             actions: [
               TextButton(
@@ -92,14 +92,14 @@ class TransactionDetailsDialog extends StatelessWidget {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: theme.secondaryBlack,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             title: Text(
               AppLocalizations.of(context)!.error,
               style: const TextStyle(color: Colors.red),
             ),
             content: Text(
               '${AppLocalizations.of(context)!.failedToSettleTransaction} ${e.toString()}',
-              style: TextStyle(color: theme.primaryWhite),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             actions: [
               TextButton(
@@ -119,7 +119,7 @@ class TransactionDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
     final timezoneService = context.watch<TimezoneService>();
 
     final confirmedTime = confirmedAt != null
@@ -139,7 +139,7 @@ class TransactionDetailsDialog extends StatelessWidget {
     final amountBtc = amountSats.toDouble() / 100000000;
 
     return Dialog(
-      backgroundColor: theme.secondaryBlack,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -152,19 +152,19 @@ class TransactionDetailsDialog extends StatelessWidget {
                 Text(
                   dialogTitle,
                   style: TextStyle(
-                    color: theme.primaryWhite,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: Icon(Icons.close, color: theme.primaryWhite),
+                  icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            Divider(color: theme.mutedText),
+            Divider(color: Theme.of(context).hintColor),
             const SizedBox(height: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,7 +202,7 @@ class TransactionDetailsDialog extends StatelessWidget {
                     child: Text(
                       AppLocalizations.of(context)!
                           .transactionPendingFundsWillBeNonReversibleAfterSettlement,
-                      style: TextStyle(color: theme.primaryWhite, fontSize: 14),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -228,7 +228,7 @@ class TransactionDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildDetailRow(BuildContext context, String label, String value) {
-    final theme = AppTheme.of(context);
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Column(
@@ -237,7 +237,7 @@ class TransactionDetailsDialog extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: theme.mutedText,
+              color: Theme.of(context).hintColor,
               fontSize: 12,
             ),
           ),
@@ -245,7 +245,7 @@ class TransactionDetailsDialog extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              color: theme.primaryWhite,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 16,
             ),
           ),

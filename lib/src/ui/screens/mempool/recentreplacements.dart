@@ -51,7 +51,7 @@ class _RecentReplacementsState extends State<RecentReplacements> {
 
     return Column(
       children: [
-        const SizedBox(height: BitNetTheme.cardPadding),
+        const SizedBox(height: AppTheme.cardPadding),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
@@ -79,7 +79,7 @@ class _RecentReplacementsState extends State<RecentReplacements> {
         child: Padding(
           padding: EdgeInsets.all(32.0),
           child: CircularProgressIndicator(
-            color: BitNetTheme.colorBitcoin,
+            color: AppTheme.colorBitcoin,
           ),
         ),
       );
@@ -141,7 +141,7 @@ class _RecentReplacementsState extends State<RecentReplacements> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: GlassContainer(
-        borderRadius: BorderRadius.circular(BitNetTheme.cardPadding * 0.5),
+        borderRadius: BorderRadius.circular(AppTheme.cardPadding * 0.5),
         child: Column(
           children: [
             ArkListTile(
@@ -167,7 +167,7 @@ class _RecentReplacementsState extends State<RecentReplacements> {
                         width: 45,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
-                          color: BitNetTheme.colorBitcoin,
+                          color: AppTheme.colorBitcoin,
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 2),
                         child: Center(
@@ -188,15 +188,15 @@ class _RecentReplacementsState extends State<RecentReplacements> {
                         // RBF type badge
                         Container(
                           padding: const EdgeInsets.all(
-                            BitNetTheme.elementSpacing / 2,
+                            AppTheme.elementSpacing / 2,
                           ),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(
-                              BitNetTheme.borderRadiusSuperSmall,
+                              AppTheme.borderRadiusSuperSmall,
                             ),
                             color: replacement.fullRbf == true
-                                ? BitNetTheme.colorBitcoin
-                                : BitNetTheme.successColor,
+                                ? AppTheme.colorBitcoin
+                                : AppTheme.successColor,
                           ),
                           child: Text(
                             replacement.fullRbf == true ? 'Full RBF' : 'RBF',
@@ -211,11 +211,11 @@ class _RecentReplacementsState extends State<RecentReplacements> {
                         if (replacement.mined == true)
                           Container(
                             padding: const EdgeInsets.all(
-                              BitNetTheme.elementSpacing / 2,
+                              AppTheme.elementSpacing / 2,
                             ),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(
-                                BitNetTheme.borderRadiusSuperSmall,
+                                AppTheme.borderRadiusSuperSmall,
                               ),
                               color: Colors.green,
                             ),
@@ -246,7 +246,7 @@ class _RecentReplacementsState extends State<RecentReplacements> {
                           : Colors.white.withAlpha(50),
                     ),
                     borderRadius: BorderRadius.circular(
-                      BitNetTheme.cardPadding * 0.2,
+                      AppTheme.cardPadding * 0.2,
                     ),
                   ),
                   child: _buildOwnedTransactionDetails(
@@ -286,16 +286,16 @@ class _RecentReplacementsState extends State<RecentReplacements> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               color: direction == TransactionDirection.sent
-                  ? BitNetTheme.errorColor.withAlpha(50)
-                  : BitNetTheme.successColor.withAlpha(50),
+                  ? AppTheme.errorColor.withAlpha(50)
+                  : AppTheme.successColor.withAlpha(50),
             ),
             child: Icon(
               direction == TransactionDirection.sent
                   ? Icons.arrow_upward
                   : Icons.arrow_downward,
               color: direction == TransactionDirection.sent
-                  ? BitNetTheme.errorColor
-                  : BitNetTheme.successColor,
+                  ? AppTheme.errorColor
+                  : AppTheme.successColor,
             ),
           ),
           const SizedBox(width: 12),
@@ -315,8 +315,8 @@ class _RecentReplacementsState extends State<RecentReplacements> {
                       : l10n.pending,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: status == TransactionStatus.confirmed
-                            ? BitNetTheme.successColor
-                            : BitNetTheme.colorBitcoin,
+                            ? AppTheme.successColor
+                            : AppTheme.colorBitcoin,
                       ),
                 ),
               ],
@@ -326,8 +326,8 @@ class _RecentReplacementsState extends State<RecentReplacements> {
             '${transaction.amount ?? "0"} sats',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: direction == TransactionDirection.sent
-                      ? BitNetTheme.errorColor
-                      : BitNetTheme.successColor,
+                      ? AppTheme.errorColor
+                      : AppTheme.successColor,
                 ),
           ),
         ],

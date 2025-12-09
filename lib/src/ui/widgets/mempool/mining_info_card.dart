@@ -21,20 +21,20 @@ class MiningInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassContainer(
       child: Container(
-        padding: const EdgeInsets.all(BitNetTheme.elementSpacing * 1.5),
+        padding: const EdgeInsets.all(AppTheme.elementSpacing * 1.5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Miner Information text heading
             Padding(
-              padding: const EdgeInsets.only(bottom: BitNetTheme.elementSpacing),
+              padding: const EdgeInsets.only(bottom: AppTheme.elementSpacing),
               child: Row(
                 children: [
                   const Icon(
                     FontAwesomeIcons.truckPickup,
-                    size: BitNetTheme.cardPadding * 0.75,
+                    size: AppTheme.cardPadding * 0.75,
                   ),
-                  const SizedBox(width: BitNetTheme.elementSpacing),
+                  const SizedBox(width: AppTheme.elementSpacing),
                   Text(
                     "Miner Information",
                     style: Theme.of(context).textTheme.titleMedium,
@@ -69,19 +69,19 @@ class MiningInfoCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: BitNetTheme.colorBitcoin,
-                    borderRadius: BitNetTheme.cardRadiusSmall,
+                    color: AppTheme.colorBitcoin,
+                    borderRadius: AppTheme.cardRadiusSmall,
                   ),
                   child: Text(
                     poolName,
                     style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                          color: _darken(BitNetTheme.colorBitcoin, 95),
+                          color: _darken(AppTheme.colorBitcoin, 95),
                         ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: BitNetTheme.cardPadding * 0.75),
+            const SizedBox(height: AppTheme.cardPadding * 0.75),
 
             // Status indicator
             Row(
@@ -90,7 +90,7 @@ class MiningInfoCard extends StatelessWidget {
                   width: 8,
                   height: 8,
                   decoration: const BoxDecoration(
-                    color: BitNetTheme.successColor,
+                    color: AppTheme.successColor,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -98,17 +98,17 @@ class MiningInfoCard extends StatelessWidget {
                 Text('Mined', style: Theme.of(context).textTheme.labelMedium),
               ],
             ),
-            const SizedBox(height: BitNetTheme.cardPadding * 0.75),
+            const SizedBox(height: AppTheme.cardPadding * 0.75),
 
             // Reward amount
             Row(
               children: [
                 const Icon(
                   FontAwesomeIcons.bitcoin,
-                  color: BitNetTheme.colorBitcoin,
+                  color: AppTheme.colorBitcoin,
                   size: 24,
                 ),
-                const SizedBox(width: BitNetTheme.elementSpacing),
+                const SizedBox(width: AppTheme.elementSpacing),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -119,7 +119,7 @@ class MiningInfoCard extends StatelessWidget {
                     Text(
                       '\$${NumberFormat('#,##0').format(rewardAmount)}',
                       style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                            color: BitNetTheme.successColor,
+                            color: AppTheme.successColor,
                           ),
                     ),
                   ],

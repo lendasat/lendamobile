@@ -19,10 +19,10 @@ class FearAndGreedCardOptimized extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      margin: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: GlassContainer(
         child: Padding(
-          padding: const EdgeInsets.all(BitNetTheme.cardPadding),
+          padding: const EdgeInsets.all(AppTheme.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -35,10 +35,10 @@ class FearAndGreedCardOptimized extends StatelessWidget {
                     children: [
                       Icon(
                         FontAwesomeIcons.gaugeHigh,
-                        size: BitNetTheme.cardPadding * 0.75,
+                        size: AppTheme.cardPadding * 0.75,
                         color: Theme.of(context).iconTheme.color,
                       ),
-                      const SizedBox(width: BitNetTheme.elementSpacing),
+                      const SizedBox(width: AppTheme.elementSpacing),
                       Text(
                         AppLocalizations.of(context)!.fearAndGreedIndex,
                         style: Theme.of(context).textTheme.titleMedium,
@@ -116,11 +116,11 @@ class FearAndGreedCardOptimized extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   gradient: LinearGradient(
                     colors: [
-                      BitNetTheme.errorColor,
-                      BitNetTheme.errorColor.withValues(alpha: 0.7),
+                      AppTheme.errorColor,
+                      AppTheme.errorColor.withValues(alpha: 0.7),
                       Colors.orange,
-                      BitNetTheme.successColor.withValues(alpha: 0.7),
-                      BitNetTheme.successColor,
+                      AppTheme.successColor.withValues(alpha: 0.7),
+                      AppTheme.successColor,
                     ],
                     stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
                   ),
@@ -206,7 +206,7 @@ class FearAndGreedCardOptimized extends StatelessWidget {
       children: [
         Icon(
           isPositive ? Icons.trending_up : Icons.trending_down,
-          color: isPositive ? BitNetTheme.successColor : BitNetTheme.errorColor,
+          color: isPositive ? AppTheme.successColor : AppTheme.errorColor,
           size: 14,
         ),
         const SizedBox(width: 4),
@@ -214,8 +214,8 @@ class FearAndGreedCardOptimized extends StatelessWidget {
           '${isPositive ? '+' : ''}$change',
           style: Theme.of(context).textTheme.bodySmall!.copyWith(
                 color: isPositive
-                    ? BitNetTheme.successColor
-                    : BitNetTheme.errorColor,
+                    ? AppTheme.successColor
+                    : AppTheme.errorColor,
                 fontWeight: FontWeight.w600,
               ),
         ),
@@ -226,13 +226,13 @@ class FearAndGreedCardOptimized extends StatelessWidget {
   // Helper to get color based on fear/greed value
   Color _getFearGreedColor(int value) {
     if (value <= 25) {
-      return BitNetTheme.errorColor;
+      return AppTheme.errorColor;
     } else if (value <= 50) {
       return Colors.orange;
     } else if (value <= 75) {
       return Colors.yellow;
     } else {
-      return BitNetTheme.successColor;
+      return AppTheme.successColor;
     }
   }
 }

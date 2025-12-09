@@ -37,8 +37,8 @@ class LongButtonWidget extends StatefulWidget {
     this.textColor,
     this.state = ButtonState.idle,
     this.leadingIcon,
-    this.customWidth = BitNetTheme.cardPadding * 12,
-    this.customHeight = BitNetTheme.cardPadding * 2.5,
+    this.customWidth = AppTheme.cardPadding * 12,
+    this.customHeight = AppTheme.cardPadding * 2.5,
     this.buttonType = ButtonType.solid,
     this.backgroundPainter = true,
     this.customShadow,
@@ -80,7 +80,7 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
         // Background content
         Container(
           decoration: BoxDecoration(
-            boxShadow: widget.customShadow ?? [BitNetTheme.boxShadowProfile],
+            boxShadow: widget.customShadow ?? [AppTheme.boxShadowProfile],
             borderRadius: borderRadius,
           ),
           child: widget.buttonType == ButtonType.solid ||
@@ -93,10 +93,10 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
                               darken(theme.colorScheme.secondaryContainer, 10),
                               darken(theme.colorScheme.tertiaryContainer, 10),
                             ]
-                          : theme.colorScheme.primary == BitNetTheme.colorBitcoin
+                          : theme.colorScheme.primary == AppTheme.colorBitcoin
                               ? [
-                                  BitNetTheme.colorBitcoin,
-                                  BitNetTheme.colorPrimaryGradient
+                                  AppTheme.colorBitcoin,
+                                  AppTheme.colorPrimaryGradient
                                 ]
                               : [
                                   theme.colorScheme.primary,
@@ -152,7 +152,7 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                BitNetTheme.white90,
+                                AppTheme.white90,
                               ),
                             ),
                           ),
@@ -188,12 +188,12 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
                                                 ? theme.colorScheme.onPrimary
                                                 : theme.brightness ==
                                                         Brightness.light
-                                                    ? BitNetTheme.black70
-                                                    : BitNetTheme.white90),
+                                                    ? AppTheme.black70
+                                                    : AppTheme.white90),
                                         shadows: [
                                           theme.brightness == Brightness.light
-                                              ? BitNetTheme.boxShadow
-                                              : BitNetTheme.boxShadowButton,
+                                              ? AppTheme.boxShadow
+                                              : AppTheme.boxShadowButton,
                                         ],
                                       ),
                                 ),

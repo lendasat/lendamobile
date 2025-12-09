@@ -24,7 +24,7 @@ class TransactionFeeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: BitNetTheme.colorBitcoin),
+        child: CircularProgressIndicator(color: AppTheme.colorBitcoin),
       );
     }
 
@@ -33,10 +33,10 @@ class TransactionFeeCard extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      margin: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: GlassContainer(
         child: Padding(
-          padding: const EdgeInsets.all(BitNetTheme.cardPadding),
+          padding: const EdgeInsets.all(AppTheme.cardPadding),
           child: Column(
             children: [
               // Header
@@ -44,17 +44,17 @@ class TransactionFeeCard extends StatelessWidget {
                 children: [
                   FaIcon(
                     FontAwesomeIcons.coins,
-                    size: BitNetTheme.cardPadding * 0.75,
+                    size: AppTheme.cardPadding * 0.75,
                     color: Theme.of(context).iconTheme.color,
                   ),
-                  const SizedBox(width: BitNetTheme.elementSpacing),
+                  const SizedBox(width: AppTheme.elementSpacing),
                   Text(
                     AppLocalizations.of(context)!.transactionFees,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],
               ),
-              const SizedBox(height: BitNetTheme.cardPadding),
+              const SizedBox(height: AppTheme.cardPadding),
 
               // Fee amounts
               Row(
@@ -77,7 +77,7 @@ class TransactionFeeCard extends StatelessWidget {
                       25,
                     ),
                     icon: Icons.speed,
-                    iconColor: BitNetTheme.errorColor.withValues(alpha: 0.7),
+                    iconColor: AppTheme.errorColor.withValues(alpha: 0.7),
                   ),
                   _buildFeeColumn(
                     context: context,
@@ -95,7 +95,7 @@ class TransactionFeeCard extends StatelessWidget {
                       25,
                     ),
                     icon: Icons.speed,
-                    iconColor: BitNetTheme.colorBitcoin.withValues(alpha: 0.8),
+                    iconColor: AppTheme.colorBitcoin.withValues(alpha: 0.8),
                   ),
                   _buildFeeColumn(
                     context: context,
@@ -113,24 +113,24 @@ class TransactionFeeCard extends StatelessWidget {
                       25,
                     ),
                     icon: Icons.speed,
-                    iconColor: BitNetTheme.successColor,
+                    iconColor: AppTheme.successColor,
                   ),
                 ],
               ),
 
-              const SizedBox(height: BitNetTheme.elementSpacing),
-              const SizedBox(height: BitNetTheme.elementSpacing),
+              const SizedBox(height: AppTheme.elementSpacing),
+              const SizedBox(height: AppTheme.elementSpacing),
 
               // Confirmation time
               Text(
                 "Estimated confirmation time",
                 style: Theme.of(context).textTheme.bodySmall!.copyWith(
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? BitNetTheme.white60
-                          : BitNetTheme.black60,
+                          ? AppTheme.white60
+                          : AppTheme.black60,
                     ),
               ),
-              const SizedBox(height: BitNetTheme.elementSpacing),
+              const SizedBox(height: AppTheme.elementSpacing),
 
               // Time estimates
               Row(
@@ -139,17 +139,17 @@ class TransactionFeeCard extends StatelessWidget {
                   _buildTimeEstimate(
                     context,
                     "~60 min",
-                    BitNetTheme.errorColor.withValues(alpha: 0.7),
+                    AppTheme.errorColor.withValues(alpha: 0.7),
                   ),
                   _buildTimeEstimate(
                     context,
                     "~30 min",
-                    BitNetTheme.colorBitcoin.withValues(alpha: 0.8),
+                    AppTheme.colorBitcoin.withValues(alpha: 0.8),
                   ),
                   _buildTimeEstimate(
                     context,
                     "Next block",
-                    BitNetTheme.successColor,
+                    AppTheme.successColor,
                   ),
                 ],
               ),
@@ -185,9 +185,9 @@ class TransactionFeeCard extends StatelessWidget {
           ),
           child: Center(child: Icon(icon, color: iconColor, size: 28)),
         ),
-        const SizedBox(height: BitNetTheme.elementSpacing),
+        const SizedBox(height: AppTheme.elementSpacing),
         Text(title, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: BitNetTheme.elementSpacing / 2),
+        const SizedBox(height: AppTheme.elementSpacing / 2),
         Text(
           feeAmount,
           overflow: TextOverflow.ellipsis,
@@ -204,12 +204,12 @@ class TransactionFeeCard extends StatelessWidget {
   Widget _buildTimeEstimate(BuildContext context, String time, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: BitNetTheme.elementSpacing,
-        vertical: BitNetTheme.elementSpacing / 2,
+        horizontal: AppTheme.elementSpacing,
+        vertical: AppTheme.elementSpacing / 2,
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BitNetTheme.cardRadiusSmall,
+        borderRadius: AppTheme.cardRadiusSmall,
       ),
       child: Text(
         time,

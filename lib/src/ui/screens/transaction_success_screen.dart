@@ -1,7 +1,7 @@
+import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
-import 'package:ark_flutter/app_theme.dart';
 
 class TransactionSuccessScreen extends StatelessWidget {
   final String aspId;
@@ -15,15 +15,15 @@ class TransactionSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
 
     return Scaffold(
-      backgroundColor: theme.primaryBlack,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(
           AppLocalizations.of(context)!.success,
-          style: TextStyle(color: theme.primaryWhite),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -31,7 +31,7 @@ class TransactionSuccessScreen extends StatelessWidget {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: theme.secondaryBlack,
+            color: Theme.of(context).colorScheme.surface,
             height: 1.0,
           ),
         ),
@@ -61,7 +61,7 @@ class TransactionSuccessScreen extends StatelessWidget {
                     ),
                     child: Icon(
                       Icons.check,
-                      color: theme.primaryWhite,
+                      color: Theme.of(context).colorScheme.onSurface,
                       size: 40,
                     ),
                   ),
@@ -71,7 +71,7 @@ class TransactionSuccessScreen extends StatelessWidget {
                   Text(
                     '${amount.toInt()} SATS ${AppLocalizations.of(context)!.sentSuccessfully}',
                     style: TextStyle(
-                      color: theme.primaryWhite,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 16,
                     ),
                   ),
@@ -93,8 +93,8 @@ class TransactionSuccessScreen extends StatelessWidget {
                       .returningToWalletAfterSuccessfulTransaction);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.secondaryBlack,
-                  foregroundColor: theme.primaryWhite,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  foregroundColor: Theme.of(context).colorScheme.onSurface,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   elevation: 0,
                   shape: RoundedRectangleBorder(

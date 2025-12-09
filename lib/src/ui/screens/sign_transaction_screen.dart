@@ -1,9 +1,9 @@
+import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_success_screen.dart';
-import 'package:ark_flutter/app_theme.dart';
 
 class SignTransactionScreen extends StatefulWidget {
   final String aspId;
@@ -64,27 +64,27 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
 
     return Scaffold(
-      backgroundColor: theme.primaryBlack,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           AppLocalizations.of(context)!.signTransaction,
-          style: TextStyle(color: theme.primaryWhite),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: _isLoading
             ? null
             : IconButton(
-                icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
+                icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
                 onPressed: () => Navigator.pop(context),
               ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: theme.secondaryBlack,
+            color: Theme.of(context).colorScheme.surface,
             height: 1.0,
           ),
         ),
@@ -168,18 +168,18 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
     Color? labelColor,
     Color? valueColor,
   }) {
-    final theme = AppTheme.of(context);
+    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Row(
         children: [
-          Icon(icon, size: 22, color: iconColor ?? theme.mutedText),
+          Icon(icon, size: 22, color: iconColor ?? Theme.of(context).hintColor),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
               style: TextStyle(
-                color: labelColor ?? theme.mutedText,
+                color: labelColor ?? Theme.of(context).hintColor,
                 fontSize: 16,
               ),
             ),
@@ -187,7 +187,7 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
           Text(
             value,
             style: TextStyle(
-              color: valueColor ?? theme.primaryWhite,
+              color: valueColor ?? Theme.of(context).colorScheme.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -198,10 +198,10 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
   }
 
   Widget _buildDivider() {
-    final theme = AppTheme.of(context);
+    
     return Container(
       height: 1,
-      color: theme.secondaryBlack,
+      color: Theme.of(context).colorScheme.surface,
     );
   }
 }

@@ -65,10 +65,10 @@ class DataWidget extends StatelessWidget {
           Stack(
             children: [
               Container(
-                height: BitNetTheme.cardPadding * 5.75,
-                width: BitNetTheme.cardPadding * 5.75,
-                margin: const EdgeInsets.only(left: BitNetTheme.cardPadding),
-                padding: const EdgeInsets.all(BitNetTheme.elementSpacing),
+                height: AppTheme.cardPadding * 5.75,
+                width: AppTheme.cardPadding * 5.75,
+                margin: const EdgeInsets.only(left: AppTheme.cardPadding),
+                padding: const EdgeInsets.all(AppTheme.elementSpacing),
                 decoration: getDecoration(
                   isAccepted
                       ? blockData?.extras?.medianFee ?? 0
@@ -98,7 +98,7 @@ class DataWidget extends StatelessWidget {
                                   fontSize: 20,
                                 ),
                           ),
-                    const SizedBox(height: BitNetTheme.elementSpacing),
+                    const SizedBox(height: AppTheme.elementSpacing),
                     isAccepted
                         ? Text(
                             '${AppLocalizations.of(context)!.fee}: ~\$${((blockData!.extras?.medianFee ?? 0) * 140 / 100000000 * currentUSD).toStringAsFixed(2)}',
@@ -108,7 +108,7 @@ class DataWidget extends StatelessWidget {
                             '${AppLocalizations.of(context)!.fee}: ~\$${(mempoolBlocks!.medianFee * 140 / 100000000 * currentUSD).toStringAsFixed(2)}',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
-                    const SizedBox(height: BitNetTheme.elementSpacing * 0.3),
+                    const SizedBox(height: AppTheme.elementSpacing * 0.3),
                     isAccepted
                         ? FittedBox(
                             child: Text(
@@ -164,14 +164,14 @@ class DataWidget extends StatelessWidget {
           i == 1 && txId == blockData?.id
               ? Container(
                   margin: isAccepted
-                      ? const EdgeInsets.only(left: BitNetTheme.cardPadding)
+                      ? const EdgeInsets.only(left: AppTheme.cardPadding)
                       : EdgeInsets.zero,
                   child: const Icon(
                     Icons.arrow_drop_down_rounded,
-                    size: BitNetTheme.cardPadding * 2,
+                    size: AppTheme.cardPadding * 2,
                   ),
                 )
-              : const SizedBox(height: BitNetTheme.cardPadding),
+              : const SizedBox(height: AppTheme.cardPadding),
         ],
       ),
     );

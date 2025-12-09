@@ -1,4 +1,5 @@
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/percentage_change_widget.dart';
 import 'package:flutter/material.dart';
 
 /// Widget for displaying price with color based on positive/negative change
@@ -20,7 +21,7 @@ class ColoredPriceWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isPositive ? BitNetTheme.successColor : BitNetTheme.errorColor;
+    final color = isPositive ? AppTheme.successColor : AppTheme.errorColor;
 
     if (shouldHideAmount) {
       return Row(
@@ -57,6 +58,7 @@ class ColoredPriceWidget extends StatelessWidget {
 }
 
 /// Widget for displaying percentage change with background color
+/// Uses PercentageChangeWidget for consistent styling with semi-transparent background
 class BitNetPercentWidget extends StatelessWidget {
   final String priceChange;
   final bool shouldHideAmount;
@@ -75,35 +77,18 @@ class BitNetPercentWidget extends StatelessWidget {
     final isPositive = !priceChange.startsWith('-') ||
         priceChange.trim() == '-0%' ||
         priceChange.trim() == '0%';
-    final color = isPositive ? BitNetTheme.successColor : BitNetTheme.errorColor;
 
-    if (shouldHideAmount) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(
-          priceChange,
-          style: textStyle ??
-              const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-        ),
-      );
-    }
-
-    return Text(
-      priceChange,
-      style: textStyle ??
-          TextStyle(
-            color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+    // Use PercentageChangeWidget for consistent styling (matches BitnetGithub)
+    return Container(
+      margin: const EdgeInsets.only(
+        top: AppTheme.elementSpacing,
+        bottom: AppTheme.elementSpacing,
+      ),
+      child: PercentageChangeWidget(
+        percentage: priceChange,
+        isPositive: isPositive,
+        fontSize: 14,
+      ),
     );
   }
 }

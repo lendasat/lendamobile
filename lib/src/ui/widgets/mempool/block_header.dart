@@ -24,8 +24,8 @@ class BlockHeader extends StatelessWidget {
       alignment: Alignment.topLeft,
       child: Padding(
         padding: const EdgeInsets.only(
-          left: BitNetTheme.cardPadding,
-          bottom: BitNetTheme.elementSpacing,
+          left: AppTheme.cardPadding,
+          bottom: AppTheme.elementSpacing,
         ),
         child: Row(
           children: [
@@ -40,7 +40,7 @@ class BlockHeader extends StatelessWidget {
                 Text(
                   ' $blockHeight',
                   style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                        color: BitNetTheme.colorBitcoin,
+                        color: AppTheme.colorBitcoin,
                       ),
                 ),
               ],
@@ -61,11 +61,11 @@ class BlockHeader extends StatelessWidget {
                       Icon(
                         Icons.copy,
                         color: Theme.of(context).brightness == Brightness.light
-                            ? BitNetTheme.black60
-                            : BitNetTheme.white60,
-                        size: BitNetTheme.elementSpacing * 1.5,
+                            ? AppTheme.black60
+                            : AppTheme.white60,
+                        size: AppTheme.elementSpacing * 1.5,
                       ),
-                      const SizedBox(width: BitNetTheme.elementSpacing / 2),
+                      const SizedBox(width: AppTheme.elementSpacing / 2),
                       Text(
                         '${blockId.substring(0, 5)}...${blockId.substring(blockId.length - 5)}',
                         textAlign: TextAlign.center,
@@ -76,7 +76,7 @@ class BlockHeader extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(width: BitNetTheme.elementSpacing / 2),
+                const SizedBox(width: AppTheme.elementSpacing / 2),
 
                 // Close button
                 IconButton(

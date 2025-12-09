@@ -1,4 +1,3 @@
-import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
@@ -21,6 +20,7 @@ import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Receive type enum for address display
+/// Note: Lightning removed - Boltz doesn't support BTC/ARK swaps yet
 enum ReceiveType { combined, ark, onchain }
 
 class ReceiveScreen extends StatefulWidget {
@@ -43,8 +43,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   String _bip21Address = "";
   String _btcAddress = "";
   String _arkAddress = "";
-  String _lightningInvoice = "";
-  String? _boltzSwapId;
+  String? _boltzSwapId; // Reserved for future Lightning support
   String? _error;
 
   // Current receive type
@@ -116,7 +115,6 @@ class _ReceiveScreenState extends State<ReceiveScreen>
         _bip21Address = addresses.bip21;
         _arkAddress = addresses.offchain;
         _btcAddress = addresses.boarding;
-        _lightningInvoice = addresses.lightning?.invoice ?? "";
         _boltzSwapId = addresses.lightning?.swapId;
         _isLoading = false;
       });
@@ -172,7 +170,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
           SnackBar(
             content: Text(AppLocalizations.of(context)!
                 .paymentMonitoringError(e.toString())),
-            backgroundColor: BitNetTheme.errorColor,
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
@@ -180,20 +178,19 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   }
 
   void _showPaymentReceivedDialog(PaymentReceived payment) {
-    final theme = AppTheme.of(context, listen: false);
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext ctx) {
         return AlertDialog(
-          backgroundColor: theme.secondaryBlack,
+          backgroundColor: Theme.of(ctx).colorScheme.surface,
           title: Row(
             children: [
               const Icon(Icons.check_circle,
-                  color: BitNetTheme.successColor, size: 32),
+                  color: AppTheme.successColor, size: 32),
               const SizedBox(width: 12),
-              Text(AppLocalizations.of(context)!.paymentReceived,
-                  style: TextStyle(color: theme.primaryWhite)),
+              Text(AppLocalizations.of(ctx)!.paymentReceived,
+                  style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface)),
             ],
           ),
           content: Column(
@@ -201,27 +198,27 @@ class _ReceiveScreenState extends State<ReceiveScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${AppLocalizations.of(context)!.amount}: ${payment.amountSats} sats',
+                '${AppLocalizations.of(ctx)!.amount}: ${payment.amountSats} sats',
                 style: TextStyle(
-                    color: theme.primaryWhite,
+                    color: Theme.of(ctx).colorScheme.onSurface,
                     fontSize: 18,
                     fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 'TXID: ${payment.txid}',
-                style: TextStyle(color: theme.mutedText, fontSize: 12),
+                style: TextStyle(color: Theme.of(ctx).hintColor, fontSize: 12),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).popUntil((route) => route.isFirst);
+                Navigator.of(ctx).pop();
+                Navigator.of(ctx).popUntil((route) => route.isFirst);
               },
-              child: Text(AppLocalizations.of(context)!.ok,
-                  style: const TextStyle(color: BitNetTheme.colorBitcoin)),
+              child: Text(AppLocalizations.of(ctx)!.ok,
+                  style: const TextStyle(color: AppTheme.colorBitcoin)),
             ),
           ],
         );
@@ -262,13 +259,25 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     }
   }
 
+  /// Get the appropriate QR code center image for current receive type
+  AssetImage _getQrCenterImage() {
+    switch (_receiveType) {
+      case ReceiveType.combined:
+        return const AssetImage('assets/images/bip21.png');
+      case ReceiveType.ark:
+        return const AssetImage('assets/images/bitcoin.png');
+      case ReceiveType.onchain:
+        return const AssetImage('assets/images/bitcoin.png');
+    }
+  }
+
   void _copyAddress() {
     final address = _getCurrentQrData();
     Clipboard.setData(ClipboardData(text: address));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalizations.of(context)!.addressCopiedToClipboard),
-        backgroundColor: BitNetTheme.successColor,
+        backgroundColor: AppTheme.successColor,
         duration: const Duration(seconds: 1),
       ),
     );
@@ -286,12 +295,10 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   }
 
   void _showReceiveTypeSheet() {
-    final theme = AppTheme.of(context, listen: false);
-
     arkBottomSheet(
       context: context,
       height: MediaQuery.of(context).size.height * 0.45,
-      backgroundColor: theme.primaryBlack,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ArkScaffold(
         context: context,
         appBar: ArkAppBar(
@@ -301,7 +308,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: BitNetTheme.elementSpacing,
+            horizontal: AppTheme.elementSpacing,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -312,7 +319,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 leading: RoundedButtonWidget(
                   buttonType: ButtonType.transparent,
                   iconData: FontAwesomeIcons.bitcoin,
-                  size: BitNetTheme.cardPadding * 1.25,
+                  size: AppTheme.cardPadding * 1.25,
                   onTap: () {
                     setState(() => _receiveType = ReceiveType.combined);
                     Navigator.of(context).pop();
@@ -329,7 +336,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 leading: RoundedButtonWidget(
                   buttonType: ButtonType.transparent,
                   iconData: FontAwesomeIcons.water,
-                  size: BitNetTheme.cardPadding * 1.25,
+                  size: AppTheme.cardPadding * 1.25,
                   onTap: () {
                     setState(() => _receiveType = ReceiveType.ark);
                     Navigator.of(context).pop();
@@ -346,7 +353,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 leading: RoundedButtonWidget(
                   buttonType: ButtonType.transparent,
                   iconData: FontAwesomeIcons.link,
-                  size: BitNetTheme.cardPadding * 1.25,
+                  size: AppTheme.cardPadding * 1.25,
                   onTap: () {
                     setState(() => _receiveType = ReceiveType.onchain);
                     Navigator.of(context).pop();
@@ -365,13 +372,12 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   }
 
   void _showAmountSheet() {
-    final theme = AppTheme.of(context, listen: false);
     _satController.text = _currentAmount?.toString() ?? "0";
 
     arkBottomSheet(
       context: context,
       height: MediaQuery.of(context).size.height * 0.5,
-      backgroundColor: theme.primaryBlack,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ArkScaffold(
         context: context,
         appBar: ArkAppBar(
@@ -380,7 +386,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
           text: AppLocalizations.of(context)!.setAmount,
           actions: [
             IconButton(
-              icon: Icon(Icons.close, color: theme.primaryWhite),
+              icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
               onPressed: () => Navigator.pop(context),
             ),
           ],
@@ -390,8 +396,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(
-                  vertical: BitNetTheme.cardPadding * 2,
-                  horizontal: BitNetTheme.cardPadding,
+                  vertical: AppTheme.cardPadding * 2,
+                  horizontal: AppTheme.cardPadding,
                 ),
                 child: AmountWidget(
                   enabled: () => true,
@@ -405,12 +411,12 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                   bitcoinPrice: 60000.0,
                 ),
               ),
-              const SizedBox(height: BitNetTheme.cardPadding),
+              const SizedBox(height: AppTheme.cardPadding),
               LongButtonWidget(
                 title: AppLocalizations.of(context)!.apply,
                 buttonType: ButtonType.primary,
-                customWidth: BitNetTheme.cardPadding * 10,
-                customHeight: BitNetTheme.cardPadding * 2,
+                customWidth: AppTheme.cardPadding * 10,
+                customHeight: AppTheme.cardPadding * 2,
                 onTap: () {
                   final amountText = _satController.text.trim();
                   if (amountText.isEmpty || amountText == "0") {
@@ -458,7 +464,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 axis: Axis.horizontal,
                 axisAlignment: -1.0,
                 child: RoundedButtonWidget(
-                  size: BitNetTheme.cardPadding * 1.5,
+                  size: AppTheme.cardPadding * 1.5,
                   buttonType: ButtonType.transparent,
                   iconData: FontAwesomeIcons.arrowsRotate,
                   onTap: _refreshAddress,
@@ -466,7 +472,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
               ),
             ],
           ),
-          const SizedBox(width: BitNetTheme.elementSpacing / 2),
+          const SizedBox(width: AppTheme.elementSpacing / 2),
         ],
       ),
       body: PopScope(
@@ -479,15 +485,15 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 const SizedBox(height: kToolbarHeight),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: BitNetTheme.cardPadding,
+                    horizontal: AppTheme.cardPadding,
                   ),
                   child: _isLoading
                       ? const Center(
                           child: Padding(
                             padding:
-                                EdgeInsets.all(BitNetTheme.cardPadding * 4),
+                                EdgeInsets.all(AppTheme.cardPadding * 4),
                             child: CircularProgressIndicator(
-                              color: BitNetTheme.colorBitcoin,
+                              color: AppTheme.colorBitcoin,
                             ),
                           ),
                         )
@@ -496,16 +502,16 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                               child: Column(
                                 children: [
                                   const Icon(Icons.error_outline,
-                                      color: BitNetTheme.errorColor, size: 48),
+                                      color: AppTheme.errorColor, size: 48),
                                   const SizedBox(
-                                      height: BitNetTheme.elementSpacing),
+                                      height: AppTheme.elementSpacing),
                                   Text(
                                     l10n.errorLoadingAddresses,
                                     style: const TextStyle(
-                                        color: BitNetTheme.errorColor),
+                                        color: AppTheme.errorColor),
                                   ),
                                   const SizedBox(
-                                      height: BitNetTheme.elementSpacing),
+                                      height: AppTheme.elementSpacing),
                                   LongButtonWidget(
                                     title: l10n.retry,
                                     buttonType: ButtonType.primary,
@@ -519,13 +525,10 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                // Payment monitoring indicator at top
-                                if (_waitingForPayment)
-                                  _buildPaymentMonitoringIndicator(l10n),
-                                const SizedBox(height: BitNetTheme.cardPadding),
+                                const SizedBox(height: AppTheme.cardPadding),
                                 // QR Code
                                 _buildQrCode(isLight),
-                                const SizedBox(height: BitNetTheme.cardPadding),
+                                const SizedBox(height: AppTheme.cardPadding),
                                 // Address tile
                                 _buildAddressTile(),
                                 // Amount tile
@@ -533,7 +536,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                                 // Type tile
                                 _buildTypeTile(),
                                 const SizedBox(
-                                    height: BitNetTheme.cardPadding * 2),
+                                    height: AppTheme.cardPadding * 2),
                               ],
                             ),
                 ),
@@ -557,18 +560,21 @@ class _ReceiveScreenState extends State<ReceiveScreen>
               foregroundPainter:
                   isLight ? BorderPainterBlack() : BorderPainter(),
               child: Container(
-                margin: const EdgeInsets.all(BitNetTheme.cardPadding),
+                margin: const EdgeInsets.all(AppTheme.cardPadding),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BitNetTheme.cardRadiusBigger,
+                  borderRadius: AppTheme.cardRadiusBigger,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(BitNetTheme.cardPadding / 1.25),
+                  padding: const EdgeInsets.all(AppTheme.cardPadding / 1.25),
                   child: qrData.isNotEmpty
                       ? PrettyQrView.data(
                           data: qrData,
-                          decoration: const PrettyQrDecoration(
-                            shape: PrettyQrSmoothSymbol(roundFactor: 1),
+                          decoration: PrettyQrDecoration(
+                            shape: const PrettyQrSmoothSymbol(roundFactor: 1),
+                            image: PrettyQrDecorationImage(
+                              image: _getQrCenterImage(),
+                            ),
                           ),
                           errorCorrectLevel: QrErrorCorrectLevel.H,
                         )
@@ -577,7 +583,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                           height: 200,
                           child: Center(
                             child: CircularProgressIndicator(
-                              color: BitNetTheme.colorBitcoin,
+                              color: AppTheme.colorBitcoin,
                             ),
                           ),
                         ),
@@ -585,8 +591,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
               ),
             ),
             LongButtonWidget(
-              customHeight: BitNetTheme.cardPadding * 2,
-              customWidth: BitNetTheme.cardPadding * 5,
+              customHeight: AppTheme.cardPadding * 2,
+              customWidth: AppTheme.cardPadding * 5,
               title: AppLocalizations.of(context)!.share,
               leadingIcon: const Icon(Icons.share_rounded),
               onTap: _shareAddress,
@@ -605,9 +611,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.copy,
-              color: AppTheme.of(context).mutedText,
-              size: BitNetTheme.cardPadding * 0.75),
-          const SizedBox(width: BitNetTheme.elementSpacing / 2),
+              color: Theme.of(context).hintColor,
+              size: AppTheme.cardPadding * 0.75),
+          const SizedBox(width: AppTheme.elementSpacing / 2),
           Text(
             _trimAddress(_getCurrentQrData()),
             style: Theme.of(context).textTheme.bodySmall,
@@ -628,10 +634,10 @@ class _ReceiveScreenState extends State<ReceiveScreen>
           children: [
             Icon(
               Icons.edit,
-              size: BitNetTheme.cardPadding * 0.75,
-              color: AppTheme.of(context).mutedText,
+              size: AppTheme.cardPadding * 0.75,
+              color: Theme.of(context).hintColor,
             ),
-            const SizedBox(width: BitNetTheme.elementSpacing / 2),
+            const SizedBox(width: AppTheme.elementSpacing / 2),
             Text(
               _currentAmount != null ? '$_currentAmount sats' : 'Any',
               style: Theme.of(context).textTheme.bodyMedium,
@@ -649,8 +655,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       trailing: GlassContainer(
         opacity: 0.05,
         padding: const EdgeInsets.symmetric(
-          horizontal: BitNetTheme.elementSpacing,
-          vertical: BitNetTheme.elementSpacing / 2,
+          horizontal: AppTheme.elementSpacing,
+          vertical: AppTheme.elementSpacing / 2,
         ),
         child: GestureDetector(
           onTap: _showReceiveTypeSheet,
@@ -659,10 +665,10 @@ class _ReceiveScreenState extends State<ReceiveScreen>
             children: [
               Icon(
                 _getReceiveTypeIcon(),
-                size: BitNetTheme.cardPadding * 0.75,
-                color: AppTheme.of(context).mutedText,
+                size: AppTheme.cardPadding * 0.75,
+                color: Theme.of(context).hintColor,
               ),
-              const SizedBox(width: BitNetTheme.elementSpacing / 2),
+              const SizedBox(width: AppTheme.elementSpacing / 2),
               Text(
                 _getReceiveTypeLabel(),
                 style: Theme.of(context).textTheme.bodyMedium,
@@ -675,39 +681,4 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     );
   }
 
-  Widget _buildPaymentMonitoringIndicator(AppLocalizations l10n) {
-    return Container(
-      margin: const EdgeInsets.only(top: BitNetTheme.cardPadding),
-      padding: const EdgeInsets.all(BitNetTheme.elementSpacing),
-      decoration: BoxDecoration(
-        color: BitNetTheme.colorBitcoin.withValues(alpha: 0.1),
-        borderRadius: BitNetTheme.cardRadiusSmall,
-        border: Border.all(
-          color: BitNetTheme.colorBitcoin.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(BitNetTheme.colorBitcoin),
-            ),
-          ),
-          const SizedBox(width: BitNetTheme.elementSpacing),
-          Text(
-            l10n.monitoringForIncomingPayment,
-            style: TextStyle(
-              color: BitNetTheme.colorBitcoin.withValues(alpha: 0.8),
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

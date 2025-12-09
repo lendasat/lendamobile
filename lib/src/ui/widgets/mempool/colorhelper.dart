@@ -50,7 +50,7 @@ BoxDecoration getDecoration(num medianFee, bool isAccepted,
         offset: const Offset(-16, -16),
       ),
     ],
-    borderRadius: BitNetTheme.cardRadiusMid,
+    borderRadius: AppTheme.cardRadiusMid,
     gradient: LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,

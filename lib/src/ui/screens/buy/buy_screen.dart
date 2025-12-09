@@ -207,7 +207,7 @@ class _BuyScreenState extends State<BuyScreen> {
           SnackBar(
             content: Text(
                 '${AppLocalizations.of(context)!.failedToLaunchMoonpay}: ${e.toString()}'),
-            backgroundColor: BitNetTheme.errorColor,
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
@@ -302,14 +302,14 @@ class _BuyScreenState extends State<BuyScreen> {
         onTap: () => Navigator.of(context).pop(),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: BitNetTheme.cardPadding),
+            padding: const EdgeInsets.only(right: AppTheme.cardPadding),
             child: LongButtonWidget(
               buttonType: ButtonType.transparent,
-              customHeight: BitNetTheme.cardPadding * 1.5,
-              customWidth: BitNetTheme.cardPadding * 4,
+              customHeight: AppTheme.cardPadding * 1.5,
+              customWidth: AppTheme.cardPadding * 4,
               leadingIcon: Icon(
                 FontAwesomeIcons.clockRotateLeft,
-                size: BitNetTheme.cardPadding * 0.75,
+                size: AppTheme.cardPadding * 0.75,
                 color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
               title: "0:${_quoteTimer.toString().padLeft(2, '0')}",
@@ -328,11 +328,11 @@ class _BuyScreenState extends State<BuyScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.max,
                         children: [
-                          const SizedBox(height: BitNetTheme.cardPadding * 2.5),
+                          const SizedBox(height: AppTheme.cardPadding * 2.5),
                           // Amount Widget
                           Padding(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: BitNetTheme.cardPadding,
+                              horizontal: AppTheme.cardPadding,
                             ),
                             child: _buildAmountWidget(),
                           ),
@@ -489,11 +489,11 @@ class _BuyScreenState extends State<BuyScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: Text(
         message,
         style: const TextStyle(
-          color: BitNetTheme.errorColor,
+          color: AppTheme.errorColor,
           fontSize: 14,
         ),
       ),
@@ -502,7 +502,7 @@ class _BuyScreenState extends State<BuyScreen> {
 
   Widget _buildPaymentMethodSection(AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.all(BitNetTheme.elementSpacing * 1.5),
+      padding: const EdgeInsets.all(AppTheme.elementSpacing * 1.5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -510,7 +510,7 @@ class _BuyScreenState extends State<BuyScreen> {
             l10n.paymentMethods,
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: BitNetTheme.elementSpacing),
+          const SizedBox(height: AppTheme.elementSpacing),
           GlassContainer(
             opacity: 0.05,
             child: ArkListTile(
@@ -552,7 +552,7 @@ class _BuyScreenState extends State<BuyScreen> {
 
   Widget _buildProviderSection(AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.all(BitNetTheme.elementSpacing * 1.5),
+      padding: const EdgeInsets.all(AppTheme.elementSpacing * 1.5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -560,7 +560,7 @@ class _BuyScreenState extends State<BuyScreen> {
             "Payment Provider",
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: BitNetTheme.elementSpacing),
+          const SizedBox(height: AppTheme.elementSpacing),
           GlassContainer(
             opacity: 0.05,
             child: ArkListTile(

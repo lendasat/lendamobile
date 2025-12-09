@@ -1,4 +1,4 @@
-import 'package:ark_flutter/app_theme.dart';
+import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/gradient_border.dart';
 import 'package:flutter/material.dart';
 
@@ -47,7 +47,7 @@ class ArkListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     return Container(
@@ -56,9 +56,9 @@ class ArkListTile extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         color: selected
-            ? theme.secondaryBlack.withValues(alpha: 0.5)
+            ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.5)
             : isActive
-                ? theme.secondaryBlack
+                ? Theme.of(context).colorScheme.surface
                 : Colors.transparent,
         border: selected
             ? GradientBoxBorder(
@@ -96,7 +96,7 @@ class ArkListTile extends StatelessWidget {
                         text,
                         style: titleStyle ??
                             TextStyle(
-                              color: theme.primaryWhite,
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
@@ -108,7 +108,7 @@ class ArkListTile extends StatelessWidget {
                       DefaultTextStyle(
                         style: subtitleStyle ??
                             TextStyle(
-                              color: theme.mutedText,
+                              color: Theme.of(context).hintColor,
                               fontSize: 14,
                             ),
                         child: subtitle!,

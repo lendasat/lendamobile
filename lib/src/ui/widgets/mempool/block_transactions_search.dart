@@ -1,5 +1,4 @@
 import 'package:ark_flutter/theme.dart';
-import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:flutter/material.dart';
 
@@ -21,12 +20,12 @@ class BlockTransactionsSearch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
 
     // This widget is designed to be a navigation button, not an actual search field
     // Tapping navigates to BlockTransactions screen where real search happens
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: GestureDetector(
         onTap: onTap,
         child: GlassContainer(
@@ -42,12 +41,12 @@ class BlockTransactionsSearch extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Icon(
                     Icons.search,
-                    color: theme.mutedText,
+                    color: Theme.of(context).hintColor,
                   ),
                 ),
                 Text(
                   '$transactionCount transactions',
-                  style: TextStyle(color: theme.mutedText),
+                  style: TextStyle(color: Theme.of(context).hintColor),
                 ),
               ],
             ),

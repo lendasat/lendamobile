@@ -108,16 +108,16 @@ class _HashrateChartState extends State<HashrateChart> {
       children: [
         Container(
           margin:
-              const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+              const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
           child: HashRealTimeValues(key: hashKey),
         ),
         widget.chartData.isEmpty
             ? const SizedBox(
-                height: BitNetTheme.cardPadding * 16,
+                height: AppTheme.cardPadding * 16,
                 child: Center(child: CircularProgressIndicator()),
               )
             : SizedBox(
-                height: BitNetTheme.cardPadding * 16,
+                height: AppTheme.cardPadding * 16,
                 child: SfCartesianChart(
                   trackballBehavior: _trackballBehavior,
                   onTrackballPositionChanging: (args) {

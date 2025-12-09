@@ -30,7 +30,7 @@ class FeeDistributionWidget extends StatelessWidget {
           ArkListTile(
             leading: const Icon(
               FontAwesomeIcons.moneyBill,
-              size: BitNetTheme.cardPadding * 0.75,
+              size: AppTheme.cardPadding * 0.75,
             ),
             text: AppLocalizations.of(context)!.feeDistribution,
             trailing: Row(
@@ -39,7 +39,7 @@ class FeeDistributionWidget extends StatelessWidget {
                 Text(
                   '\$${_formatAmount(((totalFees / 100000000) * currentUSD).toStringAsFixed(0))}',
                   style: const TextStyle(
-                    color: BitNetTheme.successColor,
+                    color: AppTheme.successColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -47,7 +47,7 @@ class FeeDistributionWidget extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: BitNetTheme.elementSpacing),
+          const SizedBox(height: AppTheme.elementSpacing),
 
           // Median fee
           Text(
@@ -55,14 +55,14 @@ class FeeDistributionWidget extends StatelessWidget {
             style: Theme.of(context)
                 .textTheme
                 .bodyMedium!
-                .copyWith(color: BitNetTheme.white90),
+                .copyWith(color: AppTheme.white90),
           ),
 
-          const SizedBox(height: BitNetTheme.elementSpacing),
+          const SizedBox(height: AppTheme.elementSpacing),
 
           // Fee distribution gauge
           SizedBox(
-            width: BitNetTheme.cardPadding * 12,
+            width: AppTheme.cardPadding * 12,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -71,11 +71,11 @@ class FeeDistributionWidget extends StatelessWidget {
                   showLabels: false,
                   useRangeColorForAxis: true,
                   axisTrackStyle: const LinearAxisTrackStyle(
-                    thickness: BitNetTheme.cardPadding,
+                    thickness: AppTheme.cardPadding,
                     color: Colors.grey,
                     edgeStyle: LinearEdgeStyle.bothCurve,
                     gradient: LinearGradient(
-                      colors: [BitNetTheme.errorColor, BitNetTheme.successColor],
+                      colors: [AppTheme.errorColor, AppTheme.successColor],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                       stops: [0.1, 0.9],
@@ -88,8 +88,8 @@ class FeeDistributionWidget extends StatelessWidget {
                     LinearWidgetPointer(
                       value: medianFee.toDouble(),
                       child: Container(
-                        height: BitNetTheme.cardPadding * 1.25,
-                        width: BitNetTheme.elementSpacing * 0.75,
+                        height: AppTheme.cardPadding * 1.25,
+                        width: AppTheme.elementSpacing * 0.75,
                         decoration: const BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.all(Radius.circular(4.0)),
@@ -101,20 +101,20 @@ class FeeDistributionWidget extends StatelessWidget {
 
                 // Fee range labels
                 Padding(
-                  padding: const EdgeInsets.only(top: BitNetTheme.elementSpacing),
+                  padding: const EdgeInsets.only(top: AppTheme.elementSpacing),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         '\$${(((feeRange.first * 140) / 100000000) * currentUSD).toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              color: BitNetTheme.errorColor,
+                              color: AppTheme.errorColor,
                             ),
                       ),
                       Text(
                         '\$${(((feeRange.last * 140) / 100000000) * currentUSD).toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              color: BitNetTheme.successColor,
+                              color: AppTheme.successColor,
                             ),
                       ),
                     ],
@@ -124,7 +124,7 @@ class FeeDistributionWidget extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: BitNetTheme.cardPadding),
+          const SizedBox(height: AppTheme.cardPadding),
         ],
       ),
     );

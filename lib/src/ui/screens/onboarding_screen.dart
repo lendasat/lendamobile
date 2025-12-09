@@ -1,11 +1,10 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
-import 'package:ark_flutter/src/ui/screens/walletscreen.dart';
+import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:ark_flutter/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -83,7 +82,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-                builder: (context) => const WalletScreen(aspId: 'debug-mode')),
+                builder: (context) => const BottomNav(aspId: 'debug-mode')),
           );
         }
         return;
@@ -105,7 +104,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           if (mounted) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                  builder: (context) => WalletScreen(aspId: aspId)),
+                  builder: (context) => BottomNav(aspId: aspId)),
             );
           }
         } catch (e) {
@@ -135,7 +134,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           if (mounted) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                  builder: (context) => WalletScreen(aspId: aspId)),
+                  builder: (context) => BottomNav(aspId: aspId)),
             );
           }
         } catch (e) {
@@ -158,54 +157,40 @@ class OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  // Helper function to build styled tagline with first letter of each word bolded
-  TextSpan _buildStyledTagline(BuildContext context, AppTheme theme) {
+  // Helper function to build styled tagline
+  TextSpan _buildStyledTagline(BuildContext context) {
     final text = AppLocalizations.of(context)!.appTagline;
-    final words = text.split(' ');
 
     return TextSpan(
+      text: text,
       style: TextStyle(
         fontSize: 18,
-        color: theme.mutedText,
+        color: Theme.of(context).hintColor,
       ),
-      children: words.asMap().entries.map((entry) {
-        final word = entry.value;
-        final isLast = entry.key == words.length - 1;
-
-        return TextSpan(
-          children: [
-            TextSpan(
-              text: word[0],
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            TextSpan(text: word.substring(1) + (isLast ? '' : ' ')),
-          ],
-        );
-      }).toList(),
     );
   }
 
   void _showErrorDialog(String title, String message) {
     if (!mounted) return;
 
-    final theme = AppTheme.of(context, listen: false);
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: theme.secondaryBlack,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(
           title,
           style: const TextStyle(color: Colors.red),
         ),
         content: Text(
           message,
-          style: TextStyle(color: theme.primaryWhite),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             style: TextButton.styleFrom(
-              foregroundColor: Colors.amber,
+              foregroundColor: Colors.orange,
             ),
             child: Text(AppLocalizations.of(context)!.ok),
           ),
@@ -216,10 +201,10 @@ class OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
 
     return Scaffold(
-      backgroundColor: theme.primaryBlack,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -233,16 +218,16 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'WTFark',
+                      'Lendasat',
                       style: TextStyle(
                         fontSize: 64,
                         fontWeight: FontWeight.bold,
-                        color: Colors.amber[500],
+                        color: Colors.orange,
                       ),
                     ),
                     const SizedBox(height: 16),
                     RichText(
-                      text: _buildStyledTagline(context, theme),
+                      text: _buildStyledTagline(context),
                     ),
                   ],
                 ),
@@ -259,7 +244,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
-                        color: theme.primaryWhite,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -297,23 +282,23 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                         AppLocalizations.of(context)!.enterYourNsec,
                         style: TextStyle(
                           fontSize: 16,
-                          color: theme.mutedText,
+                          color: Theme.of(context).hintColor,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: theme.secondaryBlack,
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: TextField(
                           controller: _secretKeyController,
-                          style: TextStyle(color: theme.primaryWhite),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                           maxLines: 3,
                           decoration: InputDecoration(
                             hintText: AppLocalizations.of(context)!
                                 .pasteYourRecoveryNsec,
-                            hintStyle: TextStyle(color: theme.mutedText),
+                            hintStyle: TextStyle(color: Theme.of(context).hintColor),
                             contentPadding: const EdgeInsets.all(16),
                             border: InputBorder.none,
                           ),
@@ -336,7 +321,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                           ? _handleContinue
                           : null),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber[500],
+                    backgroundColor: Colors.orange,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -349,7 +334,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                           width: 24,
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                theme.primaryWhite),
+                                Theme.of(context).colorScheme.onSurface),
                             strokeWidth: 3,
                           ),
                         )
@@ -375,14 +360,14 @@ class OnboardingScreenState extends State<OnboardingScreen> {
     required String option,
   }) {
     final bool isSelected = _selectedOption == option;
-    final theme = AppTheme.of(context);
+    
 
     return InkWell(
       onTap: () => _handleOptionSelect(option),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.amber[500] : theme.secondaryBlack,
+          color: isSelected ? Colors.orange : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -397,7 +382,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color:
-                          isSelected ? theme.primaryBlack : theme.primaryWhite,
+                          isSelected ? Theme.of(context).scaffoldBackgroundColor : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -406,8 +391,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       color: isSelected
-                          ? theme.primaryWhite.withAlpha((0.7 * 255).round())
-                          : theme.mutedText,
+                          ? Theme.of(context).colorScheme.onSurface.withAlpha((0.7 * 255).round())
+                          : Theme.of(context).hintColor,
                     ),
                   ),
                 ],

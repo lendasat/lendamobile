@@ -130,7 +130,7 @@ class _MempoolHomeState extends State<MempoolHome> {
 
     // Calculate scroll position based on mempool blocks count
     // Each block is approximately 140 pixels wide (cardPadding * 5.75 + margins)
-    const blockWidth = BitNetTheme.cardPadding * 7;
+    const blockWidth = AppTheme.cardPadding * 7;
     final scrollPosition = _mempoolBlocks.length * blockWidth;
 
     _scrollController.animateTo(
@@ -516,17 +516,17 @@ class _MempoolHomeState extends State<MempoolHome> {
               children: [
                 if (_socketLoading)
                   const Padding(
-                    padding: EdgeInsets.only(top: BitNetTheme.cardPadding * 15),
+                    padding: EdgeInsets.only(top: AppTheme.cardPadding * 15),
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: BitNetTheme.colorBitcoin,
+                        color: AppTheme.colorBitcoin,
                       ),
                     ),
                   )
                 else
                   Column(
                     children: [
-                      const SizedBox(height: BitNetTheme.cardPadding * 0.1),
+                      const SizedBox(height: AppTheme.cardPadding * 0.1),
 
                       // Blocks list view
                       BlocksListView(
@@ -548,7 +548,7 @@ class _MempoolHomeState extends State<MempoolHome> {
                       if (_loadingDetail)
                         const Center(
                           child: CircularProgressIndicator(
-                            color: BitNetTheme.colorBitcoin,
+                            color: AppTheme.colorBitcoin,
                           ),
                         )
                       else
@@ -589,8 +589,8 @@ class _MempoolHomeState extends State<MempoolHome> {
           alignment: Alignment.topLeft,
           child: Padding(
             padding: const EdgeInsets.only(
-              left: BitNetTheme.cardPadding,
-              bottom: BitNetTheme.elementSpacing,
+              left: AppTheme.cardPadding,
+              bottom: AppTheme.elementSpacing,
             ),
             child: Row(
               children: [
@@ -613,10 +613,10 @@ class _MempoolHomeState extends State<MempoolHome> {
 
         Container(
           margin:
-              const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+              const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
           child: Column(
             children: [
-              const SizedBox(height: BitNetTheme.cardPadding),
+              const SizedBox(height: AppTheme.cardPadding),
 
               // Fee distribution
               FeeDistributionWidget(
@@ -629,7 +629,7 @@ class _MempoolHomeState extends State<MempoolHome> {
                 currentUSD: _currentUSD,
               ),
 
-              const SizedBox(height: BitNetTheme.elementSpacing),
+              const SizedBox(height: AppTheme.elementSpacing),
 
               // Block size
               Row(
@@ -643,7 +643,7 @@ class _MempoolHomeState extends State<MempoolHome> {
                 ],
               ),
 
-              const SizedBox(height: BitNetTheme.cardPadding * 3),
+              const SizedBox(height: AppTheme.cardPadding * 3),
             ],
           ),
         ),
@@ -696,11 +696,11 @@ class _MempoolHomeState extends State<MempoolHome> {
 
         Container(
           margin:
-              const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+              const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: BitNetTheme.elementSpacing),
+              const SizedBox(height: AppTheme.elementSpacing),
 
               // Mining info card
               MiningInfoCard(
@@ -715,7 +715,7 @@ class _MempoolHomeState extends State<MempoolHome> {
                     _currentUSD,
               ),
 
-              const SizedBox(height: BitNetTheme.elementSpacing),
+              const SizedBox(height: AppTheme.elementSpacing),
 
               // Fee distribution
               FeeDistributionWidget(
@@ -725,7 +725,7 @@ class _MempoolHomeState extends State<MempoolHome> {
                 currentUSD: _currentUSD,
               ),
 
-              const SizedBox(height: BitNetTheme.elementSpacing),
+              const SizedBox(height: AppTheme.elementSpacing),
 
               // Block size and health
               Row(
@@ -741,7 +741,7 @@ class _MempoolHomeState extends State<MempoolHome> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: BitNetTheme.elementSpacing),
+                  const SizedBox(width: AppTheme.elementSpacing),
                   Expanded(
                     child: AspectRatio(
                       aspectRatio: 1,
@@ -757,7 +757,7 @@ class _MempoolHomeState extends State<MempoolHome> {
           ),
         ),
 
-        const SizedBox(height: BitNetTheme.cardPadding * 2.5),
+        const SizedBox(height: AppTheme.cardPadding * 2.5),
       ],
     );
   }
@@ -770,7 +770,7 @@ class _MempoolHomeState extends State<MempoolHome> {
 
     return Column(
       children: [
-        const SizedBox(height: BitNetTheme.cardPadding),
+        const SizedBox(height: AppTheme.cardPadding),
 
         // Transaction fees card
         TransactionFeeCard(
@@ -779,7 +779,7 @@ class _MempoolHomeState extends State<MempoolHome> {
           isLoading: _transactionLoading,
         ),
 
-        const SizedBox(height: BitNetTheme.cardPadding),
+        const SizedBox(height: AppTheme.cardPadding),
 
         // Difficulty adjustment card
         DifficultyAdjustmentCard(
@@ -788,7 +788,7 @@ class _MempoolHomeState extends State<MempoolHome> {
           isLoading: _daLoading,
         ),
 
-        const SizedBox(height: BitNetTheme.cardPadding),
+        const SizedBox(height: AppTheme.cardPadding),
 
         // Hashrate card
         HashrateCardOptimized(
@@ -799,7 +799,7 @@ class _MempoolHomeState extends State<MempoolHome> {
           isPositive: _hashrateIsPositive,
         ),
 
-        const SizedBox(height: BitNetTheme.cardPadding),
+        const SizedBox(height: AppTheme.cardPadding),
 
         // Fear & Greed card
         FearAndGreedCard(
@@ -814,7 +814,7 @@ class _MempoolHomeState extends State<MempoolHome> {
           isLoading: _fearGreedLoading,
         ),
 
-        const SizedBox(height: BitNetTheme.cardPadding * 2),
+        const SizedBox(height: AppTheme.cardPadding * 2),
       ],
     );
   }

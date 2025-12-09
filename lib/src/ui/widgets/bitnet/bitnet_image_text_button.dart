@@ -1,4 +1,3 @@
-import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -26,11 +25,11 @@ class BitNetImageWithTextButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     final buttonSize = width ?? 60.0;
-    final iconSize = fallbackIconSize ?? BitNetTheme.iconSize * 1.25;
+    final iconSize = fallbackIconSize ?? AppTheme.iconSize * 1.25;
 
     return GestureDetector(
       onTap: onTap,
@@ -71,14 +70,14 @@ class BitNetImageWithTextButton extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) {
                         return Icon(
                           fallbackIcon ?? Icons.error,
-                          color: theme.primaryWhite,
+                          color: Theme.of(context).colorScheme.onSurface,
                           size: iconSize,
                         );
                       },
                     )
                   : Icon(
                       fallbackIcon ?? Icons.circle,
-                      color: theme.primaryWhite,
+                      color: Theme.of(context).colorScheme.onSurface,
                       size: iconSize,
                     ),
             ),
@@ -89,7 +88,7 @@ class BitNetImageWithTextButton extends StatelessWidget {
             child: Text(
               title,
               style: TextStyle(
-                color: theme.primaryWhite,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),

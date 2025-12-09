@@ -52,7 +52,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
   flutter_custom_tabs: ^2.1.0
   uuid: ^4.5.1
-  animate_do: ^3.1.2
+  animate_do: ^3.3.4
   implicitly_animated_list: ^2.0.0
   syncfusion_flutter_charts: ^31.1.19
   provider: ^6.1.2

@@ -6,7 +6,6 @@ import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/theme.dart';
-import 'package:ark_flutter/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:intl/intl.dart';
@@ -180,8 +179,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         Padding(
           key: ValueKey('header_$category'),
           padding: const EdgeInsets.symmetric(
-            horizontal: BitNetTheme.cardPadding,
-            vertical: BitNetTheme.elementSpacing,
+            horizontal: AppTheme.cardPadding,
+            vertical: AppTheme.elementSpacing,
           ),
           child: Text(
             category,
@@ -224,7 +223,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
@@ -232,7 +231,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       children: [
         Padding(
           padding:
-              const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+              const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -243,12 +242,12 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             ],
           ),
         ),
-        const SizedBox(height: BitNetTheme.elementSpacing),
+        const SizedBox(height: AppTheme.elementSpacing),
         if (!widget.loading && widget.transactions.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: BitNetTheme.cardPadding,
-              vertical: BitNetTheme.elementSpacing,
+              horizontal: AppTheme.cardPadding,
+              vertical: AppTheme.elementSpacing,
             ),
             child: SearchFieldWidget(
               hintText: AppLocalizations.of(context)!.search,
@@ -268,14 +267,14 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               suffixIcon: IconButton(
                 icon: Icon(
                   Icons.filter_list,
-                  color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
-                  size: BitNetTheme.cardPadding * 0.75,
+                  color: isDark ? AppTheme.white60 : AppTheme.black60,
+                  size: AppTheme.cardPadding * 0.75,
                 ),
                 onPressed: () async {
                   await arkBottomSheet(
                     context: context,
                     height: MediaQuery.of(context).size.height * 0.6,
-                    backgroundColor: theme.primaryBlack,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                     child: const TransactionFilterScreen(),
                   );
                   _applySearch(_searchController.text);
@@ -283,7 +282,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               ),
             ),
           ),
-        const SizedBox(height: BitNetTheme.elementSpacing),
+        const SizedBox(height: AppTheme.elementSpacing),
         if (_error != null)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -295,7 +294,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                   Text(
                     AppLocalizations.of(context)!.errorLoadingTransactions,
                     style: TextStyle(
-                      color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
+                      color: isDark ? AppTheme.white60 : AppTheme.black60,
                     ),
                   ),
                 ],
@@ -319,14 +318,14 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                 children: [
                   Icon(
                     Icons.history,
-                    color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
+                    color: isDark ? AppTheme.white60 : AppTheme.black60,
                     size: 48,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context)!.noTransactionHistoryYet,
                     style: TextStyle(
-                      color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
+                      color: isDark ? AppTheme.white60 : AppTheme.black60,
                     ),
                   ),
                 ],
@@ -341,14 +340,14 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                 children: [
                   Icon(
                     Icons.search_off,
-                    color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
+                    color: isDark ? AppTheme.white60 : AppTheme.black60,
                     size: 48,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No matching transactions',
                     style: TextStyle(
-                      color: isDark ? BitNetTheme.white60 : BitNetTheme.black60,
+                      color: isDark ? AppTheme.white60 : AppTheme.black60,
                     ),
                   ),
                 ],
@@ -381,7 +380,7 @@ class _TransactionContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: Column(
         children: [
           GlassContainer(
@@ -397,7 +396,7 @@ class _TransactionContainer extends StatelessWidget {
                   .toList(),
             ),
           ),
-          const SizedBox(height: BitNetTheme.cardPadding * 0.5),
+          const SizedBox(height: AppTheme.cardPadding * 0.5),
         ],
       ),
     );
@@ -488,11 +487,11 @@ class _TransactionItem extends StatelessWidget {
 
     Color statusColor;
     if (isSettled) {
-      statusColor = BitNetTheme.successColor;
+      statusColor = AppTheme.successColor;
     } else if (confirmedAt != null) {
-      statusColor = BitNetTheme.colorBitcoin;
+      statusColor = AppTheme.colorBitcoin;
     } else {
-      statusColor = BitNetTheme.errorColor;
+      statusColor = AppTheme.errorColor;
     }
 
     String transactionType = dialogTitle.replaceAll(' Transaction', '');
@@ -504,12 +503,12 @@ class _TransactionItem extends StatelessWidget {
           onTap: () => _navigateToTransactionDetail(context, txid),
           child: Container(
             padding: const EdgeInsets.symmetric(
-              vertical: BitNetTheme.elementSpacing,
+              vertical: AppTheme.elementSpacing,
             ),
             child: Padding(
               padding: const EdgeInsets.only(
-                left: BitNetTheme.elementSpacing * 0.75,
-                right: BitNetTheme.elementSpacing * 1,
+                left: AppTheme.elementSpacing * 0.75,
+                right: AppTheme.elementSpacing * 1,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -520,15 +519,15 @@ class _TransactionItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Avatar(
-                        size: BitNetTheme.cardPadding * 2,
+                        size: AppTheme.cardPadding * 2,
                         isNft: false,
                       ),
-                      const SizedBox(width: BitNetTheme.elementSpacing * 0.75),
+                      const SizedBox(width: AppTheme.elementSpacing * 0.75),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(
-                            width: BitNetTheme.cardPadding * 6.5,
+                            width: AppTheme.cardPadding * 6.5,
                             child: Text(
                               txid,
                               overflow: TextOverflow.ellipsis,
@@ -537,31 +536,31 @@ class _TransactionItem extends StatelessWidget {
                                   .titleSmall!
                                   .copyWith(
                                     color: isDark
-                                        ? BitNetTheme.white90
-                                        : BitNetTheme.black90,
+                                        ? AppTheme.white90
+                                        : AppTheme.black90,
                                   ),
                             ),
                           ),
                           const SizedBox(
-                              height: BitNetTheme.elementSpacing / 2),
+                              height: AppTheme.elementSpacing / 2),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: BitNetTheme.elementSpacing / 2,
+                                  horizontal: AppTheme.elementSpacing / 2,
                                 ),
                                 child: Image.asset(
                                   "assets/images/bitcoin.png",
-                                  width: BitNetTheme.cardPadding * 0.6,
-                                  height: BitNetTheme.cardPadding * 0.6,
+                                  width: AppTheme.cardPadding * 0.6,
+                                  height: AppTheme.cardPadding * 0.6,
                                   fit: BoxFit.contain,
                                   errorBuilder: (context, error, stackTrace) {
                                     return const Icon(
                                       Icons.currency_bitcoin,
-                                      size: BitNetTheme.cardPadding * 0.6,
-                                      color: BitNetTheme.colorBitcoin,
+                                      size: AppTheme.cardPadding * 0.6,
+                                      color: AppTheme.colorBitcoin,
                                     );
                                   },
                                 ),
@@ -572,12 +571,12 @@ class _TransactionItem extends StatelessWidget {
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),
                               const SizedBox(
-                                width: BitNetTheme.elementSpacing / 2,
+                                width: AppTheme.elementSpacing / 2,
                               ),
                               Icon(
                                 Icons.circle,
                                 color: statusColor,
-                                size: BitNetTheme.cardPadding * 0.4,
+                                size: AppTheme.cardPadding * 0.4,
                               ),
                             ],
                           ),
@@ -606,7 +605,7 @@ class _TransactionItem extends StatelessWidget {
                                 ),
                                 if (showBtcAsMain)
                                   Icon(
-                                    BitNetTheme.satoshiIcon,
+                                    AppTheme.satoshiIcon,
                                   ),
                               ],
                             ),

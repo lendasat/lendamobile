@@ -1,4 +1,3 @@
-import 'package:ark_flutter/app_theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
@@ -8,7 +7,6 @@ import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/bitcoin_chart/bitcoin_chart_detail_screen.dart';
 import 'package:ark_flutter/src/ui/screens/buy/buy_screen.dart';
-import 'package:ark_flutter/src/ui/screens/mempool/mempoolhome.dart';
 import 'package:ark_flutter/src/ui/screens/receivescreen.dart';
 import 'package:ark_flutter/src/ui/screens/sell/sell_screen.dart';
 import 'package:ark_flutter/src/ui/screens/send_screen.dart';
@@ -20,7 +18,6 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_image_text_button.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/crypto_info_item.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/price_widgets.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
@@ -51,9 +48,8 @@ class WalletScreen extends StatefulWidget {
 
 class WalletScreenState extends State<WalletScreen> {
   // Loading states
-  bool _isBalanceLoading = true;
+  bool _isBalanceLoading = false;
   bool _isTransactionFetching = true;
-  String? _balanceError;
   List<Transaction> _transactions = [];
 
   // Balance values
@@ -65,13 +61,12 @@ class WalletScreenState extends State<WalletScreen> {
   BalanceType _currentBalanceType = BalanceType.total;
 
   // Bitcoin chart data
-  TimeRange _selectedTimeRange = TimeRange.day;
   List<PriceData> _bitcoinPriceData = [];
 
   // Gradient colors (cached for performance)
-  Color _gradientTopColor = BitNetTheme.successColor.withValues(alpha: 0.3);
+  Color _gradientTopColor = AppTheme.successColor.withValues(alpha: 0.3);
   Color _gradientBottomColor =
-      BitNetTheme.successColorGradient.withValues(alpha: 0.15);
+      AppTheme.successColorGradient.withValues(alpha: 0.15);
 
   // Scroll controller for nested scrolling
   final ScrollController _scrollController = ScrollController();
@@ -97,7 +92,9 @@ class WalletScreenState extends State<WalletScreen> {
 
   Future<void> _loadBitcoinPriceData() async {
     try {
-      final priceData = await fetchBitcoinPriceData(_selectedTimeRange);
+      final userPrefs = context.read<UserPreferencesService>();
+      final timeRange = _convertChartTimeRange(userPrefs.chartTimeRange);
+      final priceData = await fetchBitcoinPriceData(timeRange);
       if (mounted) {
         setState(() {
           _bitcoinPriceData = priceData;
@@ -109,15 +106,30 @@ class WalletScreenState extends State<WalletScreen> {
     }
   }
 
+  TimeRange _convertChartTimeRange(ChartTimeRange range) {
+    switch (range) {
+      case ChartTimeRange.day:
+        return TimeRange.day;
+      case ChartTimeRange.week:
+        return TimeRange.week;
+      case ChartTimeRange.month:
+        return TimeRange.month;
+      case ChartTimeRange.year:
+        return TimeRange.year;
+      case ChartTimeRange.max:
+        return TimeRange.max;
+    }
+  }
+
   void _updateGradientColors() {
     final isPositive = _isPriceChangePositive();
     setState(() {
       _gradientTopColor = isPositive
-          ? BitNetTheme.successColor.withValues(alpha: 0.3)
-          : BitNetTheme.errorColor.withValues(alpha: 0.3);
+          ? AppTheme.successColor.withValues(alpha: 0.3)
+          : AppTheme.errorColor.withValues(alpha: 0.3);
       _gradientBottomColor = isPositive
-          ? BitNetTheme.successColorGradient.withValues(alpha: 0.15)
-          : BitNetTheme.errorColorGradient.withValues(alpha: 0.15);
+          ? AppTheme.successColorGradient.withValues(alpha: 0.15)
+          : AppTheme.errorColorGradient.withValues(alpha: 0.15);
     });
   }
 
@@ -168,7 +180,6 @@ class WalletScreenState extends State<WalletScreen> {
   Future<void> _fetchBalance() async {
     setState(() {
       _isBalanceLoading = true;
-      _balanceError = null;
     });
 
     try {
@@ -188,7 +199,6 @@ class WalletScreenState extends State<WalletScreen> {
     } catch (e) {
       logger.e("Error fetching balance: $e");
       setState(() {
-        _balanceError = e.toString();
         _isBalanceLoading = false;
       });
 
@@ -220,7 +230,7 @@ class WalletScreenState extends State<WalletScreen> {
         content: Text(AppLocalizations.of(context)!
             .showingBalanceType(_currentBalanceType.name)),
         duration: const Duration(seconds: 1),
-        backgroundColor: BitNetTheme.colorBitcoin,
+        backgroundColor: AppTheme.colorBitcoin,
       ),
     );
   }
@@ -233,7 +243,7 @@ class WalletScreenState extends State<WalletScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: BitNetTheme.errorColor,
+        backgroundColor: AppTheme.errorColor,
         action: SnackBarAction(
           label: AppLocalizations.of(context)!.retry,
           textColor: Colors.white,
@@ -254,65 +264,10 @@ class WalletScreenState extends State<WalletScreen> {
     }
   }
 
-  String _formatBitcoinAmount(double amount) {
-    String formatted = amount.toStringAsFixed(8);
-    formatted = formatted.replaceAll(RegExp(r'0+$'), '');
-
-    int decimalIndex = formatted.indexOf('.');
-    if (decimalIndex == -1) {
-      formatted = '$formatted.00';
-    } else {
-      int decimalPlaces = formatted.length - decimalIndex - 1;
-      if (decimalPlaces < 2) {
-        formatted = formatted.padRight(decimalIndex + 3, '0');
-      }
-    }
-
-    return formatted;
-  }
-
   /// Get current BTC price in USD from price data
   double _getCurrentBtcPrice() {
     if (_bitcoinPriceData.isEmpty) return 65000.0; // Fallback
     return _bitcoinPriceData.last.price;
-  }
-
-  void _cycleTimeRange() {
-    setState(() {
-      switch (_selectedTimeRange) {
-        case TimeRange.day:
-          _selectedTimeRange = TimeRange.week;
-          break;
-        case TimeRange.week:
-          _selectedTimeRange = TimeRange.month;
-          break;
-        case TimeRange.month:
-          _selectedTimeRange = TimeRange.year;
-          break;
-        case TimeRange.year:
-          _selectedTimeRange = TimeRange.max;
-          break;
-        case TimeRange.max:
-          _selectedTimeRange = TimeRange.day;
-          break;
-      }
-    });
-    _loadBitcoinPriceData();
-  }
-
-  String _getTimeRangeLabel(TimeRange range) {
-    switch (range) {
-      case TimeRange.day:
-        return '1D';
-      case TimeRange.week:
-        return '1W';
-      case TimeRange.month:
-        return '1M';
-      case TimeRange.year:
-        return '1Y';
-      case TimeRange.max:
-        return 'Max';
-    }
   }
 
   // Navigation handlers
@@ -365,16 +320,6 @@ class WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  void _handleMempool() {
-    logger.i("Mempool button pressed");
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MempoolHome(),
-      ),
-    );
-  }
-
   void _handleBitcoinChart() {
     logger.i("Bitcoin chart button pressed");
     Navigator.push(
@@ -386,14 +331,13 @@ class WalletScreenState extends State<WalletScreen> {
   }
 
   void _handleSettings() {
-    final theme = AppTheme.of(context, listen: false);
     final settingsController = context.read<SettingsController>();
     settingsController.resetToMain();
 
     arkBottomSheet(
       context: context,
       height: MediaQuery.of(context).size.height * 0.85,
-      backgroundColor: theme.primaryBlack,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Settings(aspId: widget.aspId),
     );
   }
@@ -425,15 +369,15 @@ class WalletScreenState extends State<WalletScreen> {
                   SafeArea(
                     child: Column(
                       children: [
-                        const SizedBox(height: BitNetTheme.cardPadding),
+                        const SizedBox(height: AppTheme.cardPadding),
                         _buildTopBar(),
-                        const SizedBox(height: BitNetTheme.cardPadding * 1.5),
+                        const SizedBox(height: AppTheme.cardPadding * 1.5),
                         _buildBalanceDisplay(),
-                        const SizedBox(height: BitNetTheme.elementSpacing),
+                        const SizedBox(height: AppTheme.elementSpacing),
                         _buildPriceChangeIndicators(),
-                        const SizedBox(height: BitNetTheme.cardPadding * 1.5),
+                        const SizedBox(height: AppTheme.cardPadding * 1.5),
                         _buildActionButtons(),
-                        const SizedBox(height: BitNetTheme.cardPadding),
+                        const SizedBox(height: AppTheme.cardPadding),
                       ],
                     ),
                   ),
@@ -448,7 +392,7 @@ class WalletScreenState extends State<WalletScreen> {
 
             // Spacing before transaction list
             const SliverToBoxAdapter(
-              child: SizedBox(height: BitNetTheme.cardPadding),
+              child: SizedBox(height: AppTheme.cardPadding),
             ),
 
             // Transaction list (TransactionHistoryWidget has its own header)
@@ -458,7 +402,7 @@ class WalletScreenState extends State<WalletScreen> {
 
             // Bottom padding
             const SliverToBoxAdapter(
-              child: SizedBox(height: BitNetTheme.cardPadding * 2),
+              child: SizedBox(height: AppTheme.cardPadding * 2),
             ),
           ],
         ),
@@ -501,39 +445,24 @@ class WalletScreenState extends State<WalletScreen> {
 
   Widget _buildTopBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Avatar
+          // Avatar - larger size
           Avatar(
             onTap: () {},
-            size: BitNetTheme.cardPadding * 1.5,
+            size: AppTheme.cardPadding * 2.25,
             type: ProfilePictureType.lightning,
           ),
 
           // Action buttons
           Row(
             children: [
-              // Time range button
-              LongButtonWidget(
-                padding: EdgeInsetsGeometry.zero,
-                title: _getTimeRangeLabel(_selectedTimeRange),
-                buttonType: ButtonType.transparent,
-                onTap: _cycleTimeRange,
-                customHeight: BitNetTheme.cardPadding * 1.5,
-                customWidth: BitNetTheme.cardPadding * 2.5,
-                leadingIcon: const Icon(
-                  Icons.arrow_drop_down_rounded,
-                  size: 16,
-                ),
-              ),
-              const SizedBox(width: BitNetTheme.elementSpacing * 0.75),
-
               // Hide balance button
               Consumer<UserPreferencesService>(
                 builder: (context, userPrefs, _) => RoundedButtonWidget(
-                  size: BitNetTheme.cardPadding * 1.5,
+                  size: AppTheme.cardPadding * 1.5,
                   buttonType: ButtonType.transparent,
                   iconData: userPrefs.balancesVisible
                       ? FontAwesomeIcons.eyeSlash
@@ -541,29 +470,11 @@ class WalletScreenState extends State<WalletScreen> {
                   onTap: userPrefs.toggleBalancesVisible,
                 ),
               ),
-              const SizedBox(width: BitNetTheme.elementSpacing * 0.5),
-
-              // Refresh button
-              RoundedButtonWidget(
-                size: BitNetTheme.cardPadding * 1.5,
-                buttonType: ButtonType.transparent,
-                iconData: Icons.refresh,
-                onTap: _fetchWalletData,
-              ),
-              const SizedBox(width: BitNetTheme.elementSpacing * 0.5),
-
-              // Mempool button
-              RoundedButtonWidget(
-                size: BitNetTheme.cardPadding * 1.5,
-                buttonType: ButtonType.transparent,
-                iconData: Icons.memory_rounded,
-                onTap: _handleMempool,
-              ),
-              const SizedBox(width: BitNetTheme.elementSpacing * 0.5),
+              const SizedBox(width: AppTheme.elementSpacing * 0.5),
 
               // Settings button
               RoundedButtonWidget(
-                size: BitNetTheme.cardPadding * 1.5,
+                size: AppTheme.cardPadding * 1.5,
                 buttonType: ButtonType.transparent,
                 iconData: Icons.settings,
                 onTap: _handleSettings,
@@ -576,94 +487,140 @@ class WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildBalanceDisplay() {
-    final theme = AppTheme.of(context);
     final currencyService = context.watch<CurrencyPreferenceService>();
     final userPrefs = context.watch<UserPreferencesService>();
 
+    // Convert BTC to satoshis for display
+    final balanceInSats = (_getSelectedBalance() * 100000000).round();
+    final formattedSats = _formatSatsAmount(balanceInSats);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (_isBalanceLoading)
-            const SizedBox(
-              height: 16,
-              width: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
-          else if (_balanceError != null)
-            const Text(
-              'Error loading balance',
-              style: TextStyle(
-                color: BitNetTheme.errorColor,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            )
-          else
-            GestureDetector(
-              onTap: _toggleDisplayUnit,
-              onLongPress: _toggleBalanceType,
-              behavior: HitTestBehavior.opaque,
-              child: currencyService.showCoinBalance
-                  ? Text(
-                      userPrefs.balancesVisible
-                          ? '₿ ${_formatBitcoinAmount(_getSelectedBalance())}'
-                          : '₿ ********',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: theme.primaryWhite,
-                          ),
-                    )
-                  : Text(
-                      userPrefs.balancesVisible
-                          ? currencyService.formatAmount(
-                              _getSelectedBalance() * _getCurrentBtcPrice())
-                          : '${currencyService.symbol}****.**',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: theme.primaryWhite,
-                          ),
-                    ),
-            ),
+          GestureDetector(
+            onTap: _toggleDisplayUnit,
+            onLongPress: _toggleBalanceType,
+            behavior: HitTestBehavior.opaque,
+            child: currencyService.showCoinBalance
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        userPrefs.balancesVisible ? formattedSats : '********',
+                        style:
+                            Theme.of(context).textTheme.displayLarge?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        AppTheme.satoshiIcon,
+                        size: 40,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ],
+                  )
+                : Text(
+                    userPrefs.balancesVisible
+                        ? currencyService.formatAmount(
+                            _getSelectedBalance() * _getCurrentBtcPrice())
+                        : '${currencyService.symbol}****.**',
+                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                  ),
+          ),
         ],
       ),
     );
   }
 
+  /// Format satoshi amount with thousand separators
+  String _formatSatsAmount(int sats) {
+    final formatted = sats.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
+    return formatted;
+  }
+
   Widget _buildPriceChangeIndicators() {
-    if (_bitcoinPriceData.isEmpty) {
-      return const SizedBox.shrink();
+    final currencyService = context.watch<CurrencyPreferenceService>();
+
+    // Default values when no data is available
+    double percentChange = 0.0;
+    bool isPositive = true;
+    double balanceChangeInFiat = 0.0;
+    double balanceChange = 0.0;
+
+    if (_bitcoinPriceData.isNotEmpty) {
+      final firstPrice = _bitcoinPriceData.first.price;
+      final lastPrice = _bitcoinPriceData.last.price;
+      final diff = lastPrice - firstPrice;
+      percentChange = firstPrice != 0 ? (diff / firstPrice) * 100 : 0.0;
+      isPositive = diff >= 0;
+
+      balanceChange = firstPrice != 0
+          ? _getSelectedBalance() * (diff / firstPrice)
+          : 0.0;
+      final btcToFiat = _getCurrentBtcPrice();
+      balanceChangeInFiat = balanceChange * btcToFiat;
     }
 
-    final currencyService = context.watch<CurrencyPreferenceService>();
-    final firstPrice = _bitcoinPriceData.first.price;
-    final lastPrice = _bitcoinPriceData.last.price;
-    final diff = lastPrice - firstPrice;
-    final percentChange = firstPrice != 0 ? (diff / firstPrice) * 100 : 0.0;
-    final isPositive = diff >= 0;
-
-    final balanceChange = _getSelectedBalance() * (diff / firstPrice);
-    final btcToFiat = _getCurrentBtcPrice();
-    final balanceChangeInFiat = balanceChange * btcToFiat;
+    // Convert balance change to sats
+    final balanceChangeInSats = (balanceChange.abs() * 100000000).round();
 
     return GestureDetector(
       onTap: _toggleDisplayUnit,
       behavior: HitTestBehavior.opaque,
       child: Padding(
         padding:
-            const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+            const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ColoredPriceWidget(
-              price: currencyService.showCoinBalance
-                  ? '${_formatBitcoinAmount(balanceChange.abs())} ₿'
-                  : currencyService.formatAmount(balanceChangeInFiat.abs()),
-              isPositive: isPositive,
-              shouldHideAmount: true,
-            ),
+            // Show sats with satoshi icon when in coin mode
+            currencyService.showCoinBalance
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isPositive
+                            ? Icons.arrow_drop_up
+                            : Icons.arrow_drop_down,
+                        color: isPositive
+                            ? AppTheme.successColor
+                            : AppTheme.errorColor,
+                        size: 16,
+                      ),
+                      Text(
+                        _formatSatsAmount(balanceChangeInSats),
+                        style: TextStyle(
+                          color: isPositive
+                              ? AppTheme.successColor
+                              : AppTheme.errorColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        AppTheme.satoshiIcon,
+                        size: 14,
+                        color: isPositive
+                            ? AppTheme.successColor
+                            : AppTheme.errorColor,
+                      ),
+                    ],
+                  )
+                : ColoredPriceWidget(
+                    price: currencyService.formatAmount(balanceChangeInFiat.abs()),
+                    isPositive: isPositive,
+                    shouldHideAmount: true,
+                  ),
             const SizedBox(width: 8),
             BitNetPercentWidget(
               priceChange:
@@ -678,7 +635,7 @@ class WalletScreenState extends State<WalletScreen> {
 
   Widget _buildActionButtons() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -686,8 +643,8 @@ class WalletScreenState extends State<WalletScreen> {
             child: BitNetImageWithTextButton(
               AppLocalizations.of(context)?.send ?? "Send",
               _handleSend,
-              width: BitNetTheme.cardPadding * 2.5,
-              height: BitNetTheme.cardPadding * 2.5,
+              width: AppTheme.cardPadding * 2.5,
+              height: AppTheme.cardPadding * 2.5,
               fallbackIcon: Icons.arrow_upward_rounded,
             ),
           ),
@@ -695,8 +652,8 @@ class WalletScreenState extends State<WalletScreen> {
             child: BitNetImageWithTextButton(
               AppLocalizations.of(context)?.receive ?? "Receive",
               _handleReceive,
-              width: BitNetTheme.cardPadding * 2.5,
-              height: BitNetTheme.cardPadding * 2.5,
+              width: AppTheme.cardPadding * 2.5,
+              height: AppTheme.cardPadding * 2.5,
               fallbackIcon: Icons.arrow_downward_rounded,
             ),
           ),
@@ -704,8 +661,8 @@ class WalletScreenState extends State<WalletScreen> {
             child: BitNetImageWithTextButton(
               "Sell",
               _handleSell,
-              width: BitNetTheme.cardPadding * 2.5,
-              height: BitNetTheme.cardPadding * 2.5,
+              width: AppTheme.cardPadding * 2.5,
+              height: AppTheme.cardPadding * 2.5,
               fallbackIcon: Icons.sell_outlined,
             ),
           ),
@@ -713,10 +670,10 @@ class WalletScreenState extends State<WalletScreen> {
             child: BitNetImageWithTextButton(
               "Buy",
               _handleBuy,
-              width: BitNetTheme.cardPadding * 2.5,
-              height: BitNetTheme.cardPadding * 2.5,
+              width: AppTheme.cardPadding * 2.5,
+              height: AppTheme.cardPadding * 2.5,
               fallbackIcon: FontAwesomeIcons.btc,
-              fallbackIconSize: BitNetTheme.iconSize * 1.5,
+              fallbackIconSize: AppTheme.iconSize * 1.5,
             ),
           ),
         ],
@@ -725,7 +682,6 @@ class WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildCryptosSection() {
-    final theme = AppTheme.of(context);
     // Convert total balance to sats for display
     final balanceInSats = (_totalBalance * 100000000).toInt();
 
@@ -736,11 +692,11 @@ class WalletScreenState extends State<WalletScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: BitNetTheme.cardPadding * 1.75),
+          const SizedBox(height: AppTheme.cardPadding * 1.75),
           Text(
             "Cryptos",
             style: TextStyle(
-              color: theme.primaryWhite,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -821,7 +777,7 @@ class WalletChartWidget extends StatelessWidget {
             xValueMapper: (PriceData data, _) => data.time.toDouble(),
             yValueMapper: (PriceData data, _) => data.price,
             color:
-                isPositive ? BitNetTheme.successColor : BitNetTheme.errorColor,
+                isPositive ? AppTheme.successColor : AppTheme.errorColor,
             width: 3,
             splineType: SplineType.natural,
           ),
@@ -837,8 +793,6 @@ void showTimeframeBottomSheet(
   TimeRange currentRange,
   Function(TimeRange) onSelect,
 ) {
-  final theme = AppTheme.of(context);
-
   showModalBottomSheet(
     context: context,
     elevation: 0.0,
@@ -847,67 +801,67 @@ void showTimeframeBottomSheet(
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(BitNetTheme.borderRadiusBig),
-        topRight: Radius.circular(BitNetTheme.borderRadiusBig),
+        topLeft: Radius.circular(AppTheme.borderRadiusBig),
+        topRight: Radius.circular(AppTheme.borderRadiusBig),
       ),
     ),
-    builder: (context) {
+    builder: (ctx) {
       return Container(
         decoration: BoxDecoration(
-          color: theme.primaryBlack,
+          color: Theme.of(ctx).scaffoldBackgroundColor,
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(BitNetTheme.borderRadiusBig),
-            topRight: Radius.circular(BitNetTheme.borderRadiusBig),
+            topLeft: Radius.circular(AppTheme.borderRadiusBig),
+            topRight: Radius.circular(AppTheme.borderRadiusBig),
           ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: BitNetTheme.elementSpacing),
+            const SizedBox(height: AppTheme.elementSpacing),
             Container(
-              height: BitNetTheme.elementSpacing / 1.375,
-              width: BitNetTheme.cardPadding * 2.25,
+              height: AppTheme.elementSpacing / 1.375,
+              width: AppTheme.cardPadding * 2.25,
               decoration: BoxDecoration(
-                color: theme.mutedText.withValues(alpha: 0.5),
+                color: Theme.of(ctx).hintColor.withValues(alpha: 0.5),
                 borderRadius:
-                    BorderRadius.circular(BitNetTheme.borderRadiusCircular),
+                    BorderRadius.circular(AppTheme.borderRadiusCircular),
               ),
             ),
-            const SizedBox(height: BitNetTheme.cardPadding),
+            const SizedBox(height: AppTheme.cardPadding),
             Text(
               "Select Timeframe",
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: theme.primaryWhite,
+              style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                    color: Theme.of(ctx).colorScheme.onSurface,
                   ),
             ),
-            const SizedBox(height: BitNetTheme.cardPadding),
+            const SizedBox(height: AppTheme.cardPadding),
             ...TimeRange.values.map((range) {
               final isSelected = currentRange == range;
               return ListTile(
                 leading: Icon(
                   _getTimeframeIcon(range),
                   color: isSelected
-                      ? BitNetTheme.colorBitcoin
-                      : theme.primaryWhite,
+                      ? AppTheme.colorBitcoin
+                      : Theme.of(ctx).colorScheme.onSurface,
                 ),
                 title: Text(
                   _getTimeframeLabel(range),
                   style: TextStyle(
-                    color: theme.primaryWhite,
+                    color: Theme.of(ctx).colorScheme.onSurface,
                     fontWeight:
                         isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 trailing: isSelected
-                    ? const Icon(Icons.check, color: BitNetTheme.colorBitcoin)
+                    ? const Icon(Icons.check, color: AppTheme.colorBitcoin)
                     : null,
                 onTap: () {
                   onSelect(range);
-                  Navigator.pop(context);
+                  Navigator.pop(ctx);
                 },
               );
             }),
-            const SizedBox(height: BitNetTheme.cardPadding),
+            const SizedBox(height: AppTheme.cardPadding),
           ],
         ),
       );

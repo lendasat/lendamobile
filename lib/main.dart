@@ -9,7 +9,7 @@ import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/services/transaction_filter_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
-import 'package:ark_flutter/src/ui/screens/walletscreen.dart';
+import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
@@ -76,8 +76,8 @@ Future<Widget> determineStartScreen() async {
           boltzUrl: boltzUrl);
       logger.i("Wallet setup complete, ID: $aspId");
 
-      // Return the dashboard screen with the ASP ID
-      return WalletScreen(aspId: aspId);
+      // Return the bottom nav with the ASP ID
+      return BottomNav(aspId: aspId);
     } else {
       logger.i("No wallet found, showing onboarding screen");
       // Return the onboarding screen

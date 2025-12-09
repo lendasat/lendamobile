@@ -28,9 +28,9 @@ class ViewSockets extends StatelessWidget {
             )
           : ListView.builder(
               padding: const EdgeInsets.only(
-                top: BitNetTheme.cardPadding * 3,
-                left: BitNetTheme.cardPadding,
-                right: BitNetTheme.cardPadding,
+                top: AppTheme.cardPadding * 3,
+                left: AppTheme.cardPadding,
+                right: AppTheme.cardPadding,
               ),
               itemCount: socketsData.length,
               itemBuilder: (context, index) => Padding(

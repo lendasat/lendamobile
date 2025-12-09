@@ -1,4 +1,5 @@
 import 'package:ark_flutter/src/providers/theme_provider.dart';
+import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -66,19 +67,19 @@ class ArkBottomSheetWidget extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.elementSpacing),
         // Drag handle
         Container(
-          height: 4,
-          width: 40,
+          height: AppTheme.elementSpacing / 1.375,
+          width: AppTheme.cardPadding * 2.25,
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.light
                 ? Colors.grey.shade300
                 : Colors.grey.shade700,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusCircular),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.elementSpacing * 0.75),
         Flexible(
           child: Container(
             height: height,

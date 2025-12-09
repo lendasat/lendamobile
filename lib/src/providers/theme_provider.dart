@@ -1,3 +1,4 @@
+import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import '../models/app_theme_model.dart';
 import '../services/theme_service.dart';
@@ -96,11 +97,9 @@ class ThemeProvider extends ChangeNotifier {
         surface: _currentTheme.primaryBackground,
         onSurface: _currentTheme.primaryText,
       ),
-      textTheme: TextTheme(
-        bodyLarge: TextStyle(color: _currentTheme.primaryText),
-        bodyMedium: TextStyle(color: _currentTheme.primaryText),
-        bodySmall: TextStyle(color: _currentTheme.mutedText),
-      ),
+      textTheme: _currentThemeType == ThemeType.light
+          ? AppTheme.textTheme
+          : AppTheme.textThemeDarkMode,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,

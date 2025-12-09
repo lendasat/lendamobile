@@ -38,10 +38,10 @@ class FearAndGreedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      margin: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: GlassContainer(
         child: Padding(
-          padding: const EdgeInsets.all(BitNetTheme.cardPadding),
+          padding: const EdgeInsets.all(AppTheme.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -53,10 +53,10 @@ class FearAndGreedCard extends StatelessWidget {
                     children: [
                       Icon(
                         FontAwesomeIcons.gaugeHigh,
-                        size: BitNetTheme.cardPadding * 0.75,
+                        size: AppTheme.cardPadding * 0.75,
                         color: Theme.of(context).iconTheme.color,
                       ),
-                      const SizedBox(width: BitNetTheme.elementSpacing),
+                      const SizedBox(width: AppTheme.elementSpacing),
                       Text(
                         AppLocalizations.of(context)!.fearAndGreedIndex,
                         style: Theme.of(context).textTheme.titleMedium,
@@ -82,7 +82,7 @@ class FearAndGreedCard extends StatelessWidget {
       return const Center(
         child: SizedBox(
           height: 100,
-          child: CircularProgressIndicator(color: BitNetTheme.colorBitcoin),
+          child: CircularProgressIndicator(color: AppTheme.colorBitcoin),
         ),
       );
     }
@@ -110,8 +110,8 @@ class FearAndGreedCard extends StatelessWidget {
                 'Updated on ${data.formattedDate}',
                 style: Theme.of(context).textTheme.bodySmall!.copyWith(
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? BitNetTheme.white60
-                          : BitNetTheme.black60,
+                          ? AppTheme.white60
+                          : AppTheme.black60,
                     ),
               ),
             ),
@@ -144,8 +144,8 @@ class FearAndGreedCard extends StatelessWidget {
           style: GaugeAxisStyle(
             thickness: 20,
             background: Theme.of(context).brightness == Brightness.dark
-                ? BitNetTheme.white70
-                : BitNetTheme.black70,
+                ? AppTheme.white70
+                : AppTheme.black70,
             segmentSpacing: 4,
           ),
           progressBar: GaugeProgressBar.rounded(
@@ -155,7 +155,7 @@ class FearAndGreedCard extends StatelessWidget {
             GaugeSegment(
               from: 0,
               to: 25,
-              color: BitNetTheme.errorColor,
+              color: AppTheme.errorColor,
               cornerRadius: const Radius.circular(4),
             ),
             GaugeSegment(
@@ -173,7 +173,7 @@ class FearAndGreedCard extends StatelessWidget {
             GaugeSegment(
               from: 75,
               to: 100,
-              color: BitNetTheme.successColor,
+              color: AppTheme.successColor,
               cornerRadius: const Radius.circular(4),
             ),
           ],
@@ -282,7 +282,7 @@ class FearAndGreedCard extends StatelessWidget {
               Icon(
                 isPositive ? Icons.arrow_upward : Icons.arrow_downward,
                 color:
-                    isPositive ? BitNetTheme.successColor : BitNetTheme.errorColor,
+                    isPositive ? AppTheme.successColor : AppTheme.errorColor,
                 size: 12,
               ),
               const SizedBox(width: 2),
@@ -290,8 +290,8 @@ class FearAndGreedCard extends StatelessWidget {
                 '${change.abs()}',
                 style: Theme.of(context).textTheme.bodySmall!.copyWith(
                       color: isPositive
-                          ? BitNetTheme.successColor
-                          : BitNetTheme.errorColor,
+                          ? AppTheme.successColor
+                          : AppTheme.errorColor,
                       fontWeight: FontWeight.bold,
                     ),
                 textAlign: TextAlign.center,
@@ -306,13 +306,13 @@ class FearAndGreedCard extends StatelessWidget {
   // Helper to get color based on fear/greed value
   Color _getFearGreedColor(int value) {
     if (value <= 25) {
-      return BitNetTheme.errorColor;
+      return AppTheme.errorColor;
     } else if (value <= 50) {
       return Colors.orange;
     } else if (value <= 75) {
       return Colors.yellow;
     } else {
-      return BitNetTheme.successColor;
+      return AppTheme.successColor;
     }
   }
 }

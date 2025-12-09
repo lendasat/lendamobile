@@ -26,19 +26,19 @@ class SolidContainer extends StatelessWidget {
     this.borderWidth = 1.5,
     required this.child,
   })  : gradientColors = gradientColors ??
-            [BitNetTheme.colorBitcoin, BitNetTheme.colorPrimaryGradient],
-        height = height ?? BitNetTheme.cardPadding * 1.5,
-        width = width ?? BitNetTheme.cardPadding * 2.5,
+            [AppTheme.colorBitcoin, AppTheme.colorPrimaryGradient],
+        height = height ?? AppTheme.cardPadding * 1.5,
+        width = width ?? AppTheme.cardPadding * 2.5,
         alignment = alignment ?? Alignment.center,
-        borderRadius = borderRadius ?? BitNetTheme.borderRadiusMid,
+        borderRadius = borderRadius ?? AppTheme.borderRadiusMid,
         gradientBegin = gradientBegin ?? Alignment.topCenter,
         gradientEnd = gradientEnd ?? Alignment.bottomCenter;
 
   @override
   Widget build(BuildContext context) {
     final bool useBitcoinGradient =
-        gradientColors.contains(BitNetTheme.colorBitcoin) &&
-            gradientColors.contains(BitNetTheme.colorPrimaryGradient);
+        gradientColors.contains(AppTheme.colorBitcoin) &&
+            gradientColors.contains(AppTheme.colorPrimaryGradient);
 
     return CustomPaint(
       child: Container(

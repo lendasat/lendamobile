@@ -1,7 +1,7 @@
+import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/ui/screens/receivescreen.dart';
 import 'package:flutter/material.dart';
-import 'package:ark_flutter/app_theme.dart';
 
 class AmountInputScreen extends StatefulWidget {
   final String aspId;
@@ -53,25 +53,25 @@ class AmountInputScreenState extends State<AmountInputScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
 
     return Scaffold(
-      backgroundColor: theme.primaryBlack,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           AppLocalizations.of(context)!.enterAmount,
-          style: TextStyle(color: theme.primaryWhite),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: theme.primaryWhite),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: theme.secondaryBlack,
+            color: Theme.of(context).colorScheme.surface,
             height: 1.0,
           ),
         ),
@@ -91,7 +91,7 @@ class AmountInputScreenState extends State<AmountInputScreen> {
                       Text(
                         '${AppLocalizations.of(context)!.amount} (sats)',
                         style: TextStyle(
-                          color: theme.mutedText,
+                          color: Theme.of(context).hintColor,
                           fontSize: 16,
                         ),
                       ),
@@ -99,7 +99,7 @@ class AmountInputScreenState extends State<AmountInputScreen> {
                       Text(
                         _amount.isEmpty ? '0' : _amount,
                         style: TextStyle(
-                          color: theme.primaryWhite,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 48,
                           fontWeight: FontWeight.bold,
                         ),
@@ -147,7 +147,7 @@ class AmountInputScreenState extends State<AmountInputScreen> {
                     onPressed: _onContinue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.amber[500],
-                      foregroundColor: theme.primaryBlack,
+                      foregroundColor: Theme.of(context).scaffoldBackgroundColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -181,7 +181,7 @@ class AmountInputScreenState extends State<AmountInputScreen> {
   }
 
   Widget _buildNumberButton(String number, {VoidCallback? onPressed}) {
-    final theme = AppTheme.of(context);
+    
 
     return SizedBox(
       width: 80,
@@ -189,8 +189,8 @@ class AmountInputScreenState extends State<AmountInputScreen> {
       child: ElevatedButton(
         onPressed: onPressed ?? () => _onNumberPressed(number),
         style: ElevatedButton.styleFrom(
-          backgroundColor: theme.tertiaryBlack,
-          foregroundColor: theme.primaryWhite,
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(40),
           ),

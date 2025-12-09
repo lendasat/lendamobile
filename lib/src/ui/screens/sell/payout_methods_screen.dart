@@ -158,7 +158,7 @@ class _PayoutMethodsScreenState extends State<PayoutMethodsScreen> {
           trailing: isSelected
               ? const Icon(
                   Icons.check_circle,
-                  color: BitNetTheme.successColor,
+                  color: AppTheme.successColor,
                 )
               : const SizedBox.shrink(),
         ),

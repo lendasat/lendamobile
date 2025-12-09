@@ -392,10 +392,10 @@ abstract class AppLocalizations {
   /// **'There was an error restoring your wallet. Please check your nsec and try again.\n\nError: {error}'**
   String errorRestoringWallet(String error);
 
-  /// App tagline with first letter of each word bolded
+  /// App tagline
   ///
   /// In en, this message translates to:
-  /// **'Wallet That Flies on Ark'**
+  /// **'The first Bitcoin wallet that doesn\'t suck.'**
   String get appTagline;
 
   /// No description provided for @ok.

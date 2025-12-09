@@ -26,10 +26,10 @@ class HashrateCardOptimized extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      margin: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: GlassContainer(
         child: Padding(
-          padding: const EdgeInsets.all(BitNetTheme.cardPadding),
+          padding: const EdgeInsets.all(AppTheme.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -42,10 +42,10 @@ class HashrateCardOptimized extends StatelessWidget {
                     children: [
                       Icon(
                         FontAwesomeIcons.server,
-                        size: BitNetTheme.cardPadding * 0.75,
+                        size: AppTheme.cardPadding * 0.75,
                         color: Theme.of(context).iconTheme.color,
                       ),
-                      const SizedBox(width: BitNetTheme.elementSpacing),
+                      const SizedBox(width: AppTheme.elementSpacing),
                       Text(
                         AppLocalizations.of(context)!.networkHashrate,
                         style: Theme.of(context).textTheme.titleMedium,
@@ -72,15 +72,15 @@ class HashrateCardOptimized extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  borderRadius: BitNetTheme.cardRadiusSmall,
-                  color: BitNetTheme.colorBitcoin.withValues(alpha: 0.1),
+                  borderRadius: AppTheme.cardRadiusSmall,
+                  color: AppTheme.colorBitcoin.withValues(alpha: 0.1),
                 ),
                 child: Text(
                   "Higher hashrate = stronger network security",
                   style: Theme.of(context)
                       .textTheme
                       .bodySmall!
-                      .copyWith(color: BitNetTheme.colorBitcoin),
+                      .copyWith(color: AppTheme.colorBitcoin),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -136,8 +136,8 @@ class HashrateCardOptimized extends StatelessWidget {
                 Icon(
                   isPositive ? Icons.trending_up : Icons.trending_down,
                   color: isPositive
-                      ? BitNetTheme.successColor
-                      : BitNetTheme.errorColor,
+                      ? AppTheme.successColor
+                      : AppTheme.errorColor,
                   size: 16,
                 ),
                 const SizedBox(width: 4),
@@ -145,8 +145,8 @@ class HashrateCardOptimized extends StatelessWidget {
                   changePercentage,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         color: isPositive
-                            ? BitNetTheme.successColor
-                            : BitNetTheme.errorColor,
+                            ? AppTheme.successColor
+                            : AppTheme.errorColor,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
@@ -200,7 +200,7 @@ class HashrateCardOptimized extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: SfSparkLineChart(
         data: sampledData.map((e) => e.price).toList(),
-        color: BitNetTheme.colorBitcoin,
+        color: AppTheme.colorBitcoin,
         marker: const SparkChartMarker(
             displayMode: SparkChartMarkerDisplayMode.none),
         labelDisplayMode: SparkChartLabelDisplayMode.none,

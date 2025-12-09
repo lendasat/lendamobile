@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ark_flutter/app_theme.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class PriceData {
@@ -15,14 +14,16 @@ class BitcoinPriceChart extends StatefulWidget {
   final int alpha;
   final ActivationMode? trackballActivationMode;
   final VoidCallback? onChartTouchEnd;
+  final Color? lineColor;
 
   const BitcoinPriceChart({
     super.key,
     required this.data,
     this.trackballDataNotifier,
-    this.alpha = 100,
+    this.alpha = 255,
     this.trackballActivationMode = ActivationMode.singleTap,
     this.onChartTouchEnd,
+    this.lineColor,
   });
 
   @override
@@ -66,23 +67,46 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
     _fixedYMax = maxPrice + padding;
   }
 
+  double? _getAveragePrice() {
+    if (widget.data.isEmpty) return null;
+    final sum = widget.data.fold<double>(0, (sum, d) => sum + d.price);
+    return sum / widget.data.length;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    final averagePrice = _getAveragePrice();
+
+    // Determine line color: use provided lineColor or default to green
+    final chartLineColor = widget.lineColor ?? Colors.green;
 
     return SfCartesianChart(
-      plotAreaBorderWidth: 0.7,
+      plotAreaBorderWidth: 0,
       primaryXAxis: const DateTimeAxis(
         isVisible: false,
-        axisLine: AxisLine(width: 1),
-        majorGridLines: MajorGridLines(width: 0.7),
+        axisLine: AxisLine(width: 0),
+        majorGridLines: MajorGridLines(width: 0),
+        minorGridLines: MinorGridLines(width: 0),
       ),
       primaryYAxis: NumericAxis(
         isVisible: false,
         axisLine: const AxisLine(width: 0),
         majorGridLines: const MajorGridLines(width: 0),
+        minorGridLines: const MinorGridLines(width: 0),
         minimum: _fixedYMin,
         maximum: _fixedYMax,
+        plotBands: averagePrice != null
+            ? <PlotBand>[
+                PlotBand(
+                  isVisible: true,
+                  dashArray: const <double>[2, 5],
+                  start: averagePrice,
+                  end: averagePrice,
+                  borderColor: Colors.grey,
+                  borderWidth: 1.5,
+                ),
+              ]
+            : <PlotBand>[],
       ),
       trackballBehavior: widget.trackballActivationMode != null
           ? TrackballBehavior(
@@ -90,8 +114,13 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
               activationMode: widget.trackballActivationMode!,
               tooltipDisplayMode: TrackballDisplayMode.none,
               lineType: TrackballLineType.vertical,
-              lineColor: theme.primaryWhite,
-              lineWidth: 1,
+              lineColor: Colors.grey[400],
+              lineWidth: 2,
+              markerSettings: const TrackballMarkerSettings(
+                markerVisibility: TrackballVisibilityMode.visible,
+                color: Colors.white,
+                borderColor: Colors.white,
+              ),
             )
           : null,
       onTrackballPositionChanging: (TrackballArgs args) {
@@ -112,9 +141,10 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
           xValueMapper: (PriceData price, _) =>
               DateTime.fromMillisecondsSinceEpoch(price.time),
           yValueMapper: (PriceData price, _) => price.price,
-          color: theme.mutedText.withAlpha(widget.alpha),
-          width: 3,
+          color: chartLineColor,
+          width: 2,
           splineType: SplineType.natural,
+          animationDuration: 0,
         ),
       ],
     );

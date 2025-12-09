@@ -23,13 +23,13 @@ class BlockSizeWidget extends StatelessWidget {
     double mwu = weightInBytes / 1000000;
 
     // Calculate the width based on the ratio
-    double maxWidth = BitNetTheme.cardPadding * 3;
+    double maxWidth = AppTheme.cardPadding * 3;
     double ratio = (mbSize / mwu) * maxWidth;
     double orangeContainerWidth = ratio.clamp(0, maxWidth);
 
     return GlassContainer(
-      height: isAccepted ? null : BitNetTheme.cardPadding * 6.5,
-      width: isAccepted ? null : BitNetTheme.cardPadding * 6.5,
+      height: isAccepted ? null : AppTheme.cardPadding * 6.5,
+      width: isAccepted ? null : AppTheme.cardPadding * 6.5,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -46,44 +46,44 @@ class BlockSizeWidget extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
               ),
-              const SizedBox(width: BitNetTheme.elementSpacing / 2),
+              const SizedBox(width: AppTheme.elementSpacing / 2),
               Icon(
                 Icons.help_outline_rounded,
-                color: BitNetTheme.white80,
-                size: BitNetTheme.cardPadding * 0.75,
+                color: AppTheme.white80,
+                size: AppTheme.cardPadding * 0.75,
               ),
             ],
           ),
 
-          const SizedBox(height: BitNetTheme.cardPadding * 0.5),
+          const SizedBox(height: AppTheme.cardPadding * 0.5),
 
           // Size visualization
           Stack(
             children: [
               // Background container
               Container(
-                height: BitNetTheme.cardPadding * 3,
-                width: BitNetTheme.cardPadding * 3,
+                height: AppTheme.cardPadding * 3,
+                width: AppTheme.cardPadding * 3,
                 decoration: BoxDecoration(
-                  borderRadius: BitNetTheme.cardRadiusSmall,
+                  borderRadius: AppTheme.cardRadiusSmall,
                   color: Colors.grey,
                 ),
               ),
 
               // Filled container representing the ratio
               Container(
-                height: BitNetTheme.cardPadding * 3,
+                height: AppTheme.cardPadding * 3,
                 width: orangeContainerWidth,
                 decoration: BoxDecoration(
-                  borderRadius: BitNetTheme.cardRadiusSmall,
-                  color: BitNetTheme.colorBitcoin,
+                  borderRadius: AppTheme.cardRadiusSmall,
+                  color: AppTheme.colorBitcoin,
                 ),
               ),
 
               // Text overlay showing the size
               SizedBox(
-                height: BitNetTheme.cardPadding * 3,
-                width: BitNetTheme.cardPadding * 3,
+                height: AppTheme.cardPadding * 3,
+                width: AppTheme.cardPadding * 3,
                 child: Center(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -92,8 +92,8 @@ class BlockSizeWidget extends StatelessWidget {
                       Text(
                         '${mbSize.toStringAsFixed(2)} MB',
                         style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                          color: BitNetTheme.white90,
-                          shadows: [BitNetTheme.boxShadowBig],
+                          color: AppTheme.white90,
+                          shadows: [AppTheme.boxShadowBig],
                         ),
                       ),
                     ],
@@ -103,7 +103,7 @@ class BlockSizeWidget extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: BitNetTheme.elementSpacing * 0.75),
+          const SizedBox(height: AppTheme.elementSpacing * 0.75),
 
           // Size reference
           Row(

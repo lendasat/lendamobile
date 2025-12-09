@@ -6,8 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 /// BitNet Design System Theme
 /// Contains all design constants, colors, spacing, and typography
 /// This is a static theme class that provides design system constants
-/// For dynamic theme colors based on user preferences, use AppTheme.of(context)
-abstract class BitNetTheme {
+abstract class AppTheme {
   // Satoshi Icon (for Bitcoin symbol)
   static IconData satoshiIcon = const IconData(
     0x0021,
@@ -76,6 +75,30 @@ abstract class BitNetTheme {
   static const double cardPaddingBigger = 32;
   static const double elementSpacing = cardPadding * 0.5;
   static const double bottomNavBarHeight = 64;
+
+  // Padding Constants (aliases for convenience)
+  static const double paddingXS = 4.0;
+  static const double paddingS = 8.0;
+  static const double paddingM = 16.0;
+  static const double paddingL = 24.0;
+  static const double paddingXL = 32.0;
+  static const double paddingXXL = 48.0;
+
+  // Border Radius Constants (aliases)
+  static const double radiusXS = 4.0;
+  static const double radiusS = 8.0;
+  static const double radiusM = 12.0;
+  static const double radiusL = 16.0;
+  static const double radiusXL = 20.0;
+
+  // Button Heights
+  static const double buttonHeightS = 44.0;
+
+  // Icon Sizes
+  static const double iconS = 16.0;
+  static const double iconM = 20.0;
+  static const double iconL = 24.0;
+  static const double iconXL = 40.0;
 
   // Sizes
   static const double iconSize = cardPadding;
@@ -173,115 +196,115 @@ abstract class BitNetTheme {
       fontSize: 52,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.5,
-      color: BitNetTheme.black90,
+      color: AppTheme.black90,
     ),
     displayMedium: GoogleFonts.poppins(
       fontSize: 40,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.5,
-      color: BitNetTheme.black90,
+      color: AppTheme.black90,
     ),
     displaySmall: GoogleFonts.poppins(
       fontSize: 28,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.0,
-      color: BitNetTheme.black90,
+      color: AppTheme.black90,
     ),
     headlineLarge: GoogleFonts.poppins(
       fontSize: 24,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.25,
-      color: BitNetTheme.black80,
+      color: AppTheme.black80,
     ),
     headlineMedium: GoogleFonts.poppins(
       fontSize: 22,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.25,
-      color: BitNetTheme.black80,
+      color: AppTheme.black80,
     ),
     headlineSmall: GoogleFonts.poppins(
       fontSize: 20,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.15,
-      color: BitNetTheme.black80,
+      color: AppTheme.black80,
     ),
     titleLarge: GoogleFonts.poppins(
       fontSize: 17,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.15,
-      color: BitNetTheme.black70,
+      color: AppTheme.black70,
     ),
     titleMedium: GoogleFonts.poppins(
       fontSize: 17,
       fontWeight: FontWeight.w500,
       letterSpacing: 0.0,
-      color: BitNetTheme.black70,
+      color: AppTheme.black70,
     ),
     titleSmall: GoogleFonts.poppins(
       fontSize: 15,
       fontWeight: FontWeight.w500,
       letterSpacing: 0.0,
-      color: BitNetTheme.black70,
+      color: AppTheme.black70,
     ),
     bodyLarge: GoogleFonts.poppins(
       fontSize: 17,
       fontWeight: FontWeight.w400,
       letterSpacing: 0.15,
-      color: BitNetTheme.black60,
+      color: AppTheme.black60,
     ),
     bodyMedium: GoogleFonts.poppins(
       fontSize: 15,
       fontWeight: FontWeight.w400,
       letterSpacing: 0.15,
-      color: BitNetTheme.black60,
+      color: AppTheme.black60,
     ),
     bodySmall: GoogleFonts.poppins(
       fontSize: 13,
       fontWeight: FontWeight.w400,
       letterSpacing: 0.25,
-      color: BitNetTheme.black60,
+      color: AppTheme.black60,
     ),
     labelLarge: GoogleFonts.poppins(
       fontSize: 12,
       fontWeight: FontWeight.w400,
       letterSpacing: 0.25,
-      color: BitNetTheme.black60,
+      color: AppTheme.black60,
     ),
     labelMedium: GoogleFonts.poppins(
       fontSize: 12,
       fontWeight: FontWeight.w400,
       letterSpacing: 0.25,
-      color: BitNetTheme.black60,
+      color: AppTheme.black60,
     ),
     labelSmall: GoogleFonts.poppins(
       fontSize: 12,
       fontWeight: FontWeight.w400,
       letterSpacing: 0.25,
-      color: BitNetTheme.black60,
+      color: AppTheme.black60,
     ),
   );
 
   // Text Theme (Dark Mode)
   static final textThemeDarkMode = textTheme.copyWith(
-    displayLarge: textTheme.displayLarge!.copyWith(color: BitNetTheme.white90),
+    displayLarge: textTheme.displayLarge!.copyWith(color: AppTheme.white90),
     displayMedium:
-        textTheme.displayMedium!.copyWith(color: BitNetTheme.white90),
-    displaySmall: textTheme.displaySmall!.copyWith(color: BitNetTheme.white90),
+        textTheme.displayMedium!.copyWith(color: AppTheme.white90),
+    displaySmall: textTheme.displaySmall!.copyWith(color: AppTheme.white90),
     headlineLarge:
-        textTheme.headlineMedium!.copyWith(color: BitNetTheme.white90),
+        textTheme.headlineMedium!.copyWith(color: AppTheme.white90),
     headlineMedium:
-        textTheme.headlineMedium!.copyWith(color: BitNetTheme.white90),
+        textTheme.headlineMedium!.copyWith(color: AppTheme.white90),
     headlineSmall:
-        textTheme.headlineSmall!.copyWith(color: BitNetTheme.white90),
-    titleLarge: textTheme.titleLarge!.copyWith(color: BitNetTheme.white90),
-    titleMedium: textTheme.titleMedium!.copyWith(color: BitNetTheme.white80),
-    titleSmall: textTheme.titleSmall!.copyWith(color: BitNetTheme.white80),
-    bodyLarge: textTheme.bodyLarge!.copyWith(color: BitNetTheme.white70),
-    bodyMedium: textTheme.bodyMedium!.copyWith(color: BitNetTheme.white70),
-    bodySmall: textTheme.bodySmall!.copyWith(color: BitNetTheme.white60),
-    labelSmall: textTheme.labelSmall!.copyWith(color: BitNetTheme.white60),
-    labelMedium: textTheme.labelMedium!.copyWith(color: BitNetTheme.white60),
-    labelLarge: textTheme.labelLarge!.copyWith(color: BitNetTheme.white60),
+        textTheme.headlineSmall!.copyWith(color: AppTheme.white90),
+    titleLarge: textTheme.titleLarge!.copyWith(color: AppTheme.white90),
+    titleMedium: textTheme.titleMedium!.copyWith(color: AppTheme.white80),
+    titleSmall: textTheme.titleSmall!.copyWith(color: AppTheme.white80),
+    bodyLarge: textTheme.bodyLarge!.copyWith(color: AppTheme.white70),
+    bodyMedium: textTheme.bodyMedium!.copyWith(color: AppTheme.white70),
+    bodySmall: textTheme.bodySmall!.copyWith(color: AppTheme.white60),
+    labelSmall: textTheme.labelSmall!.copyWith(color: AppTheme.white60),
+    labelMedium: textTheme.labelMedium!.copyWith(color: AppTheme.white60),
+    labelLarge: textTheme.labelLarge!.copyWith(color: AppTheme.white60),
   );
 
   // Fallback Text Style
@@ -308,24 +331,24 @@ abstract class BitNetTheme {
 
   /// Creates a custom ThemeData based on brightness and optional seed color
   static ThemeData customTheme(Brightness brightness, [Color? seed]) {
-    Color defaultSeed = seed ?? BitNetTheme.primaryColor;
+    Color defaultSeed = seed ?? AppTheme.primaryColor;
 
     if (defaultSeed == const Color(0xffffffff) ||
         defaultSeed == const Color(0xff000000)) {
       if (brightness == Brightness.dark) {
         ColorScheme colorScheme = ColorScheme(
           onPrimaryContainer: Colors.white,
-          primary: BitNetTheme.colorBitcoin,
-          secondary: BitNetTheme.secondaryColor,
+          primary: AppTheme.colorBitcoin,
+          secondary: AppTheme.secondaryColor,
           secondaryContainer: Colors.black,
           primaryContainer: Colors.black,
           tertiary: Colors.black,
           tertiaryContainer: Colors.black,
           brightness: Brightness.dark,
-          onPrimary: BitNetTheme.white80,
+          onPrimary: AppTheme.white80,
           onSecondary: Colors.black,
-          error: BitNetTheme.errorColor,
-          onError: BitNetTheme.errorColor,
+          error: AppTheme.errorColor,
+          onError: AppTheme.errorColor,
           surface: Colors.black,
           onSurface: Colors.white,
         );
@@ -342,15 +365,15 @@ abstract class BitNetTheme {
           onPrimary: Colors.black,
           onSecondaryContainer: Colors.black,
           onSecondary: Colors.black,
-          primary: BitNetTheme.colorBitcoin,
+          primary: AppTheme.colorBitcoin,
           onSurface: Colors.black,
-          secondary: BitNetTheme.secondaryColor,
+          secondary: AppTheme.secondaryColor,
           secondaryContainer: Color(0xfff2f2f2),
           primaryContainer: Color(0xfff2f2f2),
           tertiary: Color(0xfff2f2f2),
           tertiaryContainer: Color(0xfff2f2f2),
-          error: BitNetTheme.errorColor,
-          onError: BitNetTheme.errorColor,
+          error: AppTheme.errorColor,
+          onError: AppTheme.errorColor,
           surface: Color(0xfff2f2f2),
         );
         ThemeData themeData = ThemeData.from(
@@ -406,5 +429,5 @@ Color lighten(Color c, [int percent = 10]) {
 
 /// Calculate QR code size based on context
 dynamic qrCodeSize(BuildContext context) =>
-    min(BitNetTheme.cardPadding * 9.5, BitNetTheme.cardPadding * 9.5)
+    min(AppTheme.cardPadding * 9.5, AppTheme.cardPadding * 9.5)
         .toDouble();

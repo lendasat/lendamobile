@@ -1,4 +1,4 @@
-import 'package:ark_flutter/app_theme.dart';
+import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/transaction_filter_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -16,7 +16,7 @@ class TransactionFilterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
     final filterService = context.watch<TransactionFilterService>();
 
     return Scaffold(
@@ -28,13 +28,13 @@ class TransactionFilterScreen extends StatelessWidget {
         title: Text(
           'Filter',
           style: TextStyle(
-            color: theme.primaryWhite,
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.close, color: theme.primaryWhite),
+          icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -45,7 +45,7 @@ class TransactionFilterScreen extends StatelessWidget {
             child: Text(
               AppLocalizations.of(context)!.clear,
               style: TextStyle(
-                color: theme.primaryWhite,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -63,7 +63,7 @@ class TransactionFilterScreen extends StatelessWidget {
                   Text(
                     'Filter Options',
                     style: TextStyle(
-                      color: theme.primaryWhite,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -113,7 +113,7 @@ class TransactionFilterScreen extends StatelessWidget {
                     Text(
                       'Time Frame',
                       style: TextStyle(
-                        color: theme.primaryWhite,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -123,7 +123,7 @@ class TransactionFilterScreen extends StatelessWidget {
                         icon: Icon(
                           Icons.clear,
                           size: 20,
-                          color: theme.primaryWhite,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                         onPressed: () {
                           filterService.resetTimeframe();
@@ -154,8 +154,8 @@ class TransactionFilterScreen extends StatelessWidget {
                                     : 'Start Date',
                                 style: TextStyle(
                                   color: filterService.startDate != null
-                                      ? theme.primaryWhite
-                                      : theme.mutedText,
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Theme.of(context).hintColor,
                                 ),
                               ),
                             ),
@@ -168,7 +168,7 @@ class TransactionFilterScreen extends StatelessWidget {
                           horizontal: AppTheme.paddingS),
                       child: Text(
                         'to',
-                        style: TextStyle(color: theme.mutedText),
+                        style: TextStyle(color: Theme.of(context).hintColor),
                       ),
                     ),
                     Expanded(
@@ -191,8 +191,8 @@ class TransactionFilterScreen extends StatelessWidget {
                                     : 'End Date',
                                 style: TextStyle(
                                   color: filterService.endDate != null
-                                      ? theme.primaryWhite
-                                      : theme.mutedText,
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Theme.of(context).hintColor,
                                 ),
                               ),
                             ),
@@ -251,7 +251,7 @@ class _FilterPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
 
     return InkWell(
       onTap: onTap,
@@ -265,7 +265,7 @@ class _FilterPill extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: isSelected ? theme.primaryWhite : theme.mutedText,
+              color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).hintColor,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),

@@ -122,11 +122,11 @@ class _WalletFilterScreenState extends State<WalletFilterScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: BitNetTheme.elementSpacing,
+              horizontal: AppTheme.elementSpacing,
             ),
             child: LongButtonWidget(
-              customWidth: BitNetTheme.cardPadding * 3.75,
-              customHeight: BitNetTheme.cardPadding * 1.25,
+              customWidth: AppTheme.cardPadding * 3.75,
+              customHeight: AppTheme.cardPadding * 1.25,
               buttonType: ButtonType.transparent,
               title: l10n.clear,
               onTap: () {
@@ -151,23 +151,23 @@ class _WalletFilterScreenState extends State<WalletFilterScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: BitNetTheme.cardPadding,
-              vertical: BitNetTheme.cardPadding * 2,
+              horizontal: AppTheme.cardPadding,
+              vertical: AppTheme.cardPadding * 2,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: BitNetTheme.cardPadding),
+                const SizedBox(height: AppTheme.cardPadding),
                 if (!widget.hideFilters) _buildFilterPills(context, l10n),
-                SizedBox(height: BitNetTheme.cardPadding * 1.75),
+                SizedBox(height: AppTheme.cardPadding * 1.75),
                 _buildTimeframeSection(context, l10n),
               ],
             ),
           ),
           Positioned(
-            bottom: BitNetTheme.cardPadding,
-            left: BitNetTheme.cardPadding,
-            right: BitNetTheme.cardPadding,
+            bottom: AppTheme.cardPadding,
+            left: AppTheme.cardPadding,
+            right: AppTheme.cardPadding,
             child: LongButtonWidget(
               title: l10n.apply,
               buttonType: ButtonType.solid,
@@ -212,7 +212,7 @@ class _WalletFilterScreenState extends State<WalletFilterScreen> {
           'Filter Options',
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        const SizedBox(height: BitNetTheme.elementSpacing),
+        const SizedBox(height: AppTheme.elementSpacing),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -283,7 +283,7 @@ class _WalletFilterScreenState extends State<WalletFilterScreen> {
               ),
           ],
         ),
-        const SizedBox(height: BitNetTheme.elementSpacing),
+        const SizedBox(height: AppTheme.elementSpacing),
         Row(
           children: [
             Expanded(
@@ -301,7 +301,7 @@ class _WalletFilterScreenState extends State<WalletFilterScreen> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(
-                      BitNetTheme.elementSpacing / 2,
+                      AppTheme.elementSpacing / 2,
                     ),
                     child: Center(
                       child: Text(
@@ -318,7 +318,7 @@ class _WalletFilterScreenState extends State<WalletFilterScreen> {
             ),
             Container(
               margin: const EdgeInsets.symmetric(
-                horizontal: BitNetTheme.elementSpacing,
+                horizontal: AppTheme.elementSpacing,
               ),
               child: Text(
                 'to',

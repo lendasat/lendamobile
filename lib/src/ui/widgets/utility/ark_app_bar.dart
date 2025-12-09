@@ -48,26 +48,26 @@ class _ArkAppBarState extends State<ArkAppBar> {
     final double width = MediaQuery.of(context).size.width;
 
     // Define breakpoint values for responsive layout
-    final bool isSuperSmallScreen = width < BitNetTheme.isSuperSmallScreen;
-    final bool isSmallScreen = width < BitNetTheme.isSmallScreen;
-    final bool isMidScreen = width < BitNetTheme.isMidScreen;
-    final bool isIntermediateScreen = width < BitNetTheme.isIntermediateScreen;
+    final bool isSuperSmallScreen = width < AppTheme.isSuperSmallScreen;
+    final bool isSmallScreen = width < AppTheme.isSmallScreen;
+    final bool isMidScreen = width < AppTheme.isMidScreen;
+    final bool isIntermediateScreen = width < AppTheme.isIntermediateScreen;
 
     // Check if we should use Bitcoin gradient
     final bool useBitcoinGradient =
-        Theme.of(context).colorScheme.primary == BitNetTheme.colorBitcoin;
+        Theme.of(context).colorScheme.primary == AppTheme.colorBitcoin;
 
     final double centerSpacing = kIsWeb
-        ? BitNetTheme.columnWidth * 0.075
+        ? AppTheme.columnWidth * 0.075
         : isMidScreen
             ? isIntermediateScreen
                 ? isSmallScreen
                     ? isSuperSmallScreen
-                        ? BitNetTheme.columnWidth * 0.075
-                        : BitNetTheme.columnWidth * 0.15
-                    : BitNetTheme.columnWidth * 0.35
-                : BitNetTheme.columnWidth * 0.65
-            : BitNetTheme.columnWidth;
+                        ? AppTheme.columnWidth * 0.075
+                        : AppTheme.columnWidth * 0.15
+                    : AppTheme.columnWidth * 0.35
+                : AppTheme.columnWidth * 0.65
+            : AppTheme.columnWidth;
 
     return AppBar(
       automaticallyImplyLeading: false,
@@ -82,8 +82,8 @@ class _ArkAppBarState extends State<ArkAppBar> {
           (widget.text != null && widget.text!.isNotEmpty
               ? _animateText
                   ? SizedBox(
-                      width: BitNetTheme.cardPadding * 10,
-                      height: BitNetTheme.cardPadding,
+                      width: AppTheme.cardPadding * 10,
+                      height: AppTheme.cardPadding,
                       child: _AnimatedText(text: widget.text!),
                     )
                   : Container(
@@ -104,10 +104,10 @@ class _ArkAppBarState extends State<ArkAppBar> {
                   onTap: widget.onTap,
                   child: Container(
                     margin: const EdgeInsets.only(
-                      left: BitNetTheme.elementSpacing * 1.5,
-                      right: BitNetTheme.elementSpacing * 0.5,
-                      top: BitNetTheme.elementSpacing,
-                      bottom: BitNetTheme.elementSpacing,
+                      left: AppTheme.elementSpacing * 1.5,
+                      right: AppTheme.elementSpacing * 0.5,
+                      top: AppTheme.elementSpacing,
+                      bottom: AppTheme.elementSpacing,
                     ),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(20),

@@ -2,6 +2,8 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
+import 'package:ark_flutter/src/services/user_preferences_service.dart';
+import 'package:ark_flutter/src/ui/screens/mempool/mempoolhome.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
@@ -204,7 +206,7 @@ class SettingsViewState extends State<SettingsView> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? BitNetTheme.black90
+            ? AppTheme.black90
             : Colors.white,
         title: Text(
           AppLocalizations.of(context)!.securityWarning,
@@ -218,8 +220,8 @@ class SettingsViewState extends State<SettingsView> {
               AppLocalizations.of(context)!.neverShareYourRecoveryKeyWithAnyone,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? BitNetTheme.white90
-                    : BitNetTheme.black90,
+                    ? AppTheme.white90
+                    : AppTheme.black90,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -228,8 +230,8 @@ class SettingsViewState extends State<SettingsView> {
               AppLocalizations.of(context)!.anyoneWithThisKeyCan,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? BitNetTheme.white60
-                    : BitNetTheme.black60,
+                    ? AppTheme.white60
+                    : AppTheme.black60,
               ),
             ),
           ],
@@ -241,8 +243,8 @@ class SettingsViewState extends State<SettingsView> {
               AppLocalizations.of(context)!.cancel,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? BitNetTheme.white60
-                    : BitNetTheme.black60,
+                    ? AppTheme.white60
+                    : AppTheme.black60,
               ),
             ),
           ),
@@ -267,14 +269,14 @@ class SettingsViewState extends State<SettingsView> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? BitNetTheme.black90
+            ? AppTheme.black90
             : Colors.white,
         title: Text(
           AppLocalizations.of(context)!.yourRecoveryPhrase,
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
-                ? BitNetTheme.white90
-                : BitNetTheme.black90,
+                ? AppTheme.white90
+                : AppTheme.black90,
           ),
         ),
         content: Column(
@@ -285,13 +287,13 @@ class SettingsViewState extends State<SettingsView> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? BitNetTheme.black60.withValues(alpha: 0.3)
-                    : BitNetTheme.white90,
+                    ? AppTheme.black60.withValues(alpha: 0.3)
+                    : AppTheme.white90,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? BitNetTheme.white60.withValues(alpha: 0.2)
-                      : BitNetTheme.black60.withValues(alpha: 0.2),
+                      ? AppTheme.white60.withValues(alpha: 0.2)
+                      : AppTheme.black60.withValues(alpha: 0.2),
                 ),
               ),
               child: Column(
@@ -303,16 +305,16 @@ class SettingsViewState extends State<SettingsView> {
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? BitNetTheme.black90
-                            : BitNetTheme.white90,
+                            ? AppTheme.black90
+                            : AppTheme.white90,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         _nsec,
                         style: TextStyle(
                           color: Theme.of(context).brightness == Brightness.dark
-                              ? BitNetTheme.white90
-                              : BitNetTheme.black90,
+                              ? AppTheme.white90
+                              : AppTheme.black90,
                           fontFamily: 'monospace',
                         ),
                       ),
@@ -348,8 +350,8 @@ class SettingsViewState extends State<SettingsView> {
               AppLocalizations.of(context)!.close,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? BitNetTheme.white90
-                    : BitNetTheme.black90,
+                    ? AppTheme.white90
+                    : AppTheme.black90,
               ),
             ),
           ),
@@ -363,7 +365,7 @@ class SettingsViewState extends State<SettingsView> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? BitNetTheme.black90
+            ? AppTheme.black90
             : Colors.white,
         title: Text(
           AppLocalizations.of(context)!.resetWallet,
@@ -373,8 +375,8 @@ class SettingsViewState extends State<SettingsView> {
           AppLocalizations.of(context)!.thisWillDeleteAllWalletData,
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
-                ? BitNetTheme.white60
-                : BitNetTheme.black60,
+                ? AppTheme.white60
+                : AppTheme.black60,
           ),
         ),
         actions: [
@@ -384,8 +386,8 @@ class SettingsViewState extends State<SettingsView> {
               AppLocalizations.of(context)!.cancel,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? BitNetTheme.white90
-                    : BitNetTheme.black90,
+                    ? AppTheme.white90
+                    : AppTheme.black90,
               ),
             ),
           ),
@@ -417,19 +419,101 @@ class SettingsViewState extends State<SettingsView> {
     );
   }
 
+  void _showChartTimeRangeDialog(UserPreferencesService userPrefs) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppTheme.black90
+            : Colors.white,
+        title: Text(
+          'Chart Time Range',
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppTheme.white90
+                : AppTheme.black90,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: ChartTimeRange.values.map((range) {
+            final isSelected = userPrefs.chartTimeRange == range;
+            final label = _getTimeRangeLabel(range);
+            return ListTile(
+              leading: Icon(
+                _getTimeRangeIcon(range),
+                color: isSelected
+                    ? Colors.orange
+                    : Theme.of(context).brightness == Brightness.dark
+                        ? AppTheme.white60
+                        : AppTheme.black60,
+              ),
+              title: Text(
+                label,
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.white90
+                      : AppTheme.black90,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+              trailing: isSelected
+                  ? const Icon(Icons.check, color: Colors.orange)
+                  : null,
+              onTap: () {
+                userPrefs.setChartTimeRange(range);
+                Navigator.pop(context);
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  String _getTimeRangeLabel(ChartTimeRange range) {
+    switch (range) {
+      case ChartTimeRange.day:
+        return '1 Day';
+      case ChartTimeRange.week:
+        return '1 Week';
+      case ChartTimeRange.month:
+        return '1 Month';
+      case ChartTimeRange.year:
+        return '1 Year';
+      case ChartTimeRange.max:
+        return 'All Time';
+    }
+  }
+
+  IconData _getTimeRangeIcon(ChartTimeRange range) {
+    switch (range) {
+      case ChartTimeRange.day:
+        return Icons.today;
+      case ChartTimeRange.week:
+        return Icons.date_range;
+      case ChartTimeRange.month:
+        return Icons.calendar_month;
+      case ChartTimeRange.year:
+        return Icons.calendar_today;
+      case ChartTimeRange.max:
+        return Icons.all_inclusive;
+    }
+  }
+
   void _showDeveloperOptionsDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? BitNetTheme.black90
+            ? AppTheme.black90
             : Colors.white,
         title: Text(
           AppLocalizations.of(context)!.serverConfiguration,
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
-                ? BitNetTheme.white90
-                : BitNetTheme.black90,
+                ? AppTheme.white90
+                : AppTheme.black90,
           ),
         ),
         content: SingleChildScrollView(
@@ -445,22 +529,22 @@ class SettingsViewState extends State<SettingsView> {
                     AppLocalizations.of(context)!.network,
                     style: TextStyle(
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? BitNetTheme.white90
-                          : BitNetTheme.black90,
+                          ? AppTheme.white90
+                          : AppTheme.black90,
                     ),
                   ),
                   DropdownButton<String>(
                     value: _selectedNetwork,
                     dropdownColor:
                         Theme.of(context).brightness == Brightness.dark
-                            ? BitNetTheme.black90
+                            ? AppTheme.black90
                             : Colors.white,
                     underline: const SizedBox(),
                     icon: Icon(
                       Icons.arrow_drop_down,
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? BitNetTheme.white60
-                          : BitNetTheme.black60,
+                          ? AppTheme.white60
+                          : AppTheme.black60,
                     ),
                     style: const TextStyle(color: Colors.amber),
                     onChanged: (String? value) {
@@ -488,8 +572,8 @@ class SettingsViewState extends State<SettingsView> {
                 AppLocalizations.of(context)!.esploraUrl,
                 style: TextStyle(
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? BitNetTheme.white90
-                      : BitNetTheme.black90,
+                      ? AppTheme.white90
+                      : AppTheme.black90,
                   fontSize: 14,
                 ),
               ),
@@ -498,21 +582,21 @@ class SettingsViewState extends State<SettingsView> {
                 controller: _esploraUrlController,
                 style: TextStyle(
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? BitNetTheme.white90
-                      : BitNetTheme.black90,
+                      ? AppTheme.white90
+                      : AppTheme.black90,
                   fontSize: 12,
                 ),
                 decoration: InputDecoration(
                   hintText: SettingsService.defaultEsploraUrl,
                   hintStyle: TextStyle(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? BitNetTheme.white60
-                        : BitNetTheme.black60,
+                        ? AppTheme.white60
+                        : AppTheme.black60,
                   ),
                   filled: true,
                   fillColor: Theme.of(context).brightness == Brightness.dark
-                      ? BitNetTheme.black60.withValues(alpha: 0.3)
-                      : BitNetTheme.white90,
+                      ? AppTheme.black60.withValues(alpha: 0.3)
+                      : AppTheme.white90,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
@@ -532,8 +616,8 @@ class SettingsViewState extends State<SettingsView> {
                 AppLocalizations.of(context)!.arkServer,
                 style: TextStyle(
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? BitNetTheme.white90
-                      : BitNetTheme.black90,
+                      ? AppTheme.white90
+                      : AppTheme.black90,
                   fontSize: 14,
                 ),
               ),
@@ -542,21 +626,21 @@ class SettingsViewState extends State<SettingsView> {
                 controller: _arkServerController,
                 style: TextStyle(
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? BitNetTheme.white90
-                      : BitNetTheme.black90,
+                      ? AppTheme.white90
+                      : AppTheme.black90,
                   fontSize: 12,
                 ),
                 decoration: InputDecoration(
                   hintText: SettingsService.defaultArkServerUrl,
                   hintStyle: TextStyle(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? BitNetTheme.white60
-                        : BitNetTheme.black60,
+                        ? AppTheme.white60
+                        : AppTheme.black60,
                   ),
                   filled: true,
                   fillColor: Theme.of(context).brightness == Brightness.dark
-                      ? BitNetTheme.black60.withValues(alpha: 0.3)
-                      : BitNetTheme.white90,
+                      ? AppTheme.black60.withValues(alpha: 0.3)
+                      : AppTheme.white90,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
@@ -576,8 +660,8 @@ class SettingsViewState extends State<SettingsView> {
                 AppLocalizations.of(context)!.boltzUrl,
                 style: TextStyle(
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? BitNetTheme.white90
-                      : BitNetTheme.black90,
+                      ? AppTheme.white90
+                      : AppTheme.black90,
                   fontSize: 14,
                 ),
               ),
@@ -586,21 +670,21 @@ class SettingsViewState extends State<SettingsView> {
                 controller: _boltzUrlController,
                 style: TextStyle(
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? BitNetTheme.white90
-                      : BitNetTheme.black90,
+                      ? AppTheme.white90
+                      : AppTheme.black90,
                   fontSize: 12,
                 ),
                 decoration: InputDecoration(
                   hintText: SettingsService.defaultBoltzUrl,
                   hintStyle: TextStyle(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? BitNetTheme.white60
-                        : BitNetTheme.black60,
+                        ? AppTheme.white60
+                        : AppTheme.black60,
                   ),
                   filled: true,
                   fillColor: Theme.of(context).brightness == Brightness.dark
-                      ? BitNetTheme.black60.withValues(alpha: 0.3)
-                      : BitNetTheme.white90,
+                      ? AppTheme.black60.withValues(alpha: 0.3)
+                      : AppTheme.white90,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
@@ -623,16 +707,16 @@ class SettingsViewState extends State<SettingsView> {
                     AppLocalizations.of(context)!.network,
                     style: TextStyle(
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? BitNetTheme.white90
-                          : BitNetTheme.black90,
+                          ? AppTheme.white90
+                          : AppTheme.black90,
                     ),
                   ),
                   Text(
                     _info?.network ?? AppLocalizations.of(context)!.loading,
                     style: TextStyle(
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? BitNetTheme.white60
-                          : BitNetTheme.black60,
+                          ? AppTheme.white60
+                          : AppTheme.black60,
                     ),
                   ),
                 ],
@@ -647,8 +731,8 @@ class SettingsViewState extends State<SettingsView> {
               AppLocalizations.of(context)!.close,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? BitNetTheme.white90
-                    : BitNetTheme.black90,
+                    ? AppTheme.white90
+                    : AppTheme.black90,
               ),
             ),
           ),
@@ -679,7 +763,7 @@ class SettingsViewState extends State<SettingsView> {
               iconColor: Theme.of(context).colorScheme.onSurface,
               child: Container(
                 margin: const EdgeInsets.symmetric(
-                  horizontal: BitNetTheme.elementSpacing * 0.25,
+                  horizontal: AppTheme.elementSpacing * 0.25,
                 ),
                 child: ListView(
                   key: const Key('SettingsListViewContent'),
@@ -689,16 +773,16 @@ class SettingsViewState extends State<SettingsView> {
                       leading: RoundedButtonWidget(
                         iconData: Icons.color_lens,
                         onTap: () => controller.switchTab('style'),
-                        size: BitNetTheme.iconSize * 1.5,
+                        size: AppTheme.iconSize * 1.5,
                         buttonType: ButtonType.transparent,
                       ),
                       text: AppLocalizations.of(context)!.theme,
                       trailing: Icon(
                         Icons.arrow_forward_ios_rounded,
-                        size: BitNetTheme.iconSize * 0.75,
+                        size: AppTheme.iconSize * 0.75,
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? BitNetTheme.white60
-                            : BitNetTheme.black60,
+                            ? AppTheme.white60
+                            : AppTheme.black60,
                       ),
                       onTap: () => controller.switchTab('style'),
                     ),
@@ -708,16 +792,16 @@ class SettingsViewState extends State<SettingsView> {
                       leading: RoundedButtonWidget(
                         iconData: Icons.language,
                         onTap: () => controller.switchTab('language'),
-                        size: BitNetTheme.iconSize * 1.5,
+                        size: AppTheme.iconSize * 1.5,
                         buttonType: ButtonType.transparent,
                       ),
                       text: AppLocalizations.of(context)!.language,
                       trailing: Icon(
                         Icons.arrow_forward_ios_rounded,
-                        size: BitNetTheme.iconSize * 0.75,
+                        size: AppTheme.iconSize * 0.75,
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? BitNetTheme.white60
-                            : BitNetTheme.black60,
+                            ? AppTheme.white60
+                            : AppTheme.black60,
                       ),
                       onTap: () => controller.switchTab('language'),
                     ),
@@ -727,16 +811,16 @@ class SettingsViewState extends State<SettingsView> {
                       leading: RoundedButtonWidget(
                         iconData: Icons.access_time_rounded,
                         onTap: () => controller.switchTab('timezone'),
-                        size: BitNetTheme.iconSize * 1.5,
+                        size: AppTheme.iconSize * 1.5,
                         buttonType: ButtonType.transparent,
                       ),
                       text: AppLocalizations.of(context)!.timezone,
                       trailing: Icon(
                         Icons.arrow_forward_ios_rounded,
-                        size: BitNetTheme.iconSize * 0.75,
+                        size: AppTheme.iconSize * 0.75,
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? BitNetTheme.white60
-                            : BitNetTheme.black60,
+                            ? AppTheme.white60
+                            : AppTheme.black60,
                       ),
                       onTap: () => controller.switchTab('timezone'),
                     ),
@@ -746,18 +830,89 @@ class SettingsViewState extends State<SettingsView> {
                       leading: RoundedButtonWidget(
                         iconData: Icons.currency_bitcoin,
                         onTap: () => controller.switchTab('currency'),
-                        size: BitNetTheme.iconSize * 1.5,
+                        size: AppTheme.iconSize * 1.5,
                         buttonType: ButtonType.transparent,
                       ),
                       text: AppLocalizations.of(context)!.currency,
                       trailing: Icon(
                         Icons.arrow_forward_ios_rounded,
-                        size: BitNetTheme.iconSize * 0.75,
+                        size: AppTheme.iconSize * 0.75,
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? BitNetTheme.white60
-                            : BitNetTheme.black60,
+                            ? AppTheme.white60
+                            : AppTheme.black60,
                       ),
                       onTap: () => controller.switchTab('currency'),
+                    ),
+
+                    // Chart Time Range
+                    Consumer<UserPreferencesService>(
+                      builder: (context, userPrefs, _) => ArkListTile(
+                        leading: RoundedButtonWidget(
+                          iconData: Icons.show_chart_rounded,
+                          onTap: () => _showChartTimeRangeDialog(userPrefs),
+                          size: AppTheme.iconSize * 1.5,
+                          buttonType: ButtonType.transparent,
+                        ),
+                        text: 'Chart Time Range',
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              userPrefs.getChartTimeRangeLabel(),
+                              style: TextStyle(
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: AppTheme.iconSize * 0.75,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
+                            ),
+                          ],
+                        ),
+                        onTap: () => _showChartTimeRangeDialog(userPrefs),
+                      ),
+                    ),
+
+                    // Mempool Explorer
+                    ArkListTile(
+                      leading: RoundedButtonWidget(
+                        iconData: Icons.memory_rounded,
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MempoolHome(),
+                            ),
+                          );
+                        },
+                        size: AppTheme.iconSize * 1.5,
+                        buttonType: ButtonType.transparent,
+                      ),
+                      text: 'Mempool Explorer',
+                      trailing: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: AppTheme.iconSize * 0.75,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppTheme.white60
+                            : AppTheme.black60,
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MempoolHome(),
+                          ),
+                        );
+                      },
                     ),
 
                     // Recovery Key
@@ -765,16 +920,16 @@ class SettingsViewState extends State<SettingsView> {
                       leading: RoundedButtonWidget(
                         iconData: Icons.key_rounded,
                         onTap: _showBackupWarningDialog,
-                        size: BitNetTheme.iconSize * 1.5,
+                        size: AppTheme.iconSize * 1.5,
                         buttonType: ButtonType.transparent,
                       ),
                       text: AppLocalizations.of(context)!.viewRecoveryKey,
                       trailing: Icon(
                         Icons.arrow_forward_ios_rounded,
-                        size: BitNetTheme.iconSize * 0.75,
+                        size: AppTheme.iconSize * 0.75,
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? BitNetTheme.white60
-                            : BitNetTheme.black60,
+                            ? AppTheme.white60
+                            : AppTheme.black60,
                       ),
                       onTap: _showBackupWarningDialog,
                     ),
@@ -784,16 +939,16 @@ class SettingsViewState extends State<SettingsView> {
                       leading: RoundedButtonWidget(
                         iconData: Icons.developer_mode_outlined,
                         onTap: _showDeveloperOptionsDialog,
-                        size: BitNetTheme.iconSize * 1.5,
+                        size: AppTheme.iconSize * 1.5,
                         buttonType: ButtonType.transparent,
                       ),
                       text: AppLocalizations.of(context)!.serverConfiguration,
                       trailing: Icon(
                         Icons.arrow_forward_ios_rounded,
-                        size: BitNetTheme.iconSize * 0.75,
+                        size: AppTheme.iconSize * 0.75,
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? BitNetTheme.white60
-                            : BitNetTheme.black60,
+                            ? AppTheme.white60
+                            : AppTheme.black60,
                       ),
                       onTap: _showDeveloperOptionsDialog,
                     ),
@@ -803,7 +958,7 @@ class SettingsViewState extends State<SettingsView> {
                       leading: RoundedButtonWidget(
                         iconData: Icons.warning_amber_rounded,
                         onTap: _showResetWalletDialog,
-                        size: BitNetTheme.iconSize * 1.5,
+                        size: AppTheme.iconSize * 1.5,
                         buttonType: ButtonType.transparent,
                       ),
                       text: AppLocalizations.of(context)!.resetWallet,
@@ -814,13 +969,13 @@ class SettingsViewState extends State<SettingsView> {
                       ),
                       trailing: Icon(
                         Icons.arrow_forward_ios_rounded,
-                        size: BitNetTheme.iconSize * 0.75,
+                        size: AppTheme.iconSize * 0.75,
                         color: Colors.red.withValues(alpha: 0.6),
                       ),
                       onTap: _showResetWalletDialog,
                     ),
 
-                    const SizedBox(height: BitNetTheme.cardPadding * 2),
+                    const SizedBox(height: AppTheme.cardPadding * 2),
                   ],
                 ),
               ),

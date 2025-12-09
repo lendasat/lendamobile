@@ -164,10 +164,10 @@ class _BlockTransactionsState extends State<BlockTransactions> {
         controller: scrollController,
         child: Column(
           children: [
-            const SizedBox(height: BitNetTheme.cardPadding * 3),
+            const SizedBox(height: AppTheme.cardPadding * 3),
             Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: BitNetTheme.cardPadding,
+                horizontal: AppTheme.cardPadding,
               ),
               child: SearchFieldWidget(
                 node: searchNode,
@@ -234,7 +234,7 @@ class _BlockTransactionsState extends State<BlockTransactions> {
 
           return Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: BitNetTheme.cardPadding,
+              horizontal: AppTheme.cardPadding,
               vertical: 8,
             ),
             child: GestureDetector(
@@ -250,18 +250,18 @@ class _BlockTransactionsState extends State<BlockTransactions> {
               },
               child: GlassContainer(
                 borderRadius: BorderRadius.circular(
-                  BitNetTheme.borderRadiusSmall,
+                  AppTheme.borderRadiusSmall,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Row(
                     children: [
                       Container(
-                        width: BitNetTheme.cardPadding * 2,
-                        height: BitNetTheme.cardPadding * 2,
+                        width: AppTheme.cardPadding * 2,
+                        height: AppTheme.cardPadding * 2,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(
-                            BitNetTheme.borderRadiusSmall,
+                            AppTheme.borderRadiusSmall,
                           ),
                           color: Theme.of(context).colorScheme.primaryContainer,
                         ),
@@ -294,7 +294,7 @@ class _BlockTransactionsState extends State<BlockTransactions> {
                                 const Row(
                                   children: [
                                     dot.BlinkingDot(
-                                      color: BitNetTheme.successColor,
+                                      color: AppTheme.successColor,
                                       size: 10,
                                     ),
                                     SizedBox(width: 8),
@@ -340,12 +340,12 @@ class _BlockTransactionsState extends State<BlockTransactions> {
 
         return Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: BitNetTheme.cardPadding,
+            horizontal: AppTheme.cardPadding,
             vertical: 8,
           ),
           child: GlassContainer(
             borderRadius: BorderRadius.circular(
-              BitNetTheme.borderRadiusSmall,
+              AppTheme.borderRadiusSmall,
             ),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
@@ -356,7 +356,7 @@ class _BlockTransactionsState extends State<BlockTransactions> {
                     height: 56,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(
-                        BitNetTheme.borderRadiusSmall,
+                        AppTheme.borderRadiusSmall,
                       ),
                       color: Theme.of(context).colorScheme.primaryContainer,
                     ),
@@ -400,7 +400,7 @@ class _BlockTransactionsState extends State<BlockTransactions> {
                             Row(
                               children: [
                                 const dot.BlinkingDot(
-                                  color: BitNetTheme.colorBitcoin,
+                                  color: AppTheme.colorBitcoin,
                                   size: 10,
                                 ),
                                 const SizedBox(width: 8),

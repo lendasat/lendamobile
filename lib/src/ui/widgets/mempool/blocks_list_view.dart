@@ -107,14 +107,14 @@ class BlocksListView extends StatelessWidget {
               // Divider between sections
               Container(
                 margin: const EdgeInsets.symmetric(
-                  horizontal: BitNetTheme.elementSpacing,
+                  horizontal: AppTheme.elementSpacing,
                 ),
                 decoration: BoxDecoration(
-                  borderRadius: BitNetTheme.cardRadiusCircular,
+                  borderRadius: AppTheme.cardRadiusCircular,
                   color: Colors.grey,
                 ),
-                height: BitNetTheme.cardPadding * 6,
-                width: BitNetTheme.elementSpacing / 3,
+                height: AppTheme.cardPadding * 6,
+                width: AppTheme.elementSpacing / 3,
               ),
 
               // Confirmed blocks section
@@ -131,7 +131,7 @@ class BlocksListView extends StatelessWidget {
 
   Widget _buildMempoolBlocks(BuildContext context) {
     if (isLoading) {
-      return const CircularProgressIndicator(color: BitNetTheme.colorBitcoin);
+      return const CircularProgressIndicator(color: AppTheme.colorBitcoin);
     }
 
     if (mempoolBlocks.isEmpty) {
@@ -185,7 +185,7 @@ class BlocksListView extends StatelessWidget {
     dynamic loc,
   ) {
     if (isLoading) {
-      return const CircularProgressIndicator(color: BitNetTheme.colorBitcoin);
+      return const CircularProgressIndicator(color: AppTheme.colorBitcoin);
     }
 
     if (confirmedBlocks.isEmpty) {
@@ -251,12 +251,12 @@ class BlocksListView extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: BitNetTheme.white60,
+              color: AppTheme.white60,
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.arrow_back,
-              color: BitNetTheme.colorBackground,
+              color: AppTheme.colorBackground,
             ),
           ),
         ),

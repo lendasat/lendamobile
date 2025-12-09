@@ -34,10 +34,10 @@ class HashrateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: BitNetTheme.cardPadding),
+      margin: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: GlassContainer(
         child: Padding(
-          padding: const EdgeInsets.all(BitNetTheme.cardPadding),
+          padding: const EdgeInsets.all(AppTheme.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -49,10 +49,10 @@ class HashrateCard extends StatelessWidget {
                     children: [
                       Icon(
                         FontAwesomeIcons.server,
-                        size: BitNetTheme.cardPadding * 0.75,
+                        size: AppTheme.cardPadding * 0.75,
                         color: Theme.of(context).iconTheme.color,
                       ),
-                      const SizedBox(width: BitNetTheme.elementSpacing),
+                      const SizedBox(width: AppTheme.elementSpacing),
                       Text(
                         AppLocalizations.of(context)!.networkHashrate,
                         style: Theme.of(context).textTheme.titleMedium,
@@ -97,15 +97,15 @@ class HashrateCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  borderRadius: BitNetTheme.cardRadiusSmall,
-                  color: BitNetTheme.colorBitcoin.withValues(alpha: 0.1),
+                  borderRadius: AppTheme.cardRadiusSmall,
+                  color: AppTheme.colorBitcoin.withValues(alpha: 0.1),
                 ),
                 child: Text(
                   "Higher hashrate = stronger network security",
                   style: Theme.of(context)
                       .textTheme
                       .bodySmall!
-                      .copyWith(color: BitNetTheme.colorBitcoin),
+                      .copyWith(color: AppTheme.colorBitcoin),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -119,7 +119,7 @@ class HashrateCard extends StatelessWidget {
   Widget _buildHashrateDisplay(BuildContext context) {
     if (isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: BitNetTheme.colorBitcoin),
+        child: CircularProgressIndicator(color: AppTheme.colorBitcoin),
       );
     }
 
@@ -142,8 +142,8 @@ class HashrateCard extends StatelessWidget {
                   Icon(
                     isPositive ? Icons.arrow_upward : Icons.arrow_downward,
                     color: isPositive
-                        ? BitNetTheme.successColor
-                        : BitNetTheme.errorColor,
+                        ? AppTheme.successColor
+                        : AppTheme.errorColor,
                     size: 16,
                   ),
                   const SizedBox(width: 4),
@@ -151,8 +151,8 @@ class HashrateCard extends StatelessWidget {
                     changePercentage,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           color: isPositive
-                              ? BitNetTheme.successColor
-                              : BitNetTheme.errorColor,
+                              ? AppTheme.successColor
+                              : AppTheme.errorColor,
                           fontWeight: FontWeight.bold,
                         ),
                   ),
@@ -169,7 +169,7 @@ class HashrateCard extends StatelessWidget {
       return const Center(
         child: SizedBox(
           height: 180,
-          child: CircularProgressIndicator(color: BitNetTheme.colorBitcoin),
+          child: CircularProgressIndicator(color: AppTheme.colorBitcoin),
         ),
       );
     }
@@ -187,10 +187,10 @@ class HashrateCard extends StatelessWidget {
       height: 180,
       padding: const EdgeInsets.only(top: 8, right: 8),
       decoration: BoxDecoration(
-        borderRadius: BitNetTheme.cardRadiusSmall,
+        borderRadius: AppTheme.cardRadiusSmall,
         color: Theme.of(context).brightness == Brightness.dark
-            ? BitNetTheme.black70
-            : BitNetTheme.white70,
+            ? AppTheme.black70
+            : AppTheme.white70,
       ),
       child: _buildHashrateChart(context),
     );
@@ -205,10 +205,10 @@ class HashrateCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: isActive
-              ? BitNetTheme.colorBitcoin.withValues(alpha: 0.2)
+              ? AppTheme.colorBitcoin.withValues(alpha: 0.2)
               : Colors.transparent,
           border: Border.all(
-            color: isActive ? BitNetTheme.colorBitcoin : BitNetTheme.white60,
+            color: isActive ? AppTheme.colorBitcoin : AppTheme.white60,
             width: 1,
           ),
           borderRadius: BorderRadius.circular(16),
@@ -216,7 +216,7 @@ class HashrateCard extends StatelessWidget {
         child: Text(
           period,
           style: TextStyle(
-            color: isActive ? BitNetTheme.colorBitcoin : null,
+            color: isActive ? AppTheme.colorBitcoin : null,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -248,11 +248,11 @@ class HashrateCard extends StatelessWidget {
         edgeLabelPlacement: EdgeLabelPlacement.none,
         majorGridLines: MajorGridLines(
           width: 0.5,
-          color: BitNetTheme.white70,
+          color: AppTheme.white70,
           dashArray: const [5, 5],
         ),
         axisLine: const AxisLine(width: 0),
-        labelStyle: TextStyle(color: BitNetTheme.white70, fontSize: 10),
+        labelStyle: TextStyle(color: AppTheme.white70, fontSize: 10),
       ),
       primaryYAxis: NumericAxis(
         axisLine: const AxisLine(width: 0),
@@ -260,12 +260,12 @@ class HashrateCard extends StatelessWidget {
         edgeLabelPlacement: EdgeLabelPlacement.none,
         majorGridLines: MajorGridLines(
           width: 0.5,
-          color: BitNetTheme.white70,
+          color: AppTheme.white70,
           dashArray: const [5, 5],
         ),
         majorTickLines: const MajorTickLines(width: 0),
         numberFormat: NumberFormat.compact(),
-        labelStyle: TextStyle(color: BitNetTheme.white60, fontSize: 10),
+        labelStyle: TextStyle(color: AppTheme.white60, fontSize: 10),
       ),
       series: <CartesianSeries>[
         // Hashrate line
@@ -277,7 +277,7 @@ class HashrateCard extends StatelessWidget {
           cardinalSplineTension: 0.7,
           animationDuration: 0,
           width: 2,
-          color: BitNetTheme.colorBitcoin,
+          color: AppTheme.colorBitcoin,
           xValueMapper: (ChartLine sales, _) =>
               DateTime.fromMillisecondsSinceEpoch(
             sales.time.toInt() * 1000,
@@ -303,7 +303,7 @@ class HashrateCard extends StatelessWidget {
               height: 6,
               width: 6,
               shape: DataMarkerType.circle,
-              borderColor: BitNetTheme.colorBitcoin,
+              borderColor: AppTheme.colorBitcoin,
               borderWidth: 1,
             ),
             xValueMapper: (Difficulty diff, _) =>

@@ -46,7 +46,7 @@ class _RecentTransactionsState extends State<RecentTransactions> {
 
     return Column(
       children: [
-        const SizedBox(height: BitNetTheme.cardPadding),
+        const SizedBox(height: AppTheme.cardPadding),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
@@ -82,7 +82,7 @@ class _RecentTransactionsState extends State<RecentTransactions> {
                     padding: const EdgeInsets.symmetric(vertical: 2.0),
                     child: GlassContainer(
                       borderRadius:
-                          BorderRadius.circular(BitNetTheme.cardPadding * 0.5),
+                          BorderRadius.circular(AppTheme.cardPadding * 0.5),
                       child: Column(
                         children: [
                           ArkListTile(
@@ -109,7 +109,7 @@ class _RecentTransactionsState extends State<RecentTransactions> {
                                       width: 45,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(8),
-                                        color: BitNetTheme.colorBitcoin,
+                                        color: AppTheme.colorBitcoin,
                                       ),
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 2,

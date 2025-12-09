@@ -1,6 +1,6 @@
+import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:ark_flutter/app_theme.dart';
 
 class QrScannerScreen extends StatefulWidget {
   const QrScannerScreen({super.key});
@@ -32,7 +32,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
+    
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -40,13 +40,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close, color: theme.primaryWhite),
+          icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
         title: Text(
           'Scan QR Code',
-          style: TextStyle(color: theme.primaryWhite),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         ),
       ),
       body: Stack(
@@ -100,7 +100,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         cameraController.facing == CameraFacing.front
                             ? Icons.camera_front
                             : Icons.camera_rear,
-                        color: theme.primaryWhite,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       onPressed: () => cameraController.switchCamera(),
                     ),
@@ -110,7 +110,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         cameraController.torchEnabled
                             ? Icons.flash_on
                             : Icons.flash_off,
-                        color: theme.primaryWhite,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       onPressed: () => cameraController.toggleTorch(),
                     ),

@@ -37,29 +37,29 @@ class BlockHealthWidget extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
               ),
-              const SizedBox(width: BitNetTheme.elementSpacing / 2),
+              const SizedBox(width: AppTheme.elementSpacing / 2),
               Icon(
                 Icons.help_outline_rounded,
-                color: BitNetTheme.white80,
-                size: BitNetTheme.cardPadding * 0.75,
+                color: AppTheme.white80,
+                size: AppTheme.cardPadding * 0.75,
               ),
             ],
           ),
 
-          const SizedBox(height: BitNetTheme.cardPadding * 0.75),
+          const SizedBox(height: AppTheme.cardPadding * 0.75),
 
           // Health status icon
           Icon(
             FontAwesomeIcons.faceSmile,
             color: displayRate >= 99
-                ? BitNetTheme.successColor
+                ? AppTheme.successColor
                 : displayRate >= 75 && displayRate < 99
-                    ? BitNetTheme.colorBitcoin
-                    : BitNetTheme.errorColor,
-            size: BitNetTheme.cardPadding * 2.5,
+                    ? AppTheme.colorBitcoin
+                    : AppTheme.errorColor,
+            size: AppTheme.cardPadding * 2.5,
           ),
 
-          const SizedBox(height: BitNetTheme.elementSpacing * 1.25),
+          const SizedBox(height: AppTheme.elementSpacing * 1.25),
 
           // Health percentage text
           Row(

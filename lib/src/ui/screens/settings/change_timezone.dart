@@ -73,12 +73,12 @@ class _TimezonePickerBodyState extends State<_TimezonePickerBody> {
       resizeToAvoidBottomInset: false,
       body: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: BitNetTheme.elementSpacing,
+          horizontal: AppTheme.elementSpacing,
         ),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const SizedBox(height: BitNetTheme.elementSpacing),
+              const SizedBox(height: AppTheme.elementSpacing),
               SearchFieldWidget(
                 hintText: AppLocalizations.of(context)!.search,
                 isSearchEnabled: true,
