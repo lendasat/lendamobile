@@ -184,17 +184,28 @@ pub async fn get_hashrate_data(period: &str) -> Result<HashrateData> {
 }
 
 /// Get detailed transaction information by txid
-pub async fn get_transaction(txid: &str) -> Result<BitcoinTransaction> {
-    tracing::info!("Fetching transaction {} from mempool.space", txid);
+/// base_url: The esplora/mempool API base URL (e.g., "https://mutinynet.com/api" or "https://mempool.space")
+pub async fn get_transaction(txid: &str, base_url: &str) -> Result<BitcoinTransaction> {
+    // Normalize base_url: remove trailing slash if present
+    let base = base_url.trim_end_matches('/');
 
-    let url = format!("https://mempool.space/api/tx/{}", txid);
+    // Handle both URL formats:
+    // - "https://mutinynet.com/api" -> append "/tx/{txid}"
+    // - "https://mempool.space" -> append "/api/tx/{txid}"
+    let url = if base.ends_with("/api") {
+        format!("{}/tx/{}", base, txid)
+    } else {
+        format!("{}/api/tx/{}", base, txid)
+    };
+
+    tracing::info!("Fetching transaction {} from {}", txid, url);
 
     let client = reqwest::Client::new();
     let response = client
         .get(&url)
         .send()
         .await
-        .context("Failed to fetch transaction from mempool.space")?;
+        .with_context(|| format!("Failed to fetch transaction from {}", base))?;
 
     if !response.status().is_success() {
         bail!("Failed to fetch transaction: status {}", response.status());

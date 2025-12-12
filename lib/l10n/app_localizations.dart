@@ -359,13 +359,13 @@ abstract class AppLocalizations {
   /// No description provided for @send.
   ///
   /// In en, this message translates to:
-  /// **'SEND'**
+  /// **'Send'**
   String get send;
 
   /// No description provided for @receive.
   ///
   /// In en, this message translates to:
-  /// **'RECEIVE'**
+  /// **'Receive'**
   String get receive;
 
   /// No description provided for @failedToCreateWallet.
@@ -965,7 +965,7 @@ abstract class AppLocalizations {
   /// No description provided for @boardingTransaction.
   ///
   /// In en, this message translates to:
-  /// **'Boarding Transaction'**
+  /// **'Onchain Transaction'**
   String get boardingTransaction;
 
   /// No description provided for @roundTransaction.

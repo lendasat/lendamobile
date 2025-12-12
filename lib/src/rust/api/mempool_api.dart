@@ -37,8 +37,11 @@ Future<HashrateData> getHashrateData({required String period}) =>
     RustLib.instance.api.crateApiMempoolApiGetHashrateData(period: period);
 
 /// Get detailed transaction information by txid
-Future<BitcoinTransaction> getTransaction({required String txid}) =>
-    RustLib.instance.api.crateApiMempoolApiGetTransaction(txid: txid);
+/// base_url: The esplora/mempool API base URL (e.g., "https://mutinynet.com/api" or "https://mempool.space")
+Future<BitcoinTransaction> getTransaction(
+        {required String txid, required String baseUrl}) =>
+    RustLib.instance.api
+        .crateApiMempoolApiGetTransaction(txid: txid, baseUrl: baseUrl);
 
 /// Get Fear & Greed Index from RapidAPI
 /// Returns the current fear and greed index along with historical comparisons

@@ -784,11 +784,14 @@ fn wire__crate__api__mempool_api__get_transaction_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_txid = <String>::sse_decode(&mut deserializer);
+            let api_base_url = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
-                        let output_ok = crate::api::mempool_api::get_transaction(&api_txid).await?;
+                        let output_ok =
+                            crate::api::mempool_api::get_transaction(&api_txid, &api_base_url)
+                                .await?;
                         Ok(output_ok)
                     })()
                     .await,

@@ -138,7 +138,7 @@ abstract class RustLibApi extends BaseApi {
   Future<BitcoinTransaction> crateApiGetTransaction({required String txid});
 
   Future<BitcoinTransaction> crateApiMempoolApiGetTransaction(
-      {required String txid});
+      {required String txid, required String baseUrl});
 
   Future<Info> crateApiArkApiInformation();
 
@@ -717,11 +717,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<BitcoinTransaction> crateApiMempoolApiGetTransaction(
-      {required String txid}) {
+      {required String txid, required String baseUrl}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(txid, serializer);
+        sse_encode_String(baseUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 21, port: port_);
       },
@@ -730,7 +731,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData: sse_decode_AnyhowException,
       ),
       constMeta: kCrateApiMempoolApiGetTransactionConstMeta,
-      argValues: [txid],
+      argValues: [txid, baseUrl],
       apiImpl: this,
     ));
   }
@@ -738,7 +739,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiMempoolApiGetTransactionConstMeta =>
       const TaskConstMeta(
         debugName: "get_transaction",
-        argNames: ["txid"],
+        argNames: ["txid", "baseUrl"],
       );
 
   @override

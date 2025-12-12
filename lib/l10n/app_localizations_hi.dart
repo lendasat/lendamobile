@@ -456,7 +456,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noTransactionHistoryYet => 'अभी तक कोई लेनदेन इतिहास नहीं';
 
   @override
-  String get boardingTransaction => 'बोर्डिंग लेनदेन';
+  String get boardingTransaction => 'ऑनचेन लेनदेन';
 
   @override
   String get roundTransaction => 'राउंड लेनदेन';

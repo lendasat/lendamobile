@@ -131,10 +131,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get errorLoadingBalance => 'Kesalahan saat memuat saldo';
 
   @override
-  String get send => 'KIRIM';
+  String get send => 'Kirim';
 
   @override
-  String get receive => 'TERIMA';
+  String get receive => 'Terima';
 
   @override
   String get failedToCreateWallet => 'Gagal membuat dompet';
@@ -456,7 +456,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get noTransactionHistoryYet => 'Belum ada riwayat transaksi';
 
   @override
-  String get boardingTransaction => 'Transaksi Boarding';
+  String get boardingTransaction => 'Transaksi Onchain';
 
   @override
   String get roundTransaction => 'Transaksi Pembulatan';

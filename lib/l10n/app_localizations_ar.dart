@@ -455,7 +455,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noTransactionHistoryYet => 'لا يوجد سجل معاملات بعد';
 
   @override
-  String get boardingTransaction => 'معاملة الانضمام';
+  String get boardingTransaction => 'معاملة على السلسلة';
 
   @override
   String get roundTransaction => 'معاملة التقريب';

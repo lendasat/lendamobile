@@ -80,12 +80,12 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       }
 
       final hasTypeFilter = filterService.selectedFilters.any(
-        (f) => ['Boarding', 'Round', 'Redeem'].contains(f),
+        (f) => ['Onchain', 'Round', 'Redeem'].contains(f),
       );
       if (hasTypeFilter) {
         filtered = filtered.where((tx) {
           return tx.map(
-            boarding: (_) => filterService.selectedFilters.contains('Boarding'),
+            boarding: (_) => filterService.selectedFilters.contains('Onchain'),
             round: (_) => filterService.selectedFilters.contains('Round'),
             redeem: (_) => filterService.selectedFilters.contains('Redeem'),
           );
@@ -356,6 +356,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
           )
         else
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: _arrangeTransactionsByTime(),
           ),
       ],

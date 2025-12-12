@@ -204,7 +204,7 @@
   "transactionHistory": "トランザクション履歴",
   "errorLoadingTransactions": "Error loading transactions",
   "noTransactionHistoryYet": "まだトランザクション履歴がありません",
-  "boardingTransaction": "ボーディングトランザクション",
+  "boardingTransaction": "オンチェーントランザクション",
   "roundTransaction": "ラウンドトランザクション",
   "redeemTransaction": "引換トランザクション",
   "sent": "送信済み",

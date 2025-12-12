@@ -133,10 +133,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorLoadingBalance => 'Erreur lors du chargement du solde';
 
   @override
-  String get send => 'ENVOYER';
+  String get send => 'Envoyer';
 
   @override
-  String get receive => 'RECEVOIR';
+  String get receive => 'Recevoir';
 
   @override
   String get failedToCreateWallet => 'Échec de la création du portefeuille';
@@ -468,7 +468,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun historique de transactions pour le moment';
 
   @override
-  String get boardingTransaction => 'Transaction d\'embarquement';
+  String get boardingTransaction => 'Transaction Onchain';
 
   @override
   String get roundTransaction => 'Transaction d\'arrondi';

@@ -204,7 +204,7 @@
   "transactionHistory": "سجل المعاملات",
   "errorLoadingTransactions": "Error loading transactions",
   "noTransactionHistoryYet": "لا يوجد سجل معاملات بعد",
-  "boardingTransaction": "معاملة الانضمام",
+  "boardingTransaction": "معاملة على السلسلة",
   "roundTransaction": "معاملة التقريب",
   "redeemTransaction": "معاملة الاسترداد",
   "sent": "تم الإرسال",

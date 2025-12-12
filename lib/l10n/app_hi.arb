@@ -204,7 +204,7 @@
   "transactionHistory": "लेनदेन इतिहास",
   "errorLoadingTransactions": "Error loading transactions",
   "noTransactionHistoryYet": "अभी तक कोई लेनदेन इतिहास नहीं",
-  "boardingTransaction": "बोर्डिंग लेनदेन",
+  "boardingTransaction": "ऑनचेन लेनदेन",
   "roundTransaction": "राउंड लेनदेन",
   "redeemTransaction": "रिडीम लेनदेन",
   "sent": "भेजा गया",

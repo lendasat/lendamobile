@@ -446,7 +446,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noTransactionHistoryYet => '暂无交易记录';
 
   @override
-  String get boardingTransaction => '上链交易';
+  String get boardingTransaction => '链上交易';
 
   @override
   String get roundTransaction => '循环交易';

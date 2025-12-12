@@ -74,10 +74,10 @@ class TransactionFilterScreen extends StatelessWidget {
                     runSpacing: AppTheme.paddingS,
                     children: [
                       _FilterPill(
-                        label: 'Boarding',
+                        label: 'Onchain',
                         isSelected:
-                            filterService.selectedFilters.contains('Boarding'),
-                        onTap: () => filterService.toggleFilter('Boarding'),
+                            filterService.selectedFilters.contains('Onchain'),
+                        onTap: () => filterService.toggleFilter('Onchain'),
                       ),
                       _FilterPill(
                         label: 'Round',

@@ -1,4 +1,3 @@
-import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_image_text_button.dart';

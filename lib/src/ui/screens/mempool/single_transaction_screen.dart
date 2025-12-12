@@ -2,6 +2,7 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
+import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
@@ -47,7 +48,11 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
 
   Future<void> _loadTransaction() async {
     try {
-      final tx = await mempool_api.getTransaction(txid: txID!);
+      final esploraUrl = await SettingsService().getEsploraUrl();
+      final tx = await mempool_api.getTransaction(
+        txid: txID!,
+        baseUrl: esploraUrl,
+      );
       if (mounted) {
         setState(() {
           transactionModel = tx;

@@ -456,7 +456,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get noTransactionHistoryYet => 'ابھی تک کوئی ٹرانزیکشن تاریخ نہیں';
 
   @override
-  String get boardingTransaction => 'بورڈنگ ٹرانزیکشن';
+  String get boardingTransaction => 'آن چین ٹرانزیکشن';
 
   @override
   String get roundTransaction => 'راؤنڈ ٹرانزیکشن';

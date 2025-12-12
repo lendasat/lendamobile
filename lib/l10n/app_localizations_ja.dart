@@ -448,7 +448,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noTransactionHistoryYet => 'まだトランザクション履歴がありません';
 
   @override
-  String get boardingTransaction => 'ボーディングトランザクション';
+  String get boardingTransaction => 'オンチェーントランザクション';
 
   @override
   String get roundTransaction => 'ラウンドトランザクション';

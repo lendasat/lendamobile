@@ -503,17 +503,6 @@ class _EditableBalanceCardState extends State<EditableBalanceCard> {
                         },
                       ),
                     ),
-                    if (!widget.showFiatAsMain)
-                      Text(
-                        " sats",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: isDarkMode
-                              ? AppTheme.white60
-                              : AppTheme.black60,
-                        ),
-                      ),
                   ],
                 ),
                 const SizedBox(height: AppTheme.elementSpacing * 0.25),

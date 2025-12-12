@@ -131,10 +131,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorLoadingBalance => 'Error loading balance';
 
   @override
-  String get send => 'SEND';
+  String get send => 'Send';
 
   @override
-  String get receive => 'RECEIVE';
+  String get receive => 'Receive';
 
   @override
   String get failedToCreateWallet => 'Failed to create wallet';
@@ -456,7 +456,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noTransactionHistoryYet => 'No transaction history yet';
 
   @override
-  String get boardingTransaction => 'Boarding Transaction';
+  String get boardingTransaction => 'Onchain Transaction';
 
   @override
   String get roundTransaction => 'Round Transaction';

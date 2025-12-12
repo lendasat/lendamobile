@@ -204,7 +204,7 @@
   "transactionHistory": "交易记录",
   "errorLoadingTransactions": "Error loading transactions",
   "noTransactionHistoryYet": "暂无交易记录",
-  "boardingTransaction": "上链交易",
+  "boardingTransaction": "链上交易",
   "roundTransaction": "循环交易",
   "redeemTransaction": "兑换交易",
   "sent": "已发送",

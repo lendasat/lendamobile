@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
@@ -20,8 +22,7 @@ import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Receive type enum for address display
-/// Note: Lightning removed - Boltz doesn't support BTC/ARK swaps yet
-enum ReceiveType { combined, ark, onchain }
+enum ReceiveType { combined, ark, onchain, lightning }
 
 class ReceiveScreen extends StatefulWidget {
   final String aspId;
@@ -43,7 +44,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   String _bip21Address = "";
   String _btcAddress = "";
   String _arkAddress = "";
-  String? _boltzSwapId; // Reserved for future Lightning support
+  String? _boltzSwapId;
+  String? _lightningInvoice;
   String? _error;
 
   // Current receive type
@@ -60,7 +62,12 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
   // Payment monitoring
   bool _waitingForPayment = false;
-  bool _isLoading = true;
+
+  // Lightning invoice timer
+  Timer? _invoiceTimer;
+  Duration _invoiceDuration = const Duration(minutes: 5);
+  String _timerMin = "05";
+  String _timerSec = "00";
 
   // Animation
   late AnimationController _animationController;
@@ -70,7 +77,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   void initState() {
     super.initState();
 
-    _currentAmount = widget.amount > 0 ? widget.amount : null;
+    _currentAmount = widget.amount >= 0 ? widget.amount : 0;
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -92,6 +99,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
   @override
   void dispose() {
+    _invoiceTimer?.cancel();
     _animationController.dispose();
     _btcController.dispose();
     _satController.dispose();
@@ -100,15 +108,49 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     super.dispose();
   }
 
-  Future<void> _fetchAddresses() async {
+  void _startInvoiceTimer() {
+    _invoiceTimer?.cancel();
+    _invoiceDuration = const Duration(minutes: 5);
+    _updateTimerDisplay();
+
+    _invoiceTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_invoiceDuration.inSeconds > 0) {
+        setState(() {
+          _invoiceDuration = _invoiceDuration - const Duration(seconds: 1);
+          _updateTimerDisplay();
+        });
+      } else {
+        timer.cancel();
+        // Auto-refresh when timer expires
+        if (_receiveType == ReceiveType.lightning && mounted) {
+          _refreshLightningInvoice();
+        }
+      }
+    });
+  }
+
+  void _updateTimerDisplay() {
+    _timerMin = (_invoiceDuration.inMinutes % 60).toString().padLeft(2, '0');
+    _timerSec = (_invoiceDuration.inSeconds % 60).toString().padLeft(2, '0');
+  }
+
+  void _refreshLightningInvoice() {
+    _animationController.reset();
+    _animationController.forward();
+    _fetchLightningInvoice();
+  }
+
+  Future<void> _fetchAddresses({bool includeLightning = false}) async {
     setState(() {
-      _isLoading = true;
       _error = null;
     });
 
     try {
-      final BigInt? amountSats =
-          _currentAmount != null ? BigInt.from(_currentAmount!) : null;
+      // Only pass amount when fetching Lightning invoice
+      // Passing null skips Lightning/Boltz entirely
+      final BigInt? amountSats = includeLightning && (_currentAmount ?? 0) > 0
+          ? BigInt.from(_currentAmount!)
+          : null;
 
       final addresses = await address(amount: amountSats);
       setState(() {
@@ -116,15 +158,63 @@ class _ReceiveScreenState extends State<ReceiveScreen>
         _arkAddress = addresses.offchain;
         _btcAddress = addresses.boarding;
         _boltzSwapId = addresses.lightning?.swapId;
-        _isLoading = false;
+        _lightningInvoice = addresses.lightning?.invoice;
       });
+
+      // Start timer if we have a Lightning invoice
+      if (_lightningInvoice != null && _lightningInvoice!.isNotEmpty) {
+        _startInvoiceTimer();
+      }
 
       _startPaymentMonitoring();
     } catch (e) {
       logger.e("Error fetching addresses: $e");
       setState(() {
         _error = e.toString();
-        _isLoading = false;
+      });
+    }
+  }
+
+  // Default amount for Lightning invoices (Boltz minimum is 333 sats)
+  static const int _defaultLightningAmount = 10000;
+
+  Future<void> _fetchLightningInvoice() async {
+    try {
+      // Boltz requires minimum 333 sats, use default if no amount set
+      final int amount = (_currentAmount ?? 0) > 0 ? _currentAmount! : _defaultLightningAmount;
+      final BigInt amountSats = BigInt.from(amount);
+      final addresses = await address(amount: amountSats);
+
+      setState(() {
+        _boltzSwapId = addresses.lightning?.swapId;
+        _lightningInvoice = addresses.lightning?.invoice;
+      });
+
+      if (_lightningInvoice != null && _lightningInvoice!.isNotEmpty) {
+        _startInvoiceTimer();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Lightning service temporarily unavailable"),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+        // Fall back to combined view
+        setState(() {
+          _receiveType = ReceiveType.combined;
+        });
+      }
+    } catch (e) {
+      logger.e("Error fetching Lightning invoice: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Lightning error: ${e.toString().split('\n').first}"),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+      // Fall back to combined view
+      setState(() {
+        _receiveType = ReceiveType.combined;
       });
     }
   }
@@ -234,28 +324,36 @@ class _ReceiveScreenState extends State<ReceiveScreen>
         return _arkAddress;
       case ReceiveType.onchain:
         return _btcAddress;
+      case ReceiveType.lightning:
+        // Prefix with lightning: for proper QR code scanning
+        final invoice = _lightningInvoice ?? "";
+        return invoice.isNotEmpty ? "lightning:$invoice" : "";
     }
   }
 
   String _getReceiveTypeLabel() {
     switch (_receiveType) {
       case ReceiveType.combined:
-        return 'BIP21';
+        return 'Unified';
       case ReceiveType.ark:
         return 'Ark';
       case ReceiveType.onchain:
-        return 'Boarding';
+        return 'Onchain';
+      case ReceiveType.lightning:
+        return 'Lightning';
     }
   }
 
   IconData _getReceiveTypeIcon() {
     switch (_receiveType) {
       case ReceiveType.combined:
-        return FontAwesomeIcons.bitcoin;
+        return FontAwesomeIcons.qrcode;
       case ReceiveType.ark:
         return FontAwesomeIcons.water;
       case ReceiveType.onchain:
         return FontAwesomeIcons.link;
+      case ReceiveType.lightning:
+        return FontAwesomeIcons.bolt;
     }
   }
 
@@ -268,11 +366,31 @@ class _ReceiveScreenState extends State<ReceiveScreen>
         return const AssetImage('assets/images/bitcoin.png');
       case ReceiveType.onchain:
         return const AssetImage('assets/images/bitcoin.png');
+      case ReceiveType.lightning:
+        return const AssetImage('assets/images/lightning.png');
     }
   }
 
+  /// Get the raw address/invoice for copying (without URI prefix)
+  String _getRawAddress() {
+    switch (_receiveType) {
+      case ReceiveType.combined:
+        return _bip21Address;
+      case ReceiveType.ark:
+        return _arkAddress;
+      case ReceiveType.onchain:
+        return _btcAddress;
+      case ReceiveType.lightning:
+        return _lightningInvoice ?? "";
+    }
+  }
+
+  bool _isLightningAvailable() {
+    return _lightningInvoice != null && _lightningInvoice!.isNotEmpty;
+  }
+
   void _copyAddress() {
-    final address = _getCurrentQrData();
+    final address = _getRawAddress();
     Clipboard.setData(ClipboardData(text: address));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -284,7 +402,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   }
 
   void _shareAddress() {
-    final address = _getCurrentQrData();
+    final address = _getRawAddress();
     Share.share(address);
   }
 
@@ -297,7 +415,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   void _showReceiveTypeSheet() {
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.45,
+      height: MediaQuery.of(context).size.height * 0.55,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ArkScaffold(
         context: context,
@@ -314,11 +432,11 @@ class _ReceiveScreenState extends State<ReceiveScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               ArkListTile(
-                text: "BIP21",
+                text: "Unified QR Code",
                 selected: _receiveType == ReceiveType.combined,
                 leading: RoundedButtonWidget(
                   buttonType: ButtonType.transparent,
-                  iconData: FontAwesomeIcons.bitcoin,
+                  iconData: FontAwesomeIcons.qrcode,
                   size: AppTheme.cardPadding * 1.25,
                   onTap: () {
                     setState(() => _receiveType = ReceiveType.combined);
@@ -348,7 +466,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 },
               ),
               ArkListTile(
-                text: "Boarding",
+                text: "Onchain",
                 selected: _receiveType == ReceiveType.onchain,
                 leading: RoundedButtonWidget(
                   buttonType: ButtonType.transparent,
@@ -362,6 +480,32 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 onTap: () {
                   setState(() => _receiveType = ReceiveType.onchain);
                   Navigator.of(context).pop();
+                },
+              ),
+              ArkListTile(
+                text: "Lightning",
+                subtitle: Text(
+                  "Default: 10,000 sats",
+                  style: TextStyle(
+                    color: Theme.of(context).hintColor,
+                    fontSize: 12,
+                  ),
+                ),
+                selected: _receiveType == ReceiveType.lightning,
+                leading: RoundedButtonWidget(
+                  buttonType: ButtonType.transparent,
+                  iconData: FontAwesomeIcons.bolt,
+                  size: AppTheme.cardPadding * 1.25,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    setState(() => _receiveType = ReceiveType.lightning);
+                    _fetchLightningInvoice();
+                  },
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  setState(() => _receiveType = ReceiveType.lightning);
+                  _fetchLightningInvoice();
                 },
               ),
             ],
@@ -419,16 +563,15 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 customHeight: AppTheme.cardPadding * 2,
                 onTap: () {
                   final amountText = _satController.text.trim();
-                  if (amountText.isEmpty || amountText == "0") {
-                    setState(() => _currentAmount = null);
-                  } else {
-                    final amount = int.tryParse(amountText);
-                    if (amount != null && amount > 0) {
-                      setState(() => _currentAmount = amount);
-                    }
-                  }
+                  final amount = int.tryParse(amountText) ?? 0;
+                  setState(() => _currentAmount = amount >= 0 ? amount : 0);
                   Navigator.pop(context);
-                  _fetchAddresses();
+                  // Re-fetch Lightning invoice if on Lightning, otherwise fetch addresses
+                  if (_receiveType == ReceiveType.lightning) {
+                    _fetchLightningInvoice();
+                  } else {
+                    _fetchAddresses();
+                  }
                 },
               ),
             ],
@@ -463,12 +606,26 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 sizeFactor: _animation,
                 axis: Axis.horizontal,
                 axisAlignment: -1.0,
-                child: RoundedButtonWidget(
-                  size: AppTheme.cardPadding * 1.5,
-                  buttonType: ButtonType.transparent,
-                  iconData: FontAwesomeIcons.arrowsRotate,
-                  onTap: _refreshAddress,
-                ),
+                child: _receiveType == ReceiveType.lightning && _isLightningAvailable()
+                    ? LongButtonWidget(
+                        customShadow: isLight ? [] : null,
+                        buttonType: ButtonType.transparent,
+                        customHeight: AppTheme.cardPadding * 1.5,
+                        customWidth: AppTheme.cardPadding * 4,
+                        leadingIcon: Icon(
+                          FontAwesomeIcons.arrowsRotate,
+                          color: isLight ? AppTheme.black60 : AppTheme.white80,
+                          size: AppTheme.elementSpacing * 1.5,
+                        ),
+                        title: "$_timerMin:$_timerSec",
+                        onTap: _refreshLightningInvoice,
+                      )
+                    : RoundedButtonWidget(
+                        size: AppTheme.cardPadding * 1.5,
+                        buttonType: ButtonType.transparent,
+                        iconData: FontAwesomeIcons.arrowsRotate,
+                        onTap: _refreshAddress,
+                      ),
               ),
             ],
           ),
@@ -487,58 +644,48 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.cardPadding,
                   ),
-                  child: _isLoading
-                      ? const Center(
-                          child: Padding(
-                            padding:
-                                EdgeInsets.all(AppTheme.cardPadding * 4),
-                            child: CircularProgressIndicator(
-                              color: AppTheme.colorBitcoin,
-                            ),
+                  child: _error != null
+                      ? Center(
+                          child: Column(
+                            children: [
+                              const Icon(Icons.error_outline,
+                                  color: AppTheme.errorColor, size: 48),
+                              const SizedBox(
+                                  height: AppTheme.elementSpacing),
+                              Text(
+                                l10n.errorLoadingAddresses,
+                                style: const TextStyle(
+                                    color: AppTheme.errorColor),
+                              ),
+                              const SizedBox(
+                                  height: AppTheme.elementSpacing),
+                              LongButtonWidget(
+                                title: l10n.retry,
+                                buttonType: ButtonType.primary,
+                                onTap: _fetchAddresses,
+                              ),
+                            ],
                           ),
                         )
-                      : _error != null
-                          ? Center(
-                              child: Column(
-                                children: [
-                                  const Icon(Icons.error_outline,
-                                      color: AppTheme.errorColor, size: 48),
-                                  const SizedBox(
-                                      height: AppTheme.elementSpacing),
-                                  Text(
-                                    l10n.errorLoadingAddresses,
-                                    style: const TextStyle(
-                                        color: AppTheme.errorColor),
-                                  ),
-                                  const SizedBox(
-                                      height: AppTheme.elementSpacing),
-                                  LongButtonWidget(
-                                    title: l10n.retry,
-                                    buttonType: ButtonType.primary,
-                                    onTap: _fetchAddresses,
-                                  ),
-                                ],
-                              ),
-                            )
-                          : Column(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const SizedBox(height: AppTheme.cardPadding),
-                                // QR Code
-                                _buildQrCode(isLight),
-                                const SizedBox(height: AppTheme.cardPadding),
-                                // Address tile
-                                _buildAddressTile(),
-                                // Amount tile
-                                _buildAmountTile(l10n),
-                                // Type tile
-                                _buildTypeTile(),
-                                const SizedBox(
-                                    height: AppTheme.cardPadding * 2),
-                              ],
-                            ),
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: AppTheme.cardPadding),
+                            // QR Code
+                            _buildQrCode(isLight),
+                            const SizedBox(height: AppTheme.cardPadding),
+                            // Address tile
+                            _buildAddressTile(),
+                            // Amount tile
+                            _buildAmountTile(l10n),
+                            // Type tile
+                            _buildTypeTile(),
+                            const SizedBox(
+                                height: AppTheme.cardPadding * 2),
+                          ],
+                        ),
                 ),
               ],
             ),
@@ -581,11 +728,6 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                       : const SizedBox(
                           width: 200,
                           height: 200,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: AppTheme.colorBitcoin,
-                            ),
-                          ),
                         ),
                 ),
               ),
@@ -605,8 +747,12 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   }
 
   Widget _buildAddressTile() {
+    final label = _receiveType == ReceiveType.lightning
+        ? AppLocalizations.of(context)!.lightningInvoice
+        : AppLocalizations.of(context)!.address;
+
     return ArkListTile(
-      text: AppLocalizations.of(context)!.address,
+      text: label,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -615,7 +761,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
               size: AppTheme.cardPadding * 0.75),
           const SizedBox(width: AppTheme.elementSpacing / 2),
           Text(
-            _trimAddress(_getCurrentQrData()),
+            _trimAddress(_getRawAddress()),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -625,6 +771,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   }
 
   Widget _buildAmountTile(AppLocalizations l10n) {
+    final displayAmount = _currentAmount ?? 0;
     return ArkListTile(
       text: l10n.amount,
       trailing: GestureDetector(
@@ -639,7 +786,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
             ),
             const SizedBox(width: AppTheme.elementSpacing / 2),
             Text(
-              _currentAmount != null ? '$_currentAmount sats' : 'Any',
+              displayAmount > 0 ? '$displayAmount sats' : 'Any',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],

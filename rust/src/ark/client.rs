@@ -87,9 +87,18 @@ pub async fn address(amount: Option<Amount>) -> Result<Addresses> {
                 .get_offchain_address()
                 .map_err(|error| anyhow!("Could not get offchain address {error:#}"))?;
 
+            // Try to get Lightning invoice, but don't fail if Boltz is unavailable
             let reverse_swap_result = match amount {
                 None => None,
-                Some(amount) => Some(client.get_ln_invoice(amount, Some(300)).await?),
+                Some(amount) => {
+                    match client.get_ln_invoice(amount, Some(300)).await {
+                        Ok(swap) => Some(swap),
+                        Err(e) => {
+                            tracing::warn!("Failed to create Lightning invoice (Boltz may be unavailable): {e:#}");
+                            None
+                        }
+                    }
+                }
             };
 
             Ok(Addresses {
