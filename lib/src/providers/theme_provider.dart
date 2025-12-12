@@ -71,11 +71,11 @@ class ThemeProvider extends ChangeNotifier {
       final luminance = primaryColor.computeLuminance();
       onPrimaryColor = luminance > 0.5 ? Colors.black : Colors.white;
     } else if (_currentThemeType == ThemeType.light) {
-      primaryColor = Colors.amber.shade700;
-      onPrimaryColor = Colors.black;
+      primaryColor = AppTheme.colorBitcoin;
+      onPrimaryColor = Colors.white;
     } else {
-      primaryColor = Colors.amber;
-      onPrimaryColor = Colors.black;
+      primaryColor = AppTheme.colorBitcoin;
+      onPrimaryColor = Colors.white;
     }
 
     return ThemeData(

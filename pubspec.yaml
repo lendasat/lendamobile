@@ -59,6 +59,7 @@ dependencies:
   timezone: ^0.9.4
   flex_color_picker: ^3.5.1
   mobile_scanner: ^7.0.1
+  image_picker: ^1.1.2
   google_fonts: ^6.2.1
   font_awesome_flutter: ^10.8.0
   gauge_indicator: ^0.4.3

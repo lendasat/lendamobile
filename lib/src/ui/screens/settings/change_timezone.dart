@@ -63,7 +63,7 @@ class _TimezonePickerBodyState extends State<_TimezonePickerBody> {
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
+          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
         ),
       );
     }

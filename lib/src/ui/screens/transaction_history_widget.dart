@@ -306,7 +306,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             child: Padding(
               padding: EdgeInsets.all(32.0),
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
               ),
             ),
           )

@@ -312,5 +312,12 @@
   "dataSource": "Data Source",
   "liveBitcoinMarketData": "Live Bitcoin Market Data",
   "updateFrequency": "Update Frequency",
-  "realTime": "Real-time"
+  "realTime": "Real-time",
+  "scanQrCode": "QR-Code scannen",
+  "positionQrCodeInFrame": "QR-Code im Rahmen positionieren",
+  "noQrCodeFoundInImage": "Kein QR-Code im Bild gefunden",
+  "switchCamera": "Kamera wechseln",
+  "flashOn": "Blitz an",
+  "flashOff": "Blitz aus",
+  "pickFromGallery": "Aus Galerie wählen"
 }

@@ -210,7 +210,7 @@ class SettingsViewState extends State<SettingsView> {
             : Colors.white,
         title: Text(
           AppLocalizations.of(context)!.securityWarning,
-          style: const TextStyle(color: Colors.amber),
+          style: TextStyle(color: AppTheme.colorBitcoin),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -255,7 +255,7 @@ class SettingsViewState extends State<SettingsView> {
             },
             child: Text(
               AppLocalizations.of(context)!.iUnderstand,
-              style: const TextStyle(color: Colors.amber),
+              style: TextStyle(color: AppTheme.colorBitcoin),
             ),
           ),
         ],
@@ -333,11 +333,11 @@ class SettingsViewState extends State<SettingsView> {
                           .recoveryPhraseCopiedToClipboard)),
                 );
               },
-              icon: const Icon(Icons.copy, color: Colors.amber),
+              icon: Icon(Icons.copy, color: AppTheme.colorBitcoin),
               label: Text(AppLocalizations.of(context)!.copyToClipboard),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.amber,
-                side: const BorderSide(color: Colors.amber),
+                foregroundColor: AppTheme.colorBitcoin,
+                side: BorderSide(color: AppTheme.colorBitcoin),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
@@ -546,7 +546,7 @@ class SettingsViewState extends State<SettingsView> {
                           ? AppTheme.white60
                           : AppTheme.black60,
                     ),
-                    style: const TextStyle(color: Colors.amber),
+                    style: TextStyle(color: AppTheme.colorBitcoin),
                     onChanged: (String? value) {
                       if (value != null) {
                         setState(() {
@@ -604,7 +604,7 @@ class SettingsViewState extends State<SettingsView> {
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   suffixIcon: IconButton(
-                    icon: const Icon(Icons.save, color: Colors.amber, size: 20),
+                    icon: Icon(Icons.save, color: AppTheme.colorBitcoin, size: 20),
                     onPressed: _saveEsploraUrl,
                   ),
                 ),
@@ -648,7 +648,7 @@ class SettingsViewState extends State<SettingsView> {
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   suffixIcon: IconButton(
-                    icon: const Icon(Icons.save, color: Colors.amber, size: 20),
+                    icon: Icon(Icons.save, color: AppTheme.colorBitcoin, size: 20),
                     onPressed: _saveArkServerUrl,
                   ),
                 ),
@@ -692,7 +692,7 @@ class SettingsViewState extends State<SettingsView> {
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   suffixIcon: IconButton(
-                    icon: const Icon(Icons.save, color: Colors.amber, size: 20),
+                    icon: Icon(Icons.save, color: AppTheme.colorBitcoin, size: 20),
                     onPressed: _saveBoltzUrl,
                   ),
                 ),
@@ -756,7 +756,7 @@ class SettingsViewState extends State<SettingsView> {
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
               ),
             )
           : ListTileTheme(

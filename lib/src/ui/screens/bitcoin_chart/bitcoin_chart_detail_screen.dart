@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_image_text_button.dart'
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 
 class BitcoinChartDetailScreen extends StatefulWidget {
@@ -185,7 +186,7 @@ class _BitcoinChartDetailScreenState extends State<BitcoinChartDetailScreen> {
               child: isLightning
                   ? const Icon(
                       Icons.bolt,
-                      color: Colors.amber,
+                      color: AppTheme.colorBitcoin,
                       size: 32,
                     )
                   : Image.asset(

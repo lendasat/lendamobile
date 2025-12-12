@@ -8,6 +8,7 @@ import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/bitcoin_chart/bitcoin_chart_detail_screen.dart';
 import 'package:ark_flutter/src/ui/screens/buy/buy_screen.dart';
 import 'package:ark_flutter/src/ui/screens/receivescreen.dart';
+import 'package:ark_flutter/src/ui/screens/qr_scanner_screen.dart';
 import 'package:ark_flutter/src/ui/screens/sell/sell_screen.dart';
 import 'package:ark_flutter/src/ui/screens/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/settings.dart';
@@ -320,6 +321,31 @@ class WalletScreenState extends State<WalletScreen> {
     );
   }
 
+  Future<void> _handleScan() async {
+    logger.i("Scan button pressed");
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const QrScannerScreen(),
+      ),
+    );
+
+    if (result != null && mounted) {
+      logger.i("Scanned QR code: $result");
+      // Navigate to send screen with scanned address
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SendScreen(
+            aspId: widget.aspId,
+            availableSats: _getSelectedBalance() * 100000000,
+            initialAddress: result,
+          ),
+        ),
+      );
+    }
+  }
+
   void _handleBitcoinChart() {
     logger.i("Bitcoin chart button pressed");
     Navigator.push(
@@ -463,6 +489,7 @@ class WalletScreenState extends State<WalletScreen> {
               Consumer<UserPreferencesService>(
                 builder: (context, userPrefs, _) => RoundedButtonWidget(
                   size: AppTheme.cardPadding * 1.5,
+                  iconSize: AppTheme.cardPadding * 0.65,
                   buttonType: ButtonType.transparent,
                   iconData: userPrefs.balancesVisible
                       ? FontAwesomeIcons.eyeSlash
@@ -657,15 +684,26 @@ class WalletScreenState extends State<WalletScreen> {
               fallbackIcon: Icons.arrow_downward_rounded,
             ),
           ),
+          // Scan button (replaces Sell)
           Flexible(
             child: BitNetImageWithTextButton(
-              "Sell",
-              _handleSell,
+              "Scan",
+              _handleScan,
               width: AppTheme.cardPadding * 2.5,
               height: AppTheme.cardPadding * 2.5,
-              fallbackIcon: Icons.sell_outlined,
+              fallbackIcon: Icons.qr_code_scanner_rounded,
             ),
           ),
+          // Sell button - commented out for now
+          // Flexible(
+          //   child: BitNetImageWithTextButton(
+          //     "Sell",
+          //     _handleSell,
+          //     width: AppTheme.cardPadding * 2.5,
+          //     height: AppTheme.cardPadding * 2.5,
+          //     fallbackIcon: Icons.sell_outlined,
+          //   ),
+          // ),
           Flexible(
             child: BitNetImageWithTextButton(
               "Buy",

@@ -156,7 +156,7 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
                   ElevatedButton(
                     onPressed: _handleSign,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber[500],
+                      backgroundColor: AppTheme.colorBitcoin,
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(

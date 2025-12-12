@@ -24,11 +24,13 @@ import 'package:provider/provider.dart';
 class SendScreen extends StatefulWidget {
   final String aspId;
   final double availableSats;
+  final String? initialAddress;
 
   const SendScreen({
     super.key,
     required this.aspId,
     required this.availableSats,
+    this.initialAddress,
   });
 
   @override
@@ -78,6 +80,15 @@ class SendScreenState extends State<SendScreen>
 
     // Listen to address changes
     _addressController.addListener(_onAddressChanged);
+
+    // Set initial address if provided (e.g., from QR scan)
+    if (widget.initialAddress != null && widget.initialAddress!.isNotEmpty) {
+      _addressController.text = widget.initialAddress!;
+      // Expand address field and validate
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _onAddressChanged();
+      });
+    }
 
     // Fetch bitcoin price
     _fetchBitcoinPrice();

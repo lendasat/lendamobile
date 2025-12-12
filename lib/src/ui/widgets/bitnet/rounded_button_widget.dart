@@ -7,6 +7,7 @@ class RoundedButtonWidget extends StatelessWidget {
   final IconData iconData;
   final VoidCallback? onTap;
   final double size;
+  final double? iconSize;
   final ButtonType buttonType;
   final Color? iconColor;
   final Color? backgroundColor;
@@ -18,6 +19,7 @@ class RoundedButtonWidget extends StatelessWidget {
     required this.iconData,
     this.onTap,
     this.size = 40,
+    this.iconSize,
     this.buttonType = ButtonType.solid,
     this.iconColor,
     this.backgroundColor,
@@ -27,7 +29,6 @@ class RoundedButtonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     // Determine colors based on button type
@@ -105,7 +106,7 @@ class RoundedButtonWidget extends StatelessWidget {
                 child: Icon(
                   iconData,
                   color: fgColor,
-                  size: size * 0.5,
+                  size: iconSize ?? size * 0.5,
                 ),
               ),
       ),

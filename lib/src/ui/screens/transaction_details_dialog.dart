@@ -38,8 +38,8 @@ class TransactionDetailsDialog extends StatelessWidget {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
               ),
               const SizedBox(height: 16),
               Text(
@@ -78,7 +78,7 @@ class TransactionDetailsDialog extends StatelessWidget {
                 },
                 child: Text(
                   AppLocalizations.of(context)!.goToHome,
-                  style: const TextStyle(color: Colors.amber),
+                  style: TextStyle(color: AppTheme.colorBitcoin),
                 ),
               ),
             ],
@@ -106,7 +106,7 @@ class TransactionDetailsDialog extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
                   AppLocalizations.of(context)!.ok,
-                  style: const TextStyle(color: Colors.amber),
+                  style: TextStyle(color: AppTheme.colorBitcoin),
                 ),
               ),
             ],
@@ -196,7 +196,7 @@ class TransactionDetailsDialog extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withAlpha((0.2 * 200).round()),
+                      color: AppTheme.colorBitcoin.withAlpha((0.2 * 200).round()),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -209,7 +209,7 @@ class TransactionDetailsDialog extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () => _handleSettlement(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber[500],
+                      backgroundColor: AppTheme.colorBitcoin,
                       foregroundColor: Colors.black,
                       minimumSize: const Size(double.infinity, 48),
                       shape: RoundedRectangleBorder(

@@ -320,5 +320,12 @@
   "walletAddressCopied": "Wallet address copied",
   "hashrate": "Hashrate",
   "fearAndGreedIndex": "Fear & Greed Index",
-  "health": "Health"
+  "health": "Health",
+  "scanQrCode": "Scan QR Code",
+  "positionQrCodeInFrame": "Position QR code in frame",
+  "noQrCodeFoundInImage": "No QR code found in image",
+  "switchCamera": "Switch Camera",
+  "flashOn": "Flash On",
+  "flashOff": "Flash Off",
+  "pickFromGallery": "Pick from Gallery"
 }

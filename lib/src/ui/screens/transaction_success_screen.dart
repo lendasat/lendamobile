@@ -48,7 +48,7 @@ class TransactionSuccessScreen extends StatelessWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Colors.amber[500],
+                      color: AppTheme.colorBitcoin,
                       borderRadius: BorderRadius.circular(4),
                       boxShadow: [
                         BoxShadow(

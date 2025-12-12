@@ -331,7 +331,7 @@ class _EditableBalanceCardState extends State<EditableBalanceCard> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.amber,
+                    color: AppTheme.colorBitcoin,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
@@ -395,7 +395,7 @@ class _EditableBalanceCardState extends State<EditableBalanceCard> {
                   width: AppTheme.cardPadding * 1.25,
                   height: AppTheme.cardPadding * 1.25,
                   decoration: BoxDecoration(
-                    color: Colors.amber,
+                    color: AppTheme.colorBitcoin,
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: const Icon(

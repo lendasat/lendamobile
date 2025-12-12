@@ -1663,6 +1663,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Health'**
   String get health;
+
+  /// No description provided for @scanQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR Code'**
+  String get scanQrCode;
+
+  /// No description provided for @positionQrCodeInFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Position QR code in frame'**
+  String get positionQrCodeInFrame;
+
+  /// No description provided for @noQrCodeFoundInImage.
+  ///
+  /// In en, this message translates to:
+  /// **'No QR code found in image'**
+  String get noQrCodeFoundInImage;
+
+  /// No description provided for @switchCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Camera'**
+  String get switchCamera;
+
+  /// No description provided for @flashOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Flash On'**
+  String get flashOn;
+
+  /// No description provided for @flashOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Flash Off'**
+  String get flashOff;
+
+  /// No description provided for @pickFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick from Gallery'**
+  String get pickFromGallery;
 }
 
 class _AppLocalizationsDelegate

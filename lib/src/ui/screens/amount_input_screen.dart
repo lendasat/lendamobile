@@ -146,7 +146,7 @@ class AmountInputScreenState extends State<AmountInputScreen> {
                   child: ElevatedButton(
                     onPressed: _onContinue,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber[500],
+                      backgroundColor: AppTheme.colorBitcoin,
                       foregroundColor: Theme.of(context).scaffoldBackgroundColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(

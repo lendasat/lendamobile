@@ -1,5 +1,12 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/qr_scanner_overlay.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class QrScannerScreen extends StatefulWidget {
@@ -11,7 +18,9 @@ class QrScannerScreen extends StatefulWidget {
 
 class _QrScannerScreenState extends State<QrScannerScreen> {
   final MobileScannerController cameraController = MobileScannerController();
+  final ImagePicker _imagePicker = ImagePicker();
   bool _isProcessingQR = false;
+  bool _torchEnabled = false;
 
   @override
   void dispose() {
@@ -30,27 +39,71 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     Navigator.of(context).pop(data);
   }
 
+  Future<void> _toggleTorch() async {
+    await cameraController.toggleTorch();
+    setState(() {
+      _torchEnabled = !_torchEnabled;
+    });
+  }
+
+  Future<void> _pickImageAndScan() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+      );
+
+      if (image != null) {
+        final BarcodeCapture? result = await cameraController.analyzeImage(
+          image.path,
+        );
+
+        if (result != null && result.barcodes.isNotEmpty) {
+          final String? code = result.barcodes.first.rawValue;
+          if (code != null && mounted) {
+            _onQRCodeScanned(code);
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  AppLocalizations.of(context)?.error ?? 'No QR code found in image',
+                ),
+                backgroundColor: AppTheme.errorColor,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error scanning image: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    
+    final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
+    return ArkScaffold(
+      context: context,
+      extendBodyBehindAppBar: true,
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        centerTitle: true,
-        title: Text(
-          'Scan QR Code',
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-        ),
+      appBar: ArkAppBar(
+        context: context,
+        text: l10n?.scanQrCode ?? 'Scan QR Code',
+        hasBackButton: true,
+        buttonType: ButtonType.transparent,
       ),
       body: Stack(
         children: [
+          // Camera preview
           MobileScanner(
             controller: cameraController,
             onDetect: (barcode) {
@@ -60,61 +113,51 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               }
             },
           ),
-          CustomPaint(
-            painter: QRScannerOverlayPainter(),
-            child: Container(),
-          ),
+
+          // QR Scanner Overlay with cutout and corners
+          const QRScannerOverlay(),
+
+          // Bottom controls
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 80),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? Colors.black.withValues(alpha: 0.04)
-                      : Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Theme.of(context).brightness == Brightness.light
-                      ? Border.all(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          width: 1,
-                        )
-                      : null,
-                  boxShadow: Theme.of(context).brightness == Brightness.light
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            offset: const Offset(0, 2),
-                            blurRadius: 8,
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        cameraController.facing == CameraFacing.front
-                            ? Icons.camera_front
-                            : Icons.camera_rear,
-                        color: Theme.of(context).colorScheme.onSurface,
+              padding: const EdgeInsets.only(
+                bottom: AppTheme.cardPadding * 8,
+              ),
+              child: GlassContainer(
+                width: AppTheme.cardPadding * 6.5,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.elementSpacing * 1.5,
+                    vertical: AppTheme.elementSpacing / 1.25,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Switch camera button
+                      GestureDetector(
+                        onTap: () => cameraController.switchCamera(),
+                        child: const Icon(Icons.camera_rear),
                       ),
-                      onPressed: () => cameraController.switchCamera(),
-                    ),
-                    const SizedBox(width: 24),
-                    IconButton(
-                      icon: Icon(
-                        cameraController.torchEnabled
-                            ? Icons.flash_on
-                            : Icons.flash_off,
-                        color: Theme.of(context).colorScheme.onSurface,
+
+                      // Torch toggle button
+                      GestureDetector(
+                        onTap: _toggleTorch,
+                        child: Icon(
+                          _torchEnabled ? Icons.flash_on : Icons.flash_off,
+                          color: _torchEnabled
+                              ? AppTheme.colorBitcoin
+                              : AppTheme.white90,
+                        ),
                       ),
-                      onPressed: () => cameraController.toggleTorch(),
-                    ),
-                  ],
+
+                      // Pick from gallery button
+                      GestureDetector(
+                        onTap: _pickImageAndScan,
+                        child: const Icon(Icons.image),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -123,96 +166,4 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       ),
     );
   }
-}
-
-// Custom painter for the QR scanner overlay
-class QRScannerOverlayPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final bgPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.6)
-      ..style = PaintingStyle.fill;
-
-    final holePaint = Paint()
-      ..color = Colors.transparent
-      ..blendMode = BlendMode.clear;
-
-    final borderPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-
-    // Draw the semi-transparent background
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-
-    // Calculate the scanning area (square in the center)
-    final scanAreaSize = size.width * 0.7;
-    final left = (size.width - scanAreaSize) / 2;
-    final top = (size.height - scanAreaSize) / 2;
-    final scanRect = Rect.fromLTWH(left, top, scanAreaSize, scanAreaSize);
-
-    // Cut out the scanning area
-    canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(scanRect, const Radius.circular(12)),
-      holePaint,
-    );
-    canvas.restore();
-
-    // Draw the border around the scanning area
-    const borderRadius = 12.0;
-    const cornerLength = 30.0;
-
-    // Top-left corner
-    canvas.drawLine(
-      Offset(left, top + borderRadius),
-      Offset(left, top + cornerLength),
-      borderPaint,
-    );
-    canvas.drawLine(
-      Offset(left + borderRadius, top),
-      Offset(left + cornerLength, top),
-      borderPaint,
-    );
-
-    // Top-right corner
-    canvas.drawLine(
-      Offset(left + scanAreaSize - borderRadius, top),
-      Offset(left + scanAreaSize - cornerLength, top),
-      borderPaint,
-    );
-    canvas.drawLine(
-      Offset(left + scanAreaSize, top + borderRadius),
-      Offset(left + scanAreaSize, top + cornerLength),
-      borderPaint,
-    );
-
-    // Bottom-left corner
-    canvas.drawLine(
-      Offset(left, top + scanAreaSize - borderRadius),
-      Offset(left, top + scanAreaSize - cornerLength),
-      borderPaint,
-    );
-    canvas.drawLine(
-      Offset(left + borderRadius, top + scanAreaSize),
-      Offset(left + cornerLength, top + scanAreaSize),
-      borderPaint,
-    );
-
-    // Bottom-right corner
-    canvas.drawLine(
-      Offset(left + scanAreaSize - borderRadius, top + scanAreaSize),
-      Offset(left + scanAreaSize - cornerLength, top + scanAreaSize),
-      borderPaint,
-    );
-    canvas.drawLine(
-      Offset(left + scanAreaSize, top + scanAreaSize - borderRadius),
-      Offset(left + scanAreaSize, top + scanAreaSize - cornerLength),
-      borderPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -813,4 +813,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get health => 'Health';
+
+  @override
+  String get scanQrCode => 'QR-Code scannen';
+
+  @override
+  String get positionQrCodeInFrame => 'QR-Code im Rahmen positionieren';
+
+  @override
+  String get noQrCodeFoundInImage => 'Kein QR-Code im Bild gefunden';
+
+  @override
+  String get switchCamera => 'Kamera wechseln';
+
+  @override
+  String get flashOn => 'Blitz an';
+
+  @override
+  String get flashOff => 'Blitz aus';
+
+  @override
+  String get pickFromGallery => 'Aus Galerie wählen';
 }
