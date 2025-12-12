@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1647360938;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -927650036;
 
 // Section: executor
 
@@ -1226,6 +1226,42 @@ fn wire__crate__api__ark_api__nsec_impl(
         },
     )
 }
+fn wire__crate__api__ark_api__pay_ln_invoice_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "pay_ln_invoice",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_invoice = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::ark_api::pay_ln_invoice(api_invoice).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__ark_api__reset_wallet_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -2360,6 +2396,20 @@ impl SseDecode for Vec<crate::models::mempool::TxOutput> {
     }
 }
 
+impl SseDecode for crate::api::ark_api::LnPaymentResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_swapId = <String>::sse_decode(deserializer);
+        let mut var_txid = <String>::sse_decode(deserializer);
+        let mut var_amountSats = <u64>::sse_decode(deserializer);
+        return crate::api::ark_api::LnPaymentResult {
+            swap_id: var_swapId,
+            txid: var_txid,
+            amount_sats: var_amountSats,
+        };
+    }
+}
+
 impl SseDecode for crate::logger::LogEntry {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3017,28 +3067,29 @@ fn pde_ffi_dispatcher_primary_impl(
             wire__crate__api__moonpay_api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len)
         }
         32 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
-        33 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
-        34 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
-        35 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
-        36 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
-        39 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
+        33 => wire__crate__api__ark_api__pay_ln_invoice_impl(port, ptr, rust_vec_len, data_len),
+        34 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
+        35 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
+        36 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
+        38 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        40 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
-        41 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
+        41 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        42 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
-        43 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
+        45 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3537,6 +3588,28 @@ impl flutter_rust_bridge::IntoDart for crate::api::ark_api::Info {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::ark_api::Info {}
 impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::Info> for crate::api::ark_api::Info {
     fn into_into_dart(self) -> crate::api::ark_api::Info {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::ark_api::LnPaymentResult {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.swap_id.into_into_dart().into_dart(),
+            self.txid.into_into_dart().into_dart(),
+            self.amount_sats.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::ark_api::LnPaymentResult
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::LnPaymentResult>
+    for crate::api::ark_api::LnPaymentResult
+{
+    fn into_into_dart(self) -> crate::api::ark_api::LnPaymentResult {
         self
     }
 }
@@ -4415,6 +4488,15 @@ impl SseEncode for Vec<crate::models::mempool::TxOutput> {
         for item in self {
             <crate::models::mempool::TxOutput>::sse_encode(item, serializer);
         }
+    }
+}
+
+impl SseEncode for crate::api::ark_api::LnPaymentResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.swap_id, serializer);
+        <String>::sse_encode(self.txid, serializer);
+        <u64>::sse_encode(self.amount_sats, serializer);
     }
 }
 

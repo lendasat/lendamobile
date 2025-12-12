@@ -19,8 +19,17 @@ import 'package:provider/provider.dart';
 
 class SingleTransactionScreen extends StatefulWidget {
   final String? txid;
+  final int? amountSats;
+  final int? createdAt;
+  final String? transactionType;
 
-  const SingleTransactionScreen({super.key, this.txid});
+  const SingleTransactionScreen({
+    super.key,
+    this.txid,
+    this.amountSats,
+    this.createdAt,
+    this.transactionType,
+  });
 
   @override
   State<SingleTransactionScreen> createState() =>
@@ -33,6 +42,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
 
   BitcoinTransaction? transactionModel;
   bool isLoading = true;
+  bool hasError = false;
   String? txID;
 
   @override
@@ -57,12 +67,14 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
         setState(() {
           transactionModel = tx;
           isLoading = false;
+          hasError = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           isLoading = false;
+          hasError = true;
         });
       }
     }
@@ -116,7 +128,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : transactionModel == null
-              ? Center(child: Text(l10n.errorLoadingTransaction))
+              ? _buildFallbackView(context, l10n, timezoneService)
               : SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.only(
@@ -558,6 +570,312 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                     ),
                   ),
                 ),
+    );
+  }
+
+  Widget _buildFallbackView(
+    BuildContext context,
+    AppLocalizations l10n,
+    TimezoneService timezoneService,
+  ) {
+    final amountBtc = widget.amountSats != null
+        ? (widget.amountSats! / 100000000).toStringAsFixed(8)
+        : '--';
+
+    String formattedDate = '--';
+    if (widget.createdAt != null) {
+      final loc = timezoneService.location;
+      final datetime = DateTime.fromMillisecondsSinceEpoch(
+        widget.createdAt! * 1000,
+      ).toUtc().add(Duration(milliseconds: loc.currentTimeZone.offset));
+      formattedDate =
+          '${DateFormat('yyyy-MM-dd HH:mm').format(datetime)} (${_formatTimeAgo(datetime)})';
+    }
+
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(
+          top: AppTheme.cardPadding * 3,
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.elementSpacing,
+              ),
+              child: GlassContainer(
+                borderRadius: AppTheme.cardRadiusBig,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppTheme.elementSpacing,
+                    horizontal: AppTheme.elementSpacing,
+                  ),
+                  child: Column(
+                    children: [
+                      // Transaction header
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          vertical: AppTheme.cardPadding * 0.75,
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Column(
+                                  children: [
+                                    Avatar(
+                                      size: AppTheme.cardPadding * 4,
+                                      isNft: false,
+                                    ),
+                                    SizedBox(
+                                      height: AppTheme.elementSpacing * 0.5,
+                                    ),
+                                    Text("Sender"),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  width: AppTheme.cardPadding * 0.75,
+                                ),
+                                Icon(
+                                  Icons.double_arrow_rounded,
+                                  size: AppTheme.cardPadding * 2.5,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppTheme.white80
+                                      : AppTheme.black60,
+                                ),
+                                const SizedBox(
+                                  width: AppTheme.cardPadding * 0.75,
+                                ),
+                                const Column(
+                                  children: [
+                                    Avatar(
+                                      size: AppTheme.cardPadding * 4,
+                                      isNft: false,
+                                    ),
+                                    SizedBox(
+                                      height: AppTheme.elementSpacing * 0.5,
+                                    ),
+                                    Text("Receiver"),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Nested details container
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.elementSpacing * 0.5,
+                          vertical: AppTheme.elementSpacing,
+                        ),
+                        child: GlassContainer(
+                          opacity: 0.05,
+                          borderRadius: AppTheme.cardRadiusSmall,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppTheme.elementSpacing,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Transaction Volume
+                                ArkListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.elementSpacing * 0.75,
+                                    vertical: AppTheme.elementSpacing * 0.5,
+                                  ),
+                                  text: 'Transaction Volume',
+                                  trailing: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '$amountBtc BTC',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Transaction ID
+                                ArkListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.elementSpacing * 0.75,
+                                    vertical: AppTheme.elementSpacing * 0.5,
+                                  ),
+                                  text: l10n.transactionId,
+                                  onTap: txID != null
+                                      ? () async {
+                                          await Clipboard.setData(
+                                            ClipboardData(text: txID!),
+                                          );
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  l10n.copiedToClipboard,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      : null,
+                                  trailing: Row(
+                                    children: [
+                                      if (txID != null)
+                                        Icon(
+                                          Icons.copy,
+                                          color: AppTheme.white60,
+                                          size: AppTheme.cardPadding * 0.75,
+                                        ),
+                                      const SizedBox(
+                                        width: AppTheme.elementSpacing / 2,
+                                      ),
+                                      SizedBox(
+                                        width: AppTheme.cardPadding * 5,
+                                        child: Text(
+                                          txID ?? '--',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Transaction Type (if available)
+                                if (widget.transactionType != null)
+                                  ArkListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: AppTheme.elementSpacing * 0.75,
+                                      vertical: AppTheme.elementSpacing * 0.5,
+                                    ),
+                                    text: 'Type',
+                                    trailing: Row(
+                                      children: [
+                                        Text(
+                                          widget.transactionType!,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                // Status - show as pending/unknown for ARK transactions
+                                ArkListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.elementSpacing * 0.75,
+                                    vertical: AppTheme.elementSpacing * 0.5,
+                                  ),
+                                  text: l10n.status,
+                                  trailing: Row(
+                                    children: [
+                                      const BlinkingDot(
+                                        color: AppTheme.colorBitcoin,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        l10n.pending,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium!
+                                            .copyWith(
+                                              color: AppTheme.colorBitcoin,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Payment Network
+                                ArkListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.elementSpacing * 0.75,
+                                    vertical: AppTheme.elementSpacing * 0.5,
+                                  ),
+                                  text: l10n.network,
+                                  trailing: Row(
+                                    children: [
+                                      Image.asset(
+                                        "assets/images/bitcoin.png",
+                                        width: AppTheme.cardPadding * 1,
+                                        height: AppTheme.cardPadding * 1,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return const Icon(
+                                            Icons.currency_bitcoin,
+                                            color: AppTheme.colorBitcoin,
+                                          );
+                                        },
+                                      ),
+                                      const SizedBox(
+                                        width: AppTheme.elementSpacing / 2,
+                                      ),
+                                      Text(
+                                        widget.transactionType ?? 'ARK',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Time (if available)
+                                if (widget.createdAt != null)
+                                  ArkListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: AppTheme.elementSpacing * 0.75,
+                                      vertical: AppTheme.elementSpacing * 0.5,
+                                    ),
+                                    text: 'Time',
+                                    leading: Icon(
+                                      Icons.access_time,
+                                      size: AppTheme.cardPadding * 0.75,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? AppTheme.white60
+                                          : AppTheme.black60,
+                                    ),
+                                    trailing: SizedBox(
+                                      width: AppTheme.cardPadding * 7,
+                                      child: Text(
+                                        formattedDate,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 2,
+                                        textAlign: TextAlign.end,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

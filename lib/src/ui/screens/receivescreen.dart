@@ -39,7 +39,7 @@ class ReceiveScreen extends StatefulWidget {
 }
 
 class _ReceiveScreenState extends State<ReceiveScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   // Address data
   String _bip21Address = "";
   String _btcAddress = "";
@@ -76,6 +76,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _currentAmount = widget.amount >= 0 ? widget.amount : 0;
 
@@ -99,6 +100,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _invoiceTimer?.cancel();
     _animationController.dispose();
     _btcController.dispose();
@@ -106,6 +108,32 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     _currController.dispose();
     _amountFocusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // App came back to foreground - restart payment monitoring after a small delay
+      // to allow old connections to properly terminate
+      logger.i("App resumed, will restart payment monitoring");
+      _restartPaymentMonitoring();
+    }
+  }
+
+  Future<void> _restartPaymentMonitoring() async {
+    // Only restart if we have addresses to monitor
+    if (_arkAddress.isNotEmpty || _boltzSwapId != null) {
+      // Small delay to let old connections terminate
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (!mounted) return;
+
+      setState(() {
+        _waitingForPayment = false;
+      });
+      _startPaymentMonitoring();
+    }
   }
 
   void _startInvoiceTimer() {
@@ -254,8 +282,21 @@ class _ReceiveScreenState extends State<ReceiveScreen>
         _waitingForPayment = false;
       });
 
-      if (!e.toString().contains('timeout') &&
-          !e.toString().contains('Timeout')) {
+      final errorStr = e.toString().toLowerCase();
+
+      // Don't show snackbar for expected errors:
+      // - Timeouts (expected when waiting)
+      // - Connection errors (expected when app goes to background)
+      final isExpectedError = errorStr.contains('timeout') ||
+          errorStr.contains('transport error') ||
+          errorStr.contains('connectionaborted') ||
+          errorStr.contains('connection aborted') ||
+          errorStr.contains('stream ended') ||
+          errorStr.contains('h2 protocol error') ||
+          errorStr.contains('canceled') ||
+          errorStr.contains('cancelled');
+
+      if (!isExpectedError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!
@@ -697,9 +738,10 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
   Widget _buildQrCode(bool isLight) {
     final qrData = _getCurrentQrData();
+    final isLoading = qrData.isEmpty;
 
     return GestureDetector(
-      onTap: _copyAddress,
+      onTap: isLoading ? null : _copyAddress,
       child: Center(
         child: Column(
           children: [
@@ -714,21 +756,39 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(AppTheme.cardPadding / 1.25),
-                  child: qrData.isNotEmpty
-                      ? PrettyQrView.data(
-                          data: qrData,
-                          decoration: PrettyQrDecoration(
-                            shape: const PrettyQrSmoothSymbol(roundFactor: 1),
-                            image: PrettyQrDecorationImage(
-                              image: _getQrCenterImage(),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      PrettyQrView.data(
+                        data: isLoading ? "loading..." : qrData,
+                        decoration: PrettyQrDecoration(
+                          shape: const PrettyQrSmoothSymbol(roundFactor: 1),
+                          image: isLoading
+                              ? null
+                              : PrettyQrDecorationImage(
+                                  image: _getQrCenterImage(),
+                                ),
+                        ),
+                        errorCorrectLevel: QrErrorCorrectLevel.H,
+                      ),
+                      if (isLoading)
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: AppTheme.colorBitcoin,
                             ),
                           ),
-                          errorCorrectLevel: QrErrorCorrectLevel.H,
-                        )
-                      : const SizedBox(
-                          width: 200,
-                          height: 200,
                         ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -737,7 +797,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
               customWidth: AppTheme.cardPadding * 5,
               title: AppLocalizations.of(context)!.share,
               leadingIcon: const Icon(Icons.share_rounded),
-              onTap: _shareAddress,
+              onTap: isLoading ? null : _shareAddress,
               buttonType: ButtonType.transparent,
             ),
           ],

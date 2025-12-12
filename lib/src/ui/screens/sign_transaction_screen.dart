@@ -24,19 +24,38 @@ class SignTransactionScreen extends StatefulWidget {
 class SignTransactionScreenState extends State<SignTransactionScreen> {
   bool _isLoading = false;
 
+  /// Check if the address is a Lightning invoice (BOLT11 format)
+  bool _isLightningInvoice(String address) {
+    final lower = address.toLowerCase().trim();
+    // BOLT11 invoices start with 'ln' followed by network prefix
+    // lnbc = mainnet, lntb = testnet, lnbcrt = regtest
+    return lower.startsWith('lnbc') ||
+        lower.startsWith('lntb') ||
+        lower.startsWith('lnbcrt');
+  }
+
   void _handleSign() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Simulate transaction signing
-      logger.i(
-          "Signing transaction to ${widget.address} for ${widget.amount} SATS");
-      await send(
-          address: widget.address, amountSats: BigInt.from(widget.amount));
+      final isLightning = _isLightningInvoice(widget.address);
 
-      // Navigate to success screen after simulated signing
+      if (isLightning) {
+        // Pay Lightning invoice via submarine swap
+        logger.i("Paying Lightning invoice: ${widget.address.substring(0, 20)}...");
+        final result = await payLnInvoice(invoice: widget.address);
+        logger.i("Lightning payment successful! TXID: ${result.txid}");
+      } else {
+        // Regular Ark/Bitcoin send
+        logger.i(
+            "Signing transaction to ${widget.address} for ${widget.amount} SATS");
+        await send(
+            address: widget.address, amountSats: BigInt.from(widget.amount));
+      }
+
+      // Navigate to success screen after signing
       if (mounted) {
         Navigator.pushReplacement(
           context,

@@ -117,10 +117,17 @@ class SendScreenState extends State<SendScreen>
   }
 
   bool _isValidAddress(String address) {
-    // Basic validation for Bitcoin/Ark addresses
-    // Bitcoin addresses start with 1, 3, bc1
-    // Ark addresses - add validation as needed
+    // Basic validation for Bitcoin/Ark/Lightning addresses
     if (address.isEmpty) return false;
+
+    final lower = address.toLowerCase().trim();
+
+    // Lightning invoices (BOLT11) - lnbc (mainnet), lntb (testnet), lnbcrt (regtest)
+    if (lower.startsWith('lnbc') ||
+        lower.startsWith('lntb') ||
+        lower.startsWith('lnbcrt')) {
+      return address.length >= 50; // BOLT11 invoices are typically very long
+    }
 
     // Bitcoin mainnet
     if (address.startsWith('1') ||
@@ -140,6 +147,14 @@ class SendScreenState extends State<SendScreen>
     // Ark addresses - add specific validation
     // For now, accept any reasonable length string
     return address.length >= 10;
+  }
+
+  /// Check if the address is a Lightning invoice
+  bool _isLightningInvoice(String address) {
+    final lower = address.toLowerCase().trim();
+    return lower.startsWith('lnbc') ||
+        lower.startsWith('lntb') ||
+        lower.startsWith('lnbcrt');
   }
 
   void _toggleAddressExpanded() {
@@ -176,11 +191,20 @@ class SendScreenState extends State<SendScreen>
     int? amount;
     String? description;
 
+    // Handle Lightning URI (lightning:lnbc...)
+    if (data.toLowerCase().startsWith('lightning:')) {
+      address = data.substring(10); // Remove "lightning:" prefix
+    }
     // Parse BIP21 URI if applicable
-    if (data.toLowerCase().startsWith('bitcoin:')) {
+    else if (data.toLowerCase().startsWith('bitcoin:')) {
       final uri = Uri.tryParse(data);
       if (uri != null) {
         address = uri.path;
+
+        // Check for Lightning invoice in query params
+        if (uri.queryParameters.containsKey('lightning')) {
+          address = uri.queryParameters['lightning']!;
+        }
 
         // Parse query parameters
         if (uri.queryParameters.containsKey('amount')) {
@@ -423,7 +447,11 @@ class SendScreenState extends State<SendScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _hasValidAddress ? l10n.recipient : l10n.unknown,
+                        _hasValidAddress
+                            ? (_isLightningInvoice(_addressController.text)
+                                ? 'Lightning'
+                                : l10n.recipient)
+                            : l10n.unknown,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                               color: Theme.of(context).colorScheme.onSurface,
                             ),

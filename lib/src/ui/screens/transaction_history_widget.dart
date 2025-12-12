@@ -417,11 +417,22 @@ class _TransactionItem extends StatelessWidget {
     required this.showBtcAsMain,
   });
 
-  void _navigateToTransactionDetail(BuildContext context, String txid) {
+  void _navigateToTransactionDetail(
+    BuildContext context,
+    String txid, {
+    int? amountSats,
+    int? createdAt,
+    String? transactionType,
+  }) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SingleTransactionScreen(txid: txid),
+        builder: (context) => SingleTransactionScreen(
+          txid: txid,
+          amountSats: amountSats,
+          createdAt: createdAt,
+          transactionType: transactionType,
+        ),
       ),
     );
   }
@@ -501,7 +512,13 @@ class _TransactionItem extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _navigateToTransactionDetail(context, txid),
+          onTap: () => _navigateToTransactionDetail(
+            context,
+            txid,
+            amountSats: amountSats,
+            createdAt: createdAt,
+            transactionType: transactionType,
+          ),
           child: Container(
             padding: const EdgeInsets.symmetric(
               vertical: AppTheme.elementSpacing,

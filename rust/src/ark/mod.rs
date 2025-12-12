@@ -9,7 +9,7 @@ use crate::ark::seed_file::{read_seed_file, reset_wallet, write_seed_file};
 use crate::ark::storage::InMemoryDb;
 use crate::state::ARK_CLIENT;
 use anyhow::{Result, anyhow, bail};
-use ark_client::{OfflineClient, SqliteSwapStorage};
+use ark_client::{OfflineClient, SqliteSwapStorage, StaticKeyProvider};
 use bitcoin::Network;
 use bitcoin::key::{Keypair, Secp256k1};
 use bitcoin::secp256k1::{All, SecretKey};
@@ -147,9 +147,12 @@ pub async fn setup_client(
         .await
         .map_err(|e| anyhow!(e))?;
 
+    // Create a static key provider from the keypair
+    let key_provider = Arc::new(StaticKeyProvider::new(kp));
+
     let client = OfflineClient::new(
         "sample-client".to_string(),
-        kp,
+        key_provider,
         Arc::new(esplora),
         wallet,
         server.clone(),

@@ -1,5 +1,6 @@
 use ark_client::error::IntoError;
-use ark_client::{Blockchain, Error, ExplorerUtxo, SpendStatus};
+use ark_client::{Blockchain, Error, SpendStatus};
+use ark_core::ExplorerUtxo;
 use bitcoin::OutPoint;
 use bitcoin::{Address, Amount, Transaction, Txid};
 

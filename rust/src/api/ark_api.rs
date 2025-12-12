@@ -55,7 +55,7 @@ pub async fn balance() -> Result<Balance> {
     let balance = crate::ark::client::balance().await?;
     Ok(Balance {
         offchain: OffchainBalance {
-            pending_sats: balance.offchain.pending().to_sat(),
+            pending_sats: balance.offchain.pre_confirmed().to_sat(),
             confirmed_sats: balance.offchain.confirmed().to_sat(),
             total_sats: balance.offchain.total().to_sat(),
         },
@@ -175,6 +175,23 @@ pub async fn send(address: String, amount_sats: u64) -> Result<String> {
     Ok(txid.to_string())
 }
 
+/// Result of paying a Lightning invoice
+pub struct LnPaymentResult {
+    pub swap_id: String,
+    pub txid: String,
+    pub amount_sats: u64,
+}
+
+/// Pay a BOLT11 Lightning invoice using Ark funds via Boltz submarine swap
+pub async fn pay_ln_invoice(invoice: String) -> Result<LnPaymentResult> {
+    let result = crate::ark::client::pay_ln_invoice(invoice).await?;
+    Ok(LnPaymentResult {
+        swap_id: result.swap_id,
+        txid: result.txid.to_string(),
+        amount_sats: result.amount.to_sat(),
+    })
+}
+
 pub async fn settle() -> Result<()> {
     crate::ark::client::settle().await?;
     Ok(())
@@ -232,8 +249,17 @@ pub async fn wait_for_payment(
     )
     .await?;
 
+    let txid_str = payment.txid.to_string();
+    let amount_sats = payment.amount.to_sat();
+
+    tracing::info!(
+        "API: Payment received - TXID: {}, Amount: {} sats",
+        txid_str,
+        amount_sats
+    );
+
     Ok(PaymentReceived {
-        txid: payment.txid.to_string(),
-        amount_sats: payment.amount.to_sat(),
+        txid: txid_str,
+        amount_sats,
     })
 }

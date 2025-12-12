@@ -59,7 +59,7 @@ pub async fn get_hashrate_data(period: String) -> Result<models::mempool::Hashra
 
 /// Get detailed transaction information by transaction ID
 pub async fn get_transaction(txid: String) -> Result<models::mempool::BitcoinTransaction> {
-    mempool_api::get_transaction(&txid).await
+    mempool_api::get_transaction(&txid, "https://mempool.space").await
 }
 
 /// Subscribe to real-time mempool updates via WebSocket

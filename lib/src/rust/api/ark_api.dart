@@ -66,6 +66,10 @@ Future<String> send({required String address, required BigInt amountSats}) =>
     RustLib.instance.api
         .crateApiArkApiSend(address: address, amountSats: amountSats);
 
+/// Pay a BOLT11 Lightning invoice using Ark funds via Boltz submarine swap
+Future<LnPaymentResult> payLnInvoice({required String invoice}) =>
+    RustLib.instance.api.crateApiArkApiPayLnInvoice(invoice: invoice);
+
 Future<void> settle() => RustLib.instance.api.crateApiArkApiSettle();
 
 Future<String> nsec({required String dataDir}) =>
@@ -179,6 +183,31 @@ class Info {
           runtimeType == other.runtimeType &&
           serverPk == other.serverPk &&
           network == other.network;
+}
+
+/// Result of paying a Lightning invoice
+class LnPaymentResult {
+  final String swapId;
+  final String txid;
+  final BigInt amountSats;
+
+  const LnPaymentResult({
+    required this.swapId,
+    required this.txid,
+    required this.amountSats,
+  });
+
+  @override
+  int get hashCode => swapId.hashCode ^ txid.hashCode ^ amountSats.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LnPaymentResult &&
+          runtimeType == other.runtimeType &&
+          swapId == other.swapId &&
+          txid == other.txid &&
+          amountSats == other.amountSats;
 }
 
 class OffchainBalance {

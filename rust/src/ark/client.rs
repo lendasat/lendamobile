@@ -5,7 +5,8 @@ use crate::state::ARK_CLIENT;
 use anyhow::Result;
 use anyhow::{anyhow, bail};
 use ark_bdk_wallet::Wallet;
-use ark_client::{Client, OffChainBalance, SqliteSwapStorage};
+use ark_client::lightning_invoice::Bolt11Invoice;
+use ark_client::{Client, OffChainBalance, SqliteSwapStorage, StaticKeyProvider, SwapAmount};
 use ark_core::ArkAddress;
 use ark_core::history::Transaction;
 use ark_core::server::{Info, SubscriptionResponse};
@@ -16,6 +17,9 @@ use rand::rngs::StdRng;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
+
+/// Type alias for our configured Ark client
+type ArkClient = Client<EsploraClient, Wallet<InMemoryDb>, SqliteSwapStorage, StaticKeyProvider>;
 
 pub struct Balance {
     pub offchain: OffChainBalance,
@@ -91,7 +95,7 @@ pub async fn address(amount: Option<Amount>) -> Result<Addresses> {
             let reverse_swap_result = match amount {
                 None => None,
                 Some(amount) => {
-                    match client.get_ln_invoice(amount, Some(300)).await {
+                    match client.get_ln_invoice(SwapAmount::Invoice(amount), Some(300)).await {
                         Ok(swap) => Some(swap),
                         Err(e) => {
                             tracing::warn!("Failed to create Lightning invoice (Boltz may be unavailable): {e:#}");
@@ -184,7 +188,7 @@ pub async fn send(address: String, amount: Amount) -> Result<Txid> {
                 let address = Address::from_str(address.as_str())?;
                 let rng = &mut StdRng::from_entropy();
                 let txid = client
-                    .collaborative_redeem(rng, address.assume_checked(), amount, true)
+                    .collaborative_redeem(rng, address.assume_checked(), amount)
                     .await
                     .map_err(|e| anyhow!("Failed sending onchain {e:#}"))?;
                 Ok(txid)
@@ -209,13 +213,65 @@ pub async fn settle() -> Result<()> {
             };
             let mut rng = StdRng::from_entropy();
             client
-                .settle(&mut rng, false)
+                .settle(&mut rng)
                 .await
                 .map_err(|e| anyhow!("Failed settling {e:#}"))?;
         }
     }
 
     Ok(())
+}
+
+/// Result of paying a Lightning invoice via submarine swap
+pub struct LnPaymentResult {
+    pub swap_id: String,
+    pub txid: Txid,
+    pub amount: Amount,
+}
+
+/// Pay a Lightning invoice using Ark funds via Boltz submarine swap
+pub async fn pay_ln_invoice(invoice: String) -> Result<LnPaymentResult> {
+    let maybe_client = ARK_CLIENT.try_get();
+
+    match maybe_client {
+        None => {
+            bail!("Ark client not initialized");
+        }
+        Some(client) => {
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+
+            // Parse the BOLT11 invoice
+            let bolt11: Bolt11Invoice = invoice
+                .parse()
+                .map_err(|e| anyhow!("Invalid BOLT11 invoice: {e}"))?;
+
+            tracing::info!(
+                "Paying Lightning invoice for {} msats",
+                bolt11.amount_milli_satoshis().unwrap_or(0)
+            );
+
+            // Pay the invoice via submarine swap
+            let result = client
+                .pay_ln_invoice(bolt11)
+                .await
+                .map_err(|e| anyhow!("Failed to pay Lightning invoice: {e:#}"))?;
+
+            tracing::info!(
+                "Lightning payment successful! Swap ID: {}, TXID: {}",
+                result.swap_id,
+                result.txid
+            );
+
+            Ok(LnPaymentResult {
+                swap_id: result.swap_id,
+                txid: result.txid,
+                amount: result.amount,
+            })
+        }
+    }
 }
 
 pub(crate) async fn wait_for_payment(
@@ -269,7 +325,7 @@ pub(crate) async fn wait_for_payment(
 }
 
 async fn monitor_ark_address(
-    client: &Arc<Client<EsploraClient, Wallet<InMemoryDb>, SqliteSwapStorage>>,
+    client: &Arc<ArkClient>,
     address: ArkAddress,
 ) -> Result<PaymentReceived> {
     tracing::info!("Subscribing to ark address: {}", address.encode());
@@ -338,25 +394,25 @@ async fn monitor_ark_address(
 }
 
 async fn monitor_lightning_payment(
-    client: &Arc<Client<EsploraClient, Wallet<InMemoryDb>, SqliteSwapStorage>>,
+    client: &Arc<ArkClient>,
     swap_id: String,
 ) -> Result<PaymentReceived> {
     tracing::info!("Waiting for lightning invoice payment: {}", swap_id);
 
-    client
+    let claim_result = client
         .wait_for_vhtlc(swap_id.as_str())
         .await
         .map_err(|e| anyhow!("Failed waiting for invoice payment: {e}"))?;
 
-    tracing::info!("Lightning invoice paid!");
+    tracing::info!(
+        "Lightning invoice paid and claimed! TXID: {}, Amount: {}",
+        claim_result.claim_txid,
+        claim_result.claim_amount
+    );
 
-    // TODO: Get actual txid and amount from the payment
-    // For now, return placeholder values - this needs to be updated when the API provides this info
     Ok(PaymentReceived {
-        // TODO: this is of course not a valid txid
-        txid: Txid::from_str("0000000000000000000000000000000000000000000000000000000000000000")
-            .unwrap(),
-        amount: Amount::ZERO,
+        txid: claim_result.claim_txid,
+        amount: claim_result.claim_amount,
     })
 }
 

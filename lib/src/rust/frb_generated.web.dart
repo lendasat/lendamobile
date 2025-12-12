@@ -222,6 +222,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<TxOutput> dco_decode_list_tx_output(dynamic raw);
 
   @protected
+  LnPaymentResult dco_decode_ln_payment_result(dynamic raw);
+
+  @protected
   LogEntry dco_decode_log_entry(dynamic raw);
 
   @protected
@@ -555,6 +558,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<TxOutput> sse_decode_list_tx_output(SseDeserializer deserializer);
+
+  @protected
+  LnPaymentResult sse_decode_ln_payment_result(SseDeserializer deserializer);
 
   @protected
   LogEntry sse_decode_log_entry(SseDeserializer deserializer);
@@ -914,6 +920,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_tx_output(List<TxOutput> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ln_payment_result(
+      LnPaymentResult self, SseSerializer serializer);
 
   @protected
   void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
