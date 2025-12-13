@@ -1,6 +1,7 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/lnurl_service.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_success_screen.dart';
@@ -9,12 +10,14 @@ class SignTransactionScreen extends StatefulWidget {
   final String aspId;
   final String address;
   final double amount;
+  final String? lnurlCallback; // Optional LNURL callback for getting invoice
 
   const SignTransactionScreen({
     super.key,
     required this.aspId,
     required this.address,
     required this.amount,
+    this.lnurlCallback,
   });
 
   @override
@@ -40,9 +43,32 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
     });
 
     try {
+      String? invoiceToPaymentRequest;
+
+      // If we have an LNURL callback, fetch the invoice first
+      if (widget.lnurlCallback != null) {
+        logger.i("Fetching invoice from LNURL callback...");
+        final invoiceResult = await LnurlService.requestInvoice(
+          widget.lnurlCallback!,
+          widget.amount.round(),
+        );
+
+        if (invoiceResult == null) {
+          throw Exception("Failed to get invoice from LNURL service");
+        }
+
+        invoiceToPaymentRequest = invoiceResult.pr;
+        logger.i("Got invoice from LNURL: ${invoiceToPaymentRequest.substring(0, 30)}...");
+      }
+
       final isLightning = _isLightningInvoice(widget.address);
 
-      if (isLightning) {
+      if (invoiceToPaymentRequest != null) {
+        // Pay the LNURL-generated invoice via submarine swap
+        logger.i("Paying LNURL invoice via submarine swap...");
+        final result = await payLnInvoice(invoice: invoiceToPaymentRequest);
+        logger.i("LNURL payment successful! TXID: ${result.txid}");
+      } else if (isLightning) {
         // Pay Lightning invoice via submarine swap
         logger.i("Paying Lightning invoice: ${widget.address.substring(0, 20)}...");
         final result = await payLnInvoice(invoice: widget.address);

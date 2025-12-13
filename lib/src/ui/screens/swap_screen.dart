@@ -103,9 +103,9 @@ class _SwapScreenState extends State<SwapScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: AppTheme.cardPadding * 3.5),
+                const SizedBox(height: AppTheme.cardPadding * 2),
                 SizedBox(
-                  height: AppTheme.cardPadding * (6.5 * 2 + 1),
+                  height: AppTheme.cardPadding * (6.5 * 2 + 0.5),
                   child: Stack(
                     children: [
                       Column(
@@ -140,7 +140,7 @@ class _SwapScreenState extends State<SwapScreen> {
                               },
                             ),
                           ),
-                          Container(height: AppTheme.cardPadding * 1),
+                          Container(height: AppTheme.cardPadding * 0.5),
                           // BOTTOM CARD
                           Container(
                             height: AppTheme.cardPadding * 6.5,

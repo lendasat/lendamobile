@@ -1,3 +1,8 @@
+import 'dart:async';
+
+import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/ui/screens/loans_screen.dart';
 import 'package:ark_flutter/src/ui/screens/swap_screen.dart';
 import 'package:ark_flutter/src/ui/screens/walletscreen.dart';
@@ -16,19 +21,135 @@ class BottomNav extends StatefulWidget {
   State<BottomNav> createState() => _BottomNavState();
 }
 
-class _BottomNavState extends State<BottomNav> {
+class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
   int _selectedIndex = 0;
 
   late final List<Widget> _screens;
 
+  // Global payment monitoring
+  bool _isMonitoringPayments = false;
+  String? _arkAddress;
+  String? _boardingAddress;
+
+  // Key for WalletScreen to trigger refresh
+  final GlobalKey<WalletScreenState> _walletKey = GlobalKey<WalletScreenState>();
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _screens = [
-      WalletScreen(aspId: widget.aspId),
+      WalletScreen(key: _walletKey, aspId: widget.aspId),
       const SwapScreen(),
       const LoansScreen(),
     ];
+
+    // Start global payment monitoring
+    _initPaymentMonitoring();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _isMonitoringPayments = false;
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // Restart payment monitoring when app resumes
+      logger.i("App resumed, restarting global payment monitoring");
+      _restartPaymentMonitoring();
+    } else if (state == AppLifecycleState.paused) {
+      // Stop monitoring when app is paused
+      _isMonitoringPayments = false;
+    }
+  }
+
+  Future<void> _initPaymentMonitoring() async {
+    try {
+      // Get wallet addresses for monitoring
+      final addresses = await address();
+      _arkAddress = addresses.offchain;
+      _boardingAddress = addresses.boarding;
+      logger.i("Initialized global payment monitoring");
+      logger.i("Ark address: $_arkAddress");
+      logger.i("Boarding address: $_boardingAddress");
+
+      _startPaymentMonitoring();
+    } catch (e) {
+      logger.e("Error initializing payment monitoring: $e");
+    }
+  }
+
+  Future<void> _restartPaymentMonitoring() async {
+    if (_arkAddress == null && _boardingAddress == null) {
+      await _initPaymentMonitoring();
+    } else {
+      await Future.delayed(const Duration(milliseconds: 500));
+      _startPaymentMonitoring();
+    }
+  }
+
+  Future<void> _startPaymentMonitoring() async {
+    if (_isMonitoringPayments) return;
+    if (_arkAddress == null && _boardingAddress == null) return;
+
+    _isMonitoringPayments = true;
+
+    while (_isMonitoringPayments && mounted) {
+      try {
+        logger.d("Waiting for payment globally...");
+
+        final payment = await waitForPayment(
+          arkAddress: _arkAddress,
+          boardingAddress: _boardingAddress,
+          timeoutSeconds: BigInt.from(300), // 5 minute timeout
+        );
+
+        if (!mounted) return;
+
+        logger.i(
+            "Global payment received! TXID: ${payment.txid}, Amount: ${payment.amountSats} sats");
+
+        // Show the payment overlay
+        PaymentOverlayService().showPaymentReceivedOverlay(
+          context: context,
+          payment: payment,
+          onDismiss: () {
+            // Refresh wallet data
+            _walletKey.currentState?.fetchWalletData();
+          },
+        );
+
+        // Also refresh wallet immediately
+        _walletKey.currentState?.fetchWalletData();
+
+        // Small delay before restarting monitoring
+        await Future.delayed(const Duration(seconds: 2));
+      } catch (e) {
+        final errorStr = e.toString().toLowerCase();
+
+        // Expected errors - just restart monitoring
+        final isExpectedError = errorStr.contains('timeout') ||
+            errorStr.contains('transport error') ||
+            errorStr.contains('connectionaborted') ||
+            errorStr.contains('connection aborted') ||
+            errorStr.contains('stream ended') ||
+            errorStr.contains('h2 protocol error') ||
+            errorStr.contains('canceled') ||
+            errorStr.contains('cancelled');
+
+        if (!isExpectedError) {
+          logger.e("Error in global payment monitoring: $e");
+        }
+
+        // Small delay before retrying
+        await Future.delayed(const Duration(seconds: 2));
+      }
+    }
   }
 
   void _onItemTapped(int index) {

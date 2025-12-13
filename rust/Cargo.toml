@@ -8,9 +8,9 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 anyhow = "1"
-ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "5177c99" }
-ark-client = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "5177c99", default-features = false, features = ["tls-webpki-roots"] }
-ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "5177c99" }
+ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
+ark-client = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac", default-features = false, features = ["tls-webpki-roots"] }
+ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
 # ark-bdk-wallet = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-bdk-wallet" }
 # ark-client = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-client", default-features = false, features = ["tls-webpki-roots"] }
 # ark-core = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-core" }

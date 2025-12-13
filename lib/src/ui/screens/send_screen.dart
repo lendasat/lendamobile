@@ -3,6 +3,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/lnurl_service.dart';
 import 'package:ark_flutter/src/ui/screens/qr_scanner_screen.dart';
 import 'package:ark_flutter/src/ui/screens/sign_transaction_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
@@ -15,6 +16,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:bolt11_decoder/bolt11_decoder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -53,6 +55,10 @@ class SendScreenState extends State<SendScreen>
   bool _hasValidAddress = false;
   String? _description;
   double? _bitcoinPrice;
+
+  // LNURL state
+  LnurlPayParams? _lnurlParams;
+  bool _isFetchingLnurl = false;
 
   // Animation controller for address field expansion
   late AnimationController _expandController;
@@ -122,9 +128,125 @@ class SendScreenState extends State<SendScreen>
 
   void _onAddressChanged() {
     final text = _addressController.text.trim();
+    final isValid = text.isNotEmpty && _isValidAddress(text);
+
+    // If it looks like a complete invoice/URI with an amount, parse it
+    // Only parse if the amount field is empty to avoid overwriting user input
+    if (isValid && _satController.text.isEmpty) {
+      _tryParseAmountFromAddress(text);
+    }
+
+    // Check if this is an LNURL or Lightning Address and fetch params
+    if (isValid && _isLnurlOrLightningAddress(text)) {
+      _fetchLnurlParams(text);
+    } else if (_lnurlParams != null) {
+      // Clear LNURL params if address changed to something else
+      setState(() {
+        _lnurlParams = null;
+      });
+    }
+
     setState(() {
-      _hasValidAddress = text.isNotEmpty && _isValidAddress(text);
+      _hasValidAddress = isValid;
     });
+  }
+
+  /// Fetch LNURL payment parameters
+  Future<void> _fetchLnurlParams(String address) async {
+    // Avoid duplicate fetches
+    if (_isFetchingLnurl) return;
+
+    setState(() {
+      _isFetchingLnurl = true;
+    });
+
+    try {
+      logger.i("Fetching LNURL params for: $address");
+      final params = await LnurlService.fetchPayParams(address);
+
+      if (!mounted) return;
+
+      if (params != null) {
+        logger.i(
+            "LNURL params: min=${params.minSats} sats, max=${params.maxSats} sats");
+
+        setState(() {
+          _lnurlParams = params;
+          _isFetchingLnurl = false;
+          // Set default amount to minimum if no amount entered
+          if (_satController.text.isEmpty || _satController.text == '0') {
+            _satController.text = params.minSats.toString();
+            _btcController.text =
+                (params.minSats / 100000000).toStringAsFixed(8);
+          }
+          // Set description from LNURL metadata if available
+          if (params.description != null && _description == null) {
+            _description = params.description;
+          }
+        });
+      } else {
+        logger.w("Failed to fetch LNURL parameters");
+        setState(() {
+          _isFetchingLnurl = false;
+        });
+      }
+    } catch (e) {
+      logger.e("Error fetching LNURL params: $e");
+      if (mounted) {
+        setState(() {
+          _isFetchingLnurl = false;
+        });
+      }
+    }
+  }
+
+  /// Try to extract amount from pasted Lightning invoice or BIP21 URI
+  void _tryParseAmountFromAddress(String text) {
+    int? amount;
+    String address = text;
+
+    // Handle Lightning URI (lightning:lnbc...)
+    if (text.toLowerCase().startsWith('lightning:')) {
+      address = text.substring(10);
+    }
+    // Parse BIP21 URI for amount
+    else if (text.toLowerCase().startsWith('bitcoin:')) {
+      final uri = Uri.tryParse(text);
+      if (uri != null) {
+        // Check for Lightning invoice in query params
+        if (uri.queryParameters.containsKey('lightning')) {
+          address = uri.queryParameters['lightning']!;
+        }
+        // Parse amount from query parameters
+        if (uri.queryParameters.containsKey('amount')) {
+          final btcAmount =
+              double.tryParse(uri.queryParameters['amount'] ?? '');
+          if (btcAmount != null) {
+            amount = (btcAmount * 100000000).round();
+          }
+        }
+      }
+    }
+
+    // Parse Lightning invoice amount if it's a BOLT11 invoice
+    if (_isLightningInvoice(address) && amount == null) {
+      try {
+        final invoice = Bolt11PaymentRequest(address);
+        final btcAmount = invoice.amount.toDouble();
+        if (btcAmount > 0) {
+          amount = (btcAmount * 100000000).round();
+          logger.i("Extracted amount from pasted invoice: $amount sats");
+        }
+      } catch (e) {
+        // Ignore parse errors for incomplete invoices
+      }
+    }
+
+    // Update amount fields if we extracted an amount
+    if (amount != null && amount > 0) {
+      _satController.text = amount.toString();
+      _btcController.text = (amount / 100000000).toStringAsFixed(8);
+    }
   }
 
   bool _isValidAddress(String address) {
@@ -138,6 +260,16 @@ class SendScreenState extends State<SendScreen>
         lower.startsWith('lntb') ||
         lower.startsWith('lnbcrt')) {
       return address.length >= 50; // BOLT11 invoices are typically very long
+    }
+
+    // LNURL (bech32 encoded URL)
+    if (LnurlService.isLnurl(address)) {
+      return address.length >= 20;
+    }
+
+    // Lightning Address (user@domain.com format)
+    if (LnurlService.isLightningAddress(address)) {
+      return true;
     }
 
     // Bitcoin mainnet
@@ -160,12 +292,18 @@ class SendScreenState extends State<SendScreen>
     return address.length >= 10;
   }
 
-  /// Check if the address is a Lightning invoice
+  /// Check if the address is a Lightning invoice (BOLT11)
   bool _isLightningInvoice(String address) {
     final lower = address.toLowerCase().trim();
     return lower.startsWith('lnbc') ||
         lower.startsWith('lntb') ||
         lower.startsWith('lnbcrt');
+  }
+
+  /// Check if the address is an LNURL or Lightning Address
+  bool _isLnurlOrLightningAddress(String address) {
+    return LnurlService.isLnurl(address) ||
+        LnurlService.isLightningAddress(address);
   }
 
   void _toggleAddressExpanded() {
@@ -234,12 +372,31 @@ class SendScreenState extends State<SendScreen>
       }
     }
 
+    // Parse Lightning invoice amount if it's a BOLT11 invoice
+    if (_isLightningInvoice(address) && amount == null) {
+      try {
+        final invoice = Bolt11PaymentRequest(address);
+        // Amount is in BTC, convert to sats
+        final btcAmount = invoice.amount.toDouble();
+        if (btcAmount > 0) {
+          amount = (btcAmount * 100000000).round();
+          logger.i("Extracted amount from Lightning invoice: $amount sats");
+        }
+        // Try to get description from invoice tags
+        if (invoice.tags.length > 1) {
+          description ??= invoice.tags[1].data.toString();
+        }
+      } catch (e) {
+        logger.w("Failed to parse Lightning invoice: $e");
+      }
+    }
+
     setState(() {
       _addressController.text = address;
       _hasValidAddress = _isValidAddress(address);
       if (amount != null && amount > 0) {
         _satController.text = amount.toString();
-        _btcController.text = (amount / 100000000).toString();
+        _btcController.text = (amount / 100000000).toStringAsFixed(8);
       }
       if (description != null) {
         _description = description;
@@ -271,6 +428,19 @@ class SendScreenState extends State<SendScreen>
       return;
     }
 
+    // Validate LNURL amount bounds if applicable
+    if (_lnurlParams != null) {
+      final amountSats = amount.round();
+      if (amountSats < _lnurlParams!.minSats) {
+        _showSnackBar("Minimum amount is ${_lnurlParams!.minSats} sats");
+        return;
+      }
+      if (amountSats > _lnurlParams!.maxSats) {
+        _showSnackBar("Maximum amount is ${_lnurlParams!.maxSats} sats");
+        return;
+      }
+    }
+
     // Navigate to sign transaction screen
     Navigator.push(
       context,
@@ -279,6 +449,7 @@ class SendScreenState extends State<SendScreen>
           aspId: widget.aspId,
           address: _addressController.text,
           amount: amount,
+          lnurlCallback: _lnurlParams?.callback,
         ),
       ),
     );

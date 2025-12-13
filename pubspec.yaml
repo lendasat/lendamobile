@@ -58,6 +58,9 @@ dependencies:
   provider: ^6.1.2
   timezone: ^0.9.4
   flex_color_picker: ^3.5.1
+  bolt11_decoder: ^1.0.2
+  bech32: ^0.2.2
+  http: ^1.2.0
   mobile_scanner: ^7.0.1
   image_picker: ^1.1.2
   google_fonts: ^6.2.1

@@ -76,7 +76,7 @@ class WalletScreenState extends State<WalletScreen> {
   void initState() {
     super.initState();
     logger.i("WalletScreen initialized with ASP ID: ${widget.aspId}");
-    _fetchWalletData();
+    fetchWalletData();
     _loadBitcoinPriceData();
 
     // Fetch exchange rates
@@ -144,7 +144,9 @@ class WalletScreenState extends State<WalletScreen> {
     return diff >= 0 || diff.abs() < 0.001;
   }
 
-  Future<void> _fetchWalletData() async {
+  /// Fetches all wallet data (balance and transactions)
+  /// This is public so it can be called from parent widgets (e.g., after payment received)
+  Future<void> fetchWalletData() async {
     await Future.wait([
       _fetchBalance(),
       _fetchTransactions(),
@@ -248,7 +250,7 @@ class WalletScreenState extends State<WalletScreen> {
         action: SnackBarAction(
           label: AppLocalizations.of(context)!.retry,
           textColor: Colors.white,
-          onPressed: _fetchWalletData,
+          onPressed: fetchWalletData,
         ),
       ),
     );
@@ -298,7 +300,7 @@ class WalletScreenState extends State<WalletScreen> {
     );
     // Refresh wallet data when returning
     logger.i("Returned from receive flow, refreshing wallet data");
-    _fetchWalletData();
+    fetchWalletData();
   }
 
   void _handleBuy() {
@@ -373,7 +375,7 @@ class WalletScreenState extends State<WalletScreen> {
     return ArkScaffold(
       context: context,
       body: RefreshIndicator(
-        onRefresh: _fetchWalletData,
+        onRefresh: fetchWalletData,
         child: CustomScrollView(
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
@@ -745,7 +747,7 @@ class WalletScreenState extends State<WalletScreen> {
             defaultUnit: BitcoinUnits.SAT,
             currency: Currency(
               code: 'BTC',
-              name: 'Bitcoin (Onchain)',
+              name: 'Bitcoin',
               icon: Image.asset("assets/images/bitcoin.png"),
             ),
             context: context,

@@ -4,6 +4,7 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
+import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
@@ -273,7 +274,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       logger.i(
           "Payment received! TXID: ${payment.txid}, Amount: ${payment.amountSats} sats");
 
-      _showPaymentReceivedDialog(payment);
+      _showPaymentReceivedOverlay(payment);
     } catch (e) {
       logger.e("Error waiting for payment: $e");
       if (!mounted) return;
@@ -308,51 +309,14 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     }
   }
 
-  void _showPaymentReceivedDialog(PaymentReceived payment) {
-    showDialog(
+  void _showPaymentReceivedOverlay(PaymentReceived payment) {
+    PaymentOverlayService().showPaymentReceivedOverlay(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext ctx) {
-        return AlertDialog(
-          backgroundColor: Theme.of(ctx).colorScheme.surface,
-          title: Row(
-            children: [
-              const Icon(Icons.check_circle,
-                  color: AppTheme.successColor, size: 32),
-              const SizedBox(width: 12),
-              Text(AppLocalizations.of(ctx)!.paymentReceived,
-                  style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface)),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${AppLocalizations.of(ctx)!.amount}: ${payment.amountSats} sats',
-                style: TextStyle(
-                    color: Theme.of(ctx).colorScheme.onSurface,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'TXID: ${payment.txid}',
-                style: TextStyle(color: Theme.of(ctx).hintColor, fontSize: 12),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                Navigator.of(ctx).popUntil((route) => route.isFirst);
-              },
-              child: Text(AppLocalizations.of(ctx)!.ok,
-                  style: const TextStyle(color: AppTheme.colorBitcoin)),
-            ),
-          ],
-        );
+      payment: payment,
+      onDismiss: () {
+        if (mounted) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
       },
     );
   }
