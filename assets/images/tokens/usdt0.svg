@@ -1,0 +1,15 @@
+<svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 976 976"
+        width="100%"
+        height="100%"
+        fill="none"
+        role="img"
+        aria-label="USDT"
+>
+    <circle cx="488" cy="488.3" r="488" fill="#00b988"/>
+    <path
+            fill="#fff"
+            d="M238.5 233.3h499v110.9h-194V455h-111V344h-194zM432.6 455V677h-111V455zM543.5 676.9h110.9V455h-111zH432.7v110.9h110.9z"
+    />
+</svg>
