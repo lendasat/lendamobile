@@ -1,5 +1,6 @@
 pub mod api;
 pub mod ark;
+pub mod lendaswap;
 pub mod logger;
 pub mod models;
 mod state;

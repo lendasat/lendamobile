@@ -6,6 +6,7 @@
 import 'api.dart';
 import 'api/ark_api.dart';
 import 'api/bitcoin_api.dart';
+import 'api/lendaswap_api.dart';
 import 'api/mempool_api.dart';
 import 'api/mempool_block_tracker.dart';
 import 'api/mempool_ws.dart';
@@ -14,6 +15,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'frb_generated.dart';
+import 'lendaswap.dart';
 import 'logger.dart';
 import 'models/exchange_rates.dart';
 import 'models/historical_prices.dart';
@@ -51,6 +53,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Addresses dco_decode_addresses(dynamic raw);
+
+  @protected
+  AssetInfo dco_decode_asset_info(dynamic raw);
 
   @protected
   Balance dco_decode_balance(dynamic raw);
@@ -121,6 +126,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_box_autoadd_u_64(dynamic raw);
 
   @protected
+  BtcToEvmSwapResult dco_decode_btc_to_evm_swap_result(dynamic raw);
+
+  @protected
   Conversions dco_decode_conversions(dynamic raw);
 
   @protected
@@ -131,6 +139,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DifficultyPoint dco_decode_difficulty_point(dynamic raw);
+
+  @protected
+  EvmToBtcSwapResult dco_decode_evm_to_btc_swap_result(dynamic raw);
 
   @protected
   ExchangeRates dco_decode_exchange_rates(dynamic raw);
@@ -209,6 +220,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<(String, double)> dco_decode_list_record_string_f_64(dynamic raw);
+
+  @protected
+  List<SwapInfo> dco_decode_list_swap_info(dynamic raw);
+
+  @protected
+  List<TradingPair> dco_decode_list_trading_pair(dynamic raw);
 
   @protected
   List<Transaction> dco_decode_list_transaction(dynamic raw);
@@ -325,6 +342,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   (String, double) dco_decode_record_string_f_64(dynamic raw);
 
   @protected
+  SwapInfo dco_decode_swap_info(dynamic raw);
+
+  @protected
+  SwapQuote dco_decode_swap_quote(dynamic raw);
+
+  @protected
+  SwapStatusSimple dco_decode_swap_status_simple(dynamic raw);
+
+  @protected
+  TradingPair dco_decode_trading_pair(dynamic raw);
+
+  @protected
   Transaction dco_decode_transaction(dynamic raw);
 
   @protected
@@ -373,6 +402,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Addresses sse_decode_addresses(SseDeserializer deserializer);
+
+  @protected
+  AssetInfo sse_decode_asset_info(SseDeserializer deserializer);
 
   @protected
   Balance sse_decode_balance(SseDeserializer deserializer);
@@ -447,6 +479,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
+  BtcToEvmSwapResult sse_decode_btc_to_evm_swap_result(
+      SseDeserializer deserializer);
+
+  @protected
   Conversions sse_decode_conversions(SseDeserializer deserializer);
 
   @protected
@@ -458,6 +494,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DifficultyPoint sse_decode_difficulty_point(SseDeserializer deserializer);
+
+  @protected
+  EvmToBtcSwapResult sse_decode_evm_to_btc_swap_result(
+      SseDeserializer deserializer);
 
   @protected
   ExchangeRates sse_decode_exchange_rates(SseDeserializer deserializer);
@@ -547,6 +587,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   List<(String, double)> sse_decode_list_record_string_f_64(
       SseDeserializer deserializer);
+
+  @protected
+  List<SwapInfo> sse_decode_list_swap_info(SseDeserializer deserializer);
+
+  @protected
+  List<TradingPair> sse_decode_list_trading_pair(SseDeserializer deserializer);
 
   @protected
   List<Transaction> sse_decode_list_transaction(SseDeserializer deserializer);
@@ -674,6 +720,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   (String, double) sse_decode_record_string_f_64(SseDeserializer deserializer);
 
   @protected
+  SwapInfo sse_decode_swap_info(SseDeserializer deserializer);
+
+  @protected
+  SwapQuote sse_decode_swap_quote(SseDeserializer deserializer);
+
+  @protected
+  SwapStatusSimple sse_decode_swap_status_simple(SseDeserializer deserializer);
+
+  @protected
+  TradingPair sse_decode_trading_pair(SseDeserializer deserializer);
+
+  @protected
   Transaction sse_decode_transaction(SseDeserializer deserializer);
 
   @protected
@@ -723,6 +781,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_addresses(Addresses self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_asset_info(AssetInfo self, SseSerializer serializer);
 
   @protected
   void sse_encode_balance(Balance self, SseSerializer serializer);
@@ -803,6 +864,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
 
   @protected
+  void sse_encode_btc_to_evm_swap_result(
+      BtcToEvmSwapResult self, SseSerializer serializer);
+
+  @protected
   void sse_encode_conversions(Conversions self, SseSerializer serializer);
 
   @protected
@@ -815,6 +880,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_difficulty_point(
       DifficultyPoint self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_evm_to_btc_swap_result(
+      EvmToBtcSwapResult self, SseSerializer serializer);
 
   @protected
   void sse_encode_exchange_rates(ExchangeRates self, SseSerializer serializer);
@@ -908,6 +977,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_record_string_f_64(
       List<(String, double)> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_swap_info(List<SwapInfo> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_trading_pair(
+      List<TradingPair> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_transaction(
@@ -1042,6 +1118,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_record_string_f_64(
       (String, double) self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_swap_info(SwapInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_swap_quote(SwapQuote self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_swap_status_simple(
+      SwapStatusSimple self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_trading_pair(TradingPair self, SseSerializer serializer);
 
   @protected
   void sse_encode_transaction(Transaction self, SseSerializer serializer);

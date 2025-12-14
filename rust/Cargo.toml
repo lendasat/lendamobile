@@ -11,6 +11,14 @@ anyhow = "1"
 ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
 ark-client = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac", default-features = false, features = ["tls-webpki-roots"] }
 ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
+
+# LendaSwap SDK
+lendaswap-core = { path = "/home/weltitob/lendasat/lendaswap/client-sdk/core" }
+rust_decimal = { version = "1", features = ["serde-with-float"] }
+time = { version = "0.3", features = ["serde", "formatting", "parsing", "macros"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+sha2 = "0.10"
+bip39 = { version = "2.1.0", features = ["rand_core"] }
 # ark-bdk-wallet = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-bdk-wallet" }
 # ark-client = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-client", default-features = false, features = ["tls-webpki-roots"] }
 # ark-core = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-core" }
@@ -39,3 +47,11 @@ url = "2.5.4"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+# Patch to resolve dependency conflict between arkade-os/rust-sdk and ArkLabsHQ/ark-rs
+# Both repos use the same rev but different URLs - redirect to use a single source
+[patch."https://github.com/arkade-os/rust-sdk"]
+ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
+ark-rest = { git = "https://github.com/ArkLabsHQ/ark-rs.git", package = "ark-rest", rev = "201aeac" }
+ark-rs = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
+ark-secp256k1 = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }

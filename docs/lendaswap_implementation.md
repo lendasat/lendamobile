@@ -13,6 +13,31 @@ This document outlines the step-by-step implementation of LendaSwap (Bitcoin ↔
 - Complete the [Wallet Mnemonic Migration](./wallet_mnemonic_migration.md) first
 - Same mnemonic is used for both Ark wallet and LendaSwap
 
+## Dependency Configuration
+
+### Cargo.toml Patch for ark-rs Conflict
+
+The LendaSwap SDK (`lendaswap-core`) uses `arkade-os/rust-sdk` while the mobile app uses `ArkLabsHQ/ark-rs`. Both contain the same `secp256k1-sys` native library which causes a linker conflict. To resolve this, we patch the dependencies to use a single source.
+
+**Important:** Add this patch section to `rust/Cargo.toml`:
+
+```toml
+# Patch to resolve dependency conflict between arkade-os/rust-sdk and ArkLabsHQ/ark-rs
+# Both repos use the same rev but different URLs - redirect to use a single source
+[patch."https://github.com/arkade-os/rust-sdk"]
+ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
+ark-rest = { git = "https://github.com/ArkLabsHQ/ark-rs.git", package = "ark-rest", rev = "201aeac" }
+ark-rs = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
+ark-secp256k1 = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
+```
+
+**Why this works:** Both repositories (`arkade-os/rust-sdk` and `ArkLabsHQ/ark-rs`) use the same git revision `201aeac`, so the code is compatible. The patch redirects all lendaswap SDK dependencies to use the same ark-rs source as the mobile wallet, eliminating the native library conflict.
+
+**If you encounter issues after updating ark-rs:**
+1. Ensure both the mobile app's ark-rs and the patch use the same revision
+2. Run `cargo update` to refresh the lock file
+3. If revisions diverge, you may need to update the lendaswap SDK or coordinate the versions
+
 ## Architecture
 
 ```

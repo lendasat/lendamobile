@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/models/wallet_activity_item.dart';
+import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/ui/screens/mempool/single_transaction_screen.dart';
+import 'package:ark_flutter/src/ui/screens/swap_detail_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
@@ -17,6 +20,7 @@ import 'package:ark_flutter/src/ui/screens/transaction_filter_screen.dart';
 class TransactionHistoryWidget extends StatefulWidget {
   final String aspId;
   final List<Transaction> transactions;
+  final List<SwapInfo> swaps;
   final bool loading;
   final bool hideAmounts;
   final bool showBtcAsMain;
@@ -25,6 +29,7 @@ class TransactionHistoryWidget extends StatefulWidget {
     super.key,
     required this.aspId,
     required this.transactions,
+    this.swaps = const [],
     required this.loading,
     this.hideAmounts = false,
     this.showBtcAsMain = true,
@@ -39,18 +44,19 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   String? _error;
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchTimer;
-  List<Transaction> _filteredTransactions = [];
+  List<WalletActivityItem> _filteredActivity = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredTransactions = widget.transactions;
+    _filteredActivity = combineActivity(widget.transactions, widget.swaps);
   }
 
   @override
   void didUpdateWidget(TransactionHistoryWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.transactions != widget.transactions) {
+    if (oldWidget.transactions != widget.transactions ||
+        oldWidget.swaps != widget.swaps) {
       _applySearch(_searchController.text);
     }
   }
@@ -67,59 +73,67 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     final lowerSearch = searchText.toLowerCase();
 
     setState(() {
-      var filtered = widget.transactions;
+      var allActivity = combineActivity(widget.transactions, widget.swaps);
 
+      // Search filter
       if (searchText.isNotEmpty) {
-        filtered = filtered.where((tx) {
-          return tx.map(
-            boarding: (tx) => tx.txid.toLowerCase().contains(lowerSearch),
-            round: (tx) => tx.txid.toLowerCase().contains(lowerSearch),
-            redeem: (tx) => tx.txid.toLowerCase().contains(lowerSearch),
-          );
+        allActivity = allActivity.where((item) {
+          if (item is TransactionActivityItem) {
+            return item.id.toLowerCase().contains(lowerSearch);
+          } else if (item is SwapActivityItem) {
+            return item.id.toLowerCase().contains(lowerSearch) ||
+                item.tokenSymbol.toLowerCase().contains(lowerSearch);
+          }
+          return false;
         }).toList();
       }
 
+      // Type filter (include Swap as a type)
       final hasTypeFilter = filterService.selectedFilters.any(
-        (f) => ['Onchain', 'Round', 'Redeem'].contains(f),
+        (f) => ['Onchain', 'Round', 'Redeem', 'Swap'].contains(f),
       );
       if (hasTypeFilter) {
-        filtered = filtered.where((tx) {
-          return tx.map(
-            boarding: (_) => filterService.selectedFilters.contains('Onchain'),
-            round: (_) => filterService.selectedFilters.contains('Round'),
-            redeem: (_) => filterService.selectedFilters.contains('Redeem'),
-          );
+        allActivity = allActivity.where((item) {
+          if (item is TransactionActivityItem) {
+            return item.transaction.map(
+              boarding: (_) => filterService.selectedFilters.contains('Onchain'),
+              round: (_) => filterService.selectedFilters.contains('Round'),
+              redeem: (_) => filterService.selectedFilters.contains('Redeem'),
+            );
+          } else if (item is SwapActivityItem) {
+            return filterService.selectedFilters.contains('Swap');
+          }
+          return false;
         }).toList();
       }
 
+      // Direction filter (Sent/Received)
       final filterSent = filterService.selectedFilters.contains('Sent');
       final filterReceived = filterService.selectedFilters.contains('Received');
       if (filterSent && !filterReceived) {
-        filtered = filtered.where((tx) {
-          return tx.map(
-            boarding: (tx) => tx.amountSats.isNegative,
-            round: (tx) => tx.amountSats.isNegative,
-            redeem: (tx) => tx.amountSats.isNegative,
-          );
+        allActivity = allActivity.where((item) {
+          if (item is TransactionActivityItem) {
+            return item.amountSats < 0;
+          } else if (item is SwapActivityItem) {
+            return item.isBtcToEvm; // Sending BTC
+          }
+          return false;
         }).toList();
       } else if (filterReceived && !filterSent) {
-        filtered = filtered.where((tx) {
-          return tx.map(
-            boarding: (tx) => !tx.amountSats.isNegative,
-            round: (tx) => tx.amountSats >= 0,
-            redeem: (tx) => tx.amountSats >= 0,
-          );
+        allActivity = allActivity.where((item) {
+          if (item is TransactionActivityItem) {
+            return item.amountSats >= 0;
+          } else if (item is SwapActivityItem) {
+            return !item.isBtcToEvm; // Receiving BTC
+          }
+          return false;
         }).toList();
       }
 
+      // Time filter
       if (filterService.hasTimeframeFilter) {
-        filtered = filtered.where((tx) {
-          final timestamp = tx.map(
-            boarding: (_) => 0,
-            round: (tx) => tx.createdAt,
-            redeem: (tx) => tx.createdAt,
-          );
-
+        allActivity = allActivity.where((item) {
+          final timestamp = item.timestamp;
           if (timestamp == 0) return true;
 
           bool passesFilter = true;
@@ -137,26 +151,22 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         }).toList();
       }
 
-      _filteredTransactions = filtered;
+      _filteredActivity = allActivity;
     });
   }
 
-  List<Widget> _arrangeTransactionsByTime() {
-    if (_filteredTransactions.isEmpty) return [];
+  List<Widget> _arrangeActivityByTime() {
+    if (_filteredActivity.isEmpty) return [];
 
-    Map<String, List<Transaction>> categorizedTransactions = {};
+    Map<String, List<WalletActivityItem>> categorizedActivity = {};
     DateTime now = DateTime.now();
     DateTime startOfThisMonth = DateTime(now.year, now.month, 1);
 
-    for (Transaction tx in _filteredTransactions) {
-      final timestamp = tx.map(
-        boarding: (tx) => DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        round: (tx) => tx.createdAt,
-        redeem: (tx) => tx.createdAt,
-      );
+    for (WalletActivityItem item in _filteredActivity) {
+      final timestamp = item.timestamp;
 
       if (timestamp == 0) {
-        categorizedTransactions.putIfAbsent('Unknown Date', () => []).add(tx);
+        categorizedActivity.putIfAbsent('Unknown Date', () => []).add(item);
         continue;
       }
 
@@ -164,16 +174,16 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
       if (date.isAfter(startOfThisMonth)) {
         String timeTag = _displayTimeAgo(timestamp);
-        categorizedTransactions.putIfAbsent(timeTag, () => []).add(tx);
+        categorizedActivity.putIfAbsent(timeTag, () => []).add(item);
       } else {
         String yearMonth = '${date.year}, ${DateFormat('MMMM').format(date)}';
-        categorizedTransactions.putIfAbsent(yearMonth, () => []).add(tx);
+        categorizedActivity.putIfAbsent(yearMonth, () => []).add(item);
       }
     }
 
     List<Widget> finalWidgets = [];
-    categorizedTransactions.forEach((category, transactions) {
-      if (transactions.isEmpty) return;
+    categorizedActivity.forEach((category, activityItems) {
+      if (activityItems.isEmpty) return;
 
       finalWidgets.add(
         Padding(
@@ -190,9 +200,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       );
 
       finalWidgets.add(
-        _TransactionContainer(
+        _ActivityContainer(
           key: ValueKey('container_$category'),
-          transactions: transactions,
+          activityItems: activityItems,
           aspId: widget.aspId,
           hideAmounts: widget.hideAmounts,
           showBtcAsMain: widget.showBtcAsMain,
@@ -243,7 +253,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
           ),
         ),
         const SizedBox(height: AppTheme.elementSpacing),
-        if (!widget.loading && widget.transactions.isNotEmpty)
+        if (!widget.loading && (widget.transactions.isNotEmpty || widget.swaps.isNotEmpty))
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppTheme.cardPadding,
@@ -310,7 +320,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               ),
             ),
           )
-        else if (widget.transactions.isEmpty)
+        else if (widget.transactions.isEmpty && widget.swaps.isEmpty)
           Center(
             child: Padding(
               padding: const EdgeInsets.all(32.0),
@@ -332,7 +342,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               ),
             ),
           )
-        else if (_filteredTransactions.isEmpty)
+        else if (_filteredActivity.isEmpty)
           Center(
             child: Padding(
               padding: const EdgeInsets.all(32.0),
@@ -345,7 +355,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No matching transactions',
+                    'No matching activity',
                     style: TextStyle(
                       color: isDark ? AppTheme.white60 : AppTheme.black60,
                     ),
@@ -357,22 +367,22 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         else
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: _arrangeTransactionsByTime(),
+            children: _arrangeActivityByTime(),
           ),
       ],
     );
   }
 }
 
-class _TransactionContainer extends StatelessWidget {
-  final List<Transaction> transactions;
+class _ActivityContainer extends StatelessWidget {
+  final List<WalletActivityItem> activityItems;
   final String aspId;
   final bool hideAmounts;
   final bool showBtcAsMain;
 
-  const _TransactionContainer({
+  const _ActivityContainer({
     super.key,
-    required this.transactions,
+    required this.activityItems,
     required this.aspId,
     required this.hideAmounts,
     required this.showBtcAsMain,
@@ -387,14 +397,23 @@ class _TransactionContainer extends StatelessWidget {
           GlassContainer(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: transactions
-                  .map((tx) => _TransactionItem(
-                        transaction: tx,
-                        aspId: aspId,
-                        hideAmounts: hideAmounts,
-                        showBtcAsMain: showBtcAsMain,
-                      ))
-                  .toList(),
+              children: activityItems.map((item) {
+                if (item is TransactionActivityItem) {
+                  return _TransactionItemWidget(
+                    transaction: item.transaction,
+                    aspId: aspId,
+                    hideAmounts: hideAmounts,
+                    showBtcAsMain: showBtcAsMain,
+                  );
+                } else if (item is SwapActivityItem) {
+                  return _SwapItemWidget(
+                    swapItem: item,
+                    hideAmounts: hideAmounts,
+                    showBtcAsMain: showBtcAsMain,
+                  );
+                }
+                return const SizedBox.shrink();
+              }).toList(),
             ),
           ),
           const SizedBox(height: AppTheme.cardPadding * 0.5),
@@ -404,13 +423,13 @@ class _TransactionContainer extends StatelessWidget {
   }
 }
 
-class _TransactionItem extends StatelessWidget {
+class _TransactionItemWidget extends StatelessWidget {
   final Transaction transaction;
   final String aspId;
   final bool hideAmounts;
   final bool showBtcAsMain;
 
-  const _TransactionItem({
+  const _TransactionItemWidget({
     required this.transaction,
     required this.aspId,
     required this.hideAmounts,
@@ -620,6 +639,181 @@ class _TransactionItem extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style:
                                       Theme.of(context).textTheme.titleMedium,
+                                ),
+                                if (showBtcAsMain)
+                                  Icon(
+                                    AppTheme.satoshiIcon,
+                                  ),
+                              ],
+                            ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Widget for displaying a swap item in the activity list.
+class _SwapItemWidget extends StatelessWidget {
+  final SwapActivityItem swapItem;
+  final bool hideAmounts;
+  final bool showBtcAsMain;
+
+  const _SwapItemWidget({
+    required this.swapItem,
+    required this.hideAmounts,
+    required this.showBtcAsMain,
+  });
+
+  void _navigateToSwapDetail(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SwapDetailScreen(
+          swapId: swapItem.id,
+          initialSwapItem: swapItem,
+        ),
+      ),
+    );
+  }
+
+  Color _getStatusColor() {
+    switch (swapItem.displayStatus) {
+      case SwapDisplayStatus.completed:
+        return AppTheme.successColor;
+      case SwapDisplayStatus.processing:
+      case SwapDisplayStatus.pending:
+        return AppTheme.colorBitcoin;
+      case SwapDisplayStatus.refundable:
+        return Colors.orange;
+      case SwapDisplayStatus.expired:
+      case SwapDisplayStatus.failed:
+        return AppTheme.errorColor;
+      case SwapDisplayStatus.refunded:
+        return AppTheme.white60;
+    }
+  }
+
+  String _getSwapTypeLabel() {
+    if (swapItem.isBtcToEvm) {
+      return 'BTC → ${swapItem.tokenSymbol}';
+    } else {
+      return '${swapItem.tokenSymbol} → BTC';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final statusColor = _getStatusColor();
+    final amountSats = swapItem.amountSats;
+    final usdAmount = swapItem.usdAmount;
+
+    return RepaintBoundary(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToSwapDetail(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppTheme.elementSpacing,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: AppTheme.elementSpacing * 0.75,
+                right: AppTheme.elementSpacing * 1,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // LEFT SIDE
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Swap icon
+                      Container(
+                        width: AppTheme.cardPadding * 2,
+                        height: AppTheme.cardPadding * 2,
+                        decoration: BoxDecoration(
+                          color: AppTheme.colorBitcoin.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(AppTheme.cardPadding),
+                        ),
+                        child: const Icon(
+                          Icons.swap_horiz_rounded,
+                          color: AppTheme.colorBitcoin,
+                          size: AppTheme.cardPadding * 1.2,
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.elementSpacing * 0.75),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: AppTheme.cardPadding * 6.5,
+                            child: Text(
+                              'Swap',
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall!
+                                  .copyWith(
+                                    color: isDark
+                                        ? AppTheme.white90
+                                        : AppTheme.black90,
+                                  ),
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.elementSpacing / 2),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.swap_horiz_rounded,
+                                size: AppTheme.cardPadding * 0.6,
+                                color: AppTheme.colorBitcoin,
+                              ),
+                              const SizedBox(width: AppTheme.elementSpacing / 2),
+                              Text(
+                                _getSwapTypeLabel(),
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                              const SizedBox(width: AppTheme.elementSpacing / 2),
+                              Icon(
+                                Icons.circle,
+                                color: statusColor,
+                                size: AppTheme.cardPadding * 0.4,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  // RIGHT SIDE
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      hideAmounts
+                          ? Text(
+                              '*****',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            )
+                          : Row(
+                              children: [
+                                Text(
+                                  showBtcAsMain
+                                      ? '${amountSats.isNegative ? "" : "+"}${amountSats.abs()}'
+                                      : '${amountSats.isNegative ? "-" : "+"}\$${usdAmount.toStringAsFixed(2)}',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.titleMedium,
                                 ),
                                 if (showBtcAsMain)
                                   Icon(

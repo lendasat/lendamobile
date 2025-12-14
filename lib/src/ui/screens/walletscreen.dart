@@ -1,8 +1,10 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/bitcoin_chart/bitcoin_chart_detail_screen.dart';
@@ -52,6 +54,10 @@ class WalletScreenState extends State<WalletScreen> {
   bool _isBalanceLoading = false;
   bool _isTransactionFetching = true;
   List<Transaction> _transactions = [];
+
+  // Swap history
+  final LendaSwapService _swapService = LendaSwapService();
+  List<SwapInfo> _swaps = [];
 
   // Balance values
   double _pendingBalance = 0.0;
@@ -144,13 +150,34 @@ class WalletScreenState extends State<WalletScreen> {
     return diff >= 0 || diff.abs() < 0.001;
   }
 
-  /// Fetches all wallet data (balance and transactions)
+  /// Fetches all wallet data (balance, transactions, and swaps)
   /// This is public so it can be called from parent widgets (e.g., after payment received)
   Future<void> fetchWalletData() async {
     await Future.wait([
       _fetchBalance(),
       _fetchTransactions(),
+      _fetchSwaps(),
     ]);
+  }
+
+  Future<void> _fetchSwaps() async {
+    try {
+      // Initialize swap service if needed
+      if (!_swapService.isInitialized) {
+        await _swapService.initialize();
+      }
+
+      await _swapService.refreshSwaps();
+      if (mounted) {
+        setState(() {
+          _swaps = _swapService.swaps;
+        });
+      }
+      logger.i("Fetched ${_swaps.length} swaps");
+    } catch (e) {
+      // Silently handle swap fetch errors - swaps are optional
+      logger.w("Could not fetch swaps: $e");
+    }
   }
 
   Future<void> _fetchTransactions() async {
@@ -766,6 +793,7 @@ class WalletScreenState extends State<WalletScreen> {
     return TransactionHistoryWidget(
       aspId: widget.aspId,
       transactions: _transactions,
+      swaps: _swaps,
       loading: _isTransactionFetching,
       hideAmounts: !userPrefs.balancesVisible,
       showBtcAsMain: currencyService.showCoinBalance,

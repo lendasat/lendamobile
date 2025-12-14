@@ -6,6 +6,7 @@
 import 'api.dart';
 import 'api/ark_api.dart';
 import 'api/bitcoin_api.dart';
+import 'api/lendaswap_api.dart';
 import 'api/mempool_api.dart';
 import 'api/mempool_block_tracker.dart';
 import 'api/mempool_ws.dart';
@@ -15,6 +16,7 @@ import 'dart:convert';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
+import 'lendaswap.dart';
 import 'logger.dart';
 import 'models/exchange_rates.dart';
 import 'models/historical_prices.dart';
@@ -81,7 +83,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 52364161;
+  int get rustContentHash => 298286200;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -151,6 +153,63 @@ abstract class RustLibApi extends BaseApi {
   Future<bool> crateApiArkApiIsHdWallet({required String dataDir});
 
   Future<bool> crateApiArkApiIsLegacyWallet({required String dataDir});
+
+  Future<void> crateApiLendaswapApiLendaswapClaimGelato(
+      {required String swapId});
+
+  Future<String> crateApiLendaswapApiLendaswapClaimVhtlc(
+      {required String swapId});
+
+  Future<BtcToEvmSwapResult> crateApiLendaswapApiLendaswapCreateBtcToEvmSwap(
+      {required String targetEvmAddress,
+      required double targetAmountUsd,
+      required String targetToken,
+      required String targetChain,
+      String? referralCode});
+
+  Future<EvmToBtcSwapResult> crateApiLendaswapApiLendaswapCreateEvmToBtcSwap(
+      {required String targetArkAddress,
+      required String userEvmAddress,
+      required double sourceAmountUsd,
+      required String sourceToken,
+      required String sourceChain,
+      String? referralCode});
+
+  Future<EvmToBtcSwapResult>
+      crateApiLendaswapApiLendaswapCreateEvmToLightningSwap(
+          {required String bolt11Invoice,
+          required String userEvmAddress,
+          required String sourceToken,
+          required String sourceChain,
+          String? referralCode});
+
+  Future<void> crateApiLendaswapApiLendaswapDeleteSwap(
+      {required String swapId});
+
+  Future<List<TradingPair>> crateApiLendaswapApiLendaswapGetAssetPairs();
+
+  Future<SwapQuote> crateApiLendaswapApiLendaswapGetQuote(
+      {required String fromToken,
+      required String toToken,
+      required BigInt amountSats});
+
+  Future<SwapInfo> crateApiLendaswapApiLendaswapGetSwap(
+      {required String swapId});
+
+  Future<void> crateApiLendaswapApiLendaswapInit(
+      {required String dataDir,
+      required String network,
+      required String apiUrl,
+      required String arkadeUrl});
+
+  bool crateApiLendaswapApiLendaswapIsInitialized();
+
+  Future<List<SwapInfo>> crateApiLendaswapApiLendaswapListSwaps();
+
+  Future<List<SwapInfo>> crateApiLendaswapApiLendaswapRecoverSwaps();
+
+  Future<String> crateApiLendaswapApiLendaswapRefundVhtlc(
+      {required String swapId, required String refundAddress});
 
   Future<String> crateApiArkApiLoadExistingWallet(
       {required String dataDir,
@@ -896,6 +955,439 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiLendaswapApiLendaswapClaimGelato(
+      {required String swapId}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(swapId, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 28, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapClaimGelatoConstMeta,
+      argValues: [swapId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapClaimGelatoConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_claim_gelato",
+        argNames: ["swapId"],
+      );
+
+  @override
+  Future<String> crateApiLendaswapApiLendaswapClaimVhtlc(
+      {required String swapId}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(swapId, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 29, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapClaimVhtlcConstMeta,
+      argValues: [swapId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapClaimVhtlcConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_claim_vhtlc",
+        argNames: ["swapId"],
+      );
+
+  @override
+  Future<BtcToEvmSwapResult> crateApiLendaswapApiLendaswapCreateBtcToEvmSwap(
+      {required String targetEvmAddress,
+      required double targetAmountUsd,
+      required String targetToken,
+      required String targetChain,
+      String? referralCode}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(targetEvmAddress, serializer);
+        sse_encode_f_64(targetAmountUsd, serializer);
+        sse_encode_String(targetToken, serializer);
+        sse_encode_String(targetChain, serializer);
+        sse_encode_opt_String(referralCode, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 30, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_btc_to_evm_swap_result,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapCreateBtcToEvmSwapConstMeta,
+      argValues: [
+        targetEvmAddress,
+        targetAmountUsd,
+        targetToken,
+        targetChain,
+        referralCode
+      ],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapCreateBtcToEvmSwapConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_create_btc_to_evm_swap",
+        argNames: [
+          "targetEvmAddress",
+          "targetAmountUsd",
+          "targetToken",
+          "targetChain",
+          "referralCode"
+        ],
+      );
+
+  @override
+  Future<EvmToBtcSwapResult> crateApiLendaswapApiLendaswapCreateEvmToBtcSwap(
+      {required String targetArkAddress,
+      required String userEvmAddress,
+      required double sourceAmountUsd,
+      required String sourceToken,
+      required String sourceChain,
+      String? referralCode}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(targetArkAddress, serializer);
+        sse_encode_String(userEvmAddress, serializer);
+        sse_encode_f_64(sourceAmountUsd, serializer);
+        sse_encode_String(sourceToken, serializer);
+        sse_encode_String(sourceChain, serializer);
+        sse_encode_opt_String(referralCode, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 31, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_evm_to_btc_swap_result,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapCreateEvmToBtcSwapConstMeta,
+      argValues: [
+        targetArkAddress,
+        userEvmAddress,
+        sourceAmountUsd,
+        sourceToken,
+        sourceChain,
+        referralCode
+      ],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapCreateEvmToBtcSwapConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_create_evm_to_btc_swap",
+        argNames: [
+          "targetArkAddress",
+          "userEvmAddress",
+          "sourceAmountUsd",
+          "sourceToken",
+          "sourceChain",
+          "referralCode"
+        ],
+      );
+
+  @override
+  Future<EvmToBtcSwapResult>
+      crateApiLendaswapApiLendaswapCreateEvmToLightningSwap(
+          {required String bolt11Invoice,
+          required String userEvmAddress,
+          required String sourceToken,
+          required String sourceChain,
+          String? referralCode}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(bolt11Invoice, serializer);
+        sse_encode_String(userEvmAddress, serializer);
+        sse_encode_String(sourceToken, serializer);
+        sse_encode_String(sourceChain, serializer);
+        sse_encode_opt_String(referralCode, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 32, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_evm_to_btc_swap_result,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta:
+          kCrateApiLendaswapApiLendaswapCreateEvmToLightningSwapConstMeta,
+      argValues: [
+        bolt11Invoice,
+        userEvmAddress,
+        sourceToken,
+        sourceChain,
+        referralCode
+      ],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta
+      get kCrateApiLendaswapApiLendaswapCreateEvmToLightningSwapConstMeta =>
+          const TaskConstMeta(
+            debugName: "lendaswap_create_evm_to_lightning_swap",
+            argNames: [
+              "bolt11Invoice",
+              "userEvmAddress",
+              "sourceToken",
+              "sourceChain",
+              "referralCode"
+            ],
+          );
+
+  @override
+  Future<void> crateApiLendaswapApiLendaswapDeleteSwap(
+      {required String swapId}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(swapId, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 33, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapDeleteSwapConstMeta,
+      argValues: [swapId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapDeleteSwapConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_delete_swap",
+        argNames: ["swapId"],
+      );
+
+  @override
+  Future<List<TradingPair>> crateApiLendaswapApiLendaswapGetAssetPairs() {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 34, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_trading_pair,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapGetAssetPairsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapGetAssetPairsConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_get_asset_pairs",
+        argNames: [],
+      );
+
+  @override
+  Future<SwapQuote> crateApiLendaswapApiLendaswapGetQuote(
+      {required String fromToken,
+      required String toToken,
+      required BigInt amountSats}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(fromToken, serializer);
+        sse_encode_String(toToken, serializer);
+        sse_encode_u_64(amountSats, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 35, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_swap_quote,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapGetQuoteConstMeta,
+      argValues: [fromToken, toToken, amountSats],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapGetQuoteConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_get_quote",
+        argNames: ["fromToken", "toToken", "amountSats"],
+      );
+
+  @override
+  Future<SwapInfo> crateApiLendaswapApiLendaswapGetSwap(
+      {required String swapId}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(swapId, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 36, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_swap_info,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapGetSwapConstMeta,
+      argValues: [swapId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapGetSwapConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_get_swap",
+        argNames: ["swapId"],
+      );
+
+  @override
+  Future<void> crateApiLendaswapApiLendaswapInit(
+      {required String dataDir,
+      required String network,
+      required String apiUrl,
+      required String arkadeUrl}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(dataDir, serializer);
+        sse_encode_String(network, serializer);
+        sse_encode_String(apiUrl, serializer);
+        sse_encode_String(arkadeUrl, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 37, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapInitConstMeta,
+      argValues: [dataDir, network, apiUrl, arkadeUrl],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapInitConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_init",
+        argNames: ["dataDir", "network", "apiUrl", "arkadeUrl"],
+      );
+
+  @override
+  bool crateApiLendaswapApiLendaswapIsInitialized() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 38)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapIsInitializedConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapIsInitializedConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_is_initialized",
+        argNames: [],
+      );
+
+  @override
+  Future<List<SwapInfo>> crateApiLendaswapApiLendaswapListSwaps() {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 39, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_swap_info,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapListSwapsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapListSwapsConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_list_swaps",
+        argNames: [],
+      );
+
+  @override
+  Future<List<SwapInfo>> crateApiLendaswapApiLendaswapRecoverSwaps() {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 40, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_swap_info,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapRecoverSwapsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapRecoverSwapsConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_recover_swaps",
+        argNames: [],
+      );
+
+  @override
+  Future<String> crateApiLendaswapApiLendaswapRefundVhtlc(
+      {required String swapId, required String refundAddress}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(swapId, serializer);
+        sse_encode_String(refundAddress, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 41, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiLendaswapApiLendaswapRefundVhtlcConstMeta,
+      argValues: [swapId, refundAddress],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLendaswapApiLendaswapRefundVhtlcConstMeta =>
+      const TaskConstMeta(
+        debugName: "lendaswap_refund_vhtlc",
+        argNames: ["swapId", "refundAddress"],
+      );
+
+  @override
   Future<String> crateApiArkApiLoadExistingWallet(
       {required String dataDir,
       required String network,
@@ -911,7 +1403,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(server, serializer);
         sse_encode_String(boltzUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 28, port: port_);
+            funcId: 42, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -938,7 +1430,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(serverUrl, serializer);
         sse_encode_String(data, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 29, port: port_);
+            funcId: 43, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_moon_pay_encrypted_data,
@@ -964,7 +1456,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(serverUrl, serializer);
         sse_encode_String(data, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 30, port: port_);
+            funcId: 44, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_moon_pay_encrypted_data,
@@ -994,7 +1486,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(baseCurrencyCode, serializer);
         sse_encode_String(paymentMethod, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 31, port: port_);
+            funcId: 45, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_moon_pay_currency_limits,
@@ -1024,7 +1516,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(baseCurrencyCode, serializer);
         sse_encode_String(paymentMethod, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 32, port: port_);
+            funcId: 46, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_moon_pay_currency_limits,
@@ -1049,7 +1541,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(serverUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 33, port: port_);
+            funcId: 47, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_moon_pay_quote,
@@ -1074,7 +1566,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(serverUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 34, port: port_);
+            funcId: 48, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_moon_pay_quote,
@@ -1099,7 +1591,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 35, port: port_);
+            funcId: 49, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1124,7 +1616,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(invoice, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 36, port: port_);
+            funcId: 50, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_ln_payment_result,
@@ -1148,7 +1640,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 37, port: port_);
+            funcId: 51, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1183,7 +1675,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(server, serializer);
         sse_encode_String(boltzUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 38, port: port_);
+            funcId: 52, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1217,7 +1709,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(address, serializer);
         sse_encode_u_64(amountSats, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 39, port: port_);
+            funcId: 53, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1240,7 +1732,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 40, port: port_);
+            funcId: 54, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1273,7 +1765,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(server, serializer);
         sse_encode_String(boltzUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 41, port: port_);
+            funcId: 55, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1299,7 +1791,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_StreamSink_mempool_ws_message_Sse(sink, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 42, port: port_);
+            funcId: 56, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1326,7 +1818,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_StreamSink_mempool_ws_message_Sse(sink, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 43, port: port_);
+            funcId: 57, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1356,7 +1848,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_StreamSink_projected_block_transactions_Sse(
             sink, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 44, port: port_);
+            funcId: 58, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1385,7 +1877,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_StreamSink_projected_block_transactions_Sse(
             sink, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 45, port: port_);
+            funcId: 59, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1410,7 +1902,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 46, port: port_);
+            funcId: 60, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_transaction,
@@ -1441,7 +1933,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_opt_String(boltzSwapId, serializer);
         sse_encode_u_64(timeoutSeconds, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 47, port: port_);
+            funcId: 61, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_payment_received,
@@ -1471,7 +1963,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 48, port: port_);
+            funcId: 62, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
@@ -1538,6 +2030,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       offchain: dco_decode_String(arr[1]),
       bip21: dco_decode_String(arr[2]),
       lightning: dco_decode_opt_box_autoadd_boltz_swap(arr[3]),
+    );
+  }
+
+  @protected
+  AssetInfo dco_decode_asset_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return AssetInfo(
+      tokenId: dco_decode_String(arr[0]),
+      symbol: dco_decode_String(arr[1]),
+      name: dco_decode_String(arr[2]),
+      chain: dco_decode_String(arr[3]),
+      decimals: dco_decode_u_8(arr[4]),
     );
   }
 
@@ -1733,6 +2240,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BtcToEvmSwapResult dco_decode_btc_to_evm_swap_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return BtcToEvmSwapResult(
+      swapId: dco_decode_String(arr[0]),
+      lnInvoice: dco_decode_String(arr[1]),
+      arkadeHtlcAddress: dco_decode_String(arr[2]),
+      satsToSend: dco_decode_i_64(arr[3]),
+      targetAmountUsd: dco_decode_f_64(arr[4]),
+      feeSats: dco_decode_i_64(arr[5]),
+    );
+  }
+
+  @protected
   Conversions dco_decode_conversions(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1790,6 +2313,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       timestamp: dco_decode_opt_box_autoadd_u_64(arr[0]),
       difficulty: dco_decode_opt_box_autoadd_f_64(arr[1]),
       height: dco_decode_opt_box_autoadd_u_64(arr[2]),
+    );
+  }
+
+  @protected
+  EvmToBtcSwapResult dco_decode_evm_to_btc_swap_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 9)
+      throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
+    return EvmToBtcSwapResult(
+      swapId: dco_decode_String(arr[0]),
+      evmHtlcAddress: dco_decode_String(arr[1]),
+      sourceAmountUsd: dco_decode_f_64(arr[2]),
+      satsToReceive: dco_decode_i_64(arr[3]),
+      feeSats: dco_decode_i_64(arr[4]),
+      sourceTokenAddress: dco_decode_String(arr[5]),
+      gelatoForwarderAddress: dco_decode_opt_String(arr[6]),
+      gelatoUserNonce: dco_decode_opt_String(arr[7]),
+      gelatoUserDeadline: dco_decode_opt_String(arr[8]),
     );
   }
 
@@ -2017,6 +2559,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<(String, double)> dco_decode_list_record_string_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_record_string_f_64).toList();
+  }
+
+  @protected
+  List<SwapInfo> dco_decode_list_swap_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_swap_info).toList();
+  }
+
+  @protected
+  List<TradingPair> dco_decode_list_trading_pair(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_trading_pair).toList();
   }
 
   @protected
@@ -2358,6 +2912,62 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SwapInfo dco_decode_swap_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 12)
+      throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    return SwapInfo(
+      id: dco_decode_String(arr[0]),
+      status: dco_decode_swap_status_simple(arr[1]),
+      direction: dco_decode_String(arr[2]),
+      sourceToken: dco_decode_String(arr[3]),
+      targetToken: dco_decode_String(arr[4]),
+      sourceAmountSats: dco_decode_i_64(arr[5]),
+      targetAmountUsd: dco_decode_f_64(arr[6]),
+      createdAt: dco_decode_String(arr[7]),
+      lnInvoice: dco_decode_opt_String(arr[8]),
+      arkadeHtlcAddress: dco_decode_opt_String(arr[9]),
+      evmHtlcAddress: dco_decode_opt_String(arr[10]),
+      feeSats: dco_decode_i_64(arr[11]),
+    );
+  }
+
+  @protected
+  SwapQuote dco_decode_swap_quote(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return SwapQuote(
+      exchangeRate: dco_decode_String(arr[0]),
+      networkFeeSats: dco_decode_u_64(arr[1]),
+      protocolFeeSats: dco_decode_u_64(arr[2]),
+      protocolFeePercent: dco_decode_f_64(arr[3]),
+      minAmountSats: dco_decode_u_64(arr[4]),
+      maxAmountSats: dco_decode_u_64(arr[5]),
+    );
+  }
+
+  @protected
+  SwapStatusSimple dco_decode_swap_status_simple(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SwapStatusSimple.values[raw as int];
+  }
+
+  @protected
+  TradingPair dco_decode_trading_pair(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return TradingPair(
+      source: dco_decode_asset_info(arr[0]),
+      target: dco_decode_asset_info(arr[1]),
+    );
+  }
+
+  @protected
   Transaction dco_decode_transaction(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
@@ -2512,6 +3122,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         offchain: var_offchain,
         bip21: var_bip21,
         lightning: var_lightning);
+  }
+
+  @protected
+  AssetInfo sse_decode_asset_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_tokenId = sse_decode_String(deserializer);
+    var var_symbol = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_chain = sse_decode_String(deserializer);
+    var var_decimals = sse_decode_u_8(deserializer);
+    return AssetInfo(
+        tokenId: var_tokenId,
+        symbol: var_symbol,
+        name: var_name,
+        chain: var_chain,
+        decimals: var_decimals);
   }
 
   @protected
@@ -2725,6 +3351,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BtcToEvmSwapResult sse_decode_btc_to_evm_swap_result(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_swapId = sse_decode_String(deserializer);
+    var var_lnInvoice = sse_decode_String(deserializer);
+    var var_arkadeHtlcAddress = sse_decode_String(deserializer);
+    var var_satsToSend = sse_decode_i_64(deserializer);
+    var var_targetAmountUsd = sse_decode_f_64(deserializer);
+    var var_feeSats = sse_decode_i_64(deserializer);
+    return BtcToEvmSwapResult(
+        swapId: var_swapId,
+        lnInvoice: var_lnInvoice,
+        arkadeHtlcAddress: var_arkadeHtlcAddress,
+        satsToSend: var_satsToSend,
+        targetAmountUsd: var_targetAmountUsd,
+        feeSats: var_feeSats);
+  }
+
+  @protected
   Conversions sse_decode_conversions(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_time = sse_decode_u_64(deserializer);
@@ -2786,6 +3431,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         timestamp: var_timestamp,
         difficulty: var_difficulty,
         height: var_height);
+  }
+
+  @protected
+  EvmToBtcSwapResult sse_decode_evm_to_btc_swap_result(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_swapId = sse_decode_String(deserializer);
+    var var_evmHtlcAddress = sse_decode_String(deserializer);
+    var var_sourceAmountUsd = sse_decode_f_64(deserializer);
+    var var_satsToReceive = sse_decode_i_64(deserializer);
+    var var_feeSats = sse_decode_i_64(deserializer);
+    var var_sourceTokenAddress = sse_decode_String(deserializer);
+    var var_gelatoForwarderAddress = sse_decode_opt_String(deserializer);
+    var var_gelatoUserNonce = sse_decode_opt_String(deserializer);
+    var var_gelatoUserDeadline = sse_decode_opt_String(deserializer);
+    return EvmToBtcSwapResult(
+        swapId: var_swapId,
+        evmHtlcAddress: var_evmHtlcAddress,
+        sourceAmountUsd: var_sourceAmountUsd,
+        satsToReceive: var_satsToReceive,
+        feeSats: var_feeSats,
+        sourceTokenAddress: var_sourceTokenAddress,
+        gelatoForwarderAddress: var_gelatoForwarderAddress,
+        gelatoUserNonce: var_gelatoUserNonce,
+        gelatoUserDeadline: var_gelatoUserDeadline);
   }
 
   @protected
@@ -3056,6 +3726,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <(String, double)>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_record_string_f_64(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<SwapInfo> sse_decode_list_swap_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <SwapInfo>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_swap_info(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<TradingPair> sse_decode_list_trading_pair(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <TradingPair>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_trading_pair(deserializer));
     }
     return ans_;
   }
@@ -3506,6 +4200,69 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SwapInfo sse_decode_swap_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_status = sse_decode_swap_status_simple(deserializer);
+    var var_direction = sse_decode_String(deserializer);
+    var var_sourceToken = sse_decode_String(deserializer);
+    var var_targetToken = sse_decode_String(deserializer);
+    var var_sourceAmountSats = sse_decode_i_64(deserializer);
+    var var_targetAmountUsd = sse_decode_f_64(deserializer);
+    var var_createdAt = sse_decode_String(deserializer);
+    var var_lnInvoice = sse_decode_opt_String(deserializer);
+    var var_arkadeHtlcAddress = sse_decode_opt_String(deserializer);
+    var var_evmHtlcAddress = sse_decode_opt_String(deserializer);
+    var var_feeSats = sse_decode_i_64(deserializer);
+    return SwapInfo(
+        id: var_id,
+        status: var_status,
+        direction: var_direction,
+        sourceToken: var_sourceToken,
+        targetToken: var_targetToken,
+        sourceAmountSats: var_sourceAmountSats,
+        targetAmountUsd: var_targetAmountUsd,
+        createdAt: var_createdAt,
+        lnInvoice: var_lnInvoice,
+        arkadeHtlcAddress: var_arkadeHtlcAddress,
+        evmHtlcAddress: var_evmHtlcAddress,
+        feeSats: var_feeSats);
+  }
+
+  @protected
+  SwapQuote sse_decode_swap_quote(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_exchangeRate = sse_decode_String(deserializer);
+    var var_networkFeeSats = sse_decode_u_64(deserializer);
+    var var_protocolFeeSats = sse_decode_u_64(deserializer);
+    var var_protocolFeePercent = sse_decode_f_64(deserializer);
+    var var_minAmountSats = sse_decode_u_64(deserializer);
+    var var_maxAmountSats = sse_decode_u_64(deserializer);
+    return SwapQuote(
+        exchangeRate: var_exchangeRate,
+        networkFeeSats: var_networkFeeSats,
+        protocolFeeSats: var_protocolFeeSats,
+        protocolFeePercent: var_protocolFeePercent,
+        minAmountSats: var_minAmountSats,
+        maxAmountSats: var_maxAmountSats);
+  }
+
+  @protected
+  SwapStatusSimple sse_decode_swap_status_simple(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return SwapStatusSimple.values[inner];
+  }
+
+  @protected
+  TradingPair sse_decode_trading_pair(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_source = sse_decode_asset_info(deserializer);
+    var var_target = sse_decode_asset_info(deserializer);
+    return TradingPair(source: var_source, target: var_target);
+  }
+
+  @protected
   Transaction sse_decode_transaction(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -3688,6 +4445,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_asset_info(AssetInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.tokenId, serializer);
+    sse_encode_String(self.symbol, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.chain, serializer);
+    sse_encode_u_8(self.decimals, serializer);
+  }
+
+  @protected
   void sse_encode_balance(Balance self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_offchain_balance(self.offchain, serializer);
@@ -3864,6 +4631,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_btc_to_evm_swap_result(
+      BtcToEvmSwapResult self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.swapId, serializer);
+    sse_encode_String(self.lnInvoice, serializer);
+    sse_encode_String(self.arkadeHtlcAddress, serializer);
+    sse_encode_i_64(self.satsToSend, serializer);
+    sse_encode_f_64(self.targetAmountUsd, serializer);
+    sse_encode_i_64(self.feeSats, serializer);
+  }
+
+  @protected
   void sse_encode_conversions(Conversions self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.time, serializer);
@@ -3904,6 +4683,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_u_64(self.timestamp, serializer);
     sse_encode_opt_box_autoadd_f_64(self.difficulty, serializer);
     sse_encode_opt_box_autoadd_u_64(self.height, serializer);
+  }
+
+  @protected
+  void sse_encode_evm_to_btc_swap_result(
+      EvmToBtcSwapResult self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.swapId, serializer);
+    sse_encode_String(self.evmHtlcAddress, serializer);
+    sse_encode_f_64(self.sourceAmountUsd, serializer);
+    sse_encode_i_64(self.satsToReceive, serializer);
+    sse_encode_i_64(self.feeSats, serializer);
+    sse_encode_String(self.sourceTokenAddress, serializer);
+    sse_encode_opt_String(self.gelatoForwarderAddress, serializer);
+    sse_encode_opt_String(self.gelatoUserNonce, serializer);
+    sse_encode_opt_String(self.gelatoUserDeadline, serializer);
   }
 
   @protected
@@ -4123,6 +4917,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_record_string_f_64(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_swap_info(
+      List<SwapInfo> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_swap_info(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_trading_pair(
+      List<TradingPair> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_trading_pair(item, serializer);
     }
   }
 
@@ -4498,6 +5312,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.$1, serializer);
     sse_encode_f_64(self.$2, serializer);
+  }
+
+  @protected
+  void sse_encode_swap_info(SwapInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_swap_status_simple(self.status, serializer);
+    sse_encode_String(self.direction, serializer);
+    sse_encode_String(self.sourceToken, serializer);
+    sse_encode_String(self.targetToken, serializer);
+    sse_encode_i_64(self.sourceAmountSats, serializer);
+    sse_encode_f_64(self.targetAmountUsd, serializer);
+    sse_encode_String(self.createdAt, serializer);
+    sse_encode_opt_String(self.lnInvoice, serializer);
+    sse_encode_opt_String(self.arkadeHtlcAddress, serializer);
+    sse_encode_opt_String(self.evmHtlcAddress, serializer);
+    sse_encode_i_64(self.feeSats, serializer);
+  }
+
+  @protected
+  void sse_encode_swap_quote(SwapQuote self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.exchangeRate, serializer);
+    sse_encode_u_64(self.networkFeeSats, serializer);
+    sse_encode_u_64(self.protocolFeeSats, serializer);
+    sse_encode_f_64(self.protocolFeePercent, serializer);
+    sse_encode_u_64(self.minAmountSats, serializer);
+    sse_encode_u_64(self.maxAmountSats, serializer);
+  }
+
+  @protected
+  void sse_encode_swap_status_simple(
+      SwapStatusSimple self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_trading_pair(TradingPair self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_asset_info(self.source, serializer);
+    sse_encode_asset_info(self.target, serializer);
   }
 
   @protected

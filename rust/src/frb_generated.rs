@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 52364161;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 298286200;
 
 // Section: executor
 
@@ -1010,6 +1010,566 @@ fn wire__crate__api__ark_api__is_legacy_wallet_impl(
         },
     )
 }
+fn wire__crate__api__lendaswap_api__lendaswap_claim_gelato_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_claim_gelato",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_swap_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendaswap_api::lendaswap_claim_gelato(api_swap_id).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_claim_vhtlc_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_claim_vhtlc",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_swap_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendaswap_api::lendaswap_claim_vhtlc(api_swap_id).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_create_btc_to_evm_swap_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_create_btc_to_evm_swap",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_target_evm_address = <String>::sse_decode(&mut deserializer);
+            let api_target_amount_usd = <f64>::sse_decode(&mut deserializer);
+            let api_target_token = <String>::sse_decode(&mut deserializer);
+            let api_target_chain = <String>::sse_decode(&mut deserializer);
+            let api_referral_code = <Option<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendaswap_api::lendaswap_create_btc_to_evm_swap(
+                                api_target_evm_address,
+                                api_target_amount_usd,
+                                api_target_token,
+                                api_target_chain,
+                                api_referral_code,
+                            )
+                            .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_create_evm_to_btc_swap_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_create_evm_to_btc_swap",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_target_ark_address = <String>::sse_decode(&mut deserializer);
+            let api_user_evm_address = <String>::sse_decode(&mut deserializer);
+            let api_source_amount_usd = <f64>::sse_decode(&mut deserializer);
+            let api_source_token = <String>::sse_decode(&mut deserializer);
+            let api_source_chain = <String>::sse_decode(&mut deserializer);
+            let api_referral_code = <Option<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendaswap_api::lendaswap_create_evm_to_btc_swap(
+                                api_target_ark_address,
+                                api_user_evm_address,
+                                api_source_amount_usd,
+                                api_source_token,
+                                api_source_chain,
+                                api_referral_code,
+                            )
+                            .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_create_evm_to_lightning_swap_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_create_evm_to_lightning_swap",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_bolt11_invoice = <String>::sse_decode(&mut deserializer);
+            let api_user_evm_address = <String>::sse_decode(&mut deserializer);
+            let api_source_token = <String>::sse_decode(&mut deserializer);
+            let api_source_chain = <String>::sse_decode(&mut deserializer);
+            let api_referral_code = <Option<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendaswap_api::lendaswap_create_evm_to_lightning_swap(
+                                api_bolt11_invoice,
+                                api_user_evm_address,
+                                api_source_token,
+                                api_source_chain,
+                                api_referral_code,
+                            )
+                            .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_delete_swap_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_delete_swap",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_swap_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendaswap_api::lendaswap_delete_swap(api_swap_id).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_get_asset_pairs_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_get_asset_pairs",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendaswap_api::lendaswap_get_asset_pairs().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_get_quote_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_get_quote",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_from_token = <String>::sse_decode(&mut deserializer);
+            let api_to_token = <String>::sse_decode(&mut deserializer);
+            let api_amount_sats = <u64>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendaswap_api::lendaswap_get_quote(
+                            api_from_token,
+                            api_to_token,
+                            api_amount_sats,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_get_swap_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_get_swap",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_swap_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendaswap_api::lendaswap_get_swap(api_swap_id).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_init_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_init",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_data_dir = <String>::sse_decode(&mut deserializer);
+            let api_network = <String>::sse_decode(&mut deserializer);
+            let api_api_url = <String>::sse_decode(&mut deserializer);
+            let api_arkade_url = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendaswap_api::lendaswap_init(
+                            api_data_dir,
+                            api_network,
+                            api_api_url,
+                            api_arkade_url,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_is_initialized_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_is_initialized",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let output_ok =
+                    Result::<_, ()>::Ok(crate::api::lendaswap_api::lendaswap_is_initialized())?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_list_swaps_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_list_swaps",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendaswap_api::lendaswap_list_swaps().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_recover_swaps_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_recover_swaps",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendaswap_api::lendaswap_recover_swaps().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendaswap_api__lendaswap_refund_vhtlc_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendaswap_refund_vhtlc",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_swap_id = <String>::sse_decode(&mut deserializer);
+            let api_refund_address = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendaswap_api::lendaswap_refund_vhtlc(
+                            api_swap_id,
+                            api_refund_address,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__ark_api__load_existing_wallet_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1929,6 +2489,24 @@ impl SseDecode for crate::api::ark_api::Addresses {
     }
 }
 
+impl SseDecode for crate::api::lendaswap_api::AssetInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_tokenId = <String>::sse_decode(deserializer);
+        let mut var_symbol = <String>::sse_decode(deserializer);
+        let mut var_name = <String>::sse_decode(deserializer);
+        let mut var_chain = <String>::sse_decode(deserializer);
+        let mut var_decimals = <u8>::sse_decode(deserializer);
+        return crate::api::lendaswap_api::AssetInfo {
+            token_id: var_tokenId,
+            symbol: var_symbol,
+            name: var_name,
+            chain: var_chain,
+            decimals: var_decimals,
+        };
+    }
+}
+
 impl SseDecode for crate::api::ark_api::Balance {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2051,6 +2629,26 @@ impl SseDecode for bool {
     }
 }
 
+impl SseDecode for crate::api::lendaswap_api::BtcToEvmSwapResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_swapId = <String>::sse_decode(deserializer);
+        let mut var_lnInvoice = <String>::sse_decode(deserializer);
+        let mut var_arkadeHtlcAddress = <String>::sse_decode(deserializer);
+        let mut var_satsToSend = <i64>::sse_decode(deserializer);
+        let mut var_targetAmountUsd = <f64>::sse_decode(deserializer);
+        let mut var_feeSats = <i64>::sse_decode(deserializer);
+        return crate::api::lendaswap_api::BtcToEvmSwapResult {
+            swap_id: var_swapId,
+            ln_invoice: var_lnInvoice,
+            arkade_htlc_address: var_arkadeHtlcAddress,
+            sats_to_send: var_satsToSend,
+            target_amount_usd: var_targetAmountUsd,
+            fee_sats: var_feeSats,
+        };
+    }
+}
+
 impl SseDecode for crate::models::mempool::Conversions {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2121,6 +2719,32 @@ impl SseDecode for crate::models::mempool::DifficultyPoint {
             timestamp: var_timestamp,
             difficulty: var_difficulty,
             height: var_height,
+        };
+    }
+}
+
+impl SseDecode for crate::api::lendaswap_api::EvmToBtcSwapResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_swapId = <String>::sse_decode(deserializer);
+        let mut var_evmHtlcAddress = <String>::sse_decode(deserializer);
+        let mut var_sourceAmountUsd = <f64>::sse_decode(deserializer);
+        let mut var_satsToReceive = <i64>::sse_decode(deserializer);
+        let mut var_feeSats = <i64>::sse_decode(deserializer);
+        let mut var_sourceTokenAddress = <String>::sse_decode(deserializer);
+        let mut var_gelatoForwarderAddress = <Option<String>>::sse_decode(deserializer);
+        let mut var_gelatoUserNonce = <Option<String>>::sse_decode(deserializer);
+        let mut var_gelatoUserDeadline = <Option<String>>::sse_decode(deserializer);
+        return crate::api::lendaswap_api::EvmToBtcSwapResult {
+            swap_id: var_swapId,
+            evm_htlc_address: var_evmHtlcAddress,
+            source_amount_usd: var_sourceAmountUsd,
+            sats_to_receive: var_satsToReceive,
+            fee_sats: var_feeSats,
+            source_token_address: var_sourceTokenAddress,
+            gelato_forwarder_address: var_gelatoForwarderAddress,
+            gelato_user_nonce: var_gelatoUserNonce,
+            gelato_user_deadline: var_gelatoUserDeadline,
         };
     }
 }
@@ -2458,6 +3082,32 @@ impl SseDecode for Vec<(String, f64)> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<(String, f64)>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::lendaswap::SwapInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::lendaswap::SwapInfo>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::lendaswap_api::TradingPair> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::lendaswap_api::TradingPair>::sse_decode(
+                deserializer,
+            ));
         }
         return ans_;
     }
@@ -2958,6 +3608,87 @@ impl SseDecode for (String, f64) {
     }
 }
 
+impl SseDecode for crate::lendaswap::SwapInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_status = <crate::lendaswap::SwapStatusSimple>::sse_decode(deserializer);
+        let mut var_direction = <String>::sse_decode(deserializer);
+        let mut var_sourceToken = <String>::sse_decode(deserializer);
+        let mut var_targetToken = <String>::sse_decode(deserializer);
+        let mut var_sourceAmountSats = <i64>::sse_decode(deserializer);
+        let mut var_targetAmountUsd = <f64>::sse_decode(deserializer);
+        let mut var_createdAt = <String>::sse_decode(deserializer);
+        let mut var_lnInvoice = <Option<String>>::sse_decode(deserializer);
+        let mut var_arkadeHtlcAddress = <Option<String>>::sse_decode(deserializer);
+        let mut var_evmHtlcAddress = <Option<String>>::sse_decode(deserializer);
+        let mut var_feeSats = <i64>::sse_decode(deserializer);
+        return crate::lendaswap::SwapInfo {
+            id: var_id,
+            status: var_status,
+            direction: var_direction,
+            source_token: var_sourceToken,
+            target_token: var_targetToken,
+            source_amount_sats: var_sourceAmountSats,
+            target_amount_usd: var_targetAmountUsd,
+            created_at: var_createdAt,
+            ln_invoice: var_lnInvoice,
+            arkade_htlc_address: var_arkadeHtlcAddress,
+            evm_htlc_address: var_evmHtlcAddress,
+            fee_sats: var_feeSats,
+        };
+    }
+}
+
+impl SseDecode for crate::api::lendaswap_api::SwapQuote {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_exchangeRate = <String>::sse_decode(deserializer);
+        let mut var_networkFeeSats = <u64>::sse_decode(deserializer);
+        let mut var_protocolFeeSats = <u64>::sse_decode(deserializer);
+        let mut var_protocolFeePercent = <f64>::sse_decode(deserializer);
+        let mut var_minAmountSats = <u64>::sse_decode(deserializer);
+        let mut var_maxAmountSats = <u64>::sse_decode(deserializer);
+        return crate::api::lendaswap_api::SwapQuote {
+            exchange_rate: var_exchangeRate,
+            network_fee_sats: var_networkFeeSats,
+            protocol_fee_sats: var_protocolFeeSats,
+            protocol_fee_percent: var_protocolFeePercent,
+            min_amount_sats: var_minAmountSats,
+            max_amount_sats: var_maxAmountSats,
+        };
+    }
+}
+
+impl SseDecode for crate::lendaswap::SwapStatusSimple {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::lendaswap::SwapStatusSimple::WaitingForDeposit,
+            1 => crate::lendaswap::SwapStatusSimple::Processing,
+            2 => crate::lendaswap::SwapStatusSimple::Completed,
+            3 => crate::lendaswap::SwapStatusSimple::Expired,
+            4 => crate::lendaswap::SwapStatusSimple::Refundable,
+            5 => crate::lendaswap::SwapStatusSimple::Refunded,
+            6 => crate::lendaswap::SwapStatusSimple::Failed,
+            _ => unreachable!("Invalid variant for SwapStatusSimple: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::api::lendaswap_api::TradingPair {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_source = <crate::api::lendaswap_api::AssetInfo>::sse_decode(deserializer);
+        let mut var_target = <crate::api::lendaswap_api::AssetInfo>::sse_decode(deserializer);
+        return crate::api::lendaswap_api::TradingPair {
+            source: var_source,
+            target: var_target,
+        };
+    }
+}
+
 impl SseDecode for crate::api::ark_api::Transaction {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3151,51 +3882,126 @@ fn pde_ffi_dispatcher_primary_impl(
         25 => wire__crate__api__init_logging_impl(port, ptr, rust_vec_len, data_len),
         26 => wire__crate__api__ark_api__is_hd_wallet_impl(port, ptr, rust_vec_len, data_len),
         27 => wire__crate__api__ark_api__is_legacy_wallet_impl(port, ptr, rust_vec_len, data_len),
-        28 => {
+        28 => wire__crate__api__lendaswap_api__lendaswap_claim_gelato_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        29 => wire__crate__api__lendaswap_api__lendaswap_claim_vhtlc_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        30 => wire__crate__api__lendaswap_api__lendaswap_create_btc_to_evm_swap_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        31 => wire__crate__api__lendaswap_api__lendaswap_create_evm_to_btc_swap_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        32 => wire__crate__api__lendaswap_api__lendaswap_create_evm_to_lightning_swap_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        33 => wire__crate__api__lendaswap_api__lendaswap_delete_swap_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        34 => wire__crate__api__lendaswap_api__lendaswap_get_asset_pairs_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        35 => wire__crate__api__lendaswap_api__lendaswap_get_quote_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        36 => wire__crate__api__lendaswap_api__lendaswap_get_swap_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        37 => {
+            wire__crate__api__lendaswap_api__lendaswap_init_impl(port, ptr, rust_vec_len, data_len)
+        }
+        39 => wire__crate__api__lendaswap_api__lendaswap_list_swaps_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        40 => wire__crate__api__lendaswap_api__lendaswap_recover_swaps_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        41 => wire__crate__api__lendaswap_api__lendaswap_refund_vhtlc_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        42 => {
             wire__crate__api__ark_api__load_existing_wallet_impl(port, ptr, rust_vec_len, data_len)
         }
-        29 => wire__crate__api__moonpay_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
-        30 => wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
+        43 => wire__crate__api__moonpay_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        31 => wire__crate__api__moonpay_get_currency_limits_impl(port, ptr, rust_vec_len, data_len),
-        32 => wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
+        45 => wire__crate__api__moonpay_get_currency_limits_impl(port, ptr, rust_vec_len, data_len),
+        46 => wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        33 => wire__crate__api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len),
-        34 => {
+        47 => wire__crate__api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len),
+        48 => {
             wire__crate__api__moonpay_api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len)
         }
-        35 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
-        36 => wire__crate__api__ark_api__pay_ln_invoice_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
-        39 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
-        40 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
-        41 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
-        43 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
+        49 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
+        50 => wire__crate__api__ark_api__pay_ln_invoice_impl(port, ptr, rust_vec_len, data_len),
+        51 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
+        52 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
+        53 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
+        54 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
+        55 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
+        56 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
+        57 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        44 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
-        45 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
+        58 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
+        59 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        46 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
-        47 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
-        48 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
+        60 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
+        61 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
+        62 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3210,6 +4016,11 @@ fn pde_ffi_dispatcher_sync_impl(
     match func_id {
         3 => wire__crate__api__currency_code_impl(ptr, rust_vec_len, data_len),
         20 => wire__crate__api__get_supported_currencies_impl(ptr, rust_vec_len, data_len),
+        38 => wire__crate__api__lendaswap_api__lendaswap_is_initialized_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
         _ => unreachable!(),
     }
 }
@@ -3236,6 +4047,30 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::Addresses>
     for crate::api::ark_api::Addresses
 {
     fn into_into_dart(self) -> crate::api::ark_api::Addresses {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::lendaswap_api::AssetInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.token_id.into_into_dart().into_dart(),
+            self.symbol.into_into_dart().into_dart(),
+            self.name.into_into_dart().into_dart(),
+            self.chain.into_into_dart().into_dart(),
+            self.decimals.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::lendaswap_api::AssetInfo
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::lendaswap_api::AssetInfo>
+    for crate::api::lendaswap_api::AssetInfo
+{
+    fn into_into_dart(self) -> crate::api::lendaswap_api::AssetInfo {
         self
     }
 }
@@ -3363,6 +4198,31 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::BoltzSwap>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::lendaswap_api::BtcToEvmSwapResult {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.swap_id.into_into_dart().into_dart(),
+            self.ln_invoice.into_into_dart().into_dart(),
+            self.arkade_htlc_address.into_into_dart().into_dart(),
+            self.sats_to_send.into_into_dart().into_dart(),
+            self.target_amount_usd.into_into_dart().into_dart(),
+            self.fee_sats.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::lendaswap_api::BtcToEvmSwapResult
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::lendaswap_api::BtcToEvmSwapResult>
+    for crate::api::lendaswap_api::BtcToEvmSwapResult
+{
+    fn into_into_dart(self) -> crate::api::lendaswap_api::BtcToEvmSwapResult {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::models::mempool::Conversions {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -3456,6 +4316,34 @@ impl flutter_rust_bridge::IntoIntoDart<crate::models::mempool::DifficultyPoint>
     for crate::models::mempool::DifficultyPoint
 {
     fn into_into_dart(self) -> crate::models::mempool::DifficultyPoint {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::lendaswap_api::EvmToBtcSwapResult {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.swap_id.into_into_dart().into_dart(),
+            self.evm_htlc_address.into_into_dart().into_dart(),
+            self.source_amount_usd.into_into_dart().into_dart(),
+            self.sats_to_receive.into_into_dart().into_dart(),
+            self.fee_sats.into_into_dart().into_dart(),
+            self.source_token_address.into_into_dart().into_dart(),
+            self.gelato_forwarder_address.into_into_dart().into_dart(),
+            self.gelato_user_nonce.into_into_dart().into_dart(),
+            self.gelato_user_deadline.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::lendaswap_api::EvmToBtcSwapResult
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::lendaswap_api::EvmToBtcSwapResult>
+    for crate::api::lendaswap_api::EvmToBtcSwapResult
+{
+    fn into_into_dart(self) -> crate::api::lendaswap_api::EvmToBtcSwapResult {
         self
     }
 }
@@ -3990,6 +4878,104 @@ impl flutter_rust_bridge::IntoIntoDart<crate::models::mempool::RecommendedFees>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendaswap::SwapInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.status.into_into_dart().into_dart(),
+            self.direction.into_into_dart().into_dart(),
+            self.source_token.into_into_dart().into_dart(),
+            self.target_token.into_into_dart().into_dart(),
+            self.source_amount_sats.into_into_dart().into_dart(),
+            self.target_amount_usd.into_into_dart().into_dart(),
+            self.created_at.into_into_dart().into_dart(),
+            self.ln_invoice.into_into_dart().into_dart(),
+            self.arkade_htlc_address.into_into_dart().into_dart(),
+            self.evm_htlc_address.into_into_dart().into_dart(),
+            self.fee_sats.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::lendaswap::SwapInfo {}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendaswap::SwapInfo> for crate::lendaswap::SwapInfo {
+    fn into_into_dart(self) -> crate::lendaswap::SwapInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::lendaswap_api::SwapQuote {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.exchange_rate.into_into_dart().into_dart(),
+            self.network_fee_sats.into_into_dart().into_dart(),
+            self.protocol_fee_sats.into_into_dart().into_dart(),
+            self.protocol_fee_percent.into_into_dart().into_dart(),
+            self.min_amount_sats.into_into_dart().into_dart(),
+            self.max_amount_sats.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::lendaswap_api::SwapQuote
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::lendaswap_api::SwapQuote>
+    for crate::api::lendaswap_api::SwapQuote
+{
+    fn into_into_dart(self) -> crate::api::lendaswap_api::SwapQuote {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendaswap::SwapStatusSimple {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::WaitingForDeposit => 0.into_dart(),
+            Self::Processing => 1.into_dart(),
+            Self::Completed => 2.into_dart(),
+            Self::Expired => 3.into_dart(),
+            Self::Refundable => 4.into_dart(),
+            Self::Refunded => 5.into_dart(),
+            Self::Failed => 6.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendaswap::SwapStatusSimple
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendaswap::SwapStatusSimple>
+    for crate::lendaswap::SwapStatusSimple
+{
+    fn into_into_dart(self) -> crate::lendaswap::SwapStatusSimple {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::lendaswap_api::TradingPair {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.source.into_into_dart().into_dart(),
+            self.target.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::lendaswap_api::TradingPair
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::lendaswap_api::TradingPair>
+    for crate::api::lendaswap_api::TradingPair
+{
+    fn into_into_dart(self) -> crate::api::lendaswap_api::TradingPair {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::ark_api::Transaction {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -4184,6 +5170,17 @@ impl SseEncode for crate::api::ark_api::Addresses {
     }
 }
 
+impl SseEncode for crate::api::lendaswap_api::AssetInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.token_id, serializer);
+        <String>::sse_encode(self.symbol, serializer);
+        <String>::sse_encode(self.name, serializer);
+        <String>::sse_encode(self.chain, serializer);
+        <u8>::sse_encode(self.decimals, serializer);
+    }
+}
+
 impl SseEncode for crate::api::ark_api::Balance {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4258,6 +5255,18 @@ impl SseEncode for bool {
     }
 }
 
+impl SseEncode for crate::api::lendaswap_api::BtcToEvmSwapResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.swap_id, serializer);
+        <String>::sse_encode(self.ln_invoice, serializer);
+        <String>::sse_encode(self.arkade_htlc_address, serializer);
+        <i64>::sse_encode(self.sats_to_send, serializer);
+        <f64>::sse_encode(self.target_amount_usd, serializer);
+        <i64>::sse_encode(self.fee_sats, serializer);
+    }
+}
+
 impl SseEncode for crate::models::mempool::Conversions {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4300,6 +5309,21 @@ impl SseEncode for crate::models::mempool::DifficultyPoint {
         <Option<u64>>::sse_encode(self.timestamp, serializer);
         <Option<f64>>::sse_encode(self.difficulty, serializer);
         <Option<u64>>::sse_encode(self.height, serializer);
+    }
+}
+
+impl SseEncode for crate::api::lendaswap_api::EvmToBtcSwapResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.swap_id, serializer);
+        <String>::sse_encode(self.evm_htlc_address, serializer);
+        <f64>::sse_encode(self.source_amount_usd, serializer);
+        <i64>::sse_encode(self.sats_to_receive, serializer);
+        <i64>::sse_encode(self.fee_sats, serializer);
+        <String>::sse_encode(self.source_token_address, serializer);
+        <Option<String>>::sse_encode(self.gelato_forwarder_address, serializer);
+        <Option<String>>::sse_encode(self.gelato_user_nonce, serializer);
+        <Option<String>>::sse_encode(self.gelato_user_deadline, serializer);
     }
 }
 
@@ -4563,6 +5587,26 @@ impl SseEncode for Vec<(String, f64)> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <(String, f64)>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::lendaswap::SwapInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::lendaswap::SwapInfo>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::lendaswap_api::TradingPair> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::lendaswap_api::TradingPair>::sse_encode(item, serializer);
         }
     }
 }
@@ -4936,6 +5980,65 @@ impl SseEncode for (String, f64) {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.0, serializer);
         <f64>::sse_encode(self.1, serializer);
+    }
+}
+
+impl SseEncode for crate::lendaswap::SwapInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <crate::lendaswap::SwapStatusSimple>::sse_encode(self.status, serializer);
+        <String>::sse_encode(self.direction, serializer);
+        <String>::sse_encode(self.source_token, serializer);
+        <String>::sse_encode(self.target_token, serializer);
+        <i64>::sse_encode(self.source_amount_sats, serializer);
+        <f64>::sse_encode(self.target_amount_usd, serializer);
+        <String>::sse_encode(self.created_at, serializer);
+        <Option<String>>::sse_encode(self.ln_invoice, serializer);
+        <Option<String>>::sse_encode(self.arkade_htlc_address, serializer);
+        <Option<String>>::sse_encode(self.evm_htlc_address, serializer);
+        <i64>::sse_encode(self.fee_sats, serializer);
+    }
+}
+
+impl SseEncode for crate::api::lendaswap_api::SwapQuote {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.exchange_rate, serializer);
+        <u64>::sse_encode(self.network_fee_sats, serializer);
+        <u64>::sse_encode(self.protocol_fee_sats, serializer);
+        <f64>::sse_encode(self.protocol_fee_percent, serializer);
+        <u64>::sse_encode(self.min_amount_sats, serializer);
+        <u64>::sse_encode(self.max_amount_sats, serializer);
+    }
+}
+
+impl SseEncode for crate::lendaswap::SwapStatusSimple {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::lendaswap::SwapStatusSimple::WaitingForDeposit => 0,
+                crate::lendaswap::SwapStatusSimple::Processing => 1,
+                crate::lendaswap::SwapStatusSimple::Completed => 2,
+                crate::lendaswap::SwapStatusSimple::Expired => 3,
+                crate::lendaswap::SwapStatusSimple::Refundable => 4,
+                crate::lendaswap::SwapStatusSimple::Refunded => 5,
+                crate::lendaswap::SwapStatusSimple::Failed => 6,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::api::lendaswap_api::TradingPair {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::api::lendaswap_api::AssetInfo>::sse_encode(self.source, serializer);
+        <crate::api::lendaswap_api::AssetInfo>::sse_encode(self.target, serializer);
     }
 }
 

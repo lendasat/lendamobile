@@ -6,6 +6,7 @@ use anyhow::Result;
 
 pub mod ark_api;
 pub mod bitcoin_api;
+pub mod lendaswap_api;
 pub mod mempool_api;
 pub mod mempool_block_tracker;
 pub mod mempool_ws;

@@ -5,7 +5,8 @@
       "Bash(flutter analyze:*)",
       "WebSearch",
       "Bash(ls:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(cargo ndk:*)"
     ],
     "deny": [],
     "ask": []
