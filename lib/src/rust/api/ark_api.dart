@@ -13,6 +13,8 @@ part 'ark_api.freezed.dart';
 Future<bool> walletExists({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiWalletExists(dataDir: dataDir);
 
+/// Setup a new wallet with a freshly generated 12-word mnemonic.
+/// Returns the mnemonic words that the user MUST back up securely.
 Future<String> setupNewWallet(
         {required String dataDir,
         required String network,
@@ -39,15 +41,16 @@ Future<String> loadExistingWallet(
         server: server,
         boltzUrl: boltzUrl);
 
+/// Restore a wallet from a mnemonic phrase (12 or 24 words)
 Future<String> restoreWallet(
-        {required String nsec,
+        {required String mnemonicWords,
         required String dataDir,
         required String network,
         required String esplora,
         required String server,
         required String boltzUrl}) =>
     RustLib.instance.api.crateApiArkApiRestoreWallet(
-        nsec: nsec,
+        mnemonicWords: mnemonicWords,
         dataDir: dataDir,
         network: network,
         esplora: esplora,
@@ -72,8 +75,22 @@ Future<LnPaymentResult> payLnInvoice({required String invoice}) =>
 
 Future<void> settle() => RustLib.instance.api.crateApiArkApiSettle();
 
+/// Get the Nostr secret key (nsec) derived from the wallet mnemonic
+/// Note: Nostr keys are network-independent, so we use Bitcoin mainnet for derivation
 Future<String> nsec({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiNsec(dataDir: dataDir);
+
+/// Get the mnemonic words for backup (only available for HD wallets)
+Future<String> getMnemonic({required String dataDir}) =>
+    RustLib.instance.api.crateApiArkApiGetMnemonic(dataDir: dataDir);
+
+/// Check if the wallet is using the new HD wallet format (mnemonic-based)
+Future<bool> isHdWallet({required String dataDir}) =>
+    RustLib.instance.api.crateApiArkApiIsHdWallet(dataDir: dataDir);
+
+/// Check if the wallet is using the legacy seed file format
+Future<bool> isLegacyWallet({required String dataDir}) =>
+    RustLib.instance.api.crateApiArkApiIsLegacyWallet(dataDir: dataDir);
 
 Future<void> resetWallet({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiResetWallet(dataDir: dataDir);

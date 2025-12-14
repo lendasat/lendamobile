@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -927650036;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 52364161;
 
 // Section: executor
 
@@ -626,6 +626,41 @@ fn wire__crate__api__mempool_api__get_hashrate_data_impl(
         },
     )
 }
+fn wire__crate__api__ark_api__get_mnemonic_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "get_mnemonic",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_data_dir = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::ark_api::get_mnemonic(api_data_dir)?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__get_recommended_fees_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -901,6 +936,74 @@ fn wire__crate__api__init_logging_impl(
                     let output_ok = Result::<_, ()>::Ok({
                         crate::api::init_logging(api_sink);
                     })?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__ark_api__is_hd_wallet_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "is_hd_wallet",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_data_dir = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Result::<_, ()>::Ok(crate::api::ark_api::is_hd_wallet(api_data_dir))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__ark_api__is_legacy_wallet_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "is_legacy_wallet",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_data_dir = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Result::<_, ()>::Ok(crate::api::ark_api::is_legacy_wallet(api_data_dir))?;
                     Ok(output_ok)
                 })())
             }
@@ -1320,7 +1423,7 @@ fn wire__crate__api__ark_api__restore_wallet_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_nsec = <String>::sse_decode(&mut deserializer);
+            let api_mnemonic_words = <String>::sse_decode(&mut deserializer);
             let api_data_dir = <String>::sse_decode(&mut deserializer);
             let api_network = <String>::sse_decode(&mut deserializer);
             let api_esplora = <String>::sse_decode(&mut deserializer);
@@ -1331,7 +1434,7 @@ fn wire__crate__api__ark_api__restore_wallet_impl(
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
                         let output_ok = crate::api::ark_api::restore_wallet(
-                            api_nsec,
+                            api_mnemonic_words,
                             api_data_dir,
                             api_network,
                             api_esplora,
@@ -3031,65 +3134,68 @@ fn pde_ffi_dispatcher_primary_impl(
         16 => {
             wire__crate__api__mempool_api__get_hashrate_data_impl(port, ptr, rust_vec_len, data_len)
         }
-        17 => wire__crate__api__get_recommended_fees_impl(port, ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__mempool_api__get_recommended_fees_impl(
+        17 => wire__crate__api__ark_api__get_mnemonic_impl(port, ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__get_recommended_fees_impl(port, ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__mempool_api__get_recommended_fees_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        20 => wire__crate__api__get_transaction_impl(port, ptr, rust_vec_len, data_len),
-        21 => {
+        21 => wire__crate__api__get_transaction_impl(port, ptr, rust_vec_len, data_len),
+        22 => {
             wire__crate__api__mempool_api__get_transaction_impl(port, ptr, rust_vec_len, data_len)
         }
-        22 => wire__crate__api__ark_api__information_impl(port, ptr, rust_vec_len, data_len),
-        23 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
-        24 => wire__crate__api__init_logging_impl(port, ptr, rust_vec_len, data_len),
-        25 => {
+        23 => wire__crate__api__ark_api__information_impl(port, ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__init_logging_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__ark_api__is_hd_wallet_impl(port, ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__ark_api__is_legacy_wallet_impl(port, ptr, rust_vec_len, data_len),
+        28 => {
             wire__crate__api__ark_api__load_existing_wallet_impl(port, ptr, rust_vec_len, data_len)
         }
-        26 => wire__crate__api__moonpay_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
-        27 => wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
+        29 => wire__crate__api__moonpay_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        28 => wire__crate__api__moonpay_get_currency_limits_impl(port, ptr, rust_vec_len, data_len),
-        29 => wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
+        31 => wire__crate__api__moonpay_get_currency_limits_impl(port, ptr, rust_vec_len, data_len),
+        32 => wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        30 => wire__crate__api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len),
-        31 => {
+        33 => wire__crate__api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len),
+        34 => {
             wire__crate__api__moonpay_api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len)
         }
-        32 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
-        33 => wire__crate__api__ark_api__pay_ln_invoice_impl(port, ptr, rust_vec_len, data_len),
-        34 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
-        35 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
-        36 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
-        39 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
-        40 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
+        35 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
+        36 => wire__crate__api__ark_api__pay_ln_invoice_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
+        38 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
+        41 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        41 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
+        44 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
+        45 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        43 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
-        45 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
+        46 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
+        47 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
+        48 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3103,7 +3209,7 @@ fn pde_ffi_dispatcher_sync_impl(
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
         3 => wire__crate__api__currency_code_impl(ptr, rust_vec_len, data_len),
-        19 => wire__crate__api__get_supported_currencies_impl(ptr, rust_vec_len, data_len),
+        20 => wire__crate__api__get_supported_currencies_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }

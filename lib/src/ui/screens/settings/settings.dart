@@ -5,6 +5,7 @@ import 'package:ark_flutter/src/ui/screens/settings/settings_style_view.dart';
 import 'package:ark_flutter/src/ui/screens/settings/change_language.dart';
 import 'package:ark_flutter/src/ui/screens/settings/change_timezone.dart';
 import 'package:ark_flutter/src/ui/screens/settings/change_currency.dart';
+import 'package:ark_flutter/src/ui/screens/settings/recovery_key_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -46,6 +47,8 @@ class Settings extends StatelessWidget {
         return const ChangeTimezone();
       case 'currency':
         return const ChangeCurrency();
+      case 'recovery':
+        return const RecoveryKeyView();
       case 'main':
       default:
         return SettingsView(aspId: aspId);

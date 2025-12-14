@@ -7,6 +7,8 @@ pub async fn wallet_exists(data_dir: String) -> Result<bool> {
     crate::ark::wallet_exists(data_dir).await
 }
 
+/// Setup a new wallet with a freshly generated 12-word mnemonic.
+/// Returns the mnemonic words that the user MUST back up securely.
 pub async fn setup_new_wallet(
     data_dir: String,
     network: String,
@@ -29,8 +31,9 @@ pub async fn load_existing_wallet(
     crate::ark::load_existing_wallet(data_dir, network, esplora, server, boltz_url).await
 }
 
+/// Restore a wallet from a mnemonic phrase (12 or 24 words)
 pub async fn restore_wallet(
-    nsec: String,
+    mnemonic_words: String,
     data_dir: String,
     network: String,
     esplora: String,
@@ -38,7 +41,7 @@ pub async fn restore_wallet(
     boltz_url: String,
 ) -> Result<String> {
     let network = Network::from_str(network.as_str())?;
-    crate::ark::restore_wallet(nsec, data_dir, network, esplora, server, boltz_url).await
+    crate::ark::restore_wallet(mnemonic_words, data_dir, network, esplora, server, boltz_url).await
 }
 
 pub struct Balance {
@@ -197,9 +200,28 @@ pub async fn settle() -> Result<()> {
     Ok(())
 }
 
+/// Get the Nostr secret key (nsec) derived from the wallet mnemonic
+/// Note: Nostr keys are network-independent, so we use Bitcoin mainnet for derivation
 pub async fn nsec(data_dir: String) -> Result<String> {
-    let nsec = crate::ark::nsec(data_dir).await?;
+    // Nostr keys are not network-specific, but we need a network for xpriv derivation
+    // Using mainnet as the standard (the derived key will be the same regardless)
+    let nsec = crate::ark::nsec(data_dir, Network::Bitcoin).await?;
     Ok(nsec.to_bech32()?)
+}
+
+/// Get the mnemonic words for backup (only available for HD wallets)
+pub fn get_mnemonic(data_dir: String) -> Result<String> {
+    crate::ark::get_mnemonic(data_dir)
+}
+
+/// Check if the wallet is using the new HD wallet format (mnemonic-based)
+pub fn is_hd_wallet(data_dir: String) -> bool {
+    crate::ark::is_hd_wallet(&data_dir)
+}
+
+/// Check if the wallet is using the legacy seed file format
+pub fn is_legacy_wallet(data_dir: String) -> bool {
+    crate::ark::is_legacy_wallet(&data_dir)
 }
 
 pub async fn reset_wallet(data_dir: String) -> Result<()> {

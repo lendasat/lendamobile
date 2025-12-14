@@ -3,7 +3,9 @@
     "allow": [
       "Bash(flutter build:*)",
       "Bash(flutter analyze:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(ls:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

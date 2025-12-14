@@ -1,25 +1,19 @@
 use crate::ark::address_helper::{decode_bip21, is_ark_address, is_bip21, is_btc_address};
-use crate::ark::esplora::EsploraClient;
-use crate::ark::storage::InMemoryDb;
-use crate::state::ARK_CLIENT;
+use crate::state::{ArkClient, ARK_CLIENT};
 use anyhow::Result;
 use anyhow::{anyhow, bail};
-use ark_bdk_wallet::Wallet;
 use ark_client::lightning_invoice::Bolt11Invoice;
-use ark_client::{Client, OffChainBalance, SqliteSwapStorage, StaticKeyProvider, SwapAmount};
+use ark_client::{OffChainBalance, SwapAmount};
 use ark_core::ArkAddress;
 use ark_core::history::Transaction;
 use ark_core::server::{Info, SubscriptionResponse};
 use bitcoin::{Address, Amount, Txid};
 use futures::StreamExt;
-use rand::SeedableRng;
 use rand::rngs::StdRng;
+use rand::SeedableRng;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
-
-/// Type alias for our configured Ark client
-type ArkClient = Client<EsploraClient, Wallet<InMemoryDb>, SqliteSwapStorage, StaticKeyProvider>;
 
 pub struct Balance {
     pub offchain: OffChainBalance,

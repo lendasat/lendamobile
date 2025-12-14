@@ -9,6 +9,39 @@ This document describes the unified key derivation architecture that enables a s
 - **Service interoperability** - All apps derive from same master seed
 - **Standard compliance** - Uses BIP39/BIP32 industry standards
 
+## Current Implementation
+
+### Ark Mobile Wallet
+
+The mobile wallet uses the **Arkade SDK** with custom derivation for HD wallet support:
+
+```
+Mnemonic (12 words)
+    │
+    ▼
+Master Xpriv (from BIP39 seed)
+    │
+    ├─→ Arkade Bip32KeyProvider
+    │   └─→ m/83696968'/11811'/0/{index}  (Arkade Default)
+    │
+    ├─→ Nostr Identity
+    │   └─→ m/44'/1237'/0'/0/0    (NIP-06 Standard)
+    │
+    ├─→ LendaSwap (future)
+    │   └─→ m/83696968'/121923'/{index}'
+    │
+    └─→ Lendasat (future)
+        └─→ m/10101'/0'/{index}'
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `rust/src/ark/mnemonic_file.rs` | Mnemonic generation, storage, and key derivation |
+| `rust/src/ark/mod.rs` | Wallet setup with Bip32KeyProvider |
+| `rust/src/state.rs` | UnifiedKeyProvider for HD and legacy support |
+
 ## Architecture Diagram
 
 ```
@@ -24,179 +57,185 @@ This document describes the unified key derivation architecture that enables a s
 │                     Passphrase: "" (empty)                          │
 └─────────────────────────────┬───────────────────────────────────────┘
                               │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Master Xpriv                                    │
+│              (passed to Arkade Bip32KeyProvider)                    │
+└─────────────────────────────┬───────────────────────────────────────┘
+                              │
           ┌───────────────────┼───────────────────┬───────────────────┐
           │                   │                   │                   │
           ▼                   ▼                   ▼                   ▼
 ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
 │   Ark Wallet    │ │   LendaSwap     │ │    Lendasat     │ │     Nostr       │
+│   (Arkade SDK)  │ │   (Future)      │ │   (Future)      │ │                 │
 │                 │ │                 │ │                 │ │                 │
-│ m/83696968'     │ │ m/83696968'     │ │ m/10101'        │ │ m/44            │
-│   /11811'       │ │   /121923'      │ │   /0'           │ │   /0            │
-│   /0            │ │   /{index}'     │ │   /{index}'     │ │   /0            │
-│                 │ │                 │ │                 │ │   /0            │
-│ Bitcoin funds   │ │ Swap keys       │ │ Collateral keys │ │   /0            │
-│ (on/off-chain)  │ │ (HTLC secrets)  │ │ (loan contracts)│ │                 │
-└─────────────────┘ └─────────────────┘ └─────────────────┘ │ Social identity │
-                              │                             └─────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │ LendaSwap       │
-                    │ User IDs        │
-                    │                 │
-                    │ m/9419'         │
-                    │   /121923'      │
-                    │   /0'           │
-                    │   /{index}      │
-                    │                 │
-                    │ (for recovery)  │
-                    └─────────────────┘
+│ m/83696968'     │ │ m/83696968'     │ │ m/10101'        │ │ m/44'/1237'     │
+│   /11811'/0     │ │   /121923'      │ │   /0'           │ │   /0'/0         │
+│   /{index}      │ │   /{index}'     │ │   /{index}'     │ │   /0            │
+│ Arkade Default  │ │                 │ │                 │ │                 │
+│ (not BIP84)     │ │ Swap keys       │ │ Collateral keys │ │ NIP-06          │
+│                 │ │ (HTLC secrets)  │ │ (loan contracts)│ │ Social identity │
+└─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘
 ```
 
 ## Derivation Paths Reference
 
 ### Summary Table
 
-| Service | Purpose | Derivation Path | Hardened | Notes |
-|---------|---------|-----------------|----------|-------|
-| **Ark SDK** | Wallet key | `m/83696968'/11811'/0` | Yes | BIP-85 prefix, single key |
-| **LendaSwap** | Swap keys | `m/83696968'/121923'/{i}'` | Yes | One key per swap |
-| **LendaSwap** | User IDs | `m/9419'/121923'/0'/{i}` | Mixed | For swap recovery |
-| **Lendasat** | Contract keys | `m/10101'/0'/{i}'` | Yes | Collateral signing |
-| **Nostr** | Identity | `m/44/0/0/0/0` | No | NIP-06 compatible |
+| Service | Purpose | Derivation Path | Standard | Status |
+|---------|---------|-----------------|----------|--------|
+| **Ark SDK** | HD Wallet | `m/83696968'/11811'/0/{i}` | Arkade Default | **Implemented** |
+| **Nostr** | Identity | `m/44'/1237'/0'/0/0` | NIP-06 | **Implemented** |
+| **LendaSwap** | Swap keys | `m/83696968'/121923'/{i}'` | BIP-85 | Planned |
+| **Lendasat** | Contract keys | `m/10101'/0'/{i}'` | Custom | Planned |
 
-### Path Component Meanings
-
-#### BIP-85 Applications (prefix `83696968'`)
-
-The number `83696968` is the BIP-85 application prefix, used for deriving application-specific keys:
-
-- **`11811`** = Ark identifier
-- **`121923`** = "LSW" (LendaSwap) encoded as: `L(12) S(19) W(23)`
-
-#### Lendasat (`10101'`)
-
-- **`10101`** = Lendasat-specific prefix for loan contracts
-- Non-BIP-85, custom path for historical reasons
-
-#### Nostr (`44/0/0/0/0`)
-
-- Follows NIP-06 specification
-- Non-hardened for compatibility with hardware wallets
-- Path: `m/44'/1237'/{account}'/{change}/{index}` simplified to `m/44/0/0/0/0`
-
-## Detailed Specifications
-
-### 1. Ark SDK (Wallet)
-
-**Purpose:** Hold and transact Bitcoin (on-chain and Ark off-chain)
-
-**Path:** `m/83696968'/11811'/0`
+### Path Constants (Rust)
 
 ```rust
-// Ark SDK default derivation
-const ARK_PATH: &str = "m/83696968'/11811'/0";
+// rust/src/ark/mnemonic_file.rs
 
-let seed = mnemonic.to_seed("");
-let master = Xpriv::new_master(network, &seed)?;
-let ark_key = master.derive_priv(&secp, &ARK_PATH.parse()?)?;
+/// Arkade's default derivation path for HD wallet
+/// This matches ark_core::DEFAULT_DERIVATION_PATH: m/83696968'/11811'/0/{index}
+pub const ARK_BASE_DERIVATION_PATH: &str = "m/83696968'/11811'/0";
+
+/// Derivation path for LendaSwap swap keys (from same mnemonic)
+pub const LENDASWAP_DERIVATION_PATH: &str = "m/83696968'/121923'";
+
+/// Derivation path for Lendasat contract keys (from same mnemonic)
+pub const LENDASAT_DERIVATION_PATH: &str = "m/10101'/0'";
+
+/// Derivation path for Nostr keys (NIP-06 compatible)
+pub const NOSTR_DERIVATION_PATH: &str = "m/44'/1237'/0'/0/0";
 ```
 
-**Key usage:**
-- Sign Ark transactions (VTXOs)
-- Sign on-chain transactions (boarding, unilateral exits)
-- Derive Ark addresses
+## Implementation Details
 
-### 2. LendaSwap (Swap Keys)
+### 1. Ark SDK (Bip32KeyProvider)
 
-**Purpose:** Generate cryptographic parameters for atomic swaps
+The Arkade SDK uses `Bip32KeyProvider` which handles HD key derivation internally.
 
-**Path:** `m/83696968'/121923'/{index}'`
+**Path:** `m/83696968'/11811'/0/{index}` (Arkade Default - NOT BIP84)
 
 ```rust
-// From lendaswap-core/src/hd_wallet.rs
-const SIGNING_PREFIX: u32 = 83696968;  // BIP-85
-const LSW_IDENTIFIER: u32 = 121923;    // "LSW"
+// rust/src/ark/mod.rs
 
-let path = format!("m/{}'/{}'/{}'", SIGNING_PREFIX, LSW_IDENTIFIER, index);
-let derived = master.derive_priv(&secp, &path.parse()?)?;
+pub async fn setup_client_hd(
+    master_xpriv: Xpriv,  // Master key from mnemonic
+    // ...
+) -> Result<String> {
+    // Arkade handles key derivation at m/83696968'/11811'/0/{i}
+    let base_path = DerivationPath::from_str(ARK_BASE_DERIVATION_PATH)?;
+    let bip32_provider = Bip32KeyProvider::new(master_xpriv, base_path);
+    let key_provider = UnifiedKeyProvider::Hd(bip32_provider);
 
-// Derive swap parameters
-let secret_key = derived.private_key;
-let public_key = secret_key.public_key(&secp);
-let preimage = tagged_hash("lendaswap/preimage", &secret_key.secret_bytes());
-let preimage_hash = sha256(preimage);
+    let client = OfflineClient::new(
+        "lenda-mobile".to_string(),
+        Arc::new(key_provider),
+        // ...
+    );
+}
 ```
 
-**Key usage:**
-- `secret_key` / `public_key` - Sign HTLC claims/refunds
-- `preimage` - HTLC secret (revealed to claim)
-- `preimage_hash` - HTLC lock (hash lock)
+**Key features of Bip32KeyProvider:**
+- `get_next_keypair()` - Automatically derives next key at path `/{index}`
+- `get_keypair_for_pk()` - Retrieves keypair by public key from cache
+- `supports_discovery()` - Enables BIP44-style gap limit discovery
 
-### 3. LendaSwap (User IDs)
+### 2. Nostr Identity (NIP-06)
 
-**Purpose:** Enable swap recovery from server
-
-**Path:** `m/9419'/121923'/0'/{index}` (note: last component non-hardened)
+**Path:** `m/44'/1237'/0'/0/0` (NIP-06 Standard)
 
 ```rust
-// From lendaswap-core/src/hd_wallet.rs
-const ID_PREFIX: u32 = 9419;
+// rust/src/ark/mod.rs
 
-// Derive Xpub for recovery (hardened base)
-let xpub_path = format!("m/{}'/{}'/{}'", ID_PREFIX, LSW_IDENTIFIER, 0);
-let xpub = master.derive_priv(&secp, &xpub_path.parse()?)?.to_xpub();
-
-// Derive individual user_id (non-hardened from xpub)
-let user_id_path = format!("m/{}/{}/{}", ID_PREFIX, LSW_IDENTIFIER, index);
-let user_id_pubkey = xpub.derive_pub(&secp, &user_id_path.parse()?)?;
+pub(crate) async fn nsec(data_dir: String, network: Network) -> Result<nostr::SecretKey> {
+    if let Some(mnemonic) = read_mnemonic_file(&data_dir)? {
+        let xpriv = derive_xpriv_at_path(&mnemonic, NOSTR_DERIVATION_PATH, network)?;
+        let sk = nostr::SecretKey::from_slice(xpriv.private_key.secret_bytes().as_ref())?;
+        return Ok(sk);
+    }
+    // Fall back to legacy...
+}
 ```
 
-**Why mixed hardening?**
-- Base path is hardened (protects master key)
-- Final index is non-hardened (allows Xpub sharing)
-- Server can derive user_ids from Xpub to find user's swaps
+**Note:** Nostr keys are network-independent. The derived key is the same regardless of Bitcoin network.
 
-### 4. Lendasat (Contract Keys)
-
-**Purpose:** Sign Bitcoin collateral contracts for loans
-
-**Path:** `m/10101'/0'/{index}'`
+### 3. Mnemonic Generation & Storage
 
 ```rust
-// From lendasat/client-sdk/src/wallet.rs
-let path = vec![
-    ChildNumber::from_hardened_idx(10101)?,
-    ChildNumber::from_hardened_idx(0)?,
-    ChildNumber::from_hardened_idx(contract_index)?,
-];
-let contract_key = master.derive_priv(&secp, &path.into())?;
+// rust/src/ark/mnemonic_file.rs
+
+/// Generate a new 12-word BIP39 mnemonic
+pub fn generate_mnemonic() -> Result<Mnemonic> {
+    let mut entropy = [0u8; 16];  // 128 bits = 12 words
+    rand::thread_rng().fill_bytes(&mut entropy);
+    Mnemonic::from_entropy(&entropy)
+}
+
+/// Derive the master extended private key from mnemonic
+pub fn derive_master_xpriv(mnemonic: &Mnemonic, network: Network) -> Result<Xpriv> {
+    let seed = mnemonic.to_seed("");  // Empty passphrase
+    Xpriv::new_master(network, &seed)
+}
+
+/// Derive xpriv at a specific path (for Nostr, LendaSwap, etc.)
+pub fn derive_xpriv_at_path(mnemonic: &Mnemonic, path: &str, network: Network) -> Result<Xpriv> {
+    let master = derive_master_xpriv(mnemonic, network)?;
+    let derivation_path = DerivationPath::from_str(path)?;
+    master.derive_priv(&Secp256k1::new(), &derivation_path)
+}
 ```
 
-**Key usage:**
-- Sign collateral deposit transactions
-- Sign collateral release/liquidation transactions
-- One key per loan contract
+### 4. UnifiedKeyProvider
 
-### 5. Nostr (Identity)
-
-**Purpose:** Social identity for Nostr protocol
-
-**Path:** `m/44/0/0/0/0` (non-hardened)
+Supports both HD wallets (new) and legacy wallets (migration):
 
 ```rust
-// From lendasat/client-sdk/src/wallet.rs
-pub const NOSTR_DERIVATION_PATH: &str = "m/44/0/0/0/0";
+// rust/src/state.rs
 
-let path = DerivationPath::from_str(NOSTR_DERIVATION_PATH)?;
-let nostr_key = master.derive_priv(&secp, &path)?;
-let npub = XOnlyPublicKey::from(nostr_key.public_key());
+pub enum UnifiedKeyProvider {
+    Hd(Bip32KeyProvider),      // New: mnemonic-based HD wallet
+    Legacy(StaticKeyProvider), // Old: raw seed file
+}
+
+impl KeyProvider for UnifiedKeyProvider {
+    fn get_next_keypair(&self, keypair_index: KeypairIndex) -> Result<Keypair, Error> {
+        match self {
+            UnifiedKeyProvider::Hd(kp) => kp.get_next_keypair(keypair_index),
+            UnifiedKeyProvider::Legacy(kp) => kp.get_next_keypair(keypair_index),
+        }
+    }
+    // ... other trait methods
+}
 ```
 
-**Key usage:**
-- Sign Nostr events (notes, reactions, etc.)
-- Derive npub (public identifier)
-- Encrypt/decrypt DMs (NIP-04)
+## Wallet Types
+
+### HD Wallet (New)
+
+- Created with `setup_new_wallet()` or `restore_wallet(mnemonicWords: ...)`
+- Stored in `mnemonic` file (12/24 words)
+- Uses `Bip32KeyProvider` with BIP84 derivation
+- Supports key discovery and multiple addresses
+
+### Legacy Wallet (Migration)
+
+- Created with old `setup_new_wallet()` (pre-mnemonic)
+- Stored in `seed` file (raw hex bytes)
+- Uses `StaticKeyProvider` (single key)
+- **Migration recommended:** Transfer funds to new HD wallet
+
+Check wallet type:
+```rust
+pub fn is_hd_wallet(data_dir: &str) -> bool {
+    mnemonic_exists(data_dir)
+}
+
+pub fn is_legacy_wallet(data_dir: &str) -> bool {
+    !mnemonic_exists(data_dir) && legacy_seed_exists(data_dir)
+}
+```
 
 ## Security Considerations
 
@@ -205,11 +244,10 @@ let npub = XOnlyPublicKey::from(nostr_key.public_key());
 All paths are carefully chosen to avoid collisions:
 
 ```
-m/83696968'/11811'/...    - Ark (unique app ID: 11811)
-m/83696968'/121923'/...   - LendaSwap swaps (unique app ID: 121923)
-m/9419'/121923'/...       - LendaSwap recovery (different prefix: 9419)
-m/10101'/...              - Lendasat (unique prefix: 10101)
-m/44/...                  - Nostr (standard BIP-44 prefix)
+m/83696968'/11811'/0/...  - Ark (Arkade default)
+m/44'/1237'/0'/0/0        - Nostr (NIP-06 standard)
+m/83696968'/121923'/...   - LendaSwap (BIP-85 prefix)
+m/10101'/...              - Lendasat (custom prefix)
 ```
 
 ### Hardened vs Non-Hardened
@@ -217,56 +255,51 @@ m/44/...                  - Nostr (standard BIP-44 prefix)
 | Path Type | Security | Use Case |
 |-----------|----------|----------|
 | Hardened (`'`) | Child key cannot derive parent | Financial keys, secrets |
-| Non-hardened | Xpub can derive child pubkeys | Recovery, Nostr compat |
+| Non-hardened | Xpub can derive child pubkeys | Address discovery |
 
 ### Mnemonic Security
 
-1. **Generation** - Use cryptographically secure RNG
-2. **Storage** - Encrypt at rest, use secure enclave if available
-3. **Display** - Show only during backup, require auth to view
-4. **Transmission** - Never send over network
+1. **Generation** - Use cryptographically secure RNG (128 bits entropy)
+2. **Storage** - Written to app's private directory
+3. **Display** - Shown only after security warning, with numbered words
+4. **Backup** - User must manually copy and secure
 
-## Implementation Guide
+## Flutter API
 
-### Generating a New Wallet
+### Dart Bindings (Generated)
 
-```rust
-use bip39::{Mnemonic, Language};
+```dart
+// lib/src/rust/api/ark_api.dart
 
-// Generate 12-word mnemonic
-let mnemonic = Mnemonic::generate_in(Language::English, 12)?;
-let phrase = mnemonic.to_string();
+/// Create new wallet, returns mnemonic for backup
+Future<String> setupNewWallet({
+    required String dataDir,
+    required String network,
+    required String esplora,
+    required String server,
+    required String boltzUrl,
+});
 
-// Derive master seed (empty passphrase for compatibility)
-let seed = mnemonic.to_seed("");
-let master = Xpriv::new_master(Network::Bitcoin, &seed)?;
+/// Restore wallet from mnemonic
+Future<String> restoreWallet({
+    required String mnemonicWords,  // 12 or 24 words
+    required String dataDir,
+    required String network,
+    required String esplora,
+    required String server,
+    required String boltzUrl,
+});
 
-// Now derive keys for each service...
+/// Get mnemonic for backup display
+Future<String> getMnemonic({required String dataDir});
+
+/// Check wallet type
+Future<bool> isHdWallet({required String dataDir});
+Future<bool> isLegacyWallet({required String dataDir});
+
+/// Get Nostr identity (nsec)
+Future<String> nsec({required String dataDir});
 ```
-
-### Restoring from Mnemonic
-
-```rust
-use bip39::Mnemonic;
-
-// Parse and validate mnemonic
-let mnemonic = Mnemonic::parse(user_input)?;
-
-// Derive same master seed
-let seed = mnemonic.to_seed("");
-let master = Xpriv::new_master(network, &seed)?;
-
-// All derived keys will match original wallet
-```
-
-### Cross-Platform Sync
-
-When user imports mnemonic on a new device/platform:
-
-1. **Ark** - Sync with Ark server to recover VTXOs
-2. **LendaSwap** - Call `recover_swaps()` with user ID Xpub
-3. **Lendasat** - Server has contract history linked to pubkeys
-4. **Nostr** - Follows/relays synced via Nostr protocol
 
 ## Testing Vectors
 
@@ -278,69 +311,57 @@ abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon 
 
 ### Expected Derivations (Bitcoin Mainnet)
 
-| Service | Path | Public Key (compressed hex) |
-|---------|------|----------------------------|
-| Ark | `m/83696968'/11811'/0` | (derive and verify) |
-| LendaSwap[0] | `m/83696968'/121923'/0'` | (derive and verify) |
-| Lendasat[0] | `m/10101'/0'/0'` | (derive and verify) |
-| Nostr | `m/44/0/0/0/0` | (derive and verify) |
+| Service | Path | Notes |
+|---------|------|-------|
+| Ark (index 0) | `m/83696968'/11811'/0/0` | First Ark address |
+| Ark (index 1) | `m/83696968'/11811'/0/1` | Second Ark address |
+| Nostr | `m/44'/1237'/0'/0/0` | NIP-06 identity |
 
 ### Verification Code
 
 ```rust
 #[test]
-fn test_derivation_paths_no_collision() {
-    let paths = vec![
-        "m/83696968'/11811'/0",
-        "m/83696968'/121923'/0'",
-        "m/9419'/121923'/0'/0",
-        "m/10101'/0'/0'",
-        "m/44/0/0/0/0",
-    ];
+fn test_same_mnemonic_same_keys() {
+    let phrase = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+    let mnemonic = parse_mnemonic(phrase).unwrap();
 
-    // Ensure all paths are unique
-    let unique: HashSet<_> = paths.iter().collect();
-    assert_eq!(unique.len(), paths.len());
+    let master1 = derive_master_xpriv(&mnemonic, Network::Bitcoin).unwrap();
+    let master2 = derive_master_xpriv(&mnemonic, Network::Bitcoin).unwrap();
+
+    assert_eq!(master1.to_string(), master2.to_string());
 }
 
 #[test]
-fn test_same_mnemonic_same_keys() {
+fn test_nostr_derivation() {
     let phrase = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+    let mnemonic = parse_mnemonic(phrase).unwrap();
 
-    // Derive twice
-    let keys1 = derive_all_keys(phrase);
-    let keys2 = derive_all_keys(phrase);
-
-    // Must be identical
-    assert_eq!(keys1, keys2);
+    let xpriv = derive_xpriv_at_path(&mnemonic, NOSTR_DERIVATION_PATH, Network::Bitcoin).unwrap();
+    // Verify against known test vector...
 }
 ```
 
-## Migration from Legacy Systems
+## Migration from Legacy
 
-### From Raw Seed (Mobile App)
+### From Raw Seed (Pre-Mnemonic Wallet)
 
-If user has existing raw seed (not mnemonic):
+Users with legacy wallets cannot derive a mnemonic from the raw seed. They must:
 
-1. Cannot derive mnemonic from raw seed (one-way function)
-2. Must create new mnemonic-based wallet
-3. Transfer funds from old to new wallet
-4. Securely delete old seed
+1. Create a new HD wallet (generates fresh mnemonic)
+2. Back up the new mnemonic securely
+3. Transfer funds from legacy to new wallet
+4. Delete legacy wallet
 
-### From Different Passphrase
+The app detects legacy wallets and shows a migration warning in settings.
 
-If user used a passphrase with their mnemonic:
+### Cross-Platform Sync
 
-```rust
-// Old system (with passphrase)
-let seed_old = mnemonic.to_seed("user_passphrase");
+When user imports mnemonic on a new device:
 
-// New system (no passphrase)
-let seed_new = mnemonic.to_seed("");
-
-// These produce DIFFERENT master keys!
-// User must migrate funds if switching
-```
+1. **Ark** - Bip32KeyProvider discovers used keys automatically
+2. **Nostr** - Same npub derived from NIP-06 path
+3. **LendaSwap** (future) - Recover swaps via server lookup
+4. **Lendasat** (future) - Server has contract history
 
 ## Future Considerations
 
@@ -348,7 +369,7 @@ let seed_new = mnemonic.to_seed("");
 
 New services should:
 
-1. Choose unique path prefix (avoid collisions)
+1. Choose unique path prefix (avoid collisions with existing)
 2. Document in this file
 3. Use hardened derivation for financial keys
 4. Consider BIP-85 prefix (`83696968'`) for consistency
@@ -357,14 +378,6 @@ New services should:
 
 For hardware wallet compatibility:
 
-- Non-hardened paths can be derived from Xpub
-- Hardened paths require device signing
-- Consider Taproot (BIP-86) paths for future
-
-### Multi-Signature
-
-For multi-sig setups:
-
-- Each party uses their own mnemonic
-- Derive keys at same path
-- Combine pubkeys for multi-sig script
+- Arkade path (`m/83696968'/11811'/0`) is custom and may require specific hardware support
+- NIP-06 path may require custom app on hardware wallet
+- Consider Taproot (BIP-86) paths for future Bitcoin on-chain addresses

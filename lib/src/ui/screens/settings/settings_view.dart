@@ -30,7 +30,6 @@ class SettingsView extends StatefulWidget {
 }
 
 class SettingsViewState extends State<SettingsView> {
-  String _nsec = 'Unknown';
   Info? _info;
   String _selectedNetwork = 'Regtest';
 
@@ -46,7 +45,6 @@ class SettingsViewState extends State<SettingsView> {
   @override
   void initState() {
     super.initState();
-    _fetchNsec();
     _fetchInfo();
     _loadSettings();
   }
@@ -70,18 +68,6 @@ class SettingsViewState extends State<SettingsView> {
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  Future<void> _fetchNsec() async {
-    try {
-      var dataDir = await getApplicationSupportDirectory();
-      var key = await nsec(dataDir: dataDir.path);
-      setState(() {
-        _nsec = key;
-      });
-    } catch (err) {
-      logger.e("Error getting nsec: $err");
     }
   }
 
@@ -199,165 +185,6 @@ class SettingsViewState extends State<SettingsView> {
     _arkServerController.dispose();
     _boltzUrlController.dispose();
     super.dispose();
-  }
-
-  void _showBackupWarningDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? AppTheme.black90
-            : Colors.white,
-        title: Text(
-          AppLocalizations.of(context)!.securityWarning,
-          style: TextStyle(color: AppTheme.colorBitcoin),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppLocalizations.of(context)!.neverShareYourRecoveryKeyWithAnyone,
-              style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppTheme.white90
-                    : AppTheme.black90,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)!.anyoneWithThisKeyCan,
-              style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppTheme.white60
-                    : AppTheme.black60,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              AppLocalizations.of(context)!.cancel,
-              style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppTheme.white60
-                    : AppTheme.black60,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _showRecoveryKeyDialog();
-            },
-            child: Text(
-              AppLocalizations.of(context)!.iUnderstand,
-              style: TextStyle(color: AppTheme.colorBitcoin),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRecoveryKeyDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? AppTheme.black90
-            : Colors.white,
-        title: Text(
-          AppLocalizations.of(context)!.yourRecoveryPhrase,
-          style: TextStyle(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? AppTheme.white90
-                : AppTheme.black90,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppTheme.black60.withValues(alpha: 0.3)
-                    : AppTheme.white90,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.white60.withValues(alpha: 0.2)
-                      : AppTheme.black60.withValues(alpha: 0.2),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(spacing: 8, runSpacing: 8, children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppTheme.black90
-                            : AppTheme.white90,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        _nsec,
-                        style: TextStyle(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppTheme.white90
-                              : AppTheme.black90,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    )
-                  ]),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: _nsec));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(AppLocalizations.of(context)!
-                          .recoveryPhraseCopiedToClipboard)),
-                );
-              },
-              icon: Icon(Icons.copy, color: AppTheme.colorBitcoin),
-              label: Text(AppLocalizations.of(context)!.copyToClipboard),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.colorBitcoin,
-                side: BorderSide(color: AppTheme.colorBitcoin),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              AppLocalizations.of(context)!.close,
-              style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppTheme.white90
-                    : AppTheme.black90,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showResetWalletDialog() {
@@ -919,7 +746,7 @@ class SettingsViewState extends State<SettingsView> {
                     ArkListTile(
                       leading: RoundedButtonWidget(
                         iconData: Icons.key_rounded,
-                        onTap: _showBackupWarningDialog,
+                        onTap: () => controller.switchTab('recovery'),
                         size: AppTheme.iconSize * 1.5,
                         buttonType: ButtonType.transparent,
                       ),
@@ -931,7 +758,7 @@ class SettingsViewState extends State<SettingsView> {
                             ? AppTheme.white60
                             : AppTheme.black60,
                       ),
-                      onTap: _showBackupWarningDialog,
+                      onTap: () => controller.switchTab('recovery'),
                     ),
 
                     // Developer Options

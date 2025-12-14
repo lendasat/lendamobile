@@ -2,6 +2,7 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
+import 'package:ark_flutter/src/ui/screens/mnemonic_input_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,7 +16,6 @@ class OnboardingScreen extends StatefulWidget {
 
 class OnboardingScreenState extends State<OnboardingScreen> {
   String? _selectedOption;
-  final TextEditingController _secretKeyController = TextEditingController();
   bool _isLoading = false;
   final SettingsService _settingsService = SettingsService();
   String? _esploraUrl;
@@ -51,19 +51,9 @@ class OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _secretKeyController.dispose();
-    super.dispose();
-  }
-
   void _handleOptionSelect(String option) {
     setState(() {
       _selectedOption = option;
-
-      if (option == 'new') {
-        _secretKeyController.clear();
-      }
     });
   }
 
@@ -116,35 +106,15 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                     .errorCreatingWallet(e.toString()));
           }
         }
-      } else if (_selectedOption == 'existing' &&
-          _secretKeyController.text.isNotEmpty) {
-        logger.i('Restoring wallet with key');
+      } else if (_selectedOption == 'existing') {
+        logger.i('Navigating to mnemonic input screen');
 
-        try {
-          var aspId = await restoreWallet(
-              nsec: _secretKeyController.text,
-              dataDir: dataDir.path,
-              network: _network!,
-              esplora: _esploraUrl!,
-              server: _arkServerUrl!,
-              boltzUrl: _boltzUrl!);
-          logger.i("Received id $aspId");
-
-          // Navigate to dashboard
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                  builder: (context) => BottomNav(aspId: aspId)),
-            );
-          }
-        } catch (e) {
-          logger.e("Failed to restore wallet: $e");
-          if (mounted) {
-            _showErrorDialog(
-                AppLocalizations.of(context)!.failedToRestoreWallet,
-                AppLocalizations.of(context)!
-                    .errorRestoringWallet(e.toString()));
-          }
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const MnemonicInputScreen(),
+            ),
+          );
         }
       }
     } finally {
@@ -274,37 +244,6 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                       subtitle: 'Skip wallet setup and enter app directly',
                       option: 'debug',
                     ),
-                    const SizedBox(height: 24),
-
-                    // Secret Key Input (shown only when "Existing Wallet" is selected)
-                    if (_selectedOption == 'existing') ...[
-                      Text(
-                        AppLocalizations.of(context)!.enterYourNsec,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Theme.of(context).hintColor,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TextField(
-                          controller: _secretKeyController,
-                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                          maxLines: 3,
-                          decoration: InputDecoration(
-                            hintText: AppLocalizations.of(context)!
-                                .pasteYourRecoveryNsec,
-                            hintStyle: TextStyle(color: Theme.of(context).hintColor),
-                            contentPadding: const EdgeInsets.all(16),
-                            border: InputBorder.none,
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
