@@ -1705,6 +1705,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick from Gallery'**
   String get pickFromGallery;
+
+  /// No description provided for @reportBugFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Report Bug / Feedback'**
+  String get reportBugFeedback;
+
+  /// No description provided for @recoveryOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Options'**
+  String get recoveryOptions;
+
+  /// No description provided for @securityStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Status'**
+  String get securityStatus;
+
+  /// No description provided for @setupRecoveryWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'For your security, please set up as many recovery options as possible.'**
+  String get setupRecoveryWarning;
+
+  /// No description provided for @recoveryFullySetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Your wallet recovery is fully configured!'**
+  String get recoveryFullySetup;
+
+  /// No description provided for @recoveryMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Methods'**
+  String get recoveryMethods;
+
+  /// No description provided for @wordRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Word Recovery'**
+  String get wordRecovery;
+
+  /// No description provided for @wordRecoveryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your 12-word recovery phrase'**
+  String get wordRecoveryDescription;
+
+  /// No description provided for @emailRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Recovery'**
+  String get emailRecovery;
+
+  /// No description provided for @emailRecoveryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover wallet via email and password'**
+  String get emailRecoveryDescription;
+
+  /// No description provided for @enabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get enabled;
+
+  /// No description provided for @notSetUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Set Up'**
+  String get notSetUp;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Soon'**
+  String get comingSoon;
+
+  /// No description provided for @emailRecoveryComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Email recovery will be available in a future update. For now, please make sure to backup your recovery phrase.'**
+  String get emailRecoveryComingSoon;
+
+  /// No description provided for @recoverWithEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover with Email'**
+  String get recoverWithEmail;
+
+  /// No description provided for @recoverWithEmailSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use email and password to restore your wallet'**
+  String get recoverWithEmailSubtitle;
+
+  /// No description provided for @emailRecoverySetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Recovery Setup'**
+  String get emailRecoverySetup;
+
+  /// No description provided for @emailRecoveryWarningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password encrypts your recovery phrase locally. The server only stores the encrypted version and cannot access your funds. If you forget your password, your backup cannot be recovered.'**
+  String get emailRecoveryWarningMessage;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter password'**
+  String get enterPassword;
+
+  /// No description provided for @pleaseEnterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter an email address'**
+  String get pleaseEnterEmail;
+
+  /// No description provided for @pleaseEnterValidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get pleaseEnterValidEmail;
+
+  /// No description provided for @pleaseEnterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a password'**
+  String get pleaseEnterPassword;
+
+  /// No description provided for @passwordTooWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is too weak'**
+  String get passwordTooWeak;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get confirmPassword;
+
+  /// No description provided for @confirmYourPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your password'**
+  String get confirmYourPassword;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @setupRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup Recovery'**
+  String get setupRecovery;
+
+  /// No description provided for @emailRecoverySetupSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Email recovery has been set up successfully! You can now recover your wallet using your email and password.'**
+  String get emailRecoverySetupSuccess;
+
+  /// No description provided for @sendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Code'**
+  String get sendCode;
+
+  /// No description provided for @codeSentToEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code sent to your email'**
+  String get codeSentToEmail;
+
+  /// No description provided for @verificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification Code'**
+  String get verificationCode;
+
+  /// No description provided for @recoveryPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Password'**
+  String get recoveryPassword;
+
+  /// No description provided for @enterYourRecoveryPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your recovery password'**
+  String get enterYourRecoveryPassword;
+
+  /// No description provided for @recoverWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover Wallet'**
+  String get recoverWallet;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Code'**
+  String get resendCode;
+
+  /// No description provided for @pleaseEnterCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the 6-digit verification code'**
+  String get pleaseEnterCode;
+
+  /// No description provided for @wrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong password. Please try again.'**
+  String get wrongPassword;
+
+  /// No description provided for @emailRecoveryLoginInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the email and password you used when setting up email recovery. Your wallet will be restored securely.'**
+  String get emailRecoveryLoginInfo;
+
+  /// No description provided for @authenticateToViewRecoveryPhrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to view your recovery phrase'**
+  String get authenticateToViewRecoveryPhrase;
+
+  /// No description provided for @authenticationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed. Please try again.'**
+  String get authenticationFailed;
+
+  /// No description provided for @confirmRecoveryPhrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Recovery Phrase'**
+  String get confirmRecoveryPhrase;
+
+  /// No description provided for @recoveryComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Complete'**
+  String get recoveryComplete;
+
+  /// No description provided for @writeDownYourRecoveryPhrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Write down your recovery phrase'**
+  String get writeDownYourRecoveryPhrase;
+
+  /// No description provided for @youWillNeedToConfirmIt.
+  ///
+  /// In en, this message translates to:
+  /// **'You will need to confirm it in the next step'**
+  String get youWillNeedToConfirmIt;
+
+  /// No description provided for @continueToVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to Verify'**
+  String get continueToVerify;
+
+  /// No description provided for @verifyYourRecoveryPhrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your recovery phrase'**
+  String get verifyYourRecoveryPhrase;
+
+  /// No description provided for @enterTheFollowingWords.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the following words from your phrase'**
+  String get enterTheFollowingWords;
+
+  /// No description provided for @enterWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter word'**
+  String get enterWord;
+
+  /// No description provided for @verify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get verify;
+
+  /// No description provided for @incorrectWordsPleaseTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect words. Please try again.'**
+  String get incorrectWordsPleaseTryAgain;
+
+  /// No description provided for @skipVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip Verification?'**
+  String get skipVerification;
+
+  /// No description provided for @skipVerificationWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipping verification means you haven\'t confirmed that you wrote down your recovery phrase correctly. If you lose access to your wallet, you may not be able to recover it.'**
+  String get skipVerificationWarning;
+
+  /// No description provided for @skipAtOwnRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip at own risk'**
+  String get skipAtOwnRisk;
+
+  /// No description provided for @recoveryPhraseConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Phrase Confirmed!'**
+  String get recoveryPhraseConfirmed;
+
+  /// No description provided for @yourRecoveryPhraseIsSecured.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recovery phrase has been verified and secured. Keep it safe!'**
+  String get yourRecoveryPhraseIsSecured;
+
+  /// No description provided for @enterYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Your Email'**
+  String get enterYourEmail;
+
+  /// No description provided for @emailSignupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email is used to create your Lendasat account for loans and other services.'**
+  String get emailSignupDescription;
+
+  /// No description provided for @emailUsageInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll use this email for account verification and important updates. Your wallet remains secured by your recovery phrase.'**
+  String get emailUsageInfo;
+
+  /// No description provided for @createWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Wallet'**
+  String get createWallet;
+
+  /// No description provided for @restoreWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Wallet'**
+  String get restoreWallet;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get invalidEmail;
+
+  /// No description provided for @registrationWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Account registration had an issue. You can still use your wallet.'**
+  String get registrationWarning;
 }
 
 class _AppLocalizationsDelegate

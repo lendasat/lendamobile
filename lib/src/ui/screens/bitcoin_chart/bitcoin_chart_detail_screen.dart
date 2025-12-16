@@ -3,8 +3,6 @@ import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_image_text_button.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
-import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 
 class BitcoinChartDetailScreen extends StatefulWidget {
@@ -106,47 +104,6 @@ class _BitcoinChartDetailScreenState extends State<BitcoinChartDetailScreen> {
             child: SizedBox(height: 32),
           ),
 
-          // Cryptos Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Cryptos',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Bitcoin Onchain
-                  _buildCryptoItem(
-                    context,
-                    'Bitcoin (Onchain)',
-                    'BTC',
-                    'assets/images/bitcoin.png',
-                  ),
-                  const SizedBox(height: 12),
-                  // Bitcoin Lightning
-                  _buildCryptoItem(
-                    context,
-                    'Bitcoin (Lightning)',
-                    'BTC',
-                    'assets/images/bitcoin.png',
-                    isLightning: true,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 32),
-          ),
-
           // About Section
           SliverToBoxAdapter(
             child: _buildInfoCard(context),
@@ -155,74 +112,6 @@ class _BitcoinChartDetailScreenState extends State<BitcoinChartDetailScreen> {
           // Bottom padding
           const SliverToBoxAdapter(
             child: SizedBox(height: 100),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCryptoItem(
-    BuildContext context,
-    String name,
-    String symbol,
-    String imagePath, {
-    bool isLightning = false,
-  }) {
-    return GlassContainer(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 12.0,
-      opacity: 0.1,
-      child: Row(
-        children: [
-          // Icon
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: isLightning
-                  ? const Icon(
-                      Icons.bolt,
-                      color: AppTheme.colorBitcoin,
-                      size: 32,
-                    )
-                  : Image.asset(
-                      imagePath,
-                      fit: BoxFit.cover,
-                    ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Name and symbol
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  symbol,
-                  style: TextStyle(
-                    color: Theme.of(context).hintColor,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Arrow
-          Icon(
-            Icons.chevron_right,
-            color: Theme.of(context).hintColor,
           ),
         ],
       ),

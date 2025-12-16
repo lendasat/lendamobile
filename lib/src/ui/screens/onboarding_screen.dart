@@ -1,11 +1,9 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
-import 'package:ark_flutter/src/rust/api/ark_api.dart';
-import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
+import 'package:ark_flutter/src/ui/screens/email_signup_screen.dart';
 import 'package:ark_flutter/src/ui/screens/mnemonic_input_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
-import 'package:path_provider/path_provider.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -16,40 +14,6 @@ class OnboardingScreen extends StatefulWidget {
 
 class OnboardingScreenState extends State<OnboardingScreen> {
   String? _selectedOption;
-  bool _isLoading = false;
-  final SettingsService _settingsService = SettingsService();
-  String? _esploraUrl;
-  String? _arkServerUrl;
-  String? _network;
-  String? _boltzUrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    try {
-      final esploraUrl = await _settingsService.getEsploraUrl();
-      final arkServerUrl = await _settingsService.getArkServerUrl();
-      final network = await _settingsService.getNetwork();
-      final boltzUrl = await _settingsService.getBoltzUrl();
-
-      setState(() {
-        _esploraUrl = esploraUrl;
-        _arkServerUrl = arkServerUrl;
-        _network = network;
-        _boltzUrl = boltzUrl;
-        _isLoading = false;
-      });
-    } catch (err) {
-      logger.e("Error loading settings: $err");
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
 
   void _handleOptionSelect(String option) {
     setState(() {
@@ -57,74 +21,33 @@ class OnboardingScreenState extends State<OnboardingScreen> {
     });
   }
 
-  void _handleContinue() async {
-    // Show loading indicator
-    setState(() {
-      _isLoading = true;
-    });
-
-    final dataDir = await getApplicationSupportDirectory();
-
-    try {
-      // Debug mode - skip backend entirely
-      if (_selectedOption == 'debug') {
-        logger.i('Entering debug mode - skipping wallet setup');
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-                builder: (context) => const BottomNav(aspId: 'debug-mode')),
-          );
-        }
-        return;
-      }
-
-      if (_selectedOption == 'new') {
-        logger.i('Creating new wallet');
-
-        try {
-          var aspId = await setupNewWallet(
-              dataDir: dataDir.path,
-              network: _network!,
-              esplora: _esploraUrl!,
-              server: _arkServerUrl!,
-              boltzUrl: _boltzUrl!);
-          logger.i("Received id $aspId");
-
-          // Navigate to dashboard
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                  builder: (context) => BottomNav(aspId: aspId)),
-            );
-          }
-        } catch (e) {
-          logger.e("Failed to create new wallet: $e");
-          if (mounted) {
-            _showErrorDialog(
-                AppLocalizations.of(context)!.failedToCreateWallet,
-                AppLocalizations.of(context)!
-                    .errorCreatingWallet(e.toString()));
-          }
-        }
-      } else if (_selectedOption == 'existing') {
-        logger.i('Navigating to mnemonic input screen');
-
-        if (mounted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const MnemonicInputScreen(),
-            ),
-          );
-        }
-      }
-    } finally {
-      // Hide loading indicator if we're still mounted
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+  void _handleContinue() {
+    // Debug mode - skip backend entirely
+    if (_selectedOption == 'debug') {
+      logger.i('Entering debug mode - skipping wallet setup');
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+            builder: (context) => const BottomNav(aspId: 'debug-mode')),
+      );
+      return;
     }
+
+    if (_selectedOption == 'new') {
+      logger.i('Navigating to email signup screen for new wallet');
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const EmailSignupScreen(isRestore: false),
+        ),
+      );
+    } else if (_selectedOption == 'existing') {
+      logger.i('Navigating to mnemonic input screen');
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const MnemonicInputScreen(),
+        ),
+      );
+    }
+    // Note: email_recovery option is disabled (Coming Soon)
   }
 
   // Helper function to build styled tagline
@@ -140,38 +63,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  void _showErrorDialog(String title, String message) {
-    if (!mounted) return;
-
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text(
-          title,
-          style: const TextStyle(color: Colors.red),
-        ),
-        content: Text(
-          message,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.orange,
-            ),
-            child: Text(AppLocalizations.of(context)!.ok),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -238,6 +131,15 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const SizedBox(height: 16),
 
+                    // Email Recovery Option (Coming Soon - disabled)
+                    _buildOptionCard(
+                      title: AppLocalizations.of(context)!.recoverWithEmail,
+                      subtitle: AppLocalizations.of(context)!.comingSoon,
+                      option: 'email_recovery',
+                      isDisabled: true,
+                    ),
+                    const SizedBox(height: 16),
+
                     // Debug Mode Option (only in debug builds)
                     _buildOptionCard(
                       title: 'Debug Mode',
@@ -252,13 +154,11 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isLoading
-                      ? null
-                      : (_selectedOption == 'new' ||
-                              _selectedOption == 'existing' ||
-                              _selectedOption == 'debug'
-                          ? _handleContinue
-                          : null),
+                  onPressed: _selectedOption == 'new' ||
+                          _selectedOption == 'existing' ||
+                          _selectedOption == 'debug'
+                      ? _handleContinue
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
                     foregroundColor: Colors.black,
@@ -267,19 +167,9 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: _isLoading
-                      ? SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Theme.of(context).colorScheme.onSurface),
-                            strokeWidth: 3,
-                          ),
-                        )
-                      : Text(
-                          AppLocalizations.of(context)!.contin,
-                          style: const TextStyle(
+                  child: Text(
+                    AppLocalizations.of(context)!.contin,
+                    style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -297,53 +187,56 @@ class OnboardingScreenState extends State<OnboardingScreen> {
     required String title,
     required String subtitle,
     required String option,
+    bool isDisabled = false,
   }) {
-    final bool isSelected = _selectedOption == option;
-    
+    final bool isSelected = _selectedOption == option && !isDisabled;
 
     return InkWell(
-      onTap: () => _handleOptionSelect(option),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.orange : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          isSelected ? Theme.of(context).scaffoldBackgroundColor : Theme.of(context).colorScheme.onSurface,
+      onTap: isDisabled ? null : () => _handleOptionSelect(option),
+      child: Opacity(
+        opacity: isDisabled ? 0.5 : 1.0,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.orange : Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color:
+                            isSelected ? Theme.of(context).scaffoldBackgroundColor : Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.onSurface.withAlpha((0.7 * 255).round())
-                          : Theme.of(context).hintColor,
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.onSurface.withAlpha((0.7 * 255).round())
+                            : Theme.of(context).hintColor,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            if (isSelected)
-              const Icon(
-                Icons.check_circle,
-                color: Colors.black,
-                size: 24,
-              ),
-          ],
+              if (isSelected)
+                const Icon(
+                  Icons.check_circle,
+                  color: Colors.black,
+                  size: 24,
+                ),
+            ],
+          ),
         ),
       ),
     );

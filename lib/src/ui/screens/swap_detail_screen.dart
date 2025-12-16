@@ -168,9 +168,9 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
   }
 
   SwapToken _getSourceToken() {
-    if (_swapInfo == null) return SwapToken.btcArkade;
+    if (_swapInfo == null) return SwapToken.bitcoin;
     final token = _swapInfo!.sourceToken.toLowerCase();
-    if (token.contains('btc')) return SwapToken.btcArkade;
+    if (token.contains('btc')) return SwapToken.bitcoin;
     if (token.contains('usdc') && token.contains('pol')) {
       return SwapToken.usdcPolygon;
     }
@@ -183,13 +183,13 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
     if (token.contains('usdt') && token.contains('eth')) {
       return SwapToken.usdtEthereum;
     }
-    return SwapToken.btcArkade;
+    return SwapToken.bitcoin;
   }
 
   SwapToken _getTargetToken() {
     if (_swapInfo == null) return SwapToken.usdcPolygon;
     final token = _swapInfo!.targetToken.toLowerCase();
-    if (token.contains('btc')) return SwapToken.btcArkade;
+    if (token.contains('btc')) return SwapToken.bitcoin;
     if (token.contains('usdc') && token.contains('pol')) {
       return SwapToken.usdcPolygon;
     }

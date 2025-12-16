@@ -11,8 +11,6 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:provider/provider.dart';
@@ -30,161 +28,22 @@ class SettingsView extends StatefulWidget {
 }
 
 class SettingsViewState extends State<SettingsView> {
-  Info? _info;
-  String _selectedNetwork = 'Regtest';
-
   final SettingsService _settingsService = SettingsService();
-  final TextEditingController _esploraUrlController = TextEditingController();
-  final TextEditingController _arkServerController = TextEditingController();
-  final TextEditingController _boltzUrlController = TextEditingController();
-
-  final List<String> _supportedNetworks = ['bitcoin', 'signet', 'regtest'];
-
-  bool _isLoading = true;
+  bool _wordRecoverySet = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchInfo();
-    _loadSettings();
+    _loadRecoveryStatus();
   }
 
-  Future<void> _loadSettings() async {
-    try {
-      final esploraUrl = await _settingsService.getEsploraUrl();
-      final arkServerUrl = await _settingsService.getArkServerUrl();
-      final network = await _settingsService.getNetwork();
-      final boltzUrl = await _settingsService.getBoltzUrl();
-
+  Future<void> _loadRecoveryStatus() async {
+    final wordSet = await _settingsService.isWordRecoverySet();
+    if (mounted) {
       setState(() {
-        _esploraUrlController.text = esploraUrl;
-        _arkServerController.text = arkServerUrl;
-        _boltzUrlController.text = boltzUrl;
-        _selectedNetwork = network;
-        _isLoading = false;
-      });
-    } catch (err) {
-      logger.e("Error loading settings: $err");
-      setState(() {
-        _isLoading = false;
+        _wordRecoverySet = wordSet;
       });
     }
-  }
-
-  Future<void> _fetchInfo() async {
-    try {
-      var info = await information();
-      setState(() {
-        _info = info;
-      });
-    } catch (err) {
-      logger.e("Error getting info: $err");
-    }
-  }
-
-  Future<void> _saveEsploraUrl() async {
-    try {
-      await _settingsService.saveEsploraUrl(_esploraUrlController.text);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!
-                .esploraUrlSavedWillOnlyTakeEffectAfterARestart),
-          ),
-        );
-      }
-      logger.i("Esplora URL saved: ${_esploraUrlController.text}");
-    } catch (err) {
-      logger.e("Error saving Esplora URL: $err");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.failedToSaveEsploraUrl),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _saveNetwork(String network) async {
-    try {
-      await _settingsService.saveNetwork(network);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!
-                .networkSavedWillOnlyTakeEffectAfterARestart),
-          ),
-        );
-      }
-      logger.i("Network saved: $network");
-    } catch (err) {
-      logger.e("Error saving network: $err");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.failedToSaveEsploraUrl),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _saveArkServerUrl() async {
-    try {
-      await _settingsService.saveArkServerUrl(_arkServerController.text);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!
-                .arkServerUrlSavedWillOnlyTakeEffectAfterARestart),
-          ),
-        );
-      }
-      logger.i("Ark Server URL saved: ${_arkServerController.text}");
-    } catch (err) {
-      logger.e("Error saving Ark Server URL: $err");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                Text(AppLocalizations.of(context)!.failedToSaveArkServerUrl),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _saveBoltzUrl() async {
-    try {
-      await _settingsService.saveBoltzUrl(_boltzUrlController.text);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!
-                .boltzUrlSavedWillOnlyTakeEffectAfterARestart),
-          ),
-        );
-      }
-      logger.i("Boltz URL saved: ${_boltzUrlController.text}");
-    } catch (err) {
-      logger.e("Error saving Boltz URL: $err");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.failedToSaveBoltzUrl),
-          ),
-        );
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _esploraUrlController.dispose();
-    _arkServerController.dispose();
-    _boltzUrlController.dispose();
-    super.dispose();
   }
 
   void _showResetWalletDialog() {
@@ -328,243 +187,61 @@ class SettingsViewState extends State<SettingsView> {
     }
   }
 
-  void _showDeveloperOptionsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? AppTheme.black90
-            : Colors.white,
-        title: Text(
-          AppLocalizations.of(context)!.serverConfiguration,
-          style: TextStyle(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? AppTheme.white90
-                : AppTheme.black90,
+  /// Builds the Recovery Options tile with status indicator dot
+  /// The dot color indicates recovery setup status:
+  /// - Red: No recovery options set up
+  /// - Orange: Some recovery options set up
+  /// - Green: All recovery options set up
+  Widget _buildRecoveryOptionsTile(
+    BuildContext context,
+    SettingsController controller,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Determine dot color based on word recovery status
+    // (email recovery is disabled/Coming Soon)
+    Color recoveryDotColor;
+    if (_wordRecoverySet) {
+      recoveryDotColor = AppTheme.successColor; // Green for set up
+    } else {
+      recoveryDotColor = AppTheme.errorColor; // Red for not set up
+    }
+
+    return ArkListTile(
+      leading: Stack(
+        children: [
+          RoundedButtonWidget(
+            iconData: Icons.security_rounded,
+            onTap: () => controller.switchTab('emergency_recovery'),
+            size: AppTheme.iconSize * 1.5,
+            buttonType: ButtonType.transparent,
           ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Network dropdown
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.network,
-                    style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppTheme.white90
-                          : AppTheme.black90,
-                    ),
-                  ),
-                  DropdownButton<String>(
-                    value: _selectedNetwork,
-                    dropdownColor:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? AppTheme.black90
-                            : Colors.white,
-                    underline: const SizedBox(),
-                    icon: Icon(
-                      Icons.arrow_drop_down,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppTheme.white60
-                          : AppTheme.black60,
-                    ),
-                    style: TextStyle(color: AppTheme.colorBitcoin),
-                    onChanged: (String? value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedNetwork = value;
-                        });
-                        _saveNetwork(value);
-                      }
-                    },
-                    items: _supportedNetworks
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Esplora URL
-              Text(
-                AppLocalizations.of(context)!.esploraUrl,
-                style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.white90
-                      : AppTheme.black90,
-                  fontSize: 14,
+          // Status indicator dot
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: recoveryDotColor,
+                border: Border.all(
+                  color: isDark ? Colors.black : Colors.white,
+                  width: 1.5,
                 ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _esploraUrlController,
-                style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.white90
-                      : AppTheme.black90,
-                  fontSize: 12,
-                ),
-                decoration: InputDecoration(
-                  hintText: SettingsService.defaultEsploraUrl,
-                  hintStyle: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? AppTheme.white60
-                        : AppTheme.black60,
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.black60.withValues(alpha: 0.3)
-                      : AppTheme.white90,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.save, color: AppTheme.colorBitcoin, size: 20),
-                    onPressed: _saveEsploraUrl,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Ark Server URL
-              Text(
-                AppLocalizations.of(context)!.arkServer,
-                style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.white90
-                      : AppTheme.black90,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _arkServerController,
-                style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.white90
-                      : AppTheme.black90,
-                  fontSize: 12,
-                ),
-                decoration: InputDecoration(
-                  hintText: SettingsService.defaultArkServerUrl,
-                  hintStyle: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? AppTheme.white60
-                        : AppTheme.black60,
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.black60.withValues(alpha: 0.3)
-                      : AppTheme.white90,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.save, color: AppTheme.colorBitcoin, size: 20),
-                    onPressed: _saveArkServerUrl,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Boltz URL
-              Text(
-                AppLocalizations.of(context)!.boltzUrl,
-                style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.white90
-                      : AppTheme.black90,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _boltzUrlController,
-                style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.white90
-                      : AppTheme.black90,
-                  fontSize: 12,
-                ),
-                decoration: InputDecoration(
-                  hintText: SettingsService.defaultBoltzUrl,
-                  hintStyle: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? AppTheme.white60
-                        : AppTheme.black60,
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.black60.withValues(alpha: 0.3)
-                      : AppTheme.white90,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.save, color: AppTheme.colorBitcoin, size: 20),
-                    onPressed: _saveBoltzUrl,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Network info
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.network,
-                    style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppTheme.white90
-                          : AppTheme.black90,
-                    ),
-                  ),
-                  Text(
-                    _info?.network ?? AppLocalizations.of(context)!.loading,
-                    style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppTheme.white60
-                          : AppTheme.black60,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              AppLocalizations.of(context)!.close,
-              style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppTheme.white90
-                    : AppTheme.black90,
               ),
             ),
           ),
         ],
       ),
+      text: AppLocalizations.of(context)!.recoveryOptions,
+      trailing: Icon(
+        Icons.arrow_forward_ios_rounded,
+        size: AppTheme.iconSize * 0.75,
+        color: isDark ? AppTheme.white60 : AppTheme.black60,
+      ),
+      onTap: () => controller.switchTab('emergency_recovery'),
     );
   }
 
@@ -580,13 +257,7 @@ class SettingsViewState extends State<SettingsView> {
         context: context,
         hasBackButton: false,
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
-              ),
-            )
-          : ListTileTheme(
+      body: ListTileTheme(
               iconColor: Theme.of(context).colorScheme.onSurface,
               child: Container(
                 margin: const EdgeInsets.symmetric(
@@ -742,6 +413,9 @@ class SettingsViewState extends State<SettingsView> {
                       },
                     ),
 
+                    // Recovery Options (with status indicator dot)
+                    _buildRecoveryOptionsTile(context, controller),
+
                     // Recovery Key
                     ArkListTile(
                       leading: RoundedButtonWidget(
@@ -761,15 +435,15 @@ class SettingsViewState extends State<SettingsView> {
                       onTap: () => controller.switchTab('recovery'),
                     ),
 
-                    // Developer Options
+                    // Feedback / Report Bug
                     ArkListTile(
                       leading: RoundedButtonWidget(
-                        iconData: Icons.developer_mode_outlined,
-                        onTap: _showDeveloperOptionsDialog,
+                        iconData: Icons.feedback_rounded,
+                        onTap: () => controller.switchTab('feedback'),
                         size: AppTheme.iconSize * 1.5,
                         buttonType: ButtonType.transparent,
                       ),
-                      text: AppLocalizations.of(context)!.serverConfiguration,
+                      text: AppLocalizations.of(context)!.reportBugFeedback,
                       trailing: Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: AppTheme.iconSize * 0.75,
@@ -777,7 +451,7 @@ class SettingsViewState extends State<SettingsView> {
                             ? AppTheme.white60
                             : AppTheme.black60,
                       ),
-                      onTap: _showDeveloperOptionsDialog,
+                      onTap: () => controller.switchTab('feedback'),
                     ),
 
                     // Reset Wallet

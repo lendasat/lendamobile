@@ -25,10 +25,13 @@ Future<Block> getBlockByHash({required String hash}) =>
 
 /// Get paginated block transactions
 /// start_index should be multiples of 25 (0, 25, 50, etc.)
-Future<List<BitcoinTransaction>> getBlockTransactions(
-        {required String hash, required int startIndex}) =>
-    RustLib.instance.api
-        .crateApiGetBlockTransactions(hash: hash, startIndex: startIndex);
+Future<List<BitcoinTransaction>> getBlockTransactions({
+  required String hash,
+  required int startIndex,
+}) => RustLib.instance.api.crateApiGetBlockTransactions(
+  hash: hash,
+  startIndex: startIndex,
+);
 
 /// Get recommended fee rates for different confirmation targets
 Future<RecommendedFees> getRecommendedFees() =>
@@ -48,26 +51,30 @@ Stream<MempoolWsMessage> subscribeMempoolUpdates() =>
     RustLib.instance.api.crateApiSubscribeMempoolUpdates();
 
 /// Track a specific mempool block to receive its projected transactions.
-Stream<ProjectedBlockTransactions> trackMempoolBlock(
-        {required int blockIndex}) =>
-    RustLib.instance.api.crateApiTrackMempoolBlock(blockIndex: blockIndex);
+Stream<ProjectedBlockTransactions> trackMempoolBlock({
+  required int blockIndex,
+}) => RustLib.instance.api.crateApiTrackMempoolBlock(blockIndex: blockIndex);
 
-Future<MoonPayCurrencyLimits> moonpayGetCurrencyLimits(
-        {required String serverUrl,
-        required String baseCurrencyCode,
-        required String paymentMethod}) =>
-    RustLib.instance.api.crateApiMoonpayGetCurrencyLimits(
-        serverUrl: serverUrl,
-        baseCurrencyCode: baseCurrencyCode,
-        paymentMethod: paymentMethod);
+Future<MoonPayCurrencyLimits> moonpayGetCurrencyLimits({
+  required String serverUrl,
+  required String baseCurrencyCode,
+  required String paymentMethod,
+}) => RustLib.instance.api.crateApiMoonpayGetCurrencyLimits(
+  serverUrl: serverUrl,
+  baseCurrencyCode: baseCurrencyCode,
+  paymentMethod: paymentMethod,
+);
 
 Future<MoonPayQuote> moonpayGetQuote({required String serverUrl}) =>
     RustLib.instance.api.crateApiMoonpayGetQuote(serverUrl: serverUrl);
 
-Future<MoonPayEncryptedData> moonpayEncryptData(
-        {required String serverUrl, required String data}) =>
-    RustLib.instance.api
-        .crateApiMoonpayEncryptData(serverUrl: serverUrl, data: data);
+Future<MoonPayEncryptedData> moonpayEncryptData({
+  required String serverUrl,
+  required String data,
+}) => RustLib.instance.api.crateApiMoonpayEncryptData(
+  serverUrl: serverUrl,
+  data: data,
+);
 
 Future<ExchangeRates> fetchExchangeRates() =>
     RustLib.instance.api.crateApiFetchExchangeRates();

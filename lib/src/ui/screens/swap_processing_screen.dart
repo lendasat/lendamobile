@@ -180,6 +180,12 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   Widget _buildProcessingState(BuildContext context, bool isDarkMode) {
     final status = _swapInfo?.status ?? SwapStatusSimple.waitingForDeposit;
 
+    // Only show deposit info for EVM → BTC swaps (user needs to deposit EVM tokens)
+    // For BTC → EVM swaps, Arkade handles payment automatically
+    final showDepositInfo = status == SwapStatusSimple.waitingForDeposit &&
+        _swapInfo?.depositAddress != null &&
+        widget.sourceToken.isEvm; // Only for EVM source (buying BTC)
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
@@ -191,10 +197,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
           // Swap summary
           _buildSwapSummary(context, isDarkMode),
           const SizedBox(height: AppTheme.cardPadding),
-          // Deposit info (if waiting for deposit)
-          if (status == SwapStatusSimple.waitingForDeposit &&
-              _swapInfo?.depositAddress != null)
-            _buildDepositInfo(context, isDarkMode),
+          // Deposit info only for EVM → BTC swaps
+          if (showDepositInfo) _buildDepositInfo(context, isDarkMode),
           const SizedBox(height: AppTheme.cardPadding),
           // Status details
           _buildStatusDetails(context, isDarkMode),
@@ -210,7 +214,14 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     String statusText;
     bool showSpinner = false;
 
-    switch (status) {
+    // For BTC → EVM swaps, "Waiting for Deposit" should show as "Processing"
+    // since Arkade handles the payment automatically
+    final effectiveStatus = status == SwapStatusSimple.waitingForDeposit &&
+            widget.sourceToken.isBtc
+        ? SwapStatusSimple.processing
+        : status;
+
+    switch (effectiveStatus) {
       case SwapStatusSimple.waitingForDeposit:
         icon = Icons.hourglass_empty_rounded;
         color = Colors.orange;

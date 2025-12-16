@@ -312,5 +312,6 @@
   "dataSource": "Data Source",
   "liveBitcoinMarketData": "Live Bitcoin Market Data",
   "updateFrequency": "Update Frequency",
-  "realTime": "Real-time"
+  "realTime": "Real-time",
+  "reportBugFeedback": "الإبلاغ عن خطأ / ملاحظات"
 }

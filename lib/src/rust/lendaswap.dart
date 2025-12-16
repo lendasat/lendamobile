@@ -100,5 +100,4 @@ enum SwapStatusSimple {
 
   /// Error state
   failed,
-  ;
 }

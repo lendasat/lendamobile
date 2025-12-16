@@ -767,7 +767,9 @@ lib/src/ui/screens/swap/
 ```dart
 // In your app initialization
 Future<void> initLendaSwap() async {
-  final dataDir = await getApplicationDocumentsDirectory();
+  // IMPORTANT: Use getApplicationSupportDirectory - this is where the mnemonic is stored
+  // All services must use the same directory to read the wallet's mnemonic
+  final dataDir = await getApplicationSupportDirectory();
 
   await api.initLendaswap(
     dataDir: dataDir.path,

@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 /// Supported tokens for LendaSwap
 enum SwapToken {
-  // Bitcoin
-  btcArkade,
-  btcLightning,
+  // Bitcoin (uses Arkade under the hood)
+  bitcoin,
   // Polygon
   usdcPolygon,
   usdtPolygon,
@@ -18,10 +17,8 @@ extension SwapTokenExtension on SwapToken {
   /// Get the API token ID string
   String get tokenId {
     switch (this) {
-      case SwapToken.btcArkade:
-        return 'btc_arkade';
-      case SwapToken.btcLightning:
-        return 'btc_lightning';
+      case SwapToken.bitcoin:
+        return 'btc_arkade'; // Always use Arkade for BTC swaps
       case SwapToken.usdcPolygon:
         return 'usdc_pol';
       case SwapToken.usdtPolygon:
@@ -38,8 +35,7 @@ extension SwapTokenExtension on SwapToken {
   /// Get display symbol
   String get symbol {
     switch (this) {
-      case SwapToken.btcArkade:
-      case SwapToken.btcLightning:
+      case SwapToken.bitcoin:
         return 'BTC';
       case SwapToken.usdcPolygon:
       case SwapToken.usdcEthereum:
@@ -55,10 +51,8 @@ extension SwapTokenExtension on SwapToken {
   /// Get full display name
   String get displayName {
     switch (this) {
-      case SwapToken.btcArkade:
-        return 'Bitcoin (Arkade)';
-      case SwapToken.btcLightning:
-        return 'Bitcoin (Lightning)';
+      case SwapToken.bitcoin:
+        return 'Bitcoin';
       case SwapToken.usdcPolygon:
         return 'USDC (Polygon)';
       case SwapToken.usdtPolygon:
@@ -75,10 +69,8 @@ extension SwapTokenExtension on SwapToken {
   /// Get network name
   String get network {
     switch (this) {
-      case SwapToken.btcArkade:
-        return 'Arkade';
-      case SwapToken.btcLightning:
-        return 'Lightning';
+      case SwapToken.bitcoin:
+        return 'Bitcoin';
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
         return 'Polygon';
@@ -92,8 +84,7 @@ extension SwapTokenExtension on SwapToken {
   /// Get chain ID for API calls
   String get chainId {
     switch (this) {
-      case SwapToken.btcArkade:
-      case SwapToken.btcLightning:
+      case SwapToken.bitcoin:
         return 'bitcoin';
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
@@ -106,8 +97,7 @@ extension SwapTokenExtension on SwapToken {
   }
 
   /// Check if this is a BTC token
-  bool get isBtc =>
-      this == SwapToken.btcArkade || this == SwapToken.btcLightning;
+  bool get isBtc => this == SwapToken.bitcoin;
 
   /// Check if this is an EVM token
   bool get isEvm => !isBtc;
@@ -115,21 +105,21 @@ extension SwapTokenExtension on SwapToken {
   /// Check if this is a stablecoin (USD-pegged)
   bool get isStablecoin {
     switch (this) {
+      case SwapToken.bitcoin:
+      case SwapToken.xautEthereum:
+        return false;
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
       case SwapToken.usdcEthereum:
       case SwapToken.usdtEthereum:
         return true;
-      default:
-        return false;
     }
   }
 
   /// Get token decimals
   int get decimals {
     switch (this) {
-      case SwapToken.btcArkade:
-      case SwapToken.btcLightning:
+      case SwapToken.bitcoin:
         return 8; // satoshis
       case SwapToken.usdcPolygon:
       case SwapToken.usdcEthereum:
@@ -145,8 +135,7 @@ extension SwapTokenExtension on SwapToken {
   /// Get primary color for the token
   Color get color {
     switch (this) {
-      case SwapToken.btcArkade:
-      case SwapToken.btcLightning:
+      case SwapToken.bitcoin:
         return const Color(0xFFF7931A); // Bitcoin orange
       case SwapToken.usdcPolygon:
       case SwapToken.usdcEthereum:
@@ -162,10 +151,8 @@ extension SwapTokenExtension on SwapToken {
   /// Get network color
   Color get networkColor {
     switch (this) {
-      case SwapToken.btcArkade:
+      case SwapToken.bitcoin:
         return const Color(0xFFF7931A); // Bitcoin orange
-      case SwapToken.btcLightning:
-        return const Color(0xFFF7931A); // Lightning yellow
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
         return const Color(0xFF8247E5); // Polygon purple
@@ -179,10 +166,8 @@ extension SwapTokenExtension on SwapToken {
   /// Get the icon for the token
   IconData get icon {
     switch (this) {
-      case SwapToken.btcArkade:
+      case SwapToken.bitcoin:
         return Icons.currency_bitcoin;
-      case SwapToken.btcLightning:
-        return Icons.bolt;
       case SwapToken.usdcPolygon:
       case SwapToken.usdcEthereum:
         return Icons.attach_money;
@@ -197,10 +182,8 @@ extension SwapTokenExtension on SwapToken {
   /// Get network icon
   IconData get networkIcon {
     switch (this) {
-      case SwapToken.btcArkade:
-        return Icons.account_balance_wallet;
-      case SwapToken.btcLightning:
-        return Icons.bolt;
+      case SwapToken.bitcoin:
+        return Icons.currency_bitcoin;
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
         return Icons.hexagon;
@@ -215,9 +198,8 @@ extension SwapTokenExtension on SwapToken {
   static SwapToken? fromTokenId(String tokenId) {
     switch (tokenId.toLowerCase()) {
       case 'btc_arkade':
-        return SwapToken.btcArkade;
       case 'btc_lightning':
-        return SwapToken.btcLightning;
+        return SwapToken.bitcoin;
       case 'usdc_pol':
         return SwapToken.usdcPolygon;
       case 'usdt0_pol':
@@ -234,11 +216,8 @@ extension SwapTokenExtension on SwapToken {
     }
   }
 
-  /// Get all BTC tokens
-  static List<SwapToken> get btcTokens => [
-        SwapToken.btcArkade,
-        SwapToken.btcLightning,
-      ];
+  /// Get all BTC tokens (just Bitcoin now)
+  static List<SwapToken> get btcTokens => [SwapToken.bitcoin];
 
   /// Get all EVM tokens
   static List<SwapToken> get evmTokens => [

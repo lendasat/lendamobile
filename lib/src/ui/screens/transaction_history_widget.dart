@@ -49,6 +49,14 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   @override
   void initState() {
     super.initState();
+    // Debug: Print transaction types to diagnose network label bug
+    for (final tx in widget.transactions) {
+      tx.map(
+        boarding: (t) => debugPrint('TX DEBUG: Boarding (Onchain) - ${t.txid.substring(0, 8)}...'),
+        round: (t) => debugPrint('TX DEBUG: Round (Arkade) - ${t.txid.substring(0, 8)}...'),
+        redeem: (t) => debugPrint('TX DEBUG: Redeem isSettled=${t.isSettled} (${t.isSettled ? "Onchain" : "Arkade"}) - ${t.txid.substring(0, 8)}...'),
+      );
+    }
     _filteredActivity = combineActivity(widget.transactions, widget.swaps);
   }
 
@@ -88,17 +96,25 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         }).toList();
       }
 
-      // Type filter (include Swap as a type)
+      // Type filter by network (Onchain, Arkade, Swap)
       final hasTypeFilter = filterService.selectedFilters.any(
-        (f) => ['Onchain', 'Round', 'Redeem', 'Swap'].contains(f),
+        (f) => ['Onchain', 'Arkade', 'Swap'].contains(f),
       );
       if (hasTypeFilter) {
         allActivity = allActivity.where((item) {
           if (item is TransactionActivityItem) {
             return item.transaction.map(
               boarding: (_) => filterService.selectedFilters.contains('Onchain'),
-              round: (_) => filterService.selectedFilters.contains('Round'),
-              redeem: (_) => filterService.selectedFilters.contains('Redeem'),
+              round: (_) => filterService.selectedFilters.contains('Arkade'),
+              redeem: (tx) {
+                // If not settled, it's still a virtual Ark transaction (Arkade)
+                // Only filter as Onchain if it's been settled/redeemed
+                if (tx.isSettled) {
+                  return filterService.selectedFilters.contains('Onchain');
+                } else {
+                  return filterService.selectedFilters.contains('Arkade');
+                }
+              },
             );
           } else if (item is SwapActivityItem) {
             return filterService.selectedFilters.contains('Swap');
@@ -469,6 +485,7 @@ class _TransactionItemWidget extends StatelessWidget {
         tx.confirmedAt,
         showBtcAsMain,
         hideAmounts,
+        'Onchain',
       ),
       round: (tx) => _buildTransactionTile(
         context,
@@ -480,6 +497,7 @@ class _TransactionItemWidget extends StatelessWidget {
         null,
         showBtcAsMain,
         hideAmounts,
+        'Arkade',
       ),
       redeem: (tx) => _buildTransactionTile(
         context,
@@ -491,6 +509,9 @@ class _TransactionItemWidget extends StatelessWidget {
         null,
         showBtcAsMain,
         hideAmounts,
+        // If not settled, it's still a virtual Ark transaction (Arkade)
+        // Only show as Onchain if it's been settled/redeemed
+        tx.isSettled ? 'Onchain' : 'Arkade',
       ),
     );
   }
@@ -505,6 +526,7 @@ class _TransactionItemWidget extends StatelessWidget {
     int? confirmedAt,
     bool showBtcAsMain,
     bool hideAmounts,
+    String network,
   ) {
     final currencyService = context.watch<CurrencyPreferenceService>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -603,7 +625,7 @@ class _TransactionItemWidget extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                transactionType,
+                                network,
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),

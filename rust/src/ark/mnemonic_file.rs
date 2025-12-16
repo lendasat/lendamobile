@@ -20,8 +20,10 @@ pub const LENDASWAP_DERIVATION_PATH: &str = "m/83696968'/121923'";
 /// Derivation path for Lendasat contract keys (from same mnemonic)
 pub const LENDASAT_DERIVATION_PATH: &str = "m/10101'/0'";
 
-/// Derivation path for Nostr keys (NIP-06 compatible, from same mnemonic)
-pub const NOSTR_DERIVATION_PATH: &str = "m/44'/1237'/0'/0/0";
+/// Derivation path for Nostr keys (matches LendaSat SDK, from same mnemonic)
+/// Note: This is NOT NIP-06 standard (which uses m/44'/1237'/0'/0/0)
+/// but matches the existing LendaSat web app for cross-platform consistency
+pub const NOSTR_DERIVATION_PATH: &str = "m/44/0/0/0/0";
 
 /// Generate a new 12-word BIP39 mnemonic
 pub fn generate_mnemonic() -> Result<Mnemonic> {
@@ -124,13 +126,6 @@ pub fn mnemonic_exists(data_dir: &str) -> bool {
     let data_path = Path::new(data_dir);
     let mnemonic_path = data_path.join("mnemonic");
     mnemonic_path.exists()
-}
-
-/// Check if old seed file exists (for migration purposes)
-pub fn legacy_seed_exists(data_dir: &str) -> bool {
-    let data_path = Path::new(data_dir);
-    let seed_path = data_path.join("seed");
-    seed_path.exists()
 }
 
 #[cfg(test)]

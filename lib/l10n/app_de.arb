@@ -319,5 +319,6 @@
   "switchCamera": "Kamera wechseln",
   "flashOn": "Blitz an",
   "flashOff": "Blitz aus",
-  "pickFromGallery": "Aus Galerie wählen"
+  "pickFromGallery": "Aus Galerie wählen",
+  "reportBugFeedback": "Fehler melden / Feedback"
 }

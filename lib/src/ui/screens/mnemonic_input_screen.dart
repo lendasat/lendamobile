@@ -1,12 +1,9 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
-import 'package:ark_flutter/src/rust/api/ark_api.dart';
-import 'package:ark_flutter/src/services/settings_service.dart';
-import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
+import 'package:ark_flutter/src/ui/screens/email_signup_screen.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
-import 'package:path_provider/path_provider.dart';
 
 class MnemonicInputScreen extends StatefulWidget {
   const MnemonicInputScreen({super.key});
@@ -18,14 +15,8 @@ class MnemonicInputScreen extends StatefulWidget {
 class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
   final PageController _pageController = PageController();
   final ScrollController _scrollController = ScrollController();
-  final SettingsService _settingsService = SettingsService();
 
-  bool _isLoading = false;
   bool _onLastPage = false;
-  String? _esploraUrl;
-  String? _arkServerUrl;
-  String? _network;
-  String? _boltzUrl;
 
   List<String> _bipWords = [];
 
@@ -40,7 +31,6 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
   void initState() {
     super.initState();
     _loadBipWords();
-    _loadSettings();
 
     // Add focus listeners
     for (int i = 0; i < _focusNodes.length; i++) {
@@ -50,24 +40,6 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
     // Add text change listeners for paste detection
     for (int i = 0; i < _textControllers.length; i++) {
       _textControllers[i].addListener(() => _onTextChanged(i));
-    }
-  }
-
-  Future<void> _loadSettings() async {
-    try {
-      final esploraUrl = await _settingsService.getEsploraUrl();
-      final arkServerUrl = await _settingsService.getArkServerUrl();
-      final network = await _settingsService.getNetwork();
-      final boltzUrl = await _settingsService.getBoltzUrl();
-
-      setState(() {
-        _esploraUrl = esploraUrl;
-        _arkServerUrl = arkServerUrl;
-        _network = network;
-        _boltzUrl = boltzUrl;
-      });
-    } catch (err) {
-      logger.e("Error loading settings: $err");
     }
   }
 
@@ -171,53 +143,54 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
     return _bipWords.contains(word.toLowerCase());
   }
 
-  Future<void> _handleRestore() async {
-    setState(() {
-      _isLoading = true;
-    });
+  void _handleRestore() {
+    // Validate that all words are filled
+    final emptyFields = _textControllers
+        .asMap()
+        .entries
+        .where((entry) => entry.value.text.trim().isEmpty)
+        .map((entry) => entry.key + 1)
+        .toList();
 
-    try {
-      final String mnemonic = _textControllers
-          .map((controller) => controller.text.trim().toLowerCase())
-          .join(' ');
-
-      logger.i('Restoring wallet with mnemonic');
-
-      final dataDir = await getApplicationSupportDirectory();
-
-      var aspId = await restoreWallet(
-        mnemonicWords: mnemonic,
-        dataDir: dataDir.path,
-        network: _network!,
-        esplora: _esploraUrl!,
-        server: _arkServerUrl!,
-        boltzUrl: _boltzUrl!,
+    if (emptyFields.isNotEmpty) {
+      _showErrorDialog(
+        AppLocalizations.of(context)!.failedToRestoreWallet,
+        'Please fill in all 12 words. Missing: ${emptyFields.join(", ")}',
       );
-
-      logger.i("Received id $aspId");
-
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => BottomNav(aspId: aspId),
-          ),
-        );
-      }
-    } catch (e) {
-      logger.e("Failed to restore wallet: $e");
-      if (mounted) {
-        _showErrorDialog(
-          AppLocalizations.of(context)!.failedToRestoreWallet,
-          AppLocalizations.of(context)!.errorRestoringWallet(e.toString()),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      return;
     }
+
+    // Validate all words are valid BIP39 words
+    final invalidWords = _textControllers
+        .asMap()
+        .entries
+        .where((entry) => !_isValidWord(entry.value.text.trim()))
+        .map((entry) => 'Word ${entry.key + 1}: ${entry.value.text.trim()}')
+        .toList();
+
+    if (invalidWords.isNotEmpty) {
+      _showErrorDialog(
+        AppLocalizations.of(context)!.failedToRestoreWallet,
+        'Invalid words found:\n${invalidWords.join("\n")}',
+      );
+      return;
+    }
+
+    final String mnemonic = _textControllers
+        .map((controller) => controller.text.trim().toLowerCase())
+        .join(' ');
+
+    logger.i('Navigating to email signup for wallet restore');
+
+    // Navigate to email signup screen with mnemonic for restore
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EmailSignupScreen(
+          isRestore: true,
+          mnemonicWords: mnemonic,
+        ),
+      ),
+    );
   }
 
   void _showErrorDialog(String title, String message) {
@@ -355,9 +328,7 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
                 SizedBox(
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _isLoading
-                        ? null
-                        : (_onLastPage ? _handleRestore : _nextPage),
+                    onPressed: _onLastPage ? _handleRestore : _nextPage,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                       foregroundColor: Colors.black,
@@ -366,24 +337,15 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-                              strokeWidth: 3,
-                            ),
-                          )
-                        : Text(
-                            _onLastPage
-                                ? AppLocalizations.of(context)!.restoreExistingWallet
-                                : 'Next',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                    child: Text(
+                      _onLastPage
+                          ? AppLocalizations.of(context)!.restoreExistingWallet
+                          : 'Next',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],

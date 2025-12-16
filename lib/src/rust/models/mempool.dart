@@ -192,11 +192,7 @@ class Conversions {
   final double usd;
   final double? eur;
 
-  const Conversions({
-    required this.time,
-    required this.usd,
-    this.eur,
-  });
+  const Conversions({required this.time, required this.usd, this.eur});
 
   @override
   int get hashCode => time.hashCode ^ usd.hashCode ^ eur.hashCode;
@@ -281,11 +277,7 @@ class DifficultyPoint {
   final double? difficulty;
   final BigInt? height;
 
-  const DifficultyPoint({
-    this.timestamp,
-    this.difficulty,
-    this.height,
-  });
+  const DifficultyPoint({this.timestamp, this.difficulty, this.height});
 
   @override
   int get hashCode =>
@@ -342,10 +334,7 @@ class FearGreedIndex {
   final FearGreedLastUpdated? lastUpdated;
   final FearGreedData? fgi;
 
-  const FearGreedIndex({
-    this.lastUpdated,
-    this.fgi,
-  });
+  const FearGreedIndex({this.lastUpdated, this.fgi});
 
   @override
   int get hashCode => lastUpdated.hashCode ^ fgi.hashCode;
@@ -364,10 +353,7 @@ class FearGreedLastUpdated {
   final PlatformInt64? epochUnixSeconds;
   final String? humanDate;
 
-  const FearGreedLastUpdated({
-    this.epochUnixSeconds,
-    this.humanDate,
-  });
+  const FearGreedLastUpdated({this.epochUnixSeconds, this.humanDate});
 
   @override
   int get hashCode => epochUnixSeconds.hashCode ^ humanDate.hashCode;
@@ -386,10 +372,7 @@ class FearGreedValue {
   final int? value;
   final String? valueText;
 
-  const FearGreedValue({
-    this.value,
-    this.valueText,
-  });
+  const FearGreedValue({this.value, this.valueText});
 
   @override
   int get hashCode => value.hashCode ^ valueText.hashCode;
@@ -440,10 +423,7 @@ class HashratePoint {
   final BigInt timestamp;
   final double avgHashrate;
 
-  const HashratePoint({
-    required this.timestamp,
-    required this.avgHashrate,
-  });
+  const HashratePoint({required this.timestamp, required this.avgHashrate});
 
   @override
   int get hashCode => timestamp.hashCode ^ avgHashrate.hashCode;
@@ -539,11 +519,7 @@ class MiningPool {
   final String name;
   final String? slug;
 
-  const MiningPool({
-    this.id,
-    required this.name,
-    this.slug,
-  });
+  const MiningPool({this.id, required this.name, this.slug});
 
   @override
   int get hashCode => id.hashCode ^ name.hashCode ^ slug.hashCode;

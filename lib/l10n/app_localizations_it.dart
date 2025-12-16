@@ -832,4 +832,212 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pickFromGallery => 'Pick from Gallery';
+
+  @override
+  String get reportBugFeedback => 'Segnala Bug / Feedback';
+
+  @override
+  String get recoveryOptions => 'Recovery Options';
+
+  @override
+  String get securityStatus => 'Security Status';
+
+  @override
+  String get setupRecoveryWarning =>
+      'For your security, please set up as many recovery options as possible.';
+
+  @override
+  String get recoveryFullySetup => 'Your wallet recovery is fully configured!';
+
+  @override
+  String get recoveryMethods => 'Recovery Methods';
+
+  @override
+  String get wordRecovery => 'Word Recovery';
+
+  @override
+  String get wordRecoveryDescription => 'Your 12-word recovery phrase';
+
+  @override
+  String get emailRecovery => 'Email Recovery';
+
+  @override
+  String get emailRecoveryDescription =>
+      'Recover wallet via email and password';
+
+  @override
+  String get enabled => 'Enabled';
+
+  @override
+  String get notSetUp => 'Not Set Up';
+
+  @override
+  String get comingSoon => 'Coming Soon';
+
+  @override
+  String get emailRecoveryComingSoon =>
+      'Email recovery will be available in a future update. For now, please make sure to backup your recovery phrase.';
+
+  @override
+  String get recoverWithEmail => 'Recover with Email';
+
+  @override
+  String get recoverWithEmailSubtitle =>
+      'Use email and password to restore your wallet';
+
+  @override
+  String get emailRecoverySetup => 'Email Recovery Setup';
+
+  @override
+  String get emailRecoveryWarningMessage =>
+      'Your password encrypts your recovery phrase locally. The server only stores the encrypted version and cannot access your funds. If you forget your password, your backup cannot be recovered.';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get enterPassword => 'Enter password';
+
+  @override
+  String get pleaseEnterEmail => 'Please enter an email address';
+
+  @override
+  String get pleaseEnterValidEmail => 'Please enter a valid email address';
+
+  @override
+  String get pleaseEnterPassword => 'Please enter a password';
+
+  @override
+  String get passwordTooWeak => 'Password is too weak';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get confirmYourPassword => 'Confirm your password';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get setupRecovery => 'Setup Recovery';
+
+  @override
+  String get emailRecoverySetupSuccess =>
+      'Email recovery has been set up successfully! You can now recover your wallet using your email and password.';
+
+  @override
+  String get sendCode => 'Send Code';
+
+  @override
+  String get codeSentToEmail => 'Verification code sent to your email';
+
+  @override
+  String get verificationCode => 'Verification Code';
+
+  @override
+  String get recoveryPassword => 'Recovery Password';
+
+  @override
+  String get enterYourRecoveryPassword => 'Enter your recovery password';
+
+  @override
+  String get recoverWallet => 'Recover Wallet';
+
+  @override
+  String get resendCode => 'Resend Code';
+
+  @override
+  String get pleaseEnterCode => 'Please enter the 6-digit verification code';
+
+  @override
+  String get wrongPassword => 'Wrong password. Please try again.';
+
+  @override
+  String get emailRecoveryLoginInfo =>
+      'Enter the email and password you used when setting up email recovery. Your wallet will be restored securely.';
+
+  @override
+  String get authenticateToViewRecoveryPhrase =>
+      'Authenticate to view your recovery phrase';
+
+  @override
+  String get authenticationFailed => 'Authentication failed. Please try again.';
+
+  @override
+  String get confirmRecoveryPhrase => 'Confirm Recovery Phrase';
+
+  @override
+  String get recoveryComplete => 'Recovery Complete';
+
+  @override
+  String get writeDownYourRecoveryPhrase => 'Write down your recovery phrase';
+
+  @override
+  String get youWillNeedToConfirmIt =>
+      'You will need to confirm it in the next step';
+
+  @override
+  String get continueToVerify => 'Continue to Verify';
+
+  @override
+  String get verifyYourRecoveryPhrase => 'Verify your recovery phrase';
+
+  @override
+  String get enterTheFollowingWords =>
+      'Enter the following words from your phrase';
+
+  @override
+  String get enterWord => 'Enter word';
+
+  @override
+  String get verify => 'Verify';
+
+  @override
+  String get incorrectWordsPleaseTryAgain =>
+      'Incorrect words. Please try again.';
+
+  @override
+  String get skipVerification => 'Skip Verification?';
+
+  @override
+  String get skipVerificationWarning =>
+      'Skipping verification means you haven\'t confirmed that you wrote down your recovery phrase correctly. If you lose access to your wallet, you may not be able to recover it.';
+
+  @override
+  String get skipAtOwnRisk => 'Skip at own risk';
+
+  @override
+  String get recoveryPhraseConfirmed => 'Recovery Phrase Confirmed!';
+
+  @override
+  String get yourRecoveryPhraseIsSecured =>
+      'Your recovery phrase has been verified and secured. Keep it safe!';
+
+  @override
+  String get enterYourEmail => 'Enter Your Email';
+
+  @override
+  String get emailSignupDescription =>
+      'Your email is used to create your Lendasat account for loans and other services.';
+
+  @override
+  String get emailUsageInfo =>
+      'We\'ll use this email for account verification and important updates. Your wallet remains secured by your recovery phrase.';
+
+  @override
+  String get createWallet => 'Create Wallet';
+
+  @override
+  String get restoreWallet => 'Restore Wallet';
+
+  @override
+  String get invalidEmail => 'Please enter a valid email address';
+
+  @override
+  String get registrationWarning =>
+      'Account registration had an issue. You can still use your wallet.';
 }

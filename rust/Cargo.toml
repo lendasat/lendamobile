@@ -8,6 +8,12 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 anyhow = "1"
+base64 = "0.22"
+
+# Lendasat SDK for wallet encryption (email recovery)
+lendasat-sdk = { path = "/home/weltitob/lendasat/lendasat/client-sdk", package = "client-sdk" }
+# SRP authentication
+srp = "0.6.0"
 ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
 ark-client = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac", default-features = false, features = ["tls-webpki-roots"] }
 ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }

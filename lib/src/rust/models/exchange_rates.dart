@@ -30,18 +30,4 @@ class ExchangeRates {
           timestamp == other.timestamp;
 }
 
-enum FiatCurrency {
-  usd,
-  eur,
-  gbp,
-  jpy,
-  cad,
-  aud,
-  chf,
-  cny,
-  inr,
-  brl,
-  mxn,
-  krw,
-  ;
-}
+enum FiatCurrency { usd, eur, gbp, jpy, cad, aud, chf, cny, inr, brl, mxn, krw }

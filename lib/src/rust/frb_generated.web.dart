@@ -9,6 +9,8 @@
 import 'api.dart';
 import 'api/ark_api.dart';
 import 'api/bitcoin_api.dart';
+import 'api/email_recovery_api.dart';
+import 'api/lendasat_api.dart';
 import 'api/lendaswap_api.dart';
 import 'api/mempool_api.dart';
 import 'api/mempool_block_tracker.dart';
@@ -17,6 +19,7 @@ import 'api/moonpay_api.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
+import 'lendasat/models.dart';
 import 'lendaswap.dart';
 import 'logger.dart';
 import 'models/exchange_rates.dart';
@@ -44,11 +47,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustStreamSink<MempoolWsMessage> dco_decode_StreamSink_mempool_ws_message_Sse(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   RustStreamSink<ProjectedBlockTransactions>
-      dco_decode_StreamSink_projected_block_transactions_Sse(dynamic raw);
+  dco_decode_StreamSink_projected_block_transactions_Sse(dynamic raw);
 
   @protected
   String dco_decode_String(dynamic raw);
@@ -57,7 +61,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Addresses dco_decode_addresses(dynamic raw);
 
   @protected
+  ArkClaimPsbtResponse dco_decode_ark_claim_psbt_response(dynamic raw);
+
+  @protected
   AssetInfo dco_decode_asset_info(dynamic raw);
+
+  @protected
+  AuthResult dco_decode_auth_result(dynamic raw);
 
   @protected
   Balance dco_decode_balance(dynamic raw);
@@ -87,11 +97,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_box_autoadd_bool(dynamic raw);
 
   @protected
+  ContractFilters dco_decode_box_autoadd_contract_filters(dynamic raw);
+
+  @protected
   Conversions dco_decode_box_autoadd_conversions(dynamic raw);
 
   @protected
   DifficultyAdjustment dco_decode_box_autoadd_difficulty_adjustment(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   double dco_decode_box_autoadd_f_64(dynamic raw);
@@ -101,7 +115,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FearGreedLastUpdated dco_decode_box_autoadd_fear_greed_last_updated(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   FearGreedValue dco_decode_box_autoadd_fear_greed_value(dynamic raw);
@@ -114,6 +129,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MiningPool dco_decode_box_autoadd_mining_pool(dynamic raw);
+
+  @protected
+  OfferFilters dco_decode_box_autoadd_offer_filters(dynamic raw);
 
   @protected
   RecommendedFees dco_decode_box_autoadd_recommended_fees(dynamic raw);
@@ -129,6 +147,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BtcToEvmSwapResult dco_decode_btc_to_evm_swap_result(dynamic raw);
+
+  @protected
+  ClaimPsbtResponse dco_decode_claim_psbt_response(dynamic raw);
+
+  @protected
+  CollateralAsset dco_decode_collateral_asset(dynamic raw);
+
+  @protected
+  Contract dco_decode_contract(dynamic raw);
+
+  @protected
+  ContractFilters dco_decode_contract_filters(dynamic raw);
+
+  @protected
+  ContractStatus dco_decode_contract_status(dynamic raw);
 
   @protected
   Conversions dco_decode_conversions(dynamic raw);
@@ -188,6 +221,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Info dco_decode_info(dynamic raw);
 
   @protected
+  Installment dco_decode_installment(dynamic raw);
+
+  @protected
+  InstallmentStatus dco_decode_installment_status(dynamic raw);
+
+  @protected
+  LenderStats dco_decode_lender_stats(dynamic raw);
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
@@ -195,6 +237,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<Block> dco_decode_list_block(dynamic raw);
+
+  @protected
+  List<Contract> dco_decode_list_contract(dynamic raw);
+
+  @protected
+  List<ContractStatus> dco_decode_list_contract_status(dynamic raw);
 
   @protected
   List<DifficultyPoint> dco_decode_list_difficulty_point(dynamic raw);
@@ -209,7 +257,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<HistoricalPriceData> dco_decode_list_historical_price_data(dynamic raw);
 
   @protected
+  List<Installment> dco_decode_list_installment(dynamic raw);
+
+  @protected
+  List<LoanOffer> dco_decode_list_loan_offer(dynamic raw);
+
+  @protected
+  List<LoanTransaction> dco_decode_list_loan_transaction(dynamic raw);
+
+  @protected
   List<MempoolBlock> dco_decode_list_mempool_block(dynamic raw);
+
+  @protected
+  List<OriginationFee> dco_decode_list_origination_fee(dynamic raw);
 
   @protected
   Float64List dco_decode_list_prim_f_64_strict(dynamic raw);
@@ -242,6 +302,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LnPaymentResult dco_decode_ln_payment_result(dynamic raw);
 
   @protected
+  LoanAsset dco_decode_loan_asset(dynamic raw);
+
+  @protected
+  LoanOffer dco_decode_loan_offer(dynamic raw);
+
+  @protected
+  LoanOfferStatus dco_decode_loan_offer_status(dynamic raw);
+
+  @protected
+  LoanPayout dco_decode_loan_payout(dynamic raw);
+
+  @protected
+  LoanTransaction dco_decode_loan_transaction(dynamic raw);
+
+  @protected
   LogEntry dco_decode_log_entry(dynamic raw);
 
   @protected
@@ -266,6 +341,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   OffchainBalance dco_decode_offchain_balance(dynamic raw);
 
   @protected
+  OfferFilters dco_decode_offer_filters(dynamic raw);
+
+  @protected
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
@@ -278,11 +356,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
 
   @protected
+  ContractFilters? dco_decode_opt_box_autoadd_contract_filters(dynamic raw);
+
+  @protected
   Conversions? dco_decode_opt_box_autoadd_conversions(dynamic raw);
 
   @protected
   DifficultyAdjustment? dco_decode_opt_box_autoadd_difficulty_adjustment(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
@@ -292,7 +374,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FearGreedLastUpdated? dco_decode_opt_box_autoadd_fear_greed_last_updated(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   FearGreedValue? dco_decode_opt_box_autoadd_fear_greed_value(dynamic raw);
@@ -305,6 +388,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MiningPool? dco_decode_opt_box_autoadd_mining_pool(dynamic raw);
+
+  @protected
+  OfferFilters? dco_decode_opt_box_autoadd_offer_filters(dynamic raw);
 
   @protected
   RecommendedFees? dco_decode_opt_box_autoadd_recommended_fees(dynamic raw);
@@ -325,14 +411,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<Block>? dco_decode_opt_list_block(dynamic raw);
 
   @protected
+  List<ContractStatus>? dco_decode_opt_list_contract_status(dynamic raw);
+
+  @protected
   List<MempoolBlock>? dco_decode_opt_list_mempool_block(dynamic raw);
+
+  @protected
+  OriginationFee dco_decode_origination_fee(dynamic raw);
+
+  @protected
+  PaginatedContractsResponse dco_decode_paginated_contracts_response(
+    dynamic raw,
+  );
 
   @protected
   PaymentReceived dco_decode_payment_received(dynamic raw);
 
   @protected
   ProjectedBlockTransactions dco_decode_projected_block_transactions(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   ProjectedTransaction dco_decode_projected_transaction(dynamic raw);
@@ -342,6 +440,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   (String, double) dco_decode_record_string_f_64(dynamic raw);
+
+  @protected
+  RepaymentPlan dco_decode_repayment_plan(dynamic raw);
 
   @protected
   SwapInfo dco_decode_swap_info(dynamic raw);
@@ -384,20 +485,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Map<String, double> sse_decode_Map_String_f_64_None(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Sse(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   RustStreamSink<MempoolWsMessage> sse_decode_StreamSink_mempool_ws_message_Sse(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   RustStreamSink<ProjectedBlockTransactions>
-      sse_decode_StreamSink_projected_block_transactions_Sse(
-          SseDeserializer deserializer);
+  sse_decode_StreamSink_projected_block_transactions_Sse(
+    SseDeserializer deserializer,
+  );
 
   @protected
   String sse_decode_String(SseDeserializer deserializer);
@@ -406,14 +511,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Addresses sse_decode_addresses(SseDeserializer deserializer);
 
   @protected
+  ArkClaimPsbtResponse sse_decode_ark_claim_psbt_response(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   AssetInfo sse_decode_asset_info(SseDeserializer deserializer);
+
+  @protected
+  AuthResult sse_decode_auth_result(SseDeserializer deserializer);
 
   @protected
   Balance sse_decode_balance(SseDeserializer deserializer);
 
   @protected
   BitcoinTransaction sse_decode_bitcoin_transaction(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   Block sse_decode_block(SseDeserializer deserializer);
@@ -437,26 +551,35 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
+  ContractFilters sse_decode_box_autoadd_contract_filters(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   Conversions sse_decode_box_autoadd_conversions(SseDeserializer deserializer);
 
   @protected
   DifficultyAdjustment sse_decode_box_autoadd_difficulty_adjustment(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
   FearGreedData sse_decode_box_autoadd_fear_greed_data(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   FearGreedLastUpdated sse_decode_box_autoadd_fear_greed_last_updated(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   FearGreedValue sse_decode_box_autoadd_fear_greed_value(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
@@ -468,8 +591,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MiningPool sse_decode_box_autoadd_mining_pool(SseDeserializer deserializer);
 
   @protected
+  OfferFilters sse_decode_box_autoadd_offer_filters(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RecommendedFees sse_decode_box_autoadd_recommended_fees(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   TxOutput sse_decode_box_autoadd_tx_output(SseDeserializer deserializer);
@@ -482,7 +611,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BtcToEvmSwapResult sse_decode_btc_to_evm_swap_result(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ClaimPsbtResponse sse_decode_claim_psbt_response(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CollateralAsset sse_decode_collateral_asset(SseDeserializer deserializer);
+
+  @protected
+  Contract sse_decode_contract(SseDeserializer deserializer);
+
+  @protected
+  ContractFilters sse_decode_contract_filters(SseDeserializer deserializer);
+
+  @protected
+  ContractStatus sse_decode_contract_status(SseDeserializer deserializer);
 
   @protected
   Conversions sse_decode_conversions(SseDeserializer deserializer);
@@ -492,14 +639,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DifficultyAdjustment sse_decode_difficulty_adjustment(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   DifficultyPoint sse_decode_difficulty_point(SseDeserializer deserializer);
 
   @protected
   EvmToBtcSwapResult sse_decode_evm_to_btc_swap_result(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ExchangeRates sse_decode_exchange_rates(SseDeserializer deserializer);
@@ -515,7 +664,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FearGreedLastUpdated sse_decode_fear_greed_last_updated(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   FearGreedValue sse_decode_fear_greed_value(SseDeserializer deserializer);
@@ -531,11 +681,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   HistoricalPriceData sse_decode_historical_price_data(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   HistoricalPriceResponse sse_decode_historical_price_response(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -547,34 +699,73 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Info sse_decode_info(SseDeserializer deserializer);
 
   @protected
+  Installment sse_decode_installment(SseDeserializer deserializer);
+
+  @protected
+  InstallmentStatus sse_decode_installment_status(SseDeserializer deserializer);
+
+  @protected
+  LenderStats sse_decode_lender_stats(SseDeserializer deserializer);
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
   List<BitcoinTransaction> sse_decode_list_bitcoin_transaction(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<Block> sse_decode_list_block(SseDeserializer deserializer);
 
   @protected
+  List<Contract> sse_decode_list_contract(SseDeserializer deserializer);
+
+  @protected
+  List<ContractStatus> sse_decode_list_contract_status(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<DifficultyPoint> sse_decode_list_difficulty_point(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<FiatCurrency> sse_decode_list_fiat_currency(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<HashratePoint> sse_decode_list_hashrate_point(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<HistoricalPriceData> sse_decode_list_historical_price_data(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<Installment> sse_decode_list_installment(SseDeserializer deserializer);
+
+  @protected
+  List<LoanOffer> sse_decode_list_loan_offer(SseDeserializer deserializer);
+
+  @protected
+  List<LoanTransaction> sse_decode_list_loan_transaction(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<MempoolBlock> sse_decode_list_mempool_block(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<OriginationFee> sse_decode_list_origination_fee(
+    SseDeserializer deserializer,
+  );
 
   @protected
   Float64List sse_decode_list_prim_f_64_strict(SseDeserializer deserializer);
@@ -584,11 +775,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ProjectedTransaction> sse_decode_list_projected_transaction(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<(String, double)> sse_decode_list_record_string_f_64(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<SwapInfo> sse_decode_list_swap_info(SseDeserializer deserializer);
@@ -609,6 +802,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LnPaymentResult sse_decode_ln_payment_result(SseDeserializer deserializer);
 
   @protected
+  LoanAsset sse_decode_loan_asset(SseDeserializer deserializer);
+
+  @protected
+  LoanOffer sse_decode_loan_offer(SseDeserializer deserializer);
+
+  @protected
+  LoanOfferStatus sse_decode_loan_offer_status(SseDeserializer deserializer);
+
+  @protected
+  LoanPayout sse_decode_loan_payout(SseDeserializer deserializer);
+
+  @protected
+  LoanTransaction sse_decode_loan_transaction(SseDeserializer deserializer);
+
+  @protected
   LogEntry sse_decode_log_entry(SseDeserializer deserializer);
 
   @protected
@@ -622,11 +830,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MoonPayCurrencyLimits sse_decode_moon_pay_currency_limits(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   MoonPayEncryptedData sse_decode_moon_pay_encrypted_data(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   MoonPayQuote sse_decode_moon_pay_quote(SseDeserializer deserializer);
@@ -635,41 +845,56 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   OffchainBalance sse_decode_offchain_balance(SseDeserializer deserializer);
 
   @protected
+  OfferFilters sse_decode_offer_filters(SseDeserializer deserializer);
+
+  @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
   BlockExtras? sse_decode_opt_box_autoadd_block_extras(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   BoltzSwap? sse_decode_opt_box_autoadd_boltz_swap(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
+  ContractFilters? sse_decode_opt_box_autoadd_contract_filters(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   Conversions? sse_decode_opt_box_autoadd_conversions(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   DifficultyAdjustment? sse_decode_opt_box_autoadd_difficulty_adjustment(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
   FearGreedData? sse_decode_opt_box_autoadd_fear_greed_data(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   FearGreedLastUpdated? sse_decode_opt_box_autoadd_fear_greed_last_updated(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   FearGreedValue? sse_decode_opt_box_autoadd_fear_greed_value(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
@@ -679,11 +904,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MiningPool? sse_decode_opt_box_autoadd_mining_pool(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  OfferFilters? sse_decode_opt_box_autoadd_offer_filters(
+    SseDeserializer deserializer,
+  );
 
   @protected
   RecommendedFees? sse_decode_opt_box_autoadd_recommended_fees(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   TxOutput? sse_decode_opt_box_autoadd_tx_output(SseDeserializer deserializer);
@@ -701,25 +933,44 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<Block>? sse_decode_opt_list_block(SseDeserializer deserializer);
 
   @protected
+  List<ContractStatus>? sse_decode_opt_list_contract_status(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<MempoolBlock>? sse_decode_opt_list_mempool_block(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  OriginationFee sse_decode_origination_fee(SseDeserializer deserializer);
+
+  @protected
+  PaginatedContractsResponse sse_decode_paginated_contracts_response(
+    SseDeserializer deserializer,
+  );
 
   @protected
   PaymentReceived sse_decode_payment_received(SseDeserializer deserializer);
 
   @protected
   ProjectedBlockTransactions sse_decode_projected_block_transactions(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ProjectedTransaction sse_decode_projected_transaction(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   RecommendedFees sse_decode_recommended_fees(SseDeserializer deserializer);
 
   @protected
   (String, double) sse_decode_record_string_f_64(SseDeserializer deserializer);
+
+  @protected
+  RepaymentPlan sse_decode_repayment_plan(SseDeserializer deserializer);
 
   @protected
   SwapInfo sse_decode_swap_info(SseDeserializer deserializer);
@@ -759,24 +1010,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_AnyhowException(
-      AnyhowException self, SseSerializer serializer);
+    AnyhowException self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_Map_String_f_64_None(
-      Map<String, double> self, SseSerializer serializer);
+    Map<String, double> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_StreamSink_log_entry_Sse(
-      RustStreamSink<LogEntry> self, SseSerializer serializer);
+    RustStreamSink<LogEntry> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_StreamSink_mempool_ws_message_Sse(
-      RustStreamSink<MempoolWsMessage> self, SseSerializer serializer);
+    RustStreamSink<MempoolWsMessage> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_StreamSink_projected_block_transactions_Sse(
-      RustStreamSink<ProjectedBlockTransactions> self,
-      SseSerializer serializer);
+    RustStreamSink<ProjectedBlockTransactions> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
@@ -785,14 +1045,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_addresses(Addresses self, SseSerializer serializer);
 
   @protected
+  void sse_encode_ark_claim_psbt_response(
+    ArkClaimPsbtResponse self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_asset_info(AssetInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_auth_result(AuthResult self, SseSerializer serializer);
 
   @protected
   void sse_encode_balance(Balance self, SseSerializer serializer);
 
   @protected
   void sse_encode_bitcoin_transaction(
-      BitcoinTransaction self, SseSerializer serializer);
+    BitcoinTransaction self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_block(Block self, SseSerializer serializer);
@@ -808,56 +1079,90 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_block_extras(
-      BlockExtras self, SseSerializer serializer);
+    BlockExtras self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_boltz_swap(
-      BoltzSwap self, SseSerializer serializer);
+    BoltzSwap self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_contract_filters(
+    ContractFilters self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_conversions(
-      Conversions self, SseSerializer serializer);
+    Conversions self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_difficulty_adjustment(
-      DifficultyAdjustment self, SseSerializer serializer);
+    DifficultyAdjustment self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_fear_greed_data(
-      FearGreedData self, SseSerializer serializer);
+    FearGreedData self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_fear_greed_last_updated(
-      FearGreedLastUpdated self, SseSerializer serializer);
+    FearGreedLastUpdated self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_fear_greed_value(
-      FearGreedValue self, SseSerializer serializer);
+    FearGreedValue self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_i_64(
-      PlatformInt64 self, SseSerializer serializer);
+    PlatformInt64 self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_mining_pool(
-      MiningPool self, SseSerializer serializer);
+    MiningPool self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_offer_filters(
+    OfferFilters self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_recommended_fees(
-      RecommendedFees self, SseSerializer serializer);
+    RecommendedFees self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_tx_output(
-      TxOutput self, SseSerializer serializer);
+    TxOutput self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
@@ -867,7 +1172,36 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_btc_to_evm_swap_result(
-      BtcToEvmSwapResult self, SseSerializer serializer);
+    BtcToEvmSwapResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_claim_psbt_response(
+    ClaimPsbtResponse self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_collateral_asset(
+    CollateralAsset self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_contract(Contract self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_contract_filters(
+    ContractFilters self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_contract_status(
+    ContractStatus self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_conversions(Conversions self, SseSerializer serializer);
@@ -877,15 +1211,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_difficulty_adjustment(
-      DifficultyAdjustment self, SseSerializer serializer);
+    DifficultyAdjustment self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_difficulty_point(
-      DifficultyPoint self, SseSerializer serializer);
+    DifficultyPoint self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_evm_to_btc_swap_result(
-      EvmToBtcSwapResult self, SseSerializer serializer);
+    EvmToBtcSwapResult self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_exchange_rates(ExchangeRates self, SseSerializer serializer);
@@ -898,15 +1238,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_fear_greed_index(
-      FearGreedIndex self, SseSerializer serializer);
+    FearGreedIndex self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_fear_greed_last_updated(
-      FearGreedLastUpdated self, SseSerializer serializer);
+    FearGreedLastUpdated self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_fear_greed_value(
-      FearGreedValue self, SseSerializer serializer);
+    FearGreedValue self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_fiat_currency(FiatCurrency self, SseSerializer serializer);
@@ -919,11 +1265,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_historical_price_data(
-      HistoricalPriceData self, SseSerializer serializer);
+    HistoricalPriceData self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_historical_price_response(
-      HistoricalPriceResponse self, SseSerializer serializer);
+    HistoricalPriceResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -935,61 +1285,130 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_info(Info self, SseSerializer serializer);
 
   @protected
+  void sse_encode_installment(Installment self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_installment_status(
+    InstallmentStatus self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_lender_stats(LenderStats self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_bitcoin_transaction(
-      List<BitcoinTransaction> self, SseSerializer serializer);
+    List<BitcoinTransaction> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_block(List<Block> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_contract(List<Contract> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_contract_status(
+    List<ContractStatus> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_difficulty_point(
-      List<DifficultyPoint> self, SseSerializer serializer);
+    List<DifficultyPoint> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_fiat_currency(
-      List<FiatCurrency> self, SseSerializer serializer);
+    List<FiatCurrency> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_hashrate_point(
-      List<HashratePoint> self, SseSerializer serializer);
+    List<HashratePoint> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_historical_price_data(
-      List<HistoricalPriceData> self, SseSerializer serializer);
+    List<HistoricalPriceData> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_installment(
+    List<Installment> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_loan_offer(
+    List<LoanOffer> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_loan_transaction(
+    List<LoanTransaction> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_mempool_block(
-      List<MempoolBlock> self, SseSerializer serializer);
+    List<MempoolBlock> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_origination_fee(
+    List<OriginationFee> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_f_64_strict(
-      Float64List self, SseSerializer serializer);
+    Float64List self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_u_8_strict(
-      Uint8List self, SseSerializer serializer);
+    Uint8List self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_projected_transaction(
-      List<ProjectedTransaction> self, SseSerializer serializer);
+    List<ProjectedTransaction> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_record_string_f_64(
-      List<(String, double)> self, SseSerializer serializer);
+    List<(String, double)> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_swap_info(List<SwapInfo> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_trading_pair(
-      List<TradingPair> self, SseSerializer serializer);
+    List<TradingPair> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_transaction(
-      List<Transaction> self, SseSerializer serializer);
+    List<Transaction> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_tx_input(List<TxInput> self, SseSerializer serializer);
@@ -999,7 +1418,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_ln_payment_result(
-      LnPaymentResult self, SseSerializer serializer);
+    LnPaymentResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_loan_asset(LoanAsset self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_loan_offer(LoanOffer self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_loan_offer_status(
+    LoanOfferStatus self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_loan_payout(LoanPayout self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_loan_transaction(
+    LoanTransaction self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
@@ -1009,81 +1451,126 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_mempool_ws_message(
-      MempoolWsMessage self, SseSerializer serializer);
+    MempoolWsMessage self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_mining_pool(MiningPool self, SseSerializer serializer);
 
   @protected
   void sse_encode_moon_pay_currency_limits(
-      MoonPayCurrencyLimits self, SseSerializer serializer);
+    MoonPayCurrencyLimits self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_moon_pay_encrypted_data(
-      MoonPayEncryptedData self, SseSerializer serializer);
+    MoonPayEncryptedData self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_moon_pay_quote(MoonPayQuote self, SseSerializer serializer);
 
   @protected
   void sse_encode_offchain_balance(
-      OffchainBalance self, SseSerializer serializer);
+    OffchainBalance self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_offer_filters(OfferFilters self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_block_extras(
-      BlockExtras? self, SseSerializer serializer);
+    BlockExtras? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_boltz_swap(
-      BoltzSwap? self, SseSerializer serializer);
+    BoltzSwap? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_contract_filters(
+    ContractFilters? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_conversions(
-      Conversions? self, SseSerializer serializer);
+    Conversions? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_difficulty_adjustment(
-      DifficultyAdjustment? self, SseSerializer serializer);
+    DifficultyAdjustment? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_fear_greed_data(
-      FearGreedData? self, SseSerializer serializer);
+    FearGreedData? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_fear_greed_last_updated(
-      FearGreedLastUpdated? self, SseSerializer serializer);
+    FearGreedLastUpdated? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_fear_greed_value(
-      FearGreedValue? self, SseSerializer serializer);
+    FearGreedValue? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_i_64(
-      PlatformInt64? self, SseSerializer serializer);
+    PlatformInt64? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_mining_pool(
-      MiningPool? self, SseSerializer serializer);
+    MiningPool? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_offer_filters(
+    OfferFilters? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_recommended_fees(
-      RecommendedFees? self, SseSerializer serializer);
+    RecommendedFees? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_tx_output(
-      TxOutput? self, SseSerializer serializer);
+    TxOutput? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
@@ -1098,28 +1585,61 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_list_block(List<Block>? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_list_contract_status(
+    List<ContractStatus>? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_list_mempool_block(
-      List<MempoolBlock>? self, SseSerializer serializer);
+    List<MempoolBlock>? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_origination_fee(
+    OriginationFee self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_paginated_contracts_response(
+    PaginatedContractsResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_payment_received(
-      PaymentReceived self, SseSerializer serializer);
+    PaymentReceived self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_projected_block_transactions(
-      ProjectedBlockTransactions self, SseSerializer serializer);
+    ProjectedBlockTransactions self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_projected_transaction(
-      ProjectedTransaction self, SseSerializer serializer);
+    ProjectedTransaction self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_recommended_fees(
-      RecommendedFees self, SseSerializer serializer);
+    RecommendedFees self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_record_string_f_64(
-      (String, double) self, SseSerializer serializer);
+    (String, double) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_repayment_plan(RepaymentPlan self, SseSerializer serializer);
 
   @protected
   void sse_encode_swap_info(SwapInfo self, SseSerializer serializer);
@@ -1129,7 +1649,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_swap_status_simple(
-      SwapStatusSimple self, SseSerializer serializer);
+    SwapStatusSimple self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_trading_pair(TradingPair self, SseSerializer serializer);

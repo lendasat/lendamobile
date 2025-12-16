@@ -15,47 +15,50 @@ Future<bool> walletExists({required String dataDir}) =>
 
 /// Setup a new wallet with a freshly generated 12-word mnemonic.
 /// Returns the mnemonic words that the user MUST back up securely.
-Future<String> setupNewWallet(
-        {required String dataDir,
-        required String network,
-        required String esplora,
-        required String server,
-        required String boltzUrl}) =>
-    RustLib.instance.api.crateApiArkApiSetupNewWallet(
-        dataDir: dataDir,
-        network: network,
-        esplora: esplora,
-        server: server,
-        boltzUrl: boltzUrl);
+Future<String> setupNewWallet({
+  required String dataDir,
+  required String network,
+  required String esplora,
+  required String server,
+  required String boltzUrl,
+}) => RustLib.instance.api.crateApiArkApiSetupNewWallet(
+  dataDir: dataDir,
+  network: network,
+  esplora: esplora,
+  server: server,
+  boltzUrl: boltzUrl,
+);
 
-Future<String> loadExistingWallet(
-        {required String dataDir,
-        required String network,
-        required String esplora,
-        required String server,
-        required String boltzUrl}) =>
-    RustLib.instance.api.crateApiArkApiLoadExistingWallet(
-        dataDir: dataDir,
-        network: network,
-        esplora: esplora,
-        server: server,
-        boltzUrl: boltzUrl);
+Future<String> loadExistingWallet({
+  required String dataDir,
+  required String network,
+  required String esplora,
+  required String server,
+  required String boltzUrl,
+}) => RustLib.instance.api.crateApiArkApiLoadExistingWallet(
+  dataDir: dataDir,
+  network: network,
+  esplora: esplora,
+  server: server,
+  boltzUrl: boltzUrl,
+);
 
 /// Restore a wallet from a mnemonic phrase (12 or 24 words)
-Future<String> restoreWallet(
-        {required String mnemonicWords,
-        required String dataDir,
-        required String network,
-        required String esplora,
-        required String server,
-        required String boltzUrl}) =>
-    RustLib.instance.api.crateApiArkApiRestoreWallet(
-        mnemonicWords: mnemonicWords,
-        dataDir: dataDir,
-        network: network,
-        esplora: esplora,
-        server: server,
-        boltzUrl: boltzUrl);
+Future<String> restoreWallet({
+  required String mnemonicWords,
+  required String dataDir,
+  required String network,
+  required String esplora,
+  required String server,
+  required String boltzUrl,
+}) => RustLib.instance.api.crateApiArkApiRestoreWallet(
+  mnemonicWords: mnemonicWords,
+  dataDir: dataDir,
+  network: network,
+  esplora: esplora,
+  server: server,
+  boltzUrl: boltzUrl,
+);
 
 Future<Balance> balance() => RustLib.instance.api.crateApiArkApiBalance();
 
@@ -66,8 +69,10 @@ Future<List<Transaction>> txHistory() =>
     RustLib.instance.api.crateApiArkApiTxHistory();
 
 Future<String> send({required String address, required BigInt amountSats}) =>
-    RustLib.instance.api
-        .crateApiArkApiSend(address: address, amountSats: amountSats);
+    RustLib.instance.api.crateApiArkApiSend(
+      address: address,
+      amountSats: amountSats,
+    );
 
 /// Pay a BOLT11 Lightning invoice using Ark funds via Boltz submarine swap
 Future<LnPaymentResult> payLnInvoice({required String invoice}) =>
@@ -84,29 +89,22 @@ Future<String> nsec({required String dataDir}) =>
 Future<String> getMnemonic({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiGetMnemonic(dataDir: dataDir);
 
-/// Check if the wallet is using the new HD wallet format (mnemonic-based)
-Future<bool> isHdWallet({required String dataDir}) =>
-    RustLib.instance.api.crateApiArkApiIsHdWallet(dataDir: dataDir);
-
-/// Check if the wallet is using the legacy seed file format
-Future<bool> isLegacyWallet({required String dataDir}) =>
-    RustLib.instance.api.crateApiArkApiIsLegacyWallet(dataDir: dataDir);
-
 Future<void> resetWallet({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiResetWallet(dataDir: dataDir);
 
 Future<Info> information() => RustLib.instance.api.crateApiArkApiInformation();
 
-Future<PaymentReceived> waitForPayment(
-        {String? arkAddress,
-        String? boardingAddress,
-        String? boltzSwapId,
-        required BigInt timeoutSeconds}) =>
-    RustLib.instance.api.crateApiArkApiWaitForPayment(
-        arkAddress: arkAddress,
-        boardingAddress: boardingAddress,
-        boltzSwapId: boltzSwapId,
-        timeoutSeconds: timeoutSeconds);
+Future<PaymentReceived> waitForPayment({
+  String? arkAddress,
+  String? boardingAddress,
+  String? boltzSwapId,
+  required BigInt timeoutSeconds,
+}) => RustLib.instance.api.crateApiArkApiWaitForPayment(
+  arkAddress: arkAddress,
+  boardingAddress: boardingAddress,
+  boltzSwapId: boltzSwapId,
+  timeoutSeconds: timeoutSeconds,
+);
 
 class Addresses {
   final String boarding;
@@ -142,9 +140,7 @@ class Addresses {
 class Balance {
   final OffchainBalance offchain;
 
-  const Balance({
-    required this.offchain,
-  });
+  const Balance({required this.offchain});
 
   @override
   int get hashCode => offchain.hashCode;
@@ -185,10 +181,7 @@ class Info {
   final String serverPk;
   final String network;
 
-  const Info({
-    required this.serverPk,
-    required this.network,
-  });
+  const Info({required this.serverPk, required this.network});
 
   @override
   int get hashCode => serverPk.hashCode ^ network.hashCode;
@@ -256,10 +249,7 @@ class PaymentReceived {
   final String txid;
   final BigInt amountSats;
 
-  const PaymentReceived({
-    required this.txid,
-    required this.amountSats,
-  });
+  const PaymentReceived({required this.txid, required this.amountSats});
 
   @override
   int get hashCode => txid.hashCode ^ amountSats.hashCode;

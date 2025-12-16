@@ -7,6 +7,8 @@ class SettingsService {
   static const String _arkServerUrlKey = 'ark_server_url';
   static const String _arkNetworkKey = 'ark_network';
   static const String _boltzUrlKey = 'boltz_url';
+  static const String _wordRecoverySetKey = 'word_recovery_set';
+  static const String _userEmailKey = 'user_email';
 
   // Default values from environment variables
   static String get defaultEsploraUrl =>
@@ -99,5 +101,47 @@ class SettingsService {
     await prefs.remove(_arkServerUrlKey);
     await prefs.remove(_arkNetworkKey);
     await prefs.remove(_boltzUrlKey);
+    await prefs.remove(_wordRecoverySetKey);
+  }
+
+  // Check if word recovery has been viewed/backed up
+  Future<bool> isWordRecoverySet() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_wordRecoverySetKey) ?? false;
+  }
+
+  // Mark word recovery as viewed/backed up
+  Future<bool> setWordRecoveryComplete() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_wordRecoverySetKey, true);
+  }
+
+  // Clear word recovery status
+  Future<bool> clearWordRecoveryStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.remove(_wordRecoverySetKey);
+  }
+
+  // Get Lendasat API URL (same as Backend URL)
+  Future<String> getLendasatApiUrl() async {
+    return defaultBackendUrl;
+  }
+
+  // Get user email
+  Future<String?> getUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userEmailKey);
+  }
+
+  // Set user email
+  Future<bool> setUserEmail(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_userEmailKey, email);
+  }
+
+  // Clear user email
+  Future<bool> clearUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.remove(_userEmailKey);
   }
 }

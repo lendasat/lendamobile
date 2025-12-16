@@ -6,7 +6,10 @@
       "WebSearch",
       "Bash(ls:*)",
       "Bash(git checkout:*)",
-      "Bash(cargo ndk:*)"
+      "Bash(cargo ndk:*)",
+      "Bash(mkdir:*)",
+      "Bash(export ANDROID_NDK_HOME=~/android-sdk/android-ndk-r27c)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

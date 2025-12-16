@@ -80,16 +80,16 @@ class TransactionFilterScreen extends StatelessWidget {
                         onTap: () => filterService.toggleFilter('Onchain'),
                       ),
                       _FilterPill(
-                        label: 'Round',
+                        label: 'Arkade',
                         isSelected:
-                            filterService.selectedFilters.contains('Round'),
-                        onTap: () => filterService.toggleFilter('Round'),
+                            filterService.selectedFilters.contains('Arkade'),
+                        onTap: () => filterService.toggleFilter('Arkade'),
                       ),
                       _FilterPill(
-                        label: 'Redeem',
+                        label: 'Swap',
                         isSelected:
-                            filterService.selectedFilters.contains('Redeem'),
-                        onTap: () => filterService.toggleFilter('Redeem'),
+                            filterService.selectedFilters.contains('Swap'),
+                        onTap: () => filterService.toggleFilter('Swap'),
                       ),
                       _FilterPill(
                         label: AppLocalizations.of(context)!.sent,

@@ -305,10 +305,8 @@ class TokenIcon extends StatelessWidget {
   /// Get the SVG asset path for a token
   String _getTokenSvgPath(SwapToken token) {
     switch (token) {
-      case SwapToken.btcArkade:
+      case SwapToken.bitcoin:
         return 'assets/images/tokens/bitcoin.svg';
-      case SwapToken.btcLightning:
-        return 'assets/images/tokens/bitcoin_lightning.svg';
       case SwapToken.usdcPolygon:
       case SwapToken.usdcEthereum:
         return 'assets/images/tokens/usdc.svg';
@@ -397,10 +395,8 @@ class TokenIconWithNetwork extends StatelessWidget {
   /// Get the SVG asset path for a network
   String _getNetworkSvgPath(SwapToken token) {
     switch (token) {
-      case SwapToken.btcArkade:
-        return 'assets/images/tokens/arkade.svg';
-      case SwapToken.btcLightning:
-        return 'assets/images/tokens/bitcoin_lightning.svg';
+      case SwapToken.bitcoin:
+        return 'assets/images/tokens/bitcoin.svg';
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
         return 'assets/images/tokens/polygon.svg';

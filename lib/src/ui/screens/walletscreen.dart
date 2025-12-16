@@ -4,8 +4,10 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/email_recovery_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
+import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/bitcoin_chart/bitcoin_chart_detail_screen.dart';
 import 'package:ark_flutter/src/ui/screens/buy/buy_screen.dart';
@@ -75,6 +77,10 @@ class WalletScreenState extends State<WalletScreen> {
   Color _gradientBottomColor =
       AppTheme.successColorGradient.withValues(alpha: 0.15);
 
+  // Recovery status
+  bool _wordRecoverySet = false;
+  bool _emailRecoverySet = false;
+
   // Scroll controller for nested scrolling
   final ScrollController _scrollController = ScrollController();
 
@@ -84,6 +90,7 @@ class WalletScreenState extends State<WalletScreen> {
     logger.i("WalletScreen initialized with ASP ID: ${widget.aspId}");
     fetchWalletData();
     _loadBitcoinPriceData();
+    _loadRecoveryStatus();
 
     // Fetch exchange rates
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -110,6 +117,21 @@ class WalletScreenState extends State<WalletScreen> {
       }
     } catch (e) {
       logger.e('Error loading bitcoin price data: $e');
+    }
+  }
+
+  Future<void> _loadRecoveryStatus() async {
+    try {
+      final wordRecovery = await SettingsService().isWordRecoverySet();
+      final emailRecovery = await EmailRecoveryService.isSetUp();
+      if (mounted) {
+        setState(() {
+          _wordRecoverySet = wordRecovery;
+          _emailRecoverySet = emailRecovery;
+        });
+      }
+    } catch (e) {
+      logger.e('Error loading recovery status: $e');
     }
   }
 
@@ -143,9 +165,17 @@ class WalletScreenState extends State<WalletScreen> {
   bool _isPriceChangePositive() {
     if (_bitcoinPriceData.isEmpty) return true;
 
-    final firstPrice = _bitcoinPriceData.first.price;
-    final lastPrice = _bitcoinPriceData.last.price;
-    final diff = lastPrice - firstPrice;
+    // Calculate portfolio value change (balance at time × price)
+    final firstData = _bitcoinPriceData.first;
+    final lastData = _bitcoinPriceData.last;
+
+    final firstBalance = _getBalanceAtTimestamp(firstData.time);
+    final lastBalance = _getBalanceAtTimestamp(lastData.time);
+
+    final firstValue = firstData.price * firstBalance;
+    final lastValue = lastData.price * lastBalance;
+
+    final diff = lastValue - firstValue;
 
     return diff >= 0 || diff.abs() < 0.001;
   }
@@ -172,6 +202,10 @@ class WalletScreenState extends State<WalletScreen> {
         setState(() {
           _swaps = _swapService.swaps;
         });
+        // Recalculate gradient colors now that we have swap history
+        if (_bitcoinPriceData.isNotEmpty) {
+          _updateGradientColors();
+        }
       }
       logger.i("Fetched ${_swaps.length} swaps");
     } catch (e) {
@@ -191,6 +225,10 @@ class WalletScreenState extends State<WalletScreen> {
         _isTransactionFetching = false;
         _transactions = transactions;
       });
+      // Recalculate gradient colors now that we have transaction history
+      if (_bitcoinPriceData.isNotEmpty) {
+        _updateGradientColors();
+      }
       logger.i("Fetched ${transactions.length} transactions");
     } catch (e) {
       logger.e("Error fetching transaction history: $e");
@@ -397,6 +435,44 @@ class WalletScreenState extends State<WalletScreen> {
     );
   }
 
+  /// Builds the settings button with a recovery status indicator dot
+  /// Shows RED dot only when NO recovery option has been set up
+  Widget _buildSettingsButton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Check if at least one recovery option is set up
+    final bool hasAnyRecovery = _wordRecoverySet || _emailRecoverySet;
+
+    return Stack(
+      children: [
+        RoundedButtonWidget(
+          size: AppTheme.cardPadding * 1.5,
+          buttonType: ButtonType.transparent,
+          iconData: Icons.settings,
+          onTap: _handleSettings,
+        ),
+        // Only show red dot if NO recovery option has been set up
+        if (!hasAnyRecovery)
+          Positioned(
+            right: 0,
+            top: 0,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.errorColor,
+                border: Border.all(
+                  color: isDark ? Colors.black : Colors.white,
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ArkScaffold(
@@ -483,17 +559,75 @@ class WalletScreenState extends State<WalletScreen> {
     );
   }
 
+  /// Calculate the user's BTC balance at a specific point in time
+  /// by working backwards from current balance using transaction history.
+  double _getBalanceAtTimestamp(int timestampMs) {
+    final currentBalance = _getSelectedBalance();
+    final timestampSec = timestampMs ~/ 1000;
+
+    // Sum all transaction amounts that occurred AFTER the target timestamp
+    double amountAfterTimestamp = 0.0;
+
+    // Process regular transactions
+    for (final tx in _transactions) {
+      final txTimestamp = tx.map(
+        boarding: (t) => t.confirmedAt ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+        round: (t) => t.createdAt,
+        redeem: (t) => t.createdAt,
+      );
+
+      if (txTimestamp > timestampSec) {
+        final amountSats = tx.map(
+          boarding: (t) => t.amountSats.toInt(),
+          round: (t) => t.amountSats,
+          redeem: (t) => -t.amountSats, // Redeem reduces Ark balance
+        );
+        amountAfterTimestamp += amountSats / 100000000.0;
+      }
+    }
+
+    // Process swaps (BTC to EVM = outgoing, EVM to BTC = incoming)
+    for (final swap in _swaps) {
+      try {
+        final swapDate = DateTime.parse(swap.createdAt);
+        final swapTimestampSec = swapDate.millisecondsSinceEpoch ~/ 1000;
+
+        if (swapTimestampSec > timestampSec && swap.status == SwapStatusSimple.completed) {
+          final sats = swap.sourceAmountSats.toInt();
+          // Negative when selling BTC (btc_to_evm), positive when buying BTC
+          final amountBtc = swap.direction == 'btc_to_evm' ? -sats : sats;
+          amountAfterTimestamp += amountBtc / 100000000.0;
+        }
+      } catch (e) {
+        // Skip swaps with invalid dates
+      }
+    }
+
+    // Balance at timestamp = current balance - changes that happened after
+    return (currentBalance - amountAfterTimestamp).clamp(0.0, double.infinity);
+  }
+
   Widget _buildChartWidget() {
     if (_bitcoinPriceData.isEmpty || _isBalanceLoading) {
       return const SizedBox(height: 320);
     }
 
+    // Transform price data to historical balance value (balance at time × price)
+    final balanceChartData = _bitcoinPriceData.map((priceData) {
+      final balanceAtTime = _getBalanceAtTimestamp(priceData.time);
+      return PriceData(
+        time: priceData.time,
+        price: priceData.price * balanceAtTime,
+      );
+    }).toList();
+
     return SizedBox(
       height: 320,
       child: BitcoinPriceChart(
-        data: _bitcoinPriceData,
+        data: balanceChartData,
         alpha: 255,
         trackballActivationMode: null,
+        lineColor: _isPriceChangePositive() ? Colors.green : Colors.red,
       ),
     );
   }
@@ -528,13 +662,8 @@ class WalletScreenState extends State<WalletScreen> {
               ),
               const SizedBox(width: AppTheme.elementSpacing * 0.5),
 
-              // Settings button
-              RoundedButtonWidget(
-                size: AppTheme.cardPadding * 1.5,
-                buttonType: ButtonType.transparent,
-                iconData: Icons.settings,
-                onTap: _handleSettings,
-              ),
+              // Settings button with recovery status indicator
+              _buildSettingsButton(),
             ],
           ),
         ],

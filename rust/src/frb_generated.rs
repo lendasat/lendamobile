@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 298286200;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1901055485;
 
 // Section: executor
 
@@ -108,6 +108,48 @@ fn wire__crate__api__ark_api__balance_impl(
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
                         let output_ok = crate::api::ark_api::balance().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__email_recovery_api__check_email_recovery_exists_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "check_email_recovery_exists",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_backend_url = <String>::sse_decode(&mut deserializer);
+            let api_email = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::email_recovery_api::check_email_recovery_exists(
+                                api_backend_url,
+                                api_email,
+                            )
+                            .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -661,6 +703,38 @@ fn wire__crate__api__ark_api__get_mnemonic_impl(
         },
     )
 }
+fn wire__crate__api__email_recovery_api__get_password_feedback_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "get_password_feedback",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_password = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let output_ok = Result::<_, ()>::Ok(
+                    crate::api::email_recovery_api::get_password_feedback(api_password),
+                )?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
 fn wire__crate__api__get_recommended_fees_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -942,15 +1016,47 @@ fn wire__crate__api__init_logging_impl(
         },
     )
 }
-fn wire__crate__api__ark_api__is_hd_wallet_impl(
+fn wire__crate__api__email_recovery_api__is_password_strong_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "is_password_strong",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_password = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let output_ok = Result::<_, ()>::Ok(
+                    crate::api::email_recovery_api::is_password_strong(api_password),
+                )?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_authenticate_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "is_hd_wallet",
+            debug_name: "lendasat_authenticate",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -964,27 +1070,576 @@ fn wire__crate__api__ark_api__is_hd_wallet_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_data_dir = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_authenticate().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_broadcast_claim_ark_tx_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_broadcast_claim_ark_tx",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contract_id = <String>::sse_decode(&mut deserializer);
+            let api_signed_ark_psbt = <String>::sse_decode(&mut deserializer);
+            let api_signed_checkpoint_psbts = <Vec<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_broadcast_claim_ark_tx(
+                            api_contract_id,
+                            api_signed_ark_psbt,
+                            api_signed_checkpoint_psbts,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_broadcast_claim_tx_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_broadcast_claim_tx",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contract_id = <String>::sse_decode(&mut deserializer);
+            let api_signed_tx = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_broadcast_claim_tx(
+                            api_contract_id,
+                            api_signed_tx,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_broadcast_recover_tx_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_broadcast_recover_tx",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contract_id = <String>::sse_decode(&mut deserializer);
+            let api_signed_tx = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_broadcast_recover_tx(
+                            api_contract_id,
+                            api_signed_tx,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_cancel_contract_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_cancel_contract",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contract_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendasat_api::lendasat_cancel_contract(api_contract_id)
+                                .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_create_contract_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_create_contract",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_offer_id = <String>::sse_decode(&mut deserializer);
+            let api_loan_amount = <f64>::sse_decode(&mut deserializer);
+            let api_duration_days = <i32>::sse_decode(&mut deserializer);
+            let api_borrower_loan_address = <Option<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_create_contract(
+                            api_offer_id,
+                            api_loan_amount,
+                            api_duration_days,
+                            api_borrower_loan_address,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_get_claim_ark_psbt_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_get_claim_ark_psbt",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contract_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendasat_api::lendasat_get_claim_ark_psbt(api_contract_id)
+                                .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_get_claim_psbt_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_get_claim_psbt",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contract_id = <String>::sse_decode(&mut deserializer);
+            let api_fee_rate = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_get_claim_psbt(
+                            api_contract_id,
+                            api_fee_rate,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_get_contract_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_get_contract",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contract_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendasat_api::lendasat_get_contract(api_contract_id)
+                                .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_get_contracts_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_get_contracts",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_filters =
+                <Option<crate::lendasat::models::ContractFilters>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendasat_api::lendasat_get_contracts(api_filters).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_get_derivation_path_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_get_derivation_path",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
-                    let output_ok =
-                        Result::<_, ()>::Ok(crate::api::ark_api::is_hd_wallet(api_data_dir))?;
+                    let output_ok = Result::<_, ()>::Ok(
+                        crate::api::lendasat_api::lendasat_get_derivation_path(),
+                    )?;
                     Ok(output_ok)
                 })())
             }
         },
     )
 }
-fn wire__crate__api__ark_api__is_legacy_wallet_impl(
+fn wire__crate__api__lendasat_api__lendasat_get_offer_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "is_legacy_wallet",
+            debug_name: "lendasat_get_offer",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_offer_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendasat_api::lendasat_get_offer(api_offer_id).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_get_offers_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_get_offers",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_filters =
+                <Option<crate::lendasat::models::OfferFilters>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendasat_api::lendasat_get_offers(api_filters).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_get_public_key_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_get_public_key",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_get_public_key().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_get_recover_psbt_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_get_recover_psbt",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contract_id = <String>::sse_decode(&mut deserializer);
+            let api_fee_rate = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_get_recover_psbt(
+                            api_contract_id,
+                            api_fee_rate,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_init_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_init",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -999,13 +1654,258 @@ fn wire__crate__api__ark_api__is_legacy_wallet_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_data_dir = <String>::sse_decode(&mut deserializer);
+            let api_api_url = <String>::sse_decode(&mut deserializer);
+            let api_network = <String>::sse_decode(&mut deserializer);
+            let api_api_key = <Option<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_init(
+                            api_data_dir,
+                            api_api_url,
+                            api_network,
+                            api_api_key,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_is_authenticated_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_is_authenticated",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, ()>(
+                    (move || async move {
+                        let output_ok = Result::<_, ()>::Ok(
+                            crate::api::lendasat_api::lendasat_is_authenticated().await,
+                        )?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_is_initialized_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_is_initialized",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
                     let output_ok =
-                        Result::<_, ()>::Ok(crate::api::ark_api::is_legacy_wallet(api_data_dir))?;
+                        Result::<_, ()>::Ok(crate::api::lendasat_api::lendasat_is_initialized())?;
                     Ok(output_ok)
                 })())
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_logout_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_logout",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_logout().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_mark_installment_paid_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_mark_installment_paid",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contract_id = <String>::sse_decode(&mut deserializer);
+            let api_installment_id = <String>::sse_decode(&mut deserializer);
+            let api_payment_txid = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_mark_installment_paid(
+                            api_contract_id,
+                            api_installment_id,
+                            api_payment_txid,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_register_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_register",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_email = <String>::sse_decode(&mut deserializer);
+            let api_name = <String>::sse_decode(&mut deserializer);
+            let api_invite_code = <Option<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_register(
+                            api_email,
+                            api_name,
+                            api_invite_code,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_sign_psbt_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_sign_psbt",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_psbt_hex = <String>::sse_decode(&mut deserializer);
+            let api_collateral_descriptor = <String>::sse_decode(&mut deserializer);
+            let api_borrower_pk = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_sign_psbt(
+                            api_psbt_hex,
+                            api_collateral_descriptor,
+                            api_borrower_pk,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
             }
         },
     )
@@ -1925,6 +2825,49 @@ fn wire__crate__api__ark_api__pay_ln_invoice_impl(
         },
     )
 }
+fn wire__crate__api__email_recovery_api__recover_wallet_from_email_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "recover_wallet_from_email",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_backend_url = <String>::sse_decode(&mut deserializer);
+            let api_email = <String>::sse_decode(&mut deserializer);
+            let api_password = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::email_recovery_api::recover_wallet_from_email(
+                            api_backend_url,
+                            api_email,
+                            api_password,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__ark_api__reset_wallet_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -2075,6 +3018,53 @@ fn wire__crate__api__ark_api__settle_impl(
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
                         let output_ok = crate::api::ark_api::settle().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__email_recovery_api__setup_email_recovery_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "setup_email_recovery",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_backend_url = <String>::sse_decode(&mut deserializer);
+            let api_email = <String>::sse_decode(&mut deserializer);
+            let api_password = <String>::sse_decode(&mut deserializer);
+            let api_mnemonic = <String>::sse_decode(&mut deserializer);
+            let api_network = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::email_recovery_api::setup_email_recovery(
+                            api_backend_url,
+                            api_email,
+                            api_password,
+                            api_mnemonic,
+                            api_network,
+                        )
+                        .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -2489,6 +3479,18 @@ impl SseDecode for crate::api::ark_api::Addresses {
     }
 }
 
+impl SseDecode for crate::lendasat::models::ArkClaimPsbtResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_arkPsbt = <String>::sse_decode(deserializer);
+        let mut var_checkpointPsbts = <Vec<String>>::sse_decode(deserializer);
+        return crate::lendasat::models::ArkClaimPsbtResponse {
+            ark_psbt: var_arkPsbt,
+            checkpoint_psbts: var_checkpointPsbts,
+        };
+    }
+}
+
 impl SseDecode for crate::api::lendaswap_api::AssetInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2504,6 +3506,34 @@ impl SseDecode for crate::api::lendaswap_api::AssetInfo {
             chain: var_chain,
             decimals: var_decimals,
         };
+    }
+}
+
+impl SseDecode for crate::api::lendasat_api::AuthResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_userId = <String>::sse_decode(deserializer);
+                let mut var_userName = <String>::sse_decode(deserializer);
+                let mut var_userEmail = <Option<String>>::sse_decode(deserializer);
+                return crate::api::lendasat_api::AuthResult::Success {
+                    user_id: var_userId,
+                    user_name: var_userName,
+                    user_email: var_userEmail,
+                };
+            }
+            1 => {
+                let mut var_pubkey = <String>::sse_decode(deserializer);
+                return crate::api::lendasat_api::AuthResult::NeedsRegistration {
+                    pubkey: var_pubkey,
+                };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -2645,6 +3675,178 @@ impl SseDecode for crate::api::lendaswap_api::BtcToEvmSwapResult {
             sats_to_send: var_satsToSend,
             target_amount_usd: var_targetAmountUsd,
             fee_sats: var_feeSats,
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::ClaimPsbtResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_psbt = <String>::sse_decode(deserializer);
+        let mut var_collateralDescriptor = <String>::sse_decode(deserializer);
+        let mut var_borrowerPk = <String>::sse_decode(deserializer);
+        return crate::lendasat::models::ClaimPsbtResponse {
+            psbt: var_psbt,
+            collateral_descriptor: var_collateralDescriptor,
+            borrower_pk: var_borrowerPk,
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::CollateralAsset {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::lendasat::models::CollateralAsset::BitcoinBtc,
+            1 => crate::lendasat::models::CollateralAsset::ArkadeBtc,
+            _ => unreachable!("Invalid variant for CollateralAsset: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::Contract {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_status = <crate::lendasat::models::ContractStatus>::sse_decode(deserializer);
+        let mut var_lender = <crate::lendasat::models::LenderStats>::sse_decode(deserializer);
+        let mut var_lenderPk = <String>::sse_decode(deserializer);
+        let mut var_borrowerPk = <String>::sse_decode(deserializer);
+        let mut var_borrowerBtcAddress = <String>::sse_decode(deserializer);
+        let mut var_borrowerDerivationPath = <Option<String>>::sse_decode(deserializer);
+        let mut var_borrowerLoanAddress = <Option<String>>::sse_decode(deserializer);
+        let mut var_loanAsset = <crate::lendasat::models::LoanAsset>::sse_decode(deserializer);
+        let mut var_collateralAsset =
+            <crate::lendasat::models::CollateralAsset>::sse_decode(deserializer);
+        let mut var_loanAmount = <f64>::sse_decode(deserializer);
+        let mut var_interest = <f64>::sse_decode(deserializer);
+        let mut var_interestRate = <f64>::sse_decode(deserializer);
+        let mut var_durationDays = <i32>::sse_decode(deserializer);
+        let mut var_expiry = <String>::sse_decode(deserializer);
+        let mut var_collateralSats = <i64>::sse_decode(deserializer);
+        let mut var_initialCollateralSats = <i64>::sse_decode(deserializer);
+        let mut var_depositedSats = <i64>::sse_decode(deserializer);
+        let mut var_initialLtv = <f64>::sse_decode(deserializer);
+        let mut var_liquidationPrice = <f64>::sse_decode(deserializer);
+        let mut var_ltvThresholdMarginCall1 = <f64>::sse_decode(deserializer);
+        let mut var_ltvThresholdMarginCall2 = <f64>::sse_decode(deserializer);
+        let mut var_ltvThresholdLiquidation = <f64>::sse_decode(deserializer);
+        let mut var_balanceOutstanding = <f64>::sse_decode(deserializer);
+        let mut var_contractAddress = <Option<String>>::sse_decode(deserializer);
+        let mut var_collateralScript = <Option<String>>::sse_decode(deserializer);
+        let mut var_loanRepaymentAddress = <Option<String>>::sse_decode(deserializer);
+        let mut var_btcLoanRepaymentAddress = <Option<String>>::sse_decode(deserializer);
+        let mut var_originationFeeSats = <i64>::sse_decode(deserializer);
+        let mut var_installments =
+            <Vec<crate::lendasat::models::Installment>>::sse_decode(deserializer);
+        let mut var_transactions =
+            <Vec<crate::lendasat::models::LoanTransaction>>::sse_decode(deserializer);
+        let mut var_canExtend = <bool>::sse_decode(deserializer);
+        let mut var_extensionInterestRate = <Option<f64>>::sse_decode(deserializer);
+        let mut var_extensionMaxDurationDays = <i32>::sse_decode(deserializer);
+        let mut var_extendsContract = <Option<String>>::sse_decode(deserializer);
+        let mut var_extendedByContract = <Option<String>>::sse_decode(deserializer);
+        let mut var_clientContractId = <Option<String>>::sse_decode(deserializer);
+        let mut var_requiresArkSettlement = <Option<bool>>::sse_decode(deserializer);
+        let mut var_createdAt = <String>::sse_decode(deserializer);
+        let mut var_updatedAt = <String>::sse_decode(deserializer);
+        return crate::lendasat::models::Contract {
+            id: var_id,
+            status: var_status,
+            lender: var_lender,
+            lender_pk: var_lenderPk,
+            borrower_pk: var_borrowerPk,
+            borrower_btc_address: var_borrowerBtcAddress,
+            borrower_derivation_path: var_borrowerDerivationPath,
+            borrower_loan_address: var_borrowerLoanAddress,
+            loan_asset: var_loanAsset,
+            collateral_asset: var_collateralAsset,
+            loan_amount: var_loanAmount,
+            interest: var_interest,
+            interest_rate: var_interestRate,
+            duration_days: var_durationDays,
+            expiry: var_expiry,
+            collateral_sats: var_collateralSats,
+            initial_collateral_sats: var_initialCollateralSats,
+            deposited_sats: var_depositedSats,
+            initial_ltv: var_initialLtv,
+            liquidation_price: var_liquidationPrice,
+            ltv_threshold_margin_call_1: var_ltvThresholdMarginCall1,
+            ltv_threshold_margin_call_2: var_ltvThresholdMarginCall2,
+            ltv_threshold_liquidation: var_ltvThresholdLiquidation,
+            balance_outstanding: var_balanceOutstanding,
+            contract_address: var_contractAddress,
+            collateral_script: var_collateralScript,
+            loan_repayment_address: var_loanRepaymentAddress,
+            btc_loan_repayment_address: var_btcLoanRepaymentAddress,
+            origination_fee_sats: var_originationFeeSats,
+            installments: var_installments,
+            transactions: var_transactions,
+            can_extend: var_canExtend,
+            extension_interest_rate: var_extensionInterestRate,
+            extension_max_duration_days: var_extensionMaxDurationDays,
+            extends_contract: var_extendsContract,
+            extended_by_contract: var_extendedByContract,
+            client_contract_id: var_clientContractId,
+            requires_ark_settlement: var_requiresArkSettlement,
+            created_at: var_createdAt,
+            updated_at: var_updatedAt,
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::ContractFilters {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_page = <Option<i32>>::sse_decode(deserializer);
+        let mut var_limit = <Option<i32>>::sse_decode(deserializer);
+        let mut var_status =
+            <Option<Vec<crate::lendasat::models::ContractStatus>>>::sse_decode(deserializer);
+        let mut var_sortBy = <Option<String>>::sse_decode(deserializer);
+        let mut var_sortOrder = <Option<String>>::sse_decode(deserializer);
+        return crate::lendasat::models::ContractFilters {
+            page: var_page,
+            limit: var_limit,
+            status: var_status,
+            sort_by: var_sortBy,
+            sort_order: var_sortOrder,
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::ContractStatus {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::lendasat::models::ContractStatus::Requested,
+            1 => crate::lendasat::models::ContractStatus::Approved,
+            2 => crate::lendasat::models::ContractStatus::CollateralSeen,
+            3 => crate::lendasat::models::ContractStatus::CollateralConfirmed,
+            4 => crate::lendasat::models::ContractStatus::PrincipalGiven,
+            5 => crate::lendasat::models::ContractStatus::RepaymentProvided,
+            6 => crate::lendasat::models::ContractStatus::RepaymentConfirmed,
+            7 => crate::lendasat::models::ContractStatus::Undercollateralized,
+            8 => crate::lendasat::models::ContractStatus::Defaulted,
+            9 => crate::lendasat::models::ContractStatus::ClosingByClaim,
+            10 => crate::lendasat::models::ContractStatus::Closed,
+            11 => crate::lendasat::models::ContractStatus::Closing,
+            12 => crate::lendasat::models::ContractStatus::ClosingByLiquidation,
+            13 => crate::lendasat::models::ContractStatus::ClosedByLiquidation,
+            14 => crate::lendasat::models::ContractStatus::ClosingByDefaulting,
+            15 => crate::lendasat::models::ContractStatus::ClosedByDefaulting,
+            16 => crate::lendasat::models::ContractStatus::Extended,
+            17 => crate::lendasat::models::ContractStatus::Rejected,
+            18 => crate::lendasat::models::ContractStatus::DisputeBorrowerStarted,
+            19 => crate::lendasat::models::ContractStatus::DisputeLenderStarted,
+            20 => crate::lendasat::models::ContractStatus::Cancelled,
+            21 => crate::lendasat::models::ContractStatus::RequestExpired,
+            22 => crate::lendasat::models::ContractStatus::ApprovalExpired,
+            23 => crate::lendasat::models::ContractStatus::CollateralRecoverable,
+            24 => crate::lendasat::models::ContractStatus::ClosingByRecovery,
+            25 => crate::lendasat::models::ContractStatus::ClosedByRecovery,
+            _ => unreachable!("Invalid variant for ContractStatus: {}", inner),
         };
     }
 }
@@ -2929,6 +4131,63 @@ impl SseDecode for crate::api::ark_api::Info {
     }
 }
 
+impl SseDecode for crate::lendasat::models::Installment {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_dueDate = <String>::sse_decode(deserializer);
+        let mut var_principal = <f64>::sse_decode(deserializer);
+        let mut var_interest = <f64>::sse_decode(deserializer);
+        let mut var_status = <crate::lendasat::models::InstallmentStatus>::sse_decode(deserializer);
+        let mut var_paidDate = <Option<String>>::sse_decode(deserializer);
+        let mut var_paymentId = <Option<String>>::sse_decode(deserializer);
+        return crate::lendasat::models::Installment {
+            id: var_id,
+            due_date: var_dueDate,
+            principal: var_principal,
+            interest: var_interest,
+            status: var_status,
+            paid_date: var_paidDate,
+            payment_id: var_paymentId,
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::InstallmentStatus {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::lendasat::models::InstallmentStatus::Pending,
+            1 => crate::lendasat::models::InstallmentStatus::Paid,
+            2 => crate::lendasat::models::InstallmentStatus::Confirmed,
+            3 => crate::lendasat::models::InstallmentStatus::Late,
+            4 => crate::lendasat::models::InstallmentStatus::Cancelled,
+            _ => unreachable!("Invalid variant for InstallmentStatus: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::LenderStats {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_name = <String>::sse_decode(deserializer);
+        let mut var_joinedAt = <String>::sse_decode(deserializer);
+        let mut var_successfulContracts = <i32>::sse_decode(deserializer);
+        let mut var_vetted = <bool>::sse_decode(deserializer);
+        let mut var_timezone = <Option<String>>::sse_decode(deserializer);
+        return crate::lendasat::models::LenderStats {
+            id: var_id,
+            name: var_name,
+            joined_at: var_joinedAt,
+            successful_contracts: var_successfulContracts,
+            vetted: var_vetted,
+            timezone: var_timezone,
+        };
+    }
+}
+
 impl SseDecode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2962,6 +4221,34 @@ impl SseDecode for Vec<crate::models::mempool::Block> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<crate::models::mempool::Block>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::lendasat::models::Contract> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::lendasat::models::Contract>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::lendasat::models::ContractStatus> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::lendasat::models::ContractStatus>::sse_decode(
+                deserializer,
+            ));
         }
         return ans_;
     }
@@ -3023,6 +4310,48 @@ impl SseDecode for Vec<crate::models::historical_prices::HistoricalPriceData> {
     }
 }
 
+impl SseDecode for Vec<crate::lendasat::models::Installment> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::lendasat::models::Installment>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::lendasat::models::LoanOffer> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::lendasat::models::LoanOffer>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::lendasat::models::LoanTransaction> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::lendasat::models::LoanTransaction>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::models::mempool::MempoolBlock> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3030,6 +4359,20 @@ impl SseDecode for Vec<crate::models::mempool::MempoolBlock> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<crate::models::mempool::MempoolBlock>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::lendasat::models::OriginationFee> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::lendasat::models::OriginationFee>::sse_decode(
                 deserializer,
             ));
         }
@@ -3159,6 +4502,120 @@ impl SseDecode for crate::api::ark_api::LnPaymentResult {
             swap_id: var_swapId,
             txid: var_txid,
             amount_sats: var_amountSats,
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::LoanAsset {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::lendasat::models::LoanAsset::UsdcPol,
+            1 => crate::lendasat::models::LoanAsset::UsdtPol,
+            2 => crate::lendasat::models::LoanAsset::UsdcEth,
+            3 => crate::lendasat::models::LoanAsset::UsdtEth,
+            4 => crate::lendasat::models::LoanAsset::UsdcStrk,
+            5 => crate::lendasat::models::LoanAsset::UsdtStrk,
+            6 => crate::lendasat::models::LoanAsset::UsdcSol,
+            7 => crate::lendasat::models::LoanAsset::UsdtSol,
+            8 => crate::lendasat::models::LoanAsset::UsdtLiquid,
+            9 => crate::lendasat::models::LoanAsset::Usd,
+            10 => crate::lendasat::models::LoanAsset::Eur,
+            11 => crate::lendasat::models::LoanAsset::Chf,
+            12 => crate::lendasat::models::LoanAsset::Mxn,
+            _ => unreachable!("Invalid variant for LoanAsset: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::LoanOffer {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_name = <String>::sse_decode(deserializer);
+        let mut var_lender = <crate::lendasat::models::LenderStats>::sse_decode(deserializer);
+        let mut var_lenderPk = <String>::sse_decode(deserializer);
+        let mut var_loanAsset = <crate::lendasat::models::LoanAsset>::sse_decode(deserializer);
+        let mut var_collateralAsset =
+            <crate::lendasat::models::CollateralAsset>::sse_decode(deserializer);
+        let mut var_loanAmountMin = <f64>::sse_decode(deserializer);
+        let mut var_loanAmountMax = <f64>::sse_decode(deserializer);
+        let mut var_durationDaysMin = <i32>::sse_decode(deserializer);
+        let mut var_durationDaysMax = <i32>::sse_decode(deserializer);
+        let mut var_interestRate = <f64>::sse_decode(deserializer);
+        let mut var_minLtv = <f64>::sse_decode(deserializer);
+        let mut var_loanPayout = <crate::lendasat::models::LoanPayout>::sse_decode(deserializer);
+        let mut var_loanRepaymentAddress = <String>::sse_decode(deserializer);
+        let mut var_originationFee =
+            <Vec<crate::lendasat::models::OriginationFee>>::sse_decode(deserializer);
+        let mut var_repaymentPlan =
+            <crate::lendasat::models::RepaymentPlan>::sse_decode(deserializer);
+        let mut var_status = <crate::lendasat::models::LoanOfferStatus>::sse_decode(deserializer);
+        let mut var_kycLink = <Option<String>>::sse_decode(deserializer);
+        return crate::lendasat::models::LoanOffer {
+            id: var_id,
+            name: var_name,
+            lender: var_lender,
+            lender_pk: var_lenderPk,
+            loan_asset: var_loanAsset,
+            collateral_asset: var_collateralAsset,
+            loan_amount_min: var_loanAmountMin,
+            loan_amount_max: var_loanAmountMax,
+            duration_days_min: var_durationDaysMin,
+            duration_days_max: var_durationDaysMax,
+            interest_rate: var_interestRate,
+            min_ltv: var_minLtv,
+            loan_payout: var_loanPayout,
+            loan_repayment_address: var_loanRepaymentAddress,
+            origination_fee: var_originationFee,
+            repayment_plan: var_repaymentPlan,
+            status: var_status,
+            kyc_link: var_kycLink,
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::LoanOfferStatus {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::lendasat::models::LoanOfferStatus::Available,
+            1 => crate::lendasat::models::LoanOfferStatus::Unavailable,
+            2 => crate::lendasat::models::LoanOfferStatus::Deleted,
+            _ => unreachable!("Invalid variant for LoanOfferStatus: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::LoanPayout {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::lendasat::models::LoanPayout::Direct,
+            1 => crate::lendasat::models::LoanPayout::Indirect,
+            2 => crate::lendasat::models::LoanPayout::MoonCardInstant,
+            _ => unreachable!("Invalid variant for LoanPayout: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::LoanTransaction {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <i64>::sse_decode(deserializer);
+        let mut var_contractId = <String>::sse_decode(deserializer);
+        let mut var_transactionType = <String>::sse_decode(deserializer);
+        let mut var_txid = <String>::sse_decode(deserializer);
+        let mut var_timestamp = <String>::sse_decode(deserializer);
+        return crate::lendasat::models::LoanTransaction {
+            id: var_id,
+            contract_id: var_contractId,
+            transaction_type: var_transactionType,
+            txid: var_txid,
+            timestamp: var_timestamp,
         };
     }
 }
@@ -3298,6 +4755,34 @@ impl SseDecode for crate::api::ark_api::OffchainBalance {
     }
 }
 
+impl SseDecode for crate::lendasat::models::OfferFilters {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_loanType = <Option<String>>::sse_decode(deserializer);
+        let mut var_assetType = <Option<String>>::sse_decode(deserializer);
+        let mut var_loanAssets = <Option<String>>::sse_decode(deserializer);
+        let mut var_kyc = <Option<String>>::sse_decode(deserializer);
+        let mut var_minLoanAmount = <Option<f64>>::sse_decode(deserializer);
+        let mut var_maxLoanAmount = <Option<f64>>::sse_decode(deserializer);
+        let mut var_maxInterestRate = <Option<f64>>::sse_decode(deserializer);
+        let mut var_durationMin = <Option<i32>>::sse_decode(deserializer);
+        let mut var_durationMax = <Option<i32>>::sse_decode(deserializer);
+        let mut var_collateralAssetType = <Option<String>>::sse_decode(deserializer);
+        return crate::lendasat::models::OfferFilters {
+            loan_type: var_loanType,
+            asset_type: var_assetType,
+            loan_assets: var_loanAssets,
+            kyc: var_kyc,
+            min_loan_amount: var_minLoanAmount,
+            max_loan_amount: var_maxLoanAmount,
+            max_interest_rate: var_maxInterestRate,
+            duration_min: var_durationMin,
+            duration_max: var_durationMax,
+            collateral_asset_type: var_collateralAssetType,
+        };
+    }
+}
+
 impl SseDecode for Option<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3338,6 +4823,19 @@ impl SseDecode for Option<bool> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<bool>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::lendasat::models::ContractFilters> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::lendasat::models::ContractFilters>::sse_decode(
+                deserializer,
+            ));
         } else {
             return None;
         }
@@ -3455,6 +4953,19 @@ impl SseDecode for Option<crate::models::mempool::MiningPool> {
     }
 }
 
+impl SseDecode for Option<crate::lendasat::models::OfferFilters> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::lendasat::models::OfferFilters>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<crate::models::mempool::RecommendedFees> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3525,6 +5036,19 @@ impl SseDecode for Option<Vec<crate::models::mempool::Block>> {
     }
 }
 
+impl SseDecode for Option<Vec<crate::lendasat::models::ContractStatus>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<crate::lendasat::models::ContractStatus>>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<Vec<crate::models::mempool::MempoolBlock>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3535,6 +5059,36 @@ impl SseDecode for Option<Vec<crate::models::mempool::MempoolBlock>> {
         } else {
             return None;
         }
+    }
+}
+
+impl SseDecode for crate::lendasat::models::OriginationFee {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_fee = <f64>::sse_decode(deserializer);
+        let mut var_fromDay = <i32>::sse_decode(deserializer);
+        return crate::lendasat::models::OriginationFee {
+            fee: var_fee,
+            from_day: var_fromDay,
+        };
+    }
+}
+
+impl SseDecode for crate::lendasat::models::PaginatedContractsResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_data = <Vec<crate::lendasat::models::Contract>>::sse_decode(deserializer);
+        let mut var_page = <i32>::sse_decode(deserializer);
+        let mut var_limit = <i32>::sse_decode(deserializer);
+        let mut var_total = <i32>::sse_decode(deserializer);
+        let mut var_totalPages = <i32>::sse_decode(deserializer);
+        return crate::lendasat::models::PaginatedContractsResponse {
+            data: var_data,
+            page: var_page,
+            limit: var_limit,
+            total: var_total,
+            total_pages: var_totalPages,
+        };
     }
 }
 
@@ -3605,6 +5159,19 @@ impl SseDecode for (String, f64) {
         let mut var_field0 = <String>::sse_decode(deserializer);
         let mut var_field1 = <f64>::sse_decode(deserializer);
         return (var_field0, var_field1);
+    }
+}
+
+impl SseDecode for crate::lendasat::models::RepaymentPlan {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::lendasat::models::RepaymentPlan::Bullet,
+            1 => crate::lendasat::models::RepaymentPlan::InterestOnlyWeekly,
+            2 => crate::lendasat::models::RepaymentPlan::InterestOnlyMonthly,
+            _ => unreachable!("Invalid variant for RepaymentPlan: {}", inner),
+        };
     }
 }
 
@@ -3828,180 +5395,320 @@ fn pde_ffi_dispatcher_primary_impl(
     match func_id {
         1 => wire__crate__api__ark_api__address_impl(port, ptr, rust_vec_len, data_len),
         2 => wire__crate__api__ark_api__balance_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__fetch_exchange_rates_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__bitcoin_api__fetch_historical_prices_impl(
+        3 => wire__crate__api__email_recovery_api__check_email_recovery_exists_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        6 => wire__crate__api__get_block_by_hash_impl(port, ptr, rust_vec_len, data_len),
-        7 => {
+        5 => wire__crate__api__fetch_exchange_rates_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__bitcoin_api__fetch_historical_prices_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        7 => wire__crate__api__get_block_by_hash_impl(port, ptr, rust_vec_len, data_len),
+        8 => {
             wire__crate__api__mempool_api__get_block_by_hash_impl(port, ptr, rust_vec_len, data_len)
         }
-        8 => wire__crate__api__get_block_transactions_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__mempool_api__get_block_transactions_impl(
+        9 => wire__crate__api__get_block_transactions_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__mempool_api__get_block_transactions_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        10 => wire__crate__api__get_blocks_impl(port, ptr, rust_vec_len, data_len),
-        11 => wire__crate__api__mempool_api__get_blocks_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__get_blocks_at_height_impl(port, ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__mempool_api__get_blocks_at_height_impl(
+        11 => wire__crate__api__get_blocks_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__mempool_api__get_blocks_impl(port, ptr, rust_vec_len, data_len),
+        13 => wire__crate__api__get_blocks_at_height_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__mempool_api__get_blocks_at_height_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        14 => wire__crate__api__mempool_api__get_fear_greed_index_impl(
+        15 => wire__crate__api__mempool_api__get_fear_greed_index_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        15 => wire__crate__api__get_hashrate_data_impl(port, ptr, rust_vec_len, data_len),
-        16 => {
+        16 => wire__crate__api__get_hashrate_data_impl(port, ptr, rust_vec_len, data_len),
+        17 => {
             wire__crate__api__mempool_api__get_hashrate_data_impl(port, ptr, rust_vec_len, data_len)
         }
-        17 => wire__crate__api__ark_api__get_mnemonic_impl(port, ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__get_recommended_fees_impl(port, ptr, rust_vec_len, data_len),
-        19 => wire__crate__api__mempool_api__get_recommended_fees_impl(
+        18 => wire__crate__api__ark_api__get_mnemonic_impl(port, ptr, rust_vec_len, data_len),
+        20 => wire__crate__api__get_recommended_fees_impl(port, ptr, rust_vec_len, data_len),
+        21 => wire__crate__api__mempool_api__get_recommended_fees_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        21 => wire__crate__api__get_transaction_impl(port, ptr, rust_vec_len, data_len),
-        22 => {
+        23 => wire__crate__api__get_transaction_impl(port, ptr, rust_vec_len, data_len),
+        24 => {
             wire__crate__api__mempool_api__get_transaction_impl(port, ptr, rust_vec_len, data_len)
         }
-        23 => wire__crate__api__ark_api__information_impl(port, ptr, rust_vec_len, data_len),
-        24 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
-        25 => wire__crate__api__init_logging_impl(port, ptr, rust_vec_len, data_len),
-        26 => wire__crate__api__ark_api__is_hd_wallet_impl(port, ptr, rust_vec_len, data_len),
-        27 => wire__crate__api__ark_api__is_legacy_wallet_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__lendaswap_api__lendaswap_claim_gelato_impl(
+        25 => wire__crate__api__ark_api__information_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__init_logging_impl(port, ptr, rust_vec_len, data_len),
+        29 => wire__crate__api__lendasat_api__lendasat_authenticate_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        29 => wire__crate__api__lendaswap_api__lendaswap_claim_vhtlc_impl(
+        30 => wire__crate__api__lendasat_api__lendasat_broadcast_claim_ark_tx_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        30 => wire__crate__api__lendaswap_api__lendaswap_create_btc_to_evm_swap_impl(
+        31 => wire__crate__api__lendasat_api__lendasat_broadcast_claim_tx_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        31 => wire__crate__api__lendaswap_api__lendaswap_create_evm_to_btc_swap_impl(
+        32 => wire__crate__api__lendasat_api__lendasat_broadcast_recover_tx_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        32 => wire__crate__api__lendaswap_api__lendaswap_create_evm_to_lightning_swap_impl(
+        33 => wire__crate__api__lendasat_api__lendasat_cancel_contract_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        33 => wire__crate__api__lendaswap_api__lendaswap_delete_swap_impl(
+        34 => wire__crate__api__lendasat_api__lendasat_create_contract_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        34 => wire__crate__api__lendaswap_api__lendaswap_get_asset_pairs_impl(
+        35 => wire__crate__api__lendasat_api__lendasat_get_claim_ark_psbt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        35 => wire__crate__api__lendaswap_api__lendaswap_get_quote_impl(
+        36 => wire__crate__api__lendasat_api__lendasat_get_claim_psbt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        36 => wire__crate__api__lendaswap_api__lendaswap_get_swap_impl(
+        37 => wire__crate__api__lendasat_api__lendasat_get_contract_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        37 => {
+        38 => wire__crate__api__lendasat_api__lendasat_get_contracts_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        39 => wire__crate__api__lendasat_api__lendasat_get_derivation_path_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        40 => wire__crate__api__lendasat_api__lendasat_get_offer_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        41 => wire__crate__api__lendasat_api__lendasat_get_offers_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        42 => wire__crate__api__lendasat_api__lendasat_get_public_key_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        43 => wire__crate__api__lendasat_api__lendasat_get_recover_psbt_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        44 => wire__crate__api__lendasat_api__lendasat_init_impl(port, ptr, rust_vec_len, data_len),
+        45 => wire__crate__api__lendasat_api__lendasat_is_authenticated_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        46 => wire__crate__api__lendasat_api__lendasat_is_initialized_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        47 => {
+            wire__crate__api__lendasat_api__lendasat_logout_impl(port, ptr, rust_vec_len, data_len)
+        }
+        48 => wire__crate__api__lendasat_api__lendasat_mark_installment_paid_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        49 => wire__crate__api__lendasat_api__lendasat_register_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        50 => wire__crate__api__lendasat_api__lendasat_sign_psbt_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        51 => wire__crate__api__lendaswap_api__lendaswap_claim_gelato_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        52 => wire__crate__api__lendaswap_api__lendaswap_claim_vhtlc_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        53 => wire__crate__api__lendaswap_api__lendaswap_create_btc_to_evm_swap_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        54 => wire__crate__api__lendaswap_api__lendaswap_create_evm_to_btc_swap_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        55 => wire__crate__api__lendaswap_api__lendaswap_create_evm_to_lightning_swap_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        56 => wire__crate__api__lendaswap_api__lendaswap_delete_swap_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        57 => wire__crate__api__lendaswap_api__lendaswap_get_asset_pairs_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        58 => wire__crate__api__lendaswap_api__lendaswap_get_quote_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        59 => wire__crate__api__lendaswap_api__lendaswap_get_swap_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        60 => {
             wire__crate__api__lendaswap_api__lendaswap_init_impl(port, ptr, rust_vec_len, data_len)
         }
-        39 => wire__crate__api__lendaswap_api__lendaswap_list_swaps_impl(
+        62 => wire__crate__api__lendaswap_api__lendaswap_list_swaps_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        40 => wire__crate__api__lendaswap_api__lendaswap_recover_swaps_impl(
+        63 => wire__crate__api__lendaswap_api__lendaswap_recover_swaps_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        41 => wire__crate__api__lendaswap_api__lendaswap_refund_vhtlc_impl(
+        64 => wire__crate__api__lendaswap_api__lendaswap_refund_vhtlc_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        42 => {
+        65 => {
             wire__crate__api__ark_api__load_existing_wallet_impl(port, ptr, rust_vec_len, data_len)
         }
-        43 => wire__crate__api__moonpay_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
+        66 => wire__crate__api__moonpay_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
+        67 => wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        45 => wire__crate__api__moonpay_get_currency_limits_impl(port, ptr, rust_vec_len, data_len),
-        46 => wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
+        68 => wire__crate__api__moonpay_get_currency_limits_impl(port, ptr, rust_vec_len, data_len),
+        69 => wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        47 => wire__crate__api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len),
-        48 => {
+        70 => wire__crate__api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len),
+        71 => {
             wire__crate__api__moonpay_api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len)
         }
-        49 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
-        50 => wire__crate__api__ark_api__pay_ln_invoice_impl(port, ptr, rust_vec_len, data_len),
-        51 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
-        52 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
-        53 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
-        54 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
-        55 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
-        56 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
-        57 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
+        72 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
+        73 => wire__crate__api__ark_api__pay_ln_invoice_impl(port, ptr, rust_vec_len, data_len),
+        74 => wire__crate__api__email_recovery_api__recover_wallet_from_email_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        58 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
-        59 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
+        75 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
+        76 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
+        77 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
+        78 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
+        79 => wire__crate__api__email_recovery_api__setup_email_recovery_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        60 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
-        61 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
-        62 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
+        80 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
+        81 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
+        82 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        83 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
+        84 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        85 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
+        86 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
+        87 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -4014,9 +5721,19 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        3 => wire__crate__api__currency_code_impl(ptr, rust_vec_len, data_len),
-        20 => wire__crate__api__get_supported_currencies_impl(ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__lendaswap_api__lendaswap_is_initialized_impl(
+        4 => wire__crate__api__currency_code_impl(ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__email_recovery_api__get_password_feedback_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        22 => wire__crate__api__get_supported_currencies_impl(ptr, rust_vec_len, data_len),
+        28 => wire__crate__api__email_recovery_api__is_password_strong_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        61 => wire__crate__api__lendaswap_api__lendaswap_is_initialized_impl(
             ptr,
             rust_vec_len,
             data_len,
@@ -4051,6 +5768,27 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::Addresses>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::ArkClaimPsbtResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.ark_psbt.into_into_dart().into_dart(),
+            self.checkpoint_psbts.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::ArkClaimPsbtResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::ArkClaimPsbtResponse>
+    for crate::lendasat::models::ArkClaimPsbtResponse
+{
+    fn into_into_dart(self) -> crate::lendasat::models::ArkClaimPsbtResponse {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::lendaswap_api::AssetInfo {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -4071,6 +5809,41 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::lendaswap_api::AssetInfo>
     for crate::api::lendaswap_api::AssetInfo
 {
     fn into_into_dart(self) -> crate::api::lendaswap_api::AssetInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::lendasat_api::AuthResult {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::api::lendasat_api::AuthResult::Success {
+                user_id,
+                user_name,
+                user_email,
+            } => [
+                0.into_dart(),
+                user_id.into_into_dart().into_dart(),
+                user_name.into_into_dart().into_dart(),
+                user_email.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::api::lendasat_api::AuthResult::NeedsRegistration { pubkey } => {
+                [1.into_dart(), pubkey.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::lendasat_api::AuthResult
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::lendasat_api::AuthResult>
+    for crate::api::lendasat_api::AuthResult
+{
+    fn into_into_dart(self) -> crate::api::lendasat_api::AuthResult {
         self
     }
 }
@@ -4219,6 +5992,183 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::lendaswap_api::BtcToEvmSwapRe
     for crate::api::lendaswap_api::BtcToEvmSwapResult
 {
     fn into_into_dart(self) -> crate::api::lendaswap_api::BtcToEvmSwapResult {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::ClaimPsbtResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.psbt.into_into_dart().into_dart(),
+            self.collateral_descriptor.into_into_dart().into_dart(),
+            self.borrower_pk.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::ClaimPsbtResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::ClaimPsbtResponse>
+    for crate::lendasat::models::ClaimPsbtResponse
+{
+    fn into_into_dart(self) -> crate::lendasat::models::ClaimPsbtResponse {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::CollateralAsset {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::BitcoinBtc => 0.into_dart(),
+            Self::ArkadeBtc => 1.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::CollateralAsset
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::CollateralAsset>
+    for crate::lendasat::models::CollateralAsset
+{
+    fn into_into_dart(self) -> crate::lendasat::models::CollateralAsset {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::Contract {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.status.into_into_dart().into_dart(),
+            self.lender.into_into_dart().into_dart(),
+            self.lender_pk.into_into_dart().into_dart(),
+            self.borrower_pk.into_into_dart().into_dart(),
+            self.borrower_btc_address.into_into_dart().into_dart(),
+            self.borrower_derivation_path.into_into_dart().into_dart(),
+            self.borrower_loan_address.into_into_dart().into_dart(),
+            self.loan_asset.into_into_dart().into_dart(),
+            self.collateral_asset.into_into_dart().into_dart(),
+            self.loan_amount.into_into_dart().into_dart(),
+            self.interest.into_into_dart().into_dart(),
+            self.interest_rate.into_into_dart().into_dart(),
+            self.duration_days.into_into_dart().into_dart(),
+            self.expiry.into_into_dart().into_dart(),
+            self.collateral_sats.into_into_dart().into_dart(),
+            self.initial_collateral_sats.into_into_dart().into_dart(),
+            self.deposited_sats.into_into_dart().into_dart(),
+            self.initial_ltv.into_into_dart().into_dart(),
+            self.liquidation_price.into_into_dart().into_dart(),
+            self.ltv_threshold_margin_call_1
+                .into_into_dart()
+                .into_dart(),
+            self.ltv_threshold_margin_call_2
+                .into_into_dart()
+                .into_dart(),
+            self.ltv_threshold_liquidation.into_into_dart().into_dart(),
+            self.balance_outstanding.into_into_dart().into_dart(),
+            self.contract_address.into_into_dart().into_dart(),
+            self.collateral_script.into_into_dart().into_dart(),
+            self.loan_repayment_address.into_into_dart().into_dart(),
+            self.btc_loan_repayment_address.into_into_dart().into_dart(),
+            self.origination_fee_sats.into_into_dart().into_dart(),
+            self.installments.into_into_dart().into_dart(),
+            self.transactions.into_into_dart().into_dart(),
+            self.can_extend.into_into_dart().into_dart(),
+            self.extension_interest_rate.into_into_dart().into_dart(),
+            self.extension_max_duration_days
+                .into_into_dart()
+                .into_dart(),
+            self.extends_contract.into_into_dart().into_dart(),
+            self.extended_by_contract.into_into_dart().into_dart(),
+            self.client_contract_id.into_into_dart().into_dart(),
+            self.requires_ark_settlement.into_into_dart().into_dart(),
+            self.created_at.into_into_dart().into_dart(),
+            self.updated_at.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::Contract
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::Contract>
+    for crate::lendasat::models::Contract
+{
+    fn into_into_dart(self) -> crate::lendasat::models::Contract {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::ContractFilters {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.page.into_into_dart().into_dart(),
+            self.limit.into_into_dart().into_dart(),
+            self.status.into_into_dart().into_dart(),
+            self.sort_by.into_into_dart().into_dart(),
+            self.sort_order.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::ContractFilters
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::ContractFilters>
+    for crate::lendasat::models::ContractFilters
+{
+    fn into_into_dart(self) -> crate::lendasat::models::ContractFilters {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::ContractStatus {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Requested => 0.into_dart(),
+            Self::Approved => 1.into_dart(),
+            Self::CollateralSeen => 2.into_dart(),
+            Self::CollateralConfirmed => 3.into_dart(),
+            Self::PrincipalGiven => 4.into_dart(),
+            Self::RepaymentProvided => 5.into_dart(),
+            Self::RepaymentConfirmed => 6.into_dart(),
+            Self::Undercollateralized => 7.into_dart(),
+            Self::Defaulted => 8.into_dart(),
+            Self::ClosingByClaim => 9.into_dart(),
+            Self::Closed => 10.into_dart(),
+            Self::Closing => 11.into_dart(),
+            Self::ClosingByLiquidation => 12.into_dart(),
+            Self::ClosedByLiquidation => 13.into_dart(),
+            Self::ClosingByDefaulting => 14.into_dart(),
+            Self::ClosedByDefaulting => 15.into_dart(),
+            Self::Extended => 16.into_dart(),
+            Self::Rejected => 17.into_dart(),
+            Self::DisputeBorrowerStarted => 18.into_dart(),
+            Self::DisputeLenderStarted => 19.into_dart(),
+            Self::Cancelled => 20.into_dart(),
+            Self::RequestExpired => 21.into_dart(),
+            Self::ApprovalExpired => 22.into_dart(),
+            Self::CollateralRecoverable => 23.into_dart(),
+            Self::ClosingByRecovery => 24.into_dart(),
+            Self::ClosedByRecovery => 25.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::ContractStatus
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::ContractStatus>
+    for crate::lendasat::models::ContractStatus
+{
+    fn into_into_dart(self) -> crate::lendasat::models::ContractStatus {
         self
     }
 }
@@ -4586,6 +6536,81 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::Info> for crate::api
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::Installment {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.due_date.into_into_dart().into_dart(),
+            self.principal.into_into_dart().into_dart(),
+            self.interest.into_into_dart().into_dart(),
+            self.status.into_into_dart().into_dart(),
+            self.paid_date.into_into_dart().into_dart(),
+            self.payment_id.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::Installment
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::Installment>
+    for crate::lendasat::models::Installment
+{
+    fn into_into_dart(self) -> crate::lendasat::models::Installment {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::InstallmentStatus {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Pending => 0.into_dart(),
+            Self::Paid => 1.into_dart(),
+            Self::Confirmed => 2.into_dart(),
+            Self::Late => 3.into_dart(),
+            Self::Cancelled => 4.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::InstallmentStatus
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::InstallmentStatus>
+    for crate::lendasat::models::InstallmentStatus
+{
+    fn into_into_dart(self) -> crate::lendasat::models::InstallmentStatus {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::LenderStats {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.name.into_into_dart().into_dart(),
+            self.joined_at.into_into_dart().into_dart(),
+            self.successful_contracts.into_into_dart().into_dart(),
+            self.vetted.into_into_dart().into_dart(),
+            self.timezone.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::LenderStats
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::LenderStats>
+    for crate::lendasat::models::LenderStats
+{
+    fn into_into_dart(self) -> crate::lendasat::models::LenderStats {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::ark_api::LnPaymentResult {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -4604,6 +6629,143 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::LnPaymentResult>
     for crate::api::ark_api::LnPaymentResult
 {
     fn into_into_dart(self) -> crate::api::ark_api::LnPaymentResult {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::LoanAsset {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::UsdcPol => 0.into_dart(),
+            Self::UsdtPol => 1.into_dart(),
+            Self::UsdcEth => 2.into_dart(),
+            Self::UsdtEth => 3.into_dart(),
+            Self::UsdcStrk => 4.into_dart(),
+            Self::UsdtStrk => 5.into_dart(),
+            Self::UsdcSol => 6.into_dart(),
+            Self::UsdtSol => 7.into_dart(),
+            Self::UsdtLiquid => 8.into_dart(),
+            Self::Usd => 9.into_dart(),
+            Self::Eur => 10.into_dart(),
+            Self::Chf => 11.into_dart(),
+            Self::Mxn => 12.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::LoanAsset
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::LoanAsset>
+    for crate::lendasat::models::LoanAsset
+{
+    fn into_into_dart(self) -> crate::lendasat::models::LoanAsset {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::LoanOffer {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.name.into_into_dart().into_dart(),
+            self.lender.into_into_dart().into_dart(),
+            self.lender_pk.into_into_dart().into_dart(),
+            self.loan_asset.into_into_dart().into_dart(),
+            self.collateral_asset.into_into_dart().into_dart(),
+            self.loan_amount_min.into_into_dart().into_dart(),
+            self.loan_amount_max.into_into_dart().into_dart(),
+            self.duration_days_min.into_into_dart().into_dart(),
+            self.duration_days_max.into_into_dart().into_dart(),
+            self.interest_rate.into_into_dart().into_dart(),
+            self.min_ltv.into_into_dart().into_dart(),
+            self.loan_payout.into_into_dart().into_dart(),
+            self.loan_repayment_address.into_into_dart().into_dart(),
+            self.origination_fee.into_into_dart().into_dart(),
+            self.repayment_plan.into_into_dart().into_dart(),
+            self.status.into_into_dart().into_dart(),
+            self.kyc_link.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::LoanOffer
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::LoanOffer>
+    for crate::lendasat::models::LoanOffer
+{
+    fn into_into_dart(self) -> crate::lendasat::models::LoanOffer {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::LoanOfferStatus {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Available => 0.into_dart(),
+            Self::Unavailable => 1.into_dart(),
+            Self::Deleted => 2.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::LoanOfferStatus
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::LoanOfferStatus>
+    for crate::lendasat::models::LoanOfferStatus
+{
+    fn into_into_dart(self) -> crate::lendasat::models::LoanOfferStatus {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::LoanPayout {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Direct => 0.into_dart(),
+            Self::Indirect => 1.into_dart(),
+            Self::MoonCardInstant => 2.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::LoanPayout
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::LoanPayout>
+    for crate::lendasat::models::LoanPayout
+{
+    fn into_into_dart(self) -> crate::lendasat::models::LoanPayout {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::LoanTransaction {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.contract_id.into_into_dart().into_dart(),
+            self.transaction_type.into_into_dart().into_dart(),
+            self.txid.into_into_dart().into_dart(),
+            self.timestamp.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::LoanTransaction
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::LoanTransaction>
+    for crate::lendasat::models::LoanTransaction
+{
+    fn into_into_dart(self) -> crate::lendasat::models::LoanTransaction {
         self
     }
 }
@@ -4788,6 +6950,80 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::ark_api::OffchainBalance>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::OfferFilters {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.loan_type.into_into_dart().into_dart(),
+            self.asset_type.into_into_dart().into_dart(),
+            self.loan_assets.into_into_dart().into_dart(),
+            self.kyc.into_into_dart().into_dart(),
+            self.min_loan_amount.into_into_dart().into_dart(),
+            self.max_loan_amount.into_into_dart().into_dart(),
+            self.max_interest_rate.into_into_dart().into_dart(),
+            self.duration_min.into_into_dart().into_dart(),
+            self.duration_max.into_into_dart().into_dart(),
+            self.collateral_asset_type.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::OfferFilters
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::OfferFilters>
+    for crate::lendasat::models::OfferFilters
+{
+    fn into_into_dart(self) -> crate::lendasat::models::OfferFilters {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::OriginationFee {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.fee.into_into_dart().into_dart(),
+            self.from_day.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::OriginationFee
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::OriginationFee>
+    for crate::lendasat::models::OriginationFee
+{
+    fn into_into_dart(self) -> crate::lendasat::models::OriginationFee {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::PaginatedContractsResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.data.into_into_dart().into_dart(),
+            self.page.into_into_dart().into_dart(),
+            self.limit.into_into_dart().into_dart(),
+            self.total.into_into_dart().into_dart(),
+            self.total_pages.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::PaginatedContractsResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::PaginatedContractsResponse>
+    for crate::lendasat::models::PaginatedContractsResponse
+{
+    fn into_into_dart(self) -> crate::lendasat::models::PaginatedContractsResponse {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::ark_api::PaymentReceived {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -4874,6 +7110,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::models::mempool::RecommendedFees>
     for crate::models::mempool::RecommendedFees
 {
     fn into_into_dart(self) -> crate::models::mempool::RecommendedFees {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::RepaymentPlan {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Bullet => 0.into_dart(),
+            Self::InterestOnlyWeekly => 1.into_dart(),
+            Self::InterestOnlyMonthly => 2.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::RepaymentPlan
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::RepaymentPlan>
+    for crate::lendasat::models::RepaymentPlan
+{
+    fn into_into_dart(self) -> crate::lendasat::models::RepaymentPlan {
         self
     }
 }
@@ -5170,6 +7428,14 @@ impl SseEncode for crate::api::ark_api::Addresses {
     }
 }
 
+impl SseEncode for crate::lendasat::models::ArkClaimPsbtResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.ark_psbt, serializer);
+        <Vec<String>>::sse_encode(self.checkpoint_psbts, serializer);
+    }
+}
+
 impl SseEncode for crate::api::lendaswap_api::AssetInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5178,6 +7444,31 @@ impl SseEncode for crate::api::lendaswap_api::AssetInfo {
         <String>::sse_encode(self.name, serializer);
         <String>::sse_encode(self.chain, serializer);
         <u8>::sse_encode(self.decimals, serializer);
+    }
+}
+
+impl SseEncode for crate::api::lendasat_api::AuthResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::api::lendasat_api::AuthResult::Success {
+                user_id,
+                user_name,
+                user_email,
+            } => {
+                <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(user_id, serializer);
+                <String>::sse_encode(user_name, serializer);
+                <Option<String>>::sse_encode(user_email, serializer);
+            }
+            crate::api::lendasat_api::AuthResult::NeedsRegistration { pubkey } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(pubkey, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -5264,6 +7555,128 @@ impl SseEncode for crate::api::lendaswap_api::BtcToEvmSwapResult {
         <i64>::sse_encode(self.sats_to_send, serializer);
         <f64>::sse_encode(self.target_amount_usd, serializer);
         <i64>::sse_encode(self.fee_sats, serializer);
+    }
+}
+
+impl SseEncode for crate::lendasat::models::ClaimPsbtResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.psbt, serializer);
+        <String>::sse_encode(self.collateral_descriptor, serializer);
+        <String>::sse_encode(self.borrower_pk, serializer);
+    }
+}
+
+impl SseEncode for crate::lendasat::models::CollateralAsset {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::lendasat::models::CollateralAsset::BitcoinBtc => 0,
+                crate::lendasat::models::CollateralAsset::ArkadeBtc => 1,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::lendasat::models::Contract {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <crate::lendasat::models::ContractStatus>::sse_encode(self.status, serializer);
+        <crate::lendasat::models::LenderStats>::sse_encode(self.lender, serializer);
+        <String>::sse_encode(self.lender_pk, serializer);
+        <String>::sse_encode(self.borrower_pk, serializer);
+        <String>::sse_encode(self.borrower_btc_address, serializer);
+        <Option<String>>::sse_encode(self.borrower_derivation_path, serializer);
+        <Option<String>>::sse_encode(self.borrower_loan_address, serializer);
+        <crate::lendasat::models::LoanAsset>::sse_encode(self.loan_asset, serializer);
+        <crate::lendasat::models::CollateralAsset>::sse_encode(self.collateral_asset, serializer);
+        <f64>::sse_encode(self.loan_amount, serializer);
+        <f64>::sse_encode(self.interest, serializer);
+        <f64>::sse_encode(self.interest_rate, serializer);
+        <i32>::sse_encode(self.duration_days, serializer);
+        <String>::sse_encode(self.expiry, serializer);
+        <i64>::sse_encode(self.collateral_sats, serializer);
+        <i64>::sse_encode(self.initial_collateral_sats, serializer);
+        <i64>::sse_encode(self.deposited_sats, serializer);
+        <f64>::sse_encode(self.initial_ltv, serializer);
+        <f64>::sse_encode(self.liquidation_price, serializer);
+        <f64>::sse_encode(self.ltv_threshold_margin_call_1, serializer);
+        <f64>::sse_encode(self.ltv_threshold_margin_call_2, serializer);
+        <f64>::sse_encode(self.ltv_threshold_liquidation, serializer);
+        <f64>::sse_encode(self.balance_outstanding, serializer);
+        <Option<String>>::sse_encode(self.contract_address, serializer);
+        <Option<String>>::sse_encode(self.collateral_script, serializer);
+        <Option<String>>::sse_encode(self.loan_repayment_address, serializer);
+        <Option<String>>::sse_encode(self.btc_loan_repayment_address, serializer);
+        <i64>::sse_encode(self.origination_fee_sats, serializer);
+        <Vec<crate::lendasat::models::Installment>>::sse_encode(self.installments, serializer);
+        <Vec<crate::lendasat::models::LoanTransaction>>::sse_encode(self.transactions, serializer);
+        <bool>::sse_encode(self.can_extend, serializer);
+        <Option<f64>>::sse_encode(self.extension_interest_rate, serializer);
+        <i32>::sse_encode(self.extension_max_duration_days, serializer);
+        <Option<String>>::sse_encode(self.extends_contract, serializer);
+        <Option<String>>::sse_encode(self.extended_by_contract, serializer);
+        <Option<String>>::sse_encode(self.client_contract_id, serializer);
+        <Option<bool>>::sse_encode(self.requires_ark_settlement, serializer);
+        <String>::sse_encode(self.created_at, serializer);
+        <String>::sse_encode(self.updated_at, serializer);
+    }
+}
+
+impl SseEncode for crate::lendasat::models::ContractFilters {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<i32>>::sse_encode(self.page, serializer);
+        <Option<i32>>::sse_encode(self.limit, serializer);
+        <Option<Vec<crate::lendasat::models::ContractStatus>>>::sse_encode(self.status, serializer);
+        <Option<String>>::sse_encode(self.sort_by, serializer);
+        <Option<String>>::sse_encode(self.sort_order, serializer);
+    }
+}
+
+impl SseEncode for crate::lendasat::models::ContractStatus {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::lendasat::models::ContractStatus::Requested => 0,
+                crate::lendasat::models::ContractStatus::Approved => 1,
+                crate::lendasat::models::ContractStatus::CollateralSeen => 2,
+                crate::lendasat::models::ContractStatus::CollateralConfirmed => 3,
+                crate::lendasat::models::ContractStatus::PrincipalGiven => 4,
+                crate::lendasat::models::ContractStatus::RepaymentProvided => 5,
+                crate::lendasat::models::ContractStatus::RepaymentConfirmed => 6,
+                crate::lendasat::models::ContractStatus::Undercollateralized => 7,
+                crate::lendasat::models::ContractStatus::Defaulted => 8,
+                crate::lendasat::models::ContractStatus::ClosingByClaim => 9,
+                crate::lendasat::models::ContractStatus::Closed => 10,
+                crate::lendasat::models::ContractStatus::Closing => 11,
+                crate::lendasat::models::ContractStatus::ClosingByLiquidation => 12,
+                crate::lendasat::models::ContractStatus::ClosedByLiquidation => 13,
+                crate::lendasat::models::ContractStatus::ClosingByDefaulting => 14,
+                crate::lendasat::models::ContractStatus::ClosedByDefaulting => 15,
+                crate::lendasat::models::ContractStatus::Extended => 16,
+                crate::lendasat::models::ContractStatus::Rejected => 17,
+                crate::lendasat::models::ContractStatus::DisputeBorrowerStarted => 18,
+                crate::lendasat::models::ContractStatus::DisputeLenderStarted => 19,
+                crate::lendasat::models::ContractStatus::Cancelled => 20,
+                crate::lendasat::models::ContractStatus::RequestExpired => 21,
+                crate::lendasat::models::ContractStatus::ApprovalExpired => 22,
+                crate::lendasat::models::ContractStatus::CollateralRecoverable => 23,
+                crate::lendasat::models::ContractStatus::ClosingByRecovery => 24,
+                crate::lendasat::models::ContractStatus::ClosedByRecovery => 25,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 
@@ -5471,6 +7884,50 @@ impl SseEncode for crate::api::ark_api::Info {
     }
 }
 
+impl SseEncode for crate::lendasat::models::Installment {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.due_date, serializer);
+        <f64>::sse_encode(self.principal, serializer);
+        <f64>::sse_encode(self.interest, serializer);
+        <crate::lendasat::models::InstallmentStatus>::sse_encode(self.status, serializer);
+        <Option<String>>::sse_encode(self.paid_date, serializer);
+        <Option<String>>::sse_encode(self.payment_id, serializer);
+    }
+}
+
+impl SseEncode for crate::lendasat::models::InstallmentStatus {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::lendasat::models::InstallmentStatus::Pending => 0,
+                crate::lendasat::models::InstallmentStatus::Paid => 1,
+                crate::lendasat::models::InstallmentStatus::Confirmed => 2,
+                crate::lendasat::models::InstallmentStatus::Late => 3,
+                crate::lendasat::models::InstallmentStatus::Cancelled => 4,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::lendasat::models::LenderStats {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.name, serializer);
+        <String>::sse_encode(self.joined_at, serializer);
+        <i32>::sse_encode(self.successful_contracts, serializer);
+        <bool>::sse_encode(self.vetted, serializer);
+        <Option<String>>::sse_encode(self.timezone, serializer);
+    }
+}
+
 impl SseEncode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5497,6 +7954,26 @@ impl SseEncode for Vec<crate::models::mempool::Block> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::models::mempool::Block>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::lendasat::models::Contract> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::lendasat::models::Contract>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::lendasat::models::ContractStatus> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::lendasat::models::ContractStatus>::sse_encode(item, serializer);
         }
     }
 }
@@ -5541,12 +8018,52 @@ impl SseEncode for Vec<crate::models::historical_prices::HistoricalPriceData> {
     }
 }
 
+impl SseEncode for Vec<crate::lendasat::models::Installment> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::lendasat::models::Installment>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::lendasat::models::LoanOffer> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::lendasat::models::LoanOffer>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::lendasat::models::LoanTransaction> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::lendasat::models::LoanTransaction>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::models::mempool::MempoolBlock> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::models::mempool::MempoolBlock>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::lendasat::models::OriginationFee> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::lendasat::models::OriginationFee>::sse_encode(item, serializer);
         }
     }
 }
@@ -5650,6 +8167,105 @@ impl SseEncode for crate::api::ark_api::LnPaymentResult {
     }
 }
 
+impl SseEncode for crate::lendasat::models::LoanAsset {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::lendasat::models::LoanAsset::UsdcPol => 0,
+                crate::lendasat::models::LoanAsset::UsdtPol => 1,
+                crate::lendasat::models::LoanAsset::UsdcEth => 2,
+                crate::lendasat::models::LoanAsset::UsdtEth => 3,
+                crate::lendasat::models::LoanAsset::UsdcStrk => 4,
+                crate::lendasat::models::LoanAsset::UsdtStrk => 5,
+                crate::lendasat::models::LoanAsset::UsdcSol => 6,
+                crate::lendasat::models::LoanAsset::UsdtSol => 7,
+                crate::lendasat::models::LoanAsset::UsdtLiquid => 8,
+                crate::lendasat::models::LoanAsset::Usd => 9,
+                crate::lendasat::models::LoanAsset::Eur => 10,
+                crate::lendasat::models::LoanAsset::Chf => 11,
+                crate::lendasat::models::LoanAsset::Mxn => 12,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::lendasat::models::LoanOffer {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.name, serializer);
+        <crate::lendasat::models::LenderStats>::sse_encode(self.lender, serializer);
+        <String>::sse_encode(self.lender_pk, serializer);
+        <crate::lendasat::models::LoanAsset>::sse_encode(self.loan_asset, serializer);
+        <crate::lendasat::models::CollateralAsset>::sse_encode(self.collateral_asset, serializer);
+        <f64>::sse_encode(self.loan_amount_min, serializer);
+        <f64>::sse_encode(self.loan_amount_max, serializer);
+        <i32>::sse_encode(self.duration_days_min, serializer);
+        <i32>::sse_encode(self.duration_days_max, serializer);
+        <f64>::sse_encode(self.interest_rate, serializer);
+        <f64>::sse_encode(self.min_ltv, serializer);
+        <crate::lendasat::models::LoanPayout>::sse_encode(self.loan_payout, serializer);
+        <String>::sse_encode(self.loan_repayment_address, serializer);
+        <Vec<crate::lendasat::models::OriginationFee>>::sse_encode(
+            self.origination_fee,
+            serializer,
+        );
+        <crate::lendasat::models::RepaymentPlan>::sse_encode(self.repayment_plan, serializer);
+        <crate::lendasat::models::LoanOfferStatus>::sse_encode(self.status, serializer);
+        <Option<String>>::sse_encode(self.kyc_link, serializer);
+    }
+}
+
+impl SseEncode for crate::lendasat::models::LoanOfferStatus {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::lendasat::models::LoanOfferStatus::Available => 0,
+                crate::lendasat::models::LoanOfferStatus::Unavailable => 1,
+                crate::lendasat::models::LoanOfferStatus::Deleted => 2,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::lendasat::models::LoanPayout {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::lendasat::models::LoanPayout::Direct => 0,
+                crate::lendasat::models::LoanPayout::Indirect => 1,
+                crate::lendasat::models::LoanPayout::MoonCardInstant => 2,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::lendasat::models::LoanTransaction {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.contract_id, serializer);
+        <String>::sse_encode(self.transaction_type, serializer);
+        <String>::sse_encode(self.txid, serializer);
+        <String>::sse_encode(self.timestamp, serializer);
+    }
+}
+
 impl SseEncode for crate::logger::LogEntry {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5734,6 +8350,22 @@ impl SseEncode for crate::api::ark_api::OffchainBalance {
     }
 }
 
+impl SseEncode for crate::lendasat::models::OfferFilters {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.loan_type, serializer);
+        <Option<String>>::sse_encode(self.asset_type, serializer);
+        <Option<String>>::sse_encode(self.loan_assets, serializer);
+        <Option<String>>::sse_encode(self.kyc, serializer);
+        <Option<f64>>::sse_encode(self.min_loan_amount, serializer);
+        <Option<f64>>::sse_encode(self.max_loan_amount, serializer);
+        <Option<f64>>::sse_encode(self.max_interest_rate, serializer);
+        <Option<i32>>::sse_encode(self.duration_min, serializer);
+        <Option<i32>>::sse_encode(self.duration_max, serializer);
+        <Option<String>>::sse_encode(self.collateral_asset_type, serializer);
+    }
+}
+
 impl SseEncode for Option<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5770,6 +8402,16 @@ impl SseEncode for Option<bool> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <bool>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::lendasat::models::ContractFilters> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::lendasat::models::ContractFilters>::sse_encode(value, serializer);
         }
     }
 }
@@ -5864,6 +8506,16 @@ impl SseEncode for Option<crate::models::mempool::MiningPool> {
     }
 }
 
+impl SseEncode for Option<crate::lendasat::models::OfferFilters> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::lendasat::models::OfferFilters>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<crate::models::mempool::RecommendedFees> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5924,6 +8576,16 @@ impl SseEncode for Option<Vec<crate::models::mempool::Block>> {
     }
 }
 
+impl SseEncode for Option<Vec<crate::lendasat::models::ContractStatus>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<crate::lendasat::models::ContractStatus>>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<Vec<crate::models::mempool::MempoolBlock>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5931,6 +8593,25 @@ impl SseEncode for Option<Vec<crate::models::mempool::MempoolBlock>> {
         if let Some(value) = self {
             <Vec<crate::models::mempool::MempoolBlock>>::sse_encode(value, serializer);
         }
+    }
+}
+
+impl SseEncode for crate::lendasat::models::OriginationFee {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <f64>::sse_encode(self.fee, serializer);
+        <i32>::sse_encode(self.from_day, serializer);
+    }
+}
+
+impl SseEncode for crate::lendasat::models::PaginatedContractsResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::lendasat::models::Contract>>::sse_encode(self.data, serializer);
+        <i32>::sse_encode(self.page, serializer);
+        <i32>::sse_encode(self.limit, serializer);
+        <i32>::sse_encode(self.total, serializer);
+        <i32>::sse_encode(self.total_pages, serializer);
     }
 }
 
@@ -5980,6 +8661,23 @@ impl SseEncode for (String, f64) {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.0, serializer);
         <f64>::sse_encode(self.1, serializer);
+    }
+}
+
+impl SseEncode for crate::lendasat::models::RepaymentPlan {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::lendasat::models::RepaymentPlan::Bullet => 0,
+                crate::lendasat::models::RepaymentPlan::InterestOnlyWeekly => 1,
+                crate::lendasat::models::RepaymentPlan::InterestOnlyMonthly => 2,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 

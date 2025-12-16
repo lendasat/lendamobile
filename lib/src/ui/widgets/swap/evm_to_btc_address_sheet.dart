@@ -281,11 +281,10 @@ class _EvmToBtcAddressSheetState extends State<EvmToBtcAddressSheet> {
               state: isValid ? ButtonState.idle : ButtonState.disabled,
               onTap: isValid
                   ? () {
-                      widget.onAddressesConfirmed(
-                        _evmController.text,
-                        _btcController.text,
-                      );
+                      final evmAddress = _evmController.text;
+                      final btcAddress = _btcController.text;
                       Navigator.pop(context);
+                      widget.onAddressesConfirmed(evmAddress, btcAddress);
                     }
                   : null,
             ),

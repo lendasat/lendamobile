@@ -1,5 +1,6 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
+import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -8,7 +9,6 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/evm_address_input_sheet.dart';
-import 'package:ark_flutter/src/ui/widgets/swap/evm_to_btc_address_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/swap_confirmation_sheet.dart';
 import 'package:ark_flutter/src/ui/screens/swap_processing_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -28,7 +28,7 @@ class SwapScreen extends StatefulWidget {
 
 class _SwapScreenState extends State<SwapScreen> {
   // Selected tokens
-  SwapToken sourceToken = SwapToken.btcArkade;
+  SwapToken sourceToken = SwapToken.bitcoin;
   SwapToken targetToken = SwapToken.usdcPolygon;
 
   // Amount values (stored as strings for precise decimal handling)
@@ -233,7 +233,7 @@ class _SwapScreenState extends State<SwapScreen> {
           targetToken = SwapToken.usdcPolygon;
           targetShowUsd = true;
         } else {
-          targetToken = SwapToken.btcArkade;
+          targetToken = SwapToken.bitcoin;
           targetShowUsd = false;
         }
       }
@@ -252,7 +252,7 @@ class _SwapScreenState extends State<SwapScreen> {
           sourceToken = SwapToken.usdcPolygon;
           sourceShowUsd = true;
         } else {
-          sourceToken = SwapToken.btcArkade;
+          sourceToken = SwapToken.bitcoin;
           sourceShowUsd = false;
         }
       }
@@ -345,18 +345,20 @@ class _SwapScreenState extends State<SwapScreen> {
     );
   }
 
-  /// Show EVM to BTC address input sheet (for EVM -> BTC swaps)
+  /// Show EVM address input sheet (for EVM -> BTC swaps)
+  /// Only asks for user's EVM address - BTC will be received to wallet's Arkade address automatically
   void _showEvmToBtcAddressInput() {
     arkBottomSheet(
       context: context,
-      child: EvmToBtcAddressSheet(
-        sourceTokenSymbol: sourceToken.symbol,
-        sourceNetwork: sourceToken.network,
-        onAddressesConfirmed: (evmAddress, btcAddress) {
+      child: EvmAddressInputSheet(
+        tokenSymbol: sourceToken.symbol,
+        network: sourceToken.network,
+        isSourceAddress: true, // This is the source address (where user sends from)
+        onAddressConfirmed: (evmAddress) {
           _showConfirmation(
             targetEvmAddress: null,
             sourceEvmAddress: evmAddress,
-            targetBtcAddress: btcAddress,
+            targetBtcAddress: null, // Will be auto-filled with wallet's Arkade address
           );
         },
       ),
@@ -414,22 +416,30 @@ class _SwapScreenState extends State<SwapScreen> {
       String swapId;
 
       if (sourceToken.isBtc && targetToken.isEvm) {
-        // BTC -> EVM swap
+        // BTC -> EVM swap: Arkade handles payment automatically
         final result = await _swapService.createSellBtcSwap(
           targetEvmAddress: targetEvmAddress!,
           targetAmountUsd: usd,
-          targetToken: targetToken.symbol.toLowerCase(),
-          targetChain: targetToken.network.toLowerCase(),
+          targetToken: targetToken.tokenId,
+          targetChain: targetToken.chainId,
         );
         swapId = result.swapId;
       } else {
-        // EVM -> BTC swap
+        // EVM -> BTC swap: Auto-use wallet's Arkade address for receiving
+        String arkadeAddress = targetBtcAddress ?? '';
+        if (arkadeAddress.isEmpty) {
+          // Fetch wallet's Arkade address automatically
+          final addresses = await ark_api.address();
+          arkadeAddress = addresses.offchain;
+          logger.i('Auto-using wallet Arkade address: $arkadeAddress');
+        }
+
         final result = await _swapService.createBuyBtcSwap(
-          targetArkAddress: targetBtcAddress!,
+          targetArkAddress: arkadeAddress,
           userEvmAddress: sourceEvmAddress!,
           sourceAmountUsd: usd,
-          sourceToken: sourceToken.symbol.toLowerCase(),
-          sourceChain: sourceToken.network.toLowerCase(),
+          sourceToken: sourceToken.tokenId,
+          sourceChain: sourceToken.chainId,
         );
         swapId = result.swapId;
       }
@@ -559,8 +569,8 @@ class _SwapScreenState extends State<SwapScreen> {
                   ),
                 ),
                 const SizedBox(height: AppTheme.cardPadding),
-                // Quote info section
-                _buildQuoteInfo(context),
+                // Minimal rate info
+                _buildRateInfo(context),
                 const SizedBox(height: AppTheme.cardPadding * 5.5),
               ],
             ),
@@ -585,68 +595,100 @@ class _SwapScreenState extends State<SwapScreen> {
     );
   }
 
-  Widget _buildQuoteInfo(BuildContext context) {
-    final usd = double.tryParse(usdAmount) ?? 0;
-
-    // Calculate fees (mock - in production get from quote API)
-    const networkFeeSats = 1500;
-    const protocolFeePercent = 0.25;
-    final protocolFeeSats = (usd * protocolFeePercent / 100 * 100000000 / btcUsdPrice).round();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
-      child: GlassContainer(
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.cardPadding),
-          child: Column(
-            children: [
-              _buildQuoteRow(
-                context,
-                'Rate',
-                '1 BTC = \$${formatUsd(btcUsdPrice)}',
-              ),
-              const SizedBox(height: AppTheme.elementSpacing),
-              _buildQuoteRow(
-                context,
-                'Network Fee',
-                '${formatSats(networkFeeSats)} sats (~\$${formatUsd(btcToUsd(networkFeeSats / 100000000))})',
-              ),
-              const SizedBox(height: AppTheme.elementSpacing),
-              _buildQuoteRow(
-                context,
-                'Protocol Fee',
-                '$protocolFeePercent%${protocolFeeSats > 0 ? ' (${formatSats(protocolFeeSats)} sats)' : ''}',
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuoteRow(BuildContext context, String label, String value) {
+  /// Minimal rate display with info icon
+  Widget _buildRateInfo(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          label,
+          '1 BTC ≈ \$${_formatPrice(btcUsdPrice)}',
           style: TextStyle(
+            fontSize: 13,
             color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-            fontSize: 14,
           ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+        const SizedBox(width: 6),
+        GestureDetector(
+          onTap: () => _showFeeInfoSheet(context),
+          child: Icon(
+            Icons.info_outline_rounded,
+            size: 16,
+            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
           ),
         ),
       ],
+    );
+  }
+
+  /// Format price with thousands separator
+  String _formatPrice(double price) {
+    if (price >= 1000) {
+      final formatted = price.toStringAsFixed(0);
+      final result = StringBuffer();
+      final length = formatted.length;
+      for (int i = 0; i < length; i++) {
+        if (i > 0 && (length - i) % 3 == 0) {
+          result.write(',');
+        }
+        result.write(formatted[i]);
+      }
+      return result.toString();
+    }
+    return price.toStringAsFixed(2);
+  }
+
+  /// Show fee breakdown sheet when user taps info icon
+  void _showFeeInfoSheet(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final usd = double.tryParse(usdAmount) ?? 0;
+
+    const networkFeeSats = 1500;
+    const protocolFeePercent = 0.25;
+    final networkFeeUsd = btcToUsd(networkFeeSats / 100000000);
+    final protocolFeeUsd = usd * protocolFeePercent / 100;
+    final totalFeeUsd = networkFeeUsd + protocolFeeUsd;
+
+    arkBottomSheet(
+      context: context,
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Fee Breakdown',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+            _FeeInfoRow(
+              label: 'Network Fee',
+              value: '~\$${networkFeeUsd.toStringAsFixed(2)}',
+              subtitle: '${formatSats(networkFeeSats)} sats',
+              isDarkMode: isDarkMode,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            _FeeInfoRow(
+              label: 'Protocol Fee',
+              value: '~\$${protocolFeeUsd.toStringAsFixed(2)}',
+              subtitle: '$protocolFeePercent%',
+              isDarkMode: isDarkMode,
+            ),
+            const Divider(height: AppTheme.cardPadding * 2),
+            _FeeInfoRow(
+              label: 'Total Fees',
+              value: '~\$${totalFeeUsd.toStringAsFixed(2)}',
+              isDarkMode: isDarkMode,
+              isBold: true,
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1079,6 +1121,61 @@ class _TokenListItem extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Row widget for fee breakdown display
+class _FeeInfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final String? subtitle;
+  final bool isDarkMode;
+  final bool isBold;
+
+  const _FeeInfoRow({
+    required this.label,
+    required this.value,
+    this.subtitle,
+    required this.isDarkMode,
+    this.isBold = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+            if (subtitle != null)
+              Text(
+                subtitle!,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                ),
+              ),
+          ],
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+      ],
     );
   }
 }

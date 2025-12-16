@@ -141,31 +141,40 @@ pub async fn tx_history() -> Result<Vec<Transaction>> {
                 txid,
                 amount,
                 confirmed_at,
-            } => Transaction::Boarding {
-                txid: txid.to_string(),
-                amount_sats: amount.to_sat(),
-                confirmed_at,
-            },
+            } => {
+                tracing::debug!("TX HISTORY: Boarding tx {}", txid);
+                Transaction::Boarding {
+                    txid: txid.to_string(),
+                    amount_sats: amount.to_sat(),
+                    confirmed_at,
+                }
+            }
             ark_core::history::Transaction::Commitment {
                 txid,
                 amount,
                 created_at,
-            } => Transaction::Round {
-                txid: txid.to_string(),
-                amount_sats: amount.to_sat(),
-                created_at,
-            },
+            } => {
+                tracing::debug!("TX HISTORY: Commitment/Round tx {}", txid);
+                Transaction::Round {
+                    txid: txid.to_string(),
+                    amount_sats: amount.to_sat(),
+                    created_at,
+                }
+            }
             ark_core::history::Transaction::Ark {
                 txid,
                 amount,
                 is_settled,
                 created_at,
-            } => Transaction::Redeem {
-                txid: txid.to_string(),
-                amount_sats: amount.to_sat(),
-                is_settled,
-                created_at,
-            },
+            } => {
+                tracing::debug!("TX HISTORY: Ark/Redeem tx {}", txid);
+                Transaction::Redeem {
+                    txid: txid.to_string(),
+                    amount_sats: amount.to_sat(),
+                    is_settled,
+                    created_at,
+                }
+            }
         })
         .collect();
 
@@ -212,16 +221,6 @@ pub async fn nsec(data_dir: String) -> Result<String> {
 /// Get the mnemonic words for backup (only available for HD wallets)
 pub fn get_mnemonic(data_dir: String) -> Result<String> {
     crate::ark::get_mnemonic(data_dir)
-}
-
-/// Check if the wallet is using the new HD wallet format (mnemonic-based)
-pub fn is_hd_wallet(data_dir: String) -> bool {
-    crate::ark::is_hd_wallet(&data_dir)
-}
-
-/// Check if the wallet is using the legacy seed file format
-pub fn is_legacy_wallet(data_dir: String) -> bool {
-    crate::ark::is_legacy_wallet(&data_dir)
 }
 
 pub async fn reset_wallet(data_dir: String) -> Result<()> {

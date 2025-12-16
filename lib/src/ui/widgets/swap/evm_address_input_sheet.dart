@@ -9,17 +9,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Bottom sheet for entering EVM (Ethereum/Polygon) wallet address.
-/// Used when user wants to receive stablecoins from a swap.
+/// Used for both receiving stablecoins (BTC -> EVM) and sending stablecoins (EVM -> BTC).
 class EvmAddressInputSheet extends StatefulWidget {
   final String tokenSymbol;
   final String network;
   final Function(String address) onAddressConfirmed;
+  /// If true, this is the source address (where user sends from).
+  /// If false (default), this is the destination address (where user receives).
+  final bool isSourceAddress;
 
   const EvmAddressInputSheet({
     super.key,
     required this.tokenSymbol,
     required this.network,
     required this.onAddressConfirmed,
+    this.isSourceAddress = false,
   });
 
   @override
@@ -106,12 +110,20 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
+    // Different text based on whether this is source or destination address
+    final appBarText = widget.isSourceAddress
+        ? 'Send ${widget.tokenSymbol}'
+        : 'Receive ${widget.tokenSymbol}';
+    final infoText = widget.isSourceAddress
+        ? 'Enter your ${widget.network} wallet address that you will send ${widget.tokenSymbol} from'
+        : 'Enter your ${widget.network} wallet address to receive ${widget.tokenSymbol}';
+
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,
       appBar: ArkAppBar(
         context: context,
-        text: 'Receive ${widget.tokenSymbol}',
+        text: appBarText,
         hasBackButton: false,
       ),
       body: Padding(
@@ -122,7 +134,7 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
             const SizedBox(height: AppTheme.cardPadding * 2),
             // Info text
             Text(
-              'Enter your ${widget.network} wallet address to receive ${widget.tokenSymbol}',
+              infoText,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                   ),
@@ -214,8 +226,9 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
               state: _isValid ? ButtonState.idle : ButtonState.disabled,
               onTap: _isValid
                   ? () {
-                      widget.onAddressConfirmed(_addressController.text);
+                      final address = _addressController.text;
                       Navigator.pop(context);
+                      widget.onAddressConfirmed(address);
                     }
                   : null,
             ),

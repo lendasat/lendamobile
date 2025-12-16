@@ -25,7 +25,7 @@ Master Xpriv (from BIP39 seed)
     │   └─→ m/83696968'/11811'/0/{index}  (Arkade Default)
     │
     ├─→ Nostr Identity
-    │   └─→ m/44'/1237'/0'/0/0    (NIP-06 Standard)
+    │   └─→ m/44/0/0/0/0          (LendaSat SDK)
     │
     ├─→ LendaSwap (future)
     │   └─→ m/83696968'/121923'/{index}'
@@ -70,11 +70,11 @@ Master Xpriv (from BIP39 seed)
 │   Ark Wallet    │ │   LendaSwap     │ │    Lendasat     │ │     Nostr       │
 │   (Arkade SDK)  │ │   (Future)      │ │   (Future)      │ │                 │
 │                 │ │                 │ │                 │ │                 │
-│ m/83696968'     │ │ m/83696968'     │ │ m/10101'        │ │ m/44'/1237'     │
-│   /11811'/0     │ │   /121923'      │ │   /0'           │ │   /0'/0         │
+│ m/83696968'     │ │ m/83696968'     │ │ m/10101'        │ │ m/44/0          │
+│   /11811'/0     │ │   /121923'      │ │   /0'           │ │   /0/0          │
 │   /{index}      │ │   /{index}'     │ │   /{index}'     │ │   /0            │
 │ Arkade Default  │ │                 │ │                 │ │                 │
-│ (not BIP84)     │ │ Swap keys       │ │ Collateral keys │ │ NIP-06          │
+│ (not BIP84)     │ │ Swap keys       │ │ Collateral keys │ │ LendaSat SDK    │
 │                 │ │ (HTLC secrets)  │ │ (loan contracts)│ │ Social identity │
 └─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘
 ```
@@ -86,7 +86,7 @@ Master Xpriv (from BIP39 seed)
 | Service | Purpose | Derivation Path | Standard | Status |
 |---------|---------|-----------------|----------|--------|
 | **Ark SDK** | HD Wallet | `m/83696968'/11811'/0/{i}` | Arkade Default | **Implemented** |
-| **Nostr** | Identity | `m/44'/1237'/0'/0/0` | NIP-06 | **Implemented** |
+| **Nostr** | Identity | `m/44/0/0/0/0` | LendaSat SDK | **Implemented** |
 | **LendaSwap** | Swap keys | `m/83696968'/121923'/{i}'` | BIP-85 | Planned |
 | **Lendasat** | Contract keys | `m/10101'/0'/{i}'` | Custom | Planned |
 
@@ -105,8 +105,8 @@ pub const LENDASWAP_DERIVATION_PATH: &str = "m/83696968'/121923'";
 /// Derivation path for Lendasat contract keys (from same mnemonic)
 pub const LENDASAT_DERIVATION_PATH: &str = "m/10101'/0'";
 
-/// Derivation path for Nostr keys (NIP-06 compatible)
-pub const NOSTR_DERIVATION_PATH: &str = "m/44'/1237'/0'/0/0";
+/// Derivation path for Nostr keys (matches LendaSat SDK)
+pub const NOSTR_DERIVATION_PATH: &str = "m/44/0/0/0/0";
 ```
 
 ## Implementation Details
@@ -142,9 +142,9 @@ pub async fn setup_client_hd(
 - `get_keypair_for_pk()` - Retrieves keypair by public key from cache
 - `supports_discovery()` - Enables BIP44-style gap limit discovery
 
-### 2. Nostr Identity (NIP-06)
+### 2. Nostr Identity (LendaSat SDK)
 
-**Path:** `m/44'/1237'/0'/0/0` (NIP-06 Standard)
+**Path:** `m/44/0/0/0/0` (LendaSat SDK - NOT NIP-06)
 
 ```rust
 // rust/src/ark/mod.rs
@@ -159,7 +159,7 @@ pub(crate) async fn nsec(data_dir: String, network: Network) -> Result<nostr::Se
 }
 ```
 
-**Note:** Nostr keys are network-independent. The derived key is the same regardless of Bitcoin network.
+**Note:** Nostr keys are network-independent. The derived key is the same regardless of Bitcoin network. This path matches the LendaSat web SDK for cross-platform consistency (NOT the NIP-06 standard path of `m/44'/1237'/0'/0/0`).
 
 ### 3. Mnemonic Generation & Storage
 
@@ -245,7 +245,7 @@ All paths are carefully chosen to avoid collisions:
 
 ```
 m/83696968'/11811'/0/...  - Ark (Arkade default)
-m/44'/1237'/0'/0/0        - Nostr (NIP-06 standard)
+m/44/0/0/0/0              - Nostr (LendaSat SDK)
 m/83696968'/121923'/...   - LendaSwap (BIP-85 prefix)
 m/10101'/...              - Lendasat (custom prefix)
 ```
@@ -315,7 +315,7 @@ abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon 
 |---------|------|-------|
 | Ark (index 0) | `m/83696968'/11811'/0/0` | First Ark address |
 | Ark (index 1) | `m/83696968'/11811'/0/1` | Second Ark address |
-| Nostr | `m/44'/1237'/0'/0/0` | NIP-06 identity |
+| Nostr | `m/44/0/0/0/0` | LendaSat SDK identity |
 
 ### Verification Code
 
@@ -359,7 +359,7 @@ The app detects legacy wallets and shows a migration warning in settings.
 When user imports mnemonic on a new device:
 
 1. **Ark** - Bip32KeyProvider discovers used keys automatically
-2. **Nostr** - Same npub derived from NIP-06 path
+2. **Nostr** - Same npub derived from LendaSat SDK path
 3. **LendaSwap** (future) - Recover swaps via server lookup
 4. **Lendasat** (future) - Server has contract history
 
@@ -379,5 +379,5 @@ New services should:
 For hardware wallet compatibility:
 
 - Arkade path (`m/83696968'/11811'/0`) is custom and may require specific hardware support
-- NIP-06 path may require custom app on hardware wallet
+- LendaSat SDK Nostr path (m/44/0/0/0/0) may require custom app on hardware wallet
 - Consider Taproot (BIP-86) paths for future Bitcoin on-chain addresses

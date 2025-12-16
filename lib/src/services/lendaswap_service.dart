@@ -33,7 +33,9 @@ class LendaSwapService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final dataDir = await getApplicationDocumentsDirectory();
+      // IMPORTANT: Use same directory as Ark wallet (ApplicationSupportDirectory)
+      // NOT ApplicationDocumentsDirectory - they are different paths!
+      final dataDir = await getApplicationSupportDirectory();
       final settingsService = SettingsService();
       final network = await settingsService.getNetwork();
 
@@ -283,14 +285,14 @@ class LendaSwapService extends ChangeNotifier {
   }
 
   String _getApiUrl(String network) {
-    // TODO: Make these configurable
+    // LendaSwap API is hosted at lendasat.com
     switch (network) {
       case 'bitcoin':
-        return 'https://api.lendaswap.com';
+        return 'https://apilendaswap.lendasat.com';
       case 'testnet':
-        return 'https://api-testnet.lendaswap.com';
+        return 'https://apilendaswap.lendasat.com'; // TODO: update when testnet available
       default:
-        return 'https://api.lendaswap.com';
+        return 'https://apilendaswap.lendasat.com';
     }
   }
 

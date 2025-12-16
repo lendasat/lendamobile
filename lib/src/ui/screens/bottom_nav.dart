@@ -41,7 +41,7 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
     _screens = [
       WalletScreen(key: _walletKey, aspId: widget.aspId),
       const SwapScreen(),
-      const LoansScreen(),
+      LoansScreen(aspId: widget.aspId),
     ];
 
     // Start global payment monitoring
