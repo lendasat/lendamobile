@@ -6,7 +6,6 @@ use anyhow::Result;
 
 pub mod ark_api;
 pub mod bitcoin_api;
-pub mod email_recovery_api;
 pub mod lendasat_api;
 pub mod lendaswap_api;
 pub mod mempool_api;
@@ -113,13 +112,3 @@ pub fn currency_code(currency: FiatCurrency) -> String {
     currency.code().to_string()
 }
 
-// Re-export email recovery API functions for easy access
-pub use email_recovery_api::{
-    // Main recovery functions (async) - uses lendasat backend
-    setup_email_recovery,
-    recover_wallet_from_email,
-    check_email_recovery_exists,
-    // Password validation (sync)
-    is_password_strong,
-    get_password_feedback,
-};

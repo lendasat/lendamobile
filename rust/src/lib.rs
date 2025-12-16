@@ -1,6 +1,5 @@
 pub mod api;
 pub mod ark;
-pub mod email_recovery;
 pub mod lendasat;
 pub mod lendaswap;
 pub mod logger;

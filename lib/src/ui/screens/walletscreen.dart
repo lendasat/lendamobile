@@ -4,7 +4,6 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
-import 'package:ark_flutter/src/services/email_recovery_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
@@ -79,7 +78,6 @@ class WalletScreenState extends State<WalletScreen> {
 
   // Recovery status
   bool _wordRecoverySet = false;
-  bool _emailRecoverySet = false;
 
   // Scroll controller for nested scrolling
   final ScrollController _scrollController = ScrollController();
@@ -123,11 +121,9 @@ class WalletScreenState extends State<WalletScreen> {
   Future<void> _loadRecoveryStatus() async {
     try {
       final wordRecovery = await SettingsService().isWordRecoverySet();
-      final emailRecovery = await EmailRecoveryService.isSetUp();
       if (mounted) {
         setState(() {
           _wordRecoverySet = wordRecovery;
-          _emailRecoverySet = emailRecovery;
         });
       }
     } catch (e) {
@@ -440,8 +436,8 @@ class WalletScreenState extends State<WalletScreen> {
   Widget _buildSettingsButton() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Check if at least one recovery option is set up
-    final bool hasAnyRecovery = _wordRecoverySet || _emailRecoverySet;
+    // Check if word recovery is set up (email recovery coming soon)
+    final bool hasAnyRecovery = _wordRecoverySet;
 
     return Stack(
       children: [

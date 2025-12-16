@@ -6,7 +6,6 @@
 import 'api.dart';
 import 'api/ark_api.dart';
 import 'api/bitcoin_api.dart';
-import 'api/email_recovery_api.dart';
 import 'api/lendasat_api.dart';
 import 'api/lendaswap_api.dart';
 import 'api/mempool_api.dart';

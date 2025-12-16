@@ -1,6 +1,5 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
-import 'package:ark_flutter/src/services/email_recovery_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/rust/api/lendasat_api.dart' as lendasat_api;
@@ -8,6 +7,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/screens/loan_offer_detail_screen.dart';
@@ -30,38 +30,15 @@ class LoansScreen extends StatefulWidget {
 
 class _LoansScreenState extends State<LoansScreen> {
   final LendasatService _lendasatService = LendasatService();
-  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   bool _isLoading = true;
-  bool _isEmailRecoverySetUp = false;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _initializeLendasat();
-    _checkEmailRecoveryStatus();
-    _searchController.addListener(() {
-      setState(() {
-        _searchQuery = _searchController.text.toLowerCase();
-      });
-    });
-  }
-
-  Future<void> _checkEmailRecoveryStatus() async {
-    final isSetUp = await EmailRecoveryService.isSetUp();
-    if (mounted) {
-      setState(() {
-        _isEmailRecoverySetUp = isSetUp;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 
   Future<void> _initializeLendasat() async {
@@ -71,19 +48,10 @@ class _LoansScreenState extends State<LoansScreen> {
     });
 
     try {
-      // First check email recovery status
-      final isEmailRecoverySetUp = await EmailRecoveryService.isSetUp();
-
-      if (mounted) {
-        setState(() {
-          _isEmailRecoverySetUp = isEmailRecoverySetUp;
-        });
-      }
-
       await _lendasatService.initialize();
 
-      // Auto-authenticate if email recovery is set up
-      if (isEmailRecoverySetUp && !_lendasatService.isAuthenticated) {
+      // Try to authenticate with Lendasat using wallet pubkey
+      if (!_lendasatService.isAuthenticated) {
         await _autoAuthenticate();
       }
 
@@ -113,45 +81,15 @@ class _LoansScreenState extends State<LoansScreen> {
   }
 
   /// Auto-authenticate with Lendasat using the wallet keypair.
-  /// Email recovery setup should have already registered the user.
-  /// If not (legacy account), we'll try to register the pubkey now.
+  /// User should have been registered during wallet signup.
   Future<void> _autoAuthenticate() async {
     try {
       final result = await _lendasatService.authenticate();
 
       if (result is lendasat_api.AuthResult_NeedsRegistration) {
-        // Pubkey not registered - this can happen for accounts created
-        // before we added pubkey registration to email recovery setup.
-        // Try to register the pubkey now using the recovery email.
-        logger.w('Lendasat: Pubkey not registered, attempting migration...');
-
-        final recoveryEmail = await EmailRecoveryService.getRecoveryEmail();
-        if (recoveryEmail != null) {
-          try {
-            // Register pubkey with the recovery email
-            await _lendasatService.register(
-              email: recoveryEmail,
-              name: 'Lendasat User',
-              inviteCode: 'LAS-651K4',
-            );
-            logger.i('Lendasat: Pubkey registration successful (migration)');
-            // Authentication happens automatically in register()
-          } catch (e) {
-            logger.e('Lendasat: Pubkey migration failed: $e');
-            if (mounted) {
-              setState(() {
-                _errorMessage = 'Could not link wallet to your account. Please try again.';
-              });
-            }
-          }
-        } else {
-          logger.e('Lendasat: No recovery email found for migration');
-          if (mounted) {
-            setState(() {
-              _errorMessage = 'Account sync issue. Please set up email recovery again.';
-            });
-          }
-        }
+        // Pubkey not registered - user needs to create an account
+        logger.w('Lendasat: Pubkey not registered, user needs to sign up');
+        // Don't show error - user can still see offers
       } else if (result is lendasat_api.AuthResult_Success) {
         logger.i('Lendasat: Auto-authentication successful');
       }
@@ -161,10 +99,10 @@ class _LoansScreenState extends State<LoansScreen> {
     }
   }
 
-  /// Open the settings bottom sheet directly to the email recovery screen.
-  void _openEmailRecoverySettings() {
+  /// Open the settings bottom sheet.
+  void _openSettings() {
     final settingsController = context.read<SettingsController>();
-    settingsController.switchTab('emergency_recovery');
+    settingsController.resetToMain();
 
     arkBottomSheet(
       context: context,
@@ -172,10 +110,7 @@ class _LoansScreenState extends State<LoansScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Settings(aspId: widget.aspId),
     ).then((_) {
-      // Reset settings to main tab for next time
-      settingsController.resetToMain();
-      // Re-check email recovery status and re-initialize
-      _checkEmailRecoveryStatus();
+      // Re-initialize Lendasat to check auth status
       _initializeLendasat();
     });
   }
@@ -255,32 +190,19 @@ class _LoansScreenState extends State<LoansScreen> {
                               ),
                               const SizedBox(height: AppTheme.elementSpacing),
                               // Search bar
-                              TextField(
-                                controller: _searchController,
-                                decoration: InputDecoration(
-                                  hintText: 'Search contracts...',
-                                  prefixIcon: const Icon(Icons.search, size: 20),
-                                  suffixIcon: _searchQuery.isNotEmpty
-                                      ? IconButton(
-                                          icon: const Icon(Icons.clear, size: 20),
-                                          onPressed: () {
-                                            _searchController.clear();
-                                          },
-                                        )
-                                      : null,
-                                  filled: true,
-                                  fillColor: Theme.of(context).brightness == Brightness.dark
-                                      ? Colors.white.withValues(alpha: 0.05)
-                                      : Colors.black.withValues(alpha: 0.03),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                ),
+                              SearchFieldWidget(
+                                hintText: 'Search contracts...',
+                                isSearchEnabled: true,
+                                handleSearch: (value) {
+                                  setState(() {
+                                    _searchQuery = value.toLowerCase();
+                                  });
+                                },
+                                onChanged: (value) {
+                                  setState(() {
+                                    _searchQuery = value.toLowerCase();
+                                  });
+                                },
                               ),
                             ],
                           ),
@@ -301,67 +223,26 @@ class _LoansScreenState extends State<LoansScreen> {
   }
 
   Widget _buildAuthBanner() {
-    // If email recovery is not set up, show recovery requirement banner
-    if (!_isEmailRecoverySetUp) {
-      return GlassContainer(
-        margin: const EdgeInsets.all(AppTheme.cardPadding),
-        padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Column(
-          children: [
-            const Icon(
-              Icons.security_rounded,
-              size: 48,
-              color: AppTheme.colorBitcoin,
-            ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            Text(
-              'Email Recovery Required',
-              style: Theme.of(context).textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppTheme.elementSpacing / 2),
-            Text(
-              'You must set up email recovery before you can take a loan. This ensures you can recover your wallet and access your collateral.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.7),
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-            LongButtonWidget(
-              title: 'Set Up Email Recovery',
-              buttonType: ButtonType.primary,
-              onTap: () => _openEmailRecoverySettings(),
-              customHeight: 48,
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Email recovery is set up but auth failed - show retry option
+    // Not authenticated - show info banner with retry option
     return GlassContainer(
       margin: const EdgeInsets.all(AppTheme.cardPadding),
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
         children: [
           Icon(
-            Icons.refresh_rounded,
+            Icons.account_circle_outlined,
             size: 48,
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(height: AppTheme.elementSpacing),
           Text(
-            'Connection Issue',
+            'Sign In Required',
             style: Theme.of(context).textTheme.titleLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppTheme.elementSpacing / 2),
           Text(
-            'Could not connect to the lending service. Please try again.',
+            'Sign in to view your contracts and take loans. You can still browse available offers.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context)
                       .colorScheme
@@ -372,7 +253,7 @@ class _LoansScreenState extends State<LoansScreen> {
           ),
           const SizedBox(height: AppTheme.cardPadding),
           LongButtonWidget(
-            title: 'Retry',
+            title: 'Retry Connection',
             buttonType: ButtonType.primary,
             onTap: _initializeLendasat,
             customHeight: 48,
@@ -473,11 +354,6 @@ class _LoansScreenState extends State<LoansScreen> {
 
   Widget _buildContractsSliver() {
     if (!_lendasatService.isAuthenticated) {
-      // Show appropriate message based on email recovery status
-      final message = _isEmailRecoverySetUp
-          ? 'Connecting to view your contracts...'
-          : 'Set up email recovery to view contracts';
-
       return SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
@@ -493,7 +369,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 const SizedBox(width: AppTheme.elementSpacing),
                 Expanded(
                   child: Text(
-                    message,
+                    'Sign in to view your contracts',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
