@@ -56,7 +56,10 @@ class MoonPayEncryptedData {
   final String ciphertext;
   final String iv;
 
-  const MoonPayEncryptedData({required this.ciphertext, required this.iv});
+  const MoonPayEncryptedData({
+    required this.ciphertext,
+    required this.iv,
+  });
 
   @override
   int get hashCode => ciphertext.hashCode ^ iv.hashCode;

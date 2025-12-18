@@ -18,17 +18,16 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// * `network` - Bitcoin network: "bitcoin", "testnet", "signet", or "regtest"
 /// * `api_url` - LendaSwap API URL (e.g., "https://api.lendaswap.com")
 /// * `arkade_url` - Arkade server URL (e.g., "https://arkade.computer")
-Future<void> lendaswapInit({
-  required String dataDir,
-  required String network,
-  required String apiUrl,
-  required String arkadeUrl,
-}) => RustLib.instance.api.crateApiLendaswapApiLendaswapInit(
-  dataDir: dataDir,
-  network: network,
-  apiUrl: apiUrl,
-  arkadeUrl: arkadeUrl,
-);
+Future<void> lendaswapInit(
+        {required String dataDir,
+        required String network,
+        required String apiUrl,
+        required String arkadeUrl}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapInit(
+        dataDir: dataDir,
+        network: network,
+        apiUrl: apiUrl,
+        arkadeUrl: arkadeUrl);
 
 /// Check if LendaSwap is initialized.
 bool lendaswapIsInitialized() =>
@@ -44,15 +43,12 @@ Future<List<TradingPair>> lendaswapGetAssetPairs() =>
 /// * `from_token` - Source token ID (e.g., "btc_arkade", "usdc_pol")
 /// * `to_token` - Target token ID
 /// * `amount_sats` - Amount in satoshis (for BTC) or smallest unit (for tokens)
-Future<SwapQuote> lendaswapGetQuote({
-  required String fromToken,
-  required String toToken,
-  required BigInt amountSats,
-}) => RustLib.instance.api.crateApiLendaswapApiLendaswapGetQuote(
-  fromToken: fromToken,
-  toToken: toToken,
-  amountSats: amountSats,
-);
+Future<SwapQuote> lendaswapGetQuote(
+        {required String fromToken,
+        required String toToken,
+        required BigInt amountSats}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapGetQuote(
+        fromToken: fromToken, toToken: toToken, amountSats: amountSats);
 
 /// Create a BTC to EVM swap (sell BTC for stablecoins).
 ///
@@ -62,19 +58,18 @@ Future<SwapQuote> lendaswapGetQuote({
 /// * `target_token` - Target token ID (e.g., "usdc_pol", "usdt_eth")
 /// * `target_chain` - EVM chain: "polygon" or "ethereum"
 /// * `referral_code` - Optional referral code
-Future<BtcToEvmSwapResult> lendaswapCreateBtcToEvmSwap({
-  required String targetEvmAddress,
-  required double targetAmountUsd,
-  required String targetToken,
-  required String targetChain,
-  String? referralCode,
-}) => RustLib.instance.api.crateApiLendaswapApiLendaswapCreateBtcToEvmSwap(
-  targetEvmAddress: targetEvmAddress,
-  targetAmountUsd: targetAmountUsd,
-  targetToken: targetToken,
-  targetChain: targetChain,
-  referralCode: referralCode,
-);
+Future<BtcToEvmSwapResult> lendaswapCreateBtcToEvmSwap(
+        {required String targetEvmAddress,
+        required double targetAmountUsd,
+        required String targetToken,
+        required String targetChain,
+        String? referralCode}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapCreateBtcToEvmSwap(
+        targetEvmAddress: targetEvmAddress,
+        targetAmountUsd: targetAmountUsd,
+        targetToken: targetToken,
+        targetChain: targetChain,
+        referralCode: referralCode);
 
 /// Create an EVM to BTC swap (buy BTC with stablecoins).
 ///
@@ -85,21 +80,20 @@ Future<BtcToEvmSwapResult> lendaswapCreateBtcToEvmSwap({
 /// * `source_token` - Source token ID (e.g., "usdc_pol")
 /// * `source_chain` - EVM chain: "polygon" or "ethereum"
 /// * `referral_code` - Optional referral code
-Future<EvmToBtcSwapResult> lendaswapCreateEvmToBtcSwap({
-  required String targetArkAddress,
-  required String userEvmAddress,
-  required double sourceAmountUsd,
-  required String sourceToken,
-  required String sourceChain,
-  String? referralCode,
-}) => RustLib.instance.api.crateApiLendaswapApiLendaswapCreateEvmToBtcSwap(
-  targetArkAddress: targetArkAddress,
-  userEvmAddress: userEvmAddress,
-  sourceAmountUsd: sourceAmountUsd,
-  sourceToken: sourceToken,
-  sourceChain: sourceChain,
-  referralCode: referralCode,
-);
+Future<EvmToBtcSwapResult> lendaswapCreateEvmToBtcSwap(
+        {required String targetArkAddress,
+        required String userEvmAddress,
+        required double sourceAmountUsd,
+        required String sourceToken,
+        required String sourceChain,
+        String? referralCode}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapCreateEvmToBtcSwap(
+        targetArkAddress: targetArkAddress,
+        userEvmAddress: userEvmAddress,
+        sourceAmountUsd: sourceAmountUsd,
+        sourceToken: sourceToken,
+        sourceChain: sourceChain,
+        referralCode: referralCode);
 
 /// Create an EVM to Lightning swap.
 ///
@@ -109,20 +103,18 @@ Future<EvmToBtcSwapResult> lendaswapCreateEvmToBtcSwap({
 /// * `source_token` - Source token ID (e.g., "usdc_pol")
 /// * `source_chain` - EVM chain: "polygon" or "ethereum"
 /// * `referral_code` - Optional referral code
-Future<EvmToBtcSwapResult> lendaswapCreateEvmToLightningSwap({
-  required String bolt11Invoice,
-  required String userEvmAddress,
-  required String sourceToken,
-  required String sourceChain,
-  String? referralCode,
-}) =>
+Future<EvmToBtcSwapResult> lendaswapCreateEvmToLightningSwap(
+        {required String bolt11Invoice,
+        required String userEvmAddress,
+        required String sourceToken,
+        required String sourceChain,
+        String? referralCode}) =>
     RustLib.instance.api.crateApiLendaswapApiLendaswapCreateEvmToLightningSwap(
-      bolt11Invoice: bolt11Invoice,
-      userEvmAddress: userEvmAddress,
-      sourceToken: sourceToken,
-      sourceChain: sourceChain,
-      referralCode: referralCode,
-    );
+        bolt11Invoice: bolt11Invoice,
+        userEvmAddress: userEvmAddress,
+        sourceToken: sourceToken,
+        sourceChain: sourceChain,
+        referralCode: referralCode);
 
 /// Get swap details by ID.
 Future<SwapInfo> lendaswapGetSwap({required String swapId}) =>
@@ -133,39 +125,33 @@ Future<List<SwapInfo>> lendaswapListSwaps() =>
     RustLib.instance.api.crateApiLendaswapApiLendaswapListSwaps();
 
 /// Claim a swap via Gelato (gasless).
-Future<void> lendaswapClaimGelato({required String swapId}) => RustLib
-    .instance
-    .api
-    .crateApiLendaswapApiLendaswapClaimGelato(swapId: swapId);
+Future<void> lendaswapClaimGelato({required String swapId}) =>
+    RustLib.instance.api
+        .crateApiLendaswapApiLendaswapClaimGelato(swapId: swapId);
 
 /// Claim VHTLC for an EVM to BTC swap.
 ///
 /// Returns the transaction ID.
-Future<String> lendaswapClaimVhtlc({required String swapId}) => RustLib
-    .instance
-    .api
-    .crateApiLendaswapApiLendaswapClaimVhtlc(swapId: swapId);
+Future<String> lendaswapClaimVhtlc({required String swapId}) =>
+    RustLib.instance.api
+        .crateApiLendaswapApiLendaswapClaimVhtlc(swapId: swapId);
 
 /// Refund VHTLC for a failed BTC to EVM swap.
 ///
 /// Returns the transaction ID.
-Future<String> lendaswapRefundVhtlc({
-  required String swapId,
-  required String refundAddress,
-}) => RustLib.instance.api.crateApiLendaswapApiLendaswapRefundVhtlc(
-  swapId: swapId,
-  refundAddress: refundAddress,
-);
+Future<String> lendaswapRefundVhtlc(
+        {required String swapId, required String refundAddress}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapRefundVhtlc(
+        swapId: swapId, refundAddress: refundAddress);
 
 /// Recover swaps from server (after mnemonic restore).
 Future<List<SwapInfo>> lendaswapRecoverSwaps() =>
     RustLib.instance.api.crateApiLendaswapApiLendaswapRecoverSwaps();
 
 /// Delete a swap from local storage.
-Future<void> lendaswapDeleteSwap({required String swapId}) => RustLib
-    .instance
-    .api
-    .crateApiLendaswapApiLendaswapDeleteSwap(swapId: swapId);
+Future<void> lendaswapDeleteSwap({required String swapId}) =>
+    RustLib.instance.api
+        .crateApiLendaswapApiLendaswapDeleteSwap(swapId: swapId);
 
 /// Information about a tradeable asset.
 class AssetInfo {
@@ -377,7 +363,10 @@ class TradingPair {
   final AssetInfo source;
   final AssetInfo target;
 
-  const TradingPair({required this.source, required this.target});
+  const TradingPair({
+    required this.source,
+    required this.target,
+  });
 
   @override
   int get hashCode => source.hashCode ^ target.hashCode;

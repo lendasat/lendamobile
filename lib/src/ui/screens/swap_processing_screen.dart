@@ -10,6 +10,7 @@ import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/screens/swap_success_screen.dart';
+import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -40,6 +41,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   Timer? _pollTimer;
   bool _isLoading = true;
   String? _errorMessage;
+  bool _isClaimingGelato = false;
+  bool _hasAttemptedClaim = false;
 
   @override
   void initState() {
@@ -69,6 +72,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
           _isLoading = false;
         });
 
+        logger.d('Swap ${widget.swapId} status: ${swap.detailedStatus}');
+
         // Check if completed or failed
         if (swap.isCompleted) {
           _pollTimer?.cancel();
@@ -76,6 +81,9 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
         } else if (swap.status == SwapStatusSimple.failed ||
             swap.status == SwapStatusSimple.expired) {
           _pollTimer?.cancel();
+        } else {
+          // Auto-claim if ready
+          await _attemptAutoClaim(swap);
         }
       }
     } catch (e) {
@@ -84,6 +92,56 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
           _errorMessage = e.toString();
           _isLoading = false;
         });
+      }
+    }
+  }
+
+  /// Attempt to auto-claim the swap if it's ready.
+  Future<void> _attemptAutoClaim(SwapInfo swap) async {
+    // Don't attempt if already claiming or already attempted
+    if (_isClaimingGelato || _hasAttemptedClaim) return;
+
+    // BTC → EVM swaps: claim via Gelato when server has funded
+    if (swap.canClaimGelato) {
+      logger.i('Auto-claiming BTC→EVM swap ${swap.id} via Gelato');
+      setState(() {
+        _isClaimingGelato = true;
+        _hasAttemptedClaim = true;
+      });
+
+      try {
+        await _swapService.claimGelato(swap.id);
+        logger.i('Gelato claim submitted for swap ${swap.id}');
+        // Claim submitted, polling will detect completion
+      } catch (e) {
+        logger.e('Failed to auto-claim via Gelato: $e');
+        // Don't show error - let user manually retry if needed
+      } finally {
+        if (mounted) {
+          setState(() => _isClaimingGelato = false);
+        }
+      }
+    }
+
+    // EVM → BTC swaps: claim VHTLC when server has funded
+    if (swap.canClaimVhtlc) {
+      logger.i('Auto-claiming EVM→BTC swap ${swap.id} via VHTLC');
+      setState(() {
+        _isClaimingGelato = true; // reuse flag
+        _hasAttemptedClaim = true;
+      });
+
+      try {
+        final txid = await _swapService.claimVhtlc(swap.id);
+        logger.i('VHTLC claimed for swap ${swap.id}, txid: $txid');
+        // Claim submitted, polling will detect completion
+      } catch (e) {
+        logger.e('Failed to auto-claim VHTLC: $e');
+        // Don't show error - let user manually retry if needed
+      } finally {
+        if (mounted) {
+          setState(() => _isClaimingGelato = false);
+        }
       }
     }
   }

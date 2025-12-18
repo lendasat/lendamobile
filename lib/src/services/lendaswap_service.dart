@@ -328,15 +328,10 @@ extension SwapInfoExtension on SwapInfo {
     }
   }
 
-  /// Check if swap can be claimed.
-  bool get canClaim {
-    return status == SwapStatusSimple.processing;
-  }
-
-  /// Check if swap can be refunded.
-  bool get canRefund {
-    return status == SwapStatusSimple.refundable;
-  }
+  /// Check if swap can be claimed (using model fields from Rust).
+  /// For BTC→EVM: canClaimGelato
+  /// For EVM→BTC: canClaimVhtlc
+  bool get canClaim => canClaimGelato || canClaimVhtlc;
 
   /// Check if swap is completed.
   bool get isCompleted {

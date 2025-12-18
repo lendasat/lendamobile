@@ -2,7 +2,6 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
-import 'package:ark_flutter/src/rust/api/lendasat_api.dart' as lendasat_api;
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
@@ -35,6 +34,11 @@ class _LoansScreenState extends State<LoansScreen> {
   bool _isLoading = true;
   String? _errorMessage;
 
+  // Debug info
+  String? _debugPubkey;
+  String? _debugDerivationPath;
+  bool _showDebugInfo = true; // Set to false for production
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +53,16 @@ class _LoansScreenState extends State<LoansScreen> {
 
     try {
       await _lendasatService.initialize();
+
+      // Fetch debug info
+      try {
+        _debugPubkey = await _lendasatService.getPublicKey();
+        _debugDerivationPath = await _lendasatService.getDerivationPath();
+        logger.i('Lendasat pubkey: $_debugPubkey');
+        logger.i('Lendasat derivation path: $_debugDerivationPath');
+      } catch (e) {
+        logger.w('Could not get debug info: $e');
+      }
 
       // Try to authenticate with Lendasat using wallet pubkey
       if (!_lendasatService.isAuthenticated) {
@@ -67,8 +81,25 @@ class _LoansScreenState extends State<LoansScreen> {
           await _lendasatService.refreshOffers();
         }
       } catch (e) {
-        // Log but don't fail
-        logger.w('Could not load initial data: $e');
+        // Check if this is a 401 error - token expired
+        if (_isUnauthorizedError(e)) {
+          logger.i('Token expired, re-authenticating...');
+          await _autoAuthenticate();
+          // Retry loading data after re-authentication
+          if (_lendasatService.isAuthenticated) {
+            try {
+              await Future.wait([
+                _lendasatService.refreshOffers(),
+                _lendasatService.refreshContracts(),
+              ]);
+            } catch (retryError) {
+              logger.w('Could not load data after re-auth: $retryError');
+            }
+          }
+        } else {
+          // Log but don't fail for other errors
+          logger.w('Could not load initial data: $e');
+        }
       }
     } catch (e) {
       logger.e('Error initializing Lendasat: $e');
@@ -80,17 +111,25 @@ class _LoansScreenState extends State<LoansScreen> {
     }
   }
 
+  /// Check if error is a 401 Unauthorized error (token expired).
+  bool _isUnauthorizedError(dynamic error) {
+    final errorStr = error.toString().toLowerCase();
+    return errorStr.contains('401') ||
+           errorStr.contains('unauthorized') ||
+           errorStr.contains('invalid token');
+  }
+
   /// Auto-authenticate with Lendasat using the wallet keypair.
   /// User should have been registered during wallet signup.
   Future<void> _autoAuthenticate() async {
     try {
       final result = await _lendasatService.authenticate();
 
-      if (result is lendasat_api.AuthResult_NeedsRegistration) {
+      if (result is AuthResult_NeedsRegistration) {
         // Pubkey not registered - user needs to create an account
         logger.w('Lendasat: Pubkey not registered, user needs to sign up');
         // Don't show error - user can still see offers
-      } else if (result is lendasat_api.AuthResult_Success) {
+      } else if (result is AuthResult_Success) {
         logger.i('Lendasat: Auto-authentication successful');
       }
     } catch (e) {
@@ -124,7 +163,25 @@ class _LoansScreenState extends State<LoansScreen> {
       ]);
       if (mounted) setState(() {});
     } catch (e) {
-      logger.e('Error refreshing: $e');
+      // Check if this is a 401 error - token expired
+      if (_isUnauthorizedError(e)) {
+        logger.i('Token expired during refresh, re-authenticating...');
+        await _autoAuthenticate();
+        // Retry refresh after re-authentication
+        if (_lendasatService.isAuthenticated) {
+          try {
+            await Future.wait([
+              _lendasatService.refreshOffers(),
+              _lendasatService.refreshContracts(),
+            ]);
+            if (mounted) setState(() {});
+          } catch (retryError) {
+            logger.e('Error refreshing after re-auth: $retryError');
+          }
+        }
+      } else {
+        logger.e('Error refreshing: $e');
+      }
     }
   }
 
@@ -145,6 +202,10 @@ class _LoansScreenState extends State<LoansScreen> {
                   onRefresh: _refresh,
                   child: CustomScrollView(
                     slivers: [
+                      // Debug info (development only)
+                      if (_showDebugInfo)
+                        SliverToBoxAdapter(child: _buildDebugCard()),
+
                       // Auth banner (if not authenticated)
                       if (!_lendasatService.isAuthenticated)
                         SliverToBoxAdapter(child: _buildAuthBanner()),
@@ -219,6 +280,76 @@ class _LoansScreenState extends State<LoansScreen> {
                     ],
                   ),
                 ),
+    );
+  }
+
+  Widget _buildDebugCard() {
+    return GlassContainer(
+      margin: const EdgeInsets.all(AppTheme.cardPadding),
+      padding: const EdgeInsets.all(AppTheme.cardPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.bug_report,
+                size: 20,
+                color: Colors.orange,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Debug Info',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: () => setState(() => _showDebugInfo = false),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+          _buildDebugRow('Derivation Path', _debugDerivationPath ?? 'Loading...'),
+          const SizedBox(height: 4),
+          _buildDebugRow('Public Key', _debugPubkey ?? 'Loading...', isMonospace: true),
+          const SizedBox(height: 4),
+          _buildDebugRow('Auth Status', _lendasatService.isAuthenticated ? 'Authenticated' : 'Not Authenticated'),
+          if (_lendasatService.publicKey != null) ...[
+            const SizedBox(height: 4),
+            _buildDebugRow('Service PubKey', _lendasatService.publicKey!, isMonospace: true),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDebugRow(String label, String value, {bool isMonospace = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+        ),
+        const SizedBox(height: 2),
+        SelectableText(
+          isMonospace && value.length > 20
+              ? '${value.substring(0, 10)}...${value.substring(value.length - 10)}'
+              : value,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontFamily: isMonospace ? 'monospace' : null,
+                fontWeight: FontWeight.w500,
+              ),
+        ),
+      ],
     );
   }
 

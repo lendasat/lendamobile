@@ -379,40 +379,80 @@ pub struct SwapInfo {
     pub evm_htlc_address: Option<String>,
     /// Fee in satoshis
     pub fee_sats: i64,
+    /// True when BTC→EVM swap can be claimed via Gelato (server has funded)
+    pub can_claim_gelato: bool,
+    /// True when EVM→BTC swap can claim the VHTLC (server has funded)
+    pub can_claim_vhtlc: bool,
+    /// True when swap can be refunded
+    pub can_refund: bool,
+    /// Detailed status string for debugging
+    pub detailed_status: String,
 }
 
 impl SwapInfo {
     /// Convert from SDK response to simplified SwapInfo.
     pub fn from_extended_data(data: &ExtendedSwapStorageData) -> Self {
         match &data.response {
-            GetSwapResponse::BtcToEvm(r) => SwapInfo {
-                id: r.common.id.to_string(),
-                status: r.common.status.into(),
-                direction: "btc_to_evm".to_string(),
-                source_token: r.source_token.as_str().to_string(),
-                target_token: r.target_token.as_str().to_string(),
-                source_amount_sats: r.sats_receive,
-                target_amount_usd: r.common.usd_amount,
-                created_at: r.common.created_at.to_string(),
-                ln_invoice: Some(r.ln_invoice.clone()),
-                arkade_htlc_address: Some(r.htlc_address_arkade.clone()),
-                evm_htlc_address: None,
-                fee_sats: r.common.fee_sats,
-            },
-            GetSwapResponse::EvmToBtc(r) => SwapInfo {
-                id: r.common.id.to_string(),
-                status: r.common.status.into(),
-                direction: "evm_to_btc".to_string(),
-                source_token: r.source_token.as_str().to_string(),
-                target_token: r.target_token.as_str().to_string(),
-                source_amount_sats: r.sats_receive,
-                target_amount_usd: r.common.usd_amount,
-                created_at: r.common.created_at.to_string(),
-                ln_invoice: None,
-                arkade_htlc_address: None,
-                evm_htlc_address: Some(r.htlc_address_evm.clone()),
-                fee_sats: r.common.fee_sats,
-            },
+            GetSwapResponse::BtcToEvm(r) => {
+                // For BTC→EVM: can claim via Gelato when server has funded
+                let can_claim = matches!(r.common.status, ApiSwapStatus::ServerFunded);
+                // Can refund if in refundable state
+                let can_refund = matches!(
+                    r.common.status,
+                    ApiSwapStatus::ClientRefundedServerFunded
+                        | ApiSwapStatus::ClientInvalidFunded
+                        | ApiSwapStatus::ClientFundedTooLate
+                );
+
+                SwapInfo {
+                    id: r.common.id.to_string(),
+                    status: r.common.status.into(),
+                    direction: "btc_to_evm".to_string(),
+                    source_token: r.source_token.as_str().to_string(),
+                    target_token: r.target_token.as_str().to_string(),
+                    source_amount_sats: r.sats_receive,
+                    target_amount_usd: r.common.usd_amount,
+                    created_at: r.common.created_at.to_string(),
+                    ln_invoice: Some(r.ln_invoice.clone()),
+                    arkade_htlc_address: Some(r.htlc_address_arkade.clone()),
+                    evm_htlc_address: None,
+                    fee_sats: r.common.fee_sats,
+                    can_claim_gelato: can_claim,
+                    can_claim_vhtlc: false,
+                    can_refund,
+                    detailed_status: format!("{:?}", r.common.status),
+                }
+            }
+            GetSwapResponse::EvmToBtc(r) => {
+                // For EVM→BTC: can claim VHTLC when server has funded
+                let can_claim = matches!(r.common.status, ApiSwapStatus::ServerFunded);
+                // Can refund if in refundable state
+                let can_refund = matches!(
+                    r.common.status,
+                    ApiSwapStatus::ClientRefundedServerFunded
+                        | ApiSwapStatus::ClientInvalidFunded
+                        | ApiSwapStatus::ClientFundedTooLate
+                );
+
+                SwapInfo {
+                    id: r.common.id.to_string(),
+                    status: r.common.status.into(),
+                    direction: "evm_to_btc".to_string(),
+                    source_token: r.source_token.as_str().to_string(),
+                    target_token: r.target_token.as_str().to_string(),
+                    source_amount_sats: r.sats_receive,
+                    target_amount_usd: r.common.usd_amount,
+                    created_at: r.common.created_at.to_string(),
+                    ln_invoice: None,
+                    arkade_htlc_address: None,
+                    evm_htlc_address: Some(r.htlc_address_evm.clone()),
+                    fee_sats: r.common.fee_sats,
+                    can_claim_gelato: false,
+                    can_claim_vhtlc: can_claim,
+                    can_refund,
+                    detailed_status: format!("{:?}", r.common.status),
+                }
+            }
         }
     }
 }

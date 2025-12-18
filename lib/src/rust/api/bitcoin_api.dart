@@ -8,10 +8,7 @@ import '../models/historical_prices.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Fetch historical Bitcoin prices for a given time range.
-Future<HistoricalPriceResponse> fetchHistoricalPrices({
-  required String serverUrl,
-  required String timeRange,
-}) => RustLib.instance.api.crateApiBitcoinApiFetchHistoricalPrices(
-  serverUrl: serverUrl,
-  timeRange: timeRange,
-);
+Future<HistoricalPriceResponse> fetchHistoricalPrices(
+        {required String serverUrl, required String timeRange}) =>
+    RustLib.instance.api.crateApiBitcoinApiFetchHistoricalPrices(
+        serverUrl: serverUrl, timeRange: timeRange);

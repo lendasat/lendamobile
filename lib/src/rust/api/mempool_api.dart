@@ -22,13 +22,10 @@ Future<Block> getBlockByHash({required String hash}) =>
 
 /// Get paginated block transactions
 /// start_index should be multiples of 25 (0, 25, 50, etc.)
-Future<List<BitcoinTransaction>> getBlockTransactions({
-  required String hash,
-  required int startIndex,
-}) => RustLib.instance.api.crateApiMempoolApiGetBlockTransactions(
-  hash: hash,
-  startIndex: startIndex,
-);
+Future<List<BitcoinTransaction>> getBlockTransactions(
+        {required String hash, required int startIndex}) =>
+    RustLib.instance.api.crateApiMempoolApiGetBlockTransactions(
+        hash: hash, startIndex: startIndex);
 
 /// Get recommended fee rates for different confirmation targets
 Future<RecommendedFees> getRecommendedFees() =>
@@ -41,13 +38,10 @@ Future<HashrateData> getHashrateData({required String period}) =>
 
 /// Get detailed transaction information by txid
 /// base_url: The esplora/mempool API base URL (e.g., "https://mutinynet.com/api" or "https://mempool.space")
-Future<BitcoinTransaction> getTransaction({
-  required String txid,
-  required String baseUrl,
-}) => RustLib.instance.api.crateApiMempoolApiGetTransaction(
-  txid: txid,
-  baseUrl: baseUrl,
-);
+Future<BitcoinTransaction> getTransaction(
+        {required String txid, required String baseUrl}) =>
+    RustLib.instance.api
+        .crateApiMempoolApiGetTransaction(txid: txid, baseUrl: baseUrl);
 
 /// Get Fear & Greed Index from RapidAPI
 /// Returns the current fear and greed index along with historical comparisons

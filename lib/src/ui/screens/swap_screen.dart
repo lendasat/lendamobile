@@ -16,6 +16,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -406,6 +407,10 @@ class _SwapScreenState extends State<SwapScreen> {
     setState(() => isLoading = true);
     Navigator.pop(context); // Close confirmation sheet
 
+    // Suppress payment notifications during swap to avoid showing "payment received"
+    // when change from the outgoing transaction is detected
+    PaymentOverlayService().startSuppression();
+
     try {
       // Initialize swap service if needed
       if (!_swapService.isInitialized) {
@@ -416,7 +421,23 @@ class _SwapScreenState extends State<SwapScreen> {
       String swapId;
 
       if (sourceToken.isBtc && targetToken.isEvm) {
-        // BTC -> EVM swap: Arkade handles payment automatically
+        // BTC -> EVM swap: Create swap and automatically fund from wallet
+
+        // Step 1: Check wallet balance before creating swap
+        final walletBalance = await ark_api.balance();
+        final availableSats = walletBalance.offchain.totalSats.toInt();
+
+        // Parse BTC amount to sats for balance check
+        final btcValue = double.tryParse(btcAmount) ?? 0;
+        final estimatedSats = (btcValue * 100000000).toInt();
+
+        if (availableSats < estimatedSats) {
+          throw Exception(
+            'Insufficient balance. Available: $availableSats sats, Required: ~$estimatedSats sats',
+          );
+        }
+
+        // Step 2: Create the swap
         final result = await _swapService.createSellBtcSwap(
           targetEvmAddress: targetEvmAddress!,
           targetAmountUsd: usd,
@@ -424,6 +445,51 @@ class _SwapScreenState extends State<SwapScreen> {
           targetChain: targetToken.chainId,
         );
         swapId = result.swapId;
+
+        // Step 3: Automatically fund the swap by sending BTC to HTLC address
+        final satsToSend = result.satsToSend;
+        final htlcAddress = result.arkadeHtlcAddress;
+
+        logger.i('Auto-funding swap $swapId: sending $satsToSend sats to $htlcAddress');
+
+        // Verify we have enough for the actual amount (may differ slightly from estimate)
+        if (availableSats < satsToSend) {
+          // Swap was created but we can't fund it - still navigate to show status
+          logger.e('Insufficient balance for funding. Swap created but not funded.');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Swap created but insufficient balance to fund. '
+                  'Need $satsToSend sats, have $availableSats sats.',
+                ),
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+          // Continue to navigate to processing screen - swap will show as waiting
+        } else {
+          // Send the BTC to fund the HTLC
+          try {
+            final fundingTxid = await ark_api.send(
+              address: htlcAddress,
+              amountSats: BigInt.from(satsToSend),
+            );
+            logger.i('Swap funded successfully. TXID: $fundingTxid');
+          } catch (fundingError) {
+            // Funding failed but swap was created - still navigate to show status
+            logger.e('Failed to fund swap: $fundingError');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to send funds: ${fundingError.toString()}'),
+                  duration: const Duration(seconds: 5),
+                ),
+              );
+            }
+            // Continue to navigate - user can see swap status and potentially retry
+          }
+        }
       } else {
         // EVM -> BTC swap: Auto-use wallet's Arkade address for receiving
         String arkadeAddress = targetBtcAddress ?? '';
@@ -470,6 +536,11 @@ class _SwapScreenState extends State<SwapScreen> {
       if (mounted) {
         setState(() => isLoading = false);
       }
+      // Stop suppression after a delay to allow change transaction to settle
+      // without showing a "payment received" notification
+      Future.delayed(const Duration(seconds: 5), () {
+        PaymentOverlayService().stopSuppression();
+      });
     }
   }
 

@@ -83,27 +83,35 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
         padding: const EdgeInsets.all(AppTheme.cardPadding),
         child: Column(
           children: [
-            const SizedBox(height: AppTheme.cardPadding * 2),
-            // You pay card
-            _buildPayCard(context, isDarkMode),
-            const SizedBox(height: AppTheme.elementSpacing),
-            // Arrow
-            Icon(
-              Icons.arrow_downward_rounded,
-              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: AppTheme.cardPadding * 2),
+                    // You pay card
+                    _buildPayCard(context, isDarkMode),
+                    const SizedBox(height: AppTheme.elementSpacing),
+                    // Arrow
+                    Icon(
+                      Icons.arrow_downward_rounded,
+                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                    ),
+                    const SizedBox(height: AppTheme.elementSpacing),
+                    // You receive card (with net amount after fees)
+                    _buildReceiveCard(context, isDarkMode),
+                    const SizedBox(height: AppTheme.cardPadding),
+                    // Collapsible fees section
+                    _buildFeesSection(context, isDarkMode),
+                    // Receiving address (if applicable)
+                    if (widget.targetAddress != null) ...[
+                      const SizedBox(height: AppTheme.elementSpacing),
+                      _buildAddressRow(context, isDarkMode),
+                    ],
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            // You receive card (with net amount after fees)
-            _buildReceiveCard(context, isDarkMode),
             const SizedBox(height: AppTheme.cardPadding),
-            // Collapsible fees section
-            _buildFeesSection(context, isDarkMode),
-            // Receiving address (if applicable)
-            if (widget.targetAddress != null) ...[
-              const SizedBox(height: AppTheme.elementSpacing),
-              _buildAddressRow(context, isDarkMode),
-            ],
-            const Spacer(),
             // Confirm button
             LongButtonWidget(
               title: 'Confirm Swap',

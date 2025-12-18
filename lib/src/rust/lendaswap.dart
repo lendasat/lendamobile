@@ -29,6 +29,18 @@ class SwapInfo {
   /// Fee in satoshis
   final PlatformInt64 feeSats;
 
+  /// True when BTC→EVM swap can be claimed via Gelato (server has funded)
+  final bool canClaimGelato;
+
+  /// True when EVM→BTC swap can claim the VHTLC (server has funded)
+  final bool canClaimVhtlc;
+
+  /// True when swap can be refunded
+  final bool canRefund;
+
+  /// Detailed status string for debugging
+  final String detailedStatus;
+
   const SwapInfo({
     required this.id,
     required this.status,
@@ -42,6 +54,10 @@ class SwapInfo {
     this.arkadeHtlcAddress,
     this.evmHtlcAddress,
     required this.feeSats,
+    required this.canClaimGelato,
+    required this.canClaimVhtlc,
+    required this.canRefund,
+    required this.detailedStatus,
   });
 
   @override
@@ -57,7 +73,11 @@ class SwapInfo {
       lnInvoice.hashCode ^
       arkadeHtlcAddress.hashCode ^
       evmHtlcAddress.hashCode ^
-      feeSats.hashCode;
+      feeSats.hashCode ^
+      canClaimGelato.hashCode ^
+      canClaimVhtlc.hashCode ^
+      canRefund.hashCode ^
+      detailedStatus.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -75,7 +95,11 @@ class SwapInfo {
           lnInvoice == other.lnInvoice &&
           arkadeHtlcAddress == other.arkadeHtlcAddress &&
           evmHtlcAddress == other.evmHtlcAddress &&
-          feeSats == other.feeSats;
+          feeSats == other.feeSats &&
+          canClaimGelato == other.canClaimGelato &&
+          canClaimVhtlc == other.canClaimVhtlc &&
+          canRefund == other.canRefund &&
+          detailedStatus == other.detailedStatus;
 }
 
 /// Simplified swap status for Flutter UI.
@@ -100,4 +124,5 @@ enum SwapStatusSimple {
 
   /// Error state
   failed,
+  ;
 }

@@ -36,6 +36,7 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
   SwapInfo? _swapInfo;
   bool _isLoading = true;
   bool _isRefunding = false;
+  bool _isClaiming = false;
   String? _errorMessage;
   Timer? _pollTimer;
 
@@ -145,6 +146,55 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
     } finally {
       if (mounted) {
         setState(() => _isRefunding = false);
+      }
+    }
+  }
+
+  Future<void> _handleClaim() async {
+    if (_swapInfo == null) return;
+
+    setState(() => _isClaiming = true);
+
+    try {
+      if (_swapInfo!.canClaimGelato) {
+        // BTC → EVM: Claim via Gelato (gasless)
+        logger.i('Claiming BTC→EVM swap via Gelato');
+        await _swapService.claimGelato(widget.swapId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Claim submitted! Funds will arrive shortly.'),
+              backgroundColor: AppTheme.successColor,
+            ),
+          );
+        }
+      } else if (_swapInfo!.canClaimVhtlc) {
+        // EVM → BTC: Claim VHTLC
+        logger.i('Claiming EVM→BTC swap via VHTLC');
+        final txid = await _swapService.claimVhtlc(widget.swapId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Claimed! TXID: ${_truncateId(txid)}'),
+              backgroundColor: AppTheme.successColor,
+            ),
+          );
+        }
+      }
+      await _loadSwapInfo();
+    } catch (e) {
+      logger.e('Claim failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Claim failed: ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isClaiming = false);
       }
     }
   }
@@ -606,46 +656,85 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
   }
 
   Widget _buildActionButtons(BuildContext context, SwapStatusSimple status) {
-    final canRefund = status == SwapStatusSimple.refundable;
+    final canClaim = _swapInfo?.canClaimGelato == true || _swapInfo?.canClaimVhtlc == true;
+    final canRefund = _swapInfo?.canRefund == true;
 
-    if (!canRefund) return const SizedBox.shrink();
+    if (!canClaim && !canRefund) return const SizedBox.shrink();
 
     return Column(
       children: [
-        // Refund warning
-        GlassContainer(
-          borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.cardPadding),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: Colors.orange,
-                  size: 24,
-                ),
-                const SizedBox(width: AppTheme.elementSpacing),
-                Expanded(
-                  child: Text(
-                    'This swap did not complete. You can claim a refund to recover your funds.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.orange,
-                        ),
+        // Claim section
+        if (canClaim) ...[
+          GlassContainer(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.cardPadding),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: AppTheme.successColor,
+                    size: 24,
                   ),
-                ),
-              ],
+                  const SizedBox(width: AppTheme.elementSpacing),
+                  Expanded(
+                    child: Text(
+                      _swapInfo!.canClaimGelato
+                          ? 'Your swap is ready! Claim your stablecoins now.'
+                          : 'Your swap is ready! Claim your BTC now.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.successColor,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: AppTheme.cardPadding),
-        // Refund button
-        LongButtonWidget(
-          title: 'Claim Refund',
-          customWidth: double.infinity,
-          state: _isRefunding ? ButtonState.loading : ButtonState.idle,
-          buttonType: ButtonType.secondary,
-          onTap: _isRefunding ? null : _handleRefund,
-        ),
+          const SizedBox(height: AppTheme.cardPadding),
+          LongButtonWidget(
+            title: _swapInfo!.canClaimGelato ? 'Claim Stablecoins' : 'Claim BTC',
+            customWidth: double.infinity,
+            state: _isClaiming ? ButtonState.loading : ButtonState.idle,
+            onTap: _isClaiming ? null : _handleClaim,
+          ),
+        ],
+        // Refund section
+        if (canRefund) ...[
+          if (canClaim) const SizedBox(height: AppTheme.cardPadding),
+          GlassContainer(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.cardPadding),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: Colors.orange,
+                    size: 24,
+                  ),
+                  const SizedBox(width: AppTheme.elementSpacing),
+                  Expanded(
+                    child: Text(
+                      'This swap did not complete. You can claim a refund to recover your funds.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.orange,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          LongButtonWidget(
+            title: 'Claim Refund',
+            customWidth: double.infinity,
+            state: _isRefunding ? ButtonState.loading : ButtonState.idle,
+            buttonType: ButtonType.secondary,
+            onTap: _isRefunding ? null : _handleRefund,
+          ),
+        ],
       ],
     );
   }

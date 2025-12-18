@@ -16,6 +16,24 @@ class PaymentOverlayService {
   OverlayEntry? _currentOverlay;
   AnimationController? _animationController;
 
+  /// Flag to suppress payment notifications during swap/send operations.
+  /// When true, the global payment monitor should not show "payment received"
+  /// notifications (e.g., when change from an outgoing tx is detected).
+  bool _suppressPaymentNotifications = false;
+
+  /// Whether payment notifications are currently suppressed.
+  bool get suppressPaymentNotifications => _suppressPaymentNotifications;
+
+  /// Suppress payment notifications (call when starting a swap or send).
+  void startSuppression() {
+    _suppressPaymentNotifications = true;
+  }
+
+  /// Stop suppressing payment notifications (call when swap/send completes).
+  void stopSuppression() {
+    _suppressPaymentNotifications = false;
+  }
+
   /// Global navigator key for overlay access
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

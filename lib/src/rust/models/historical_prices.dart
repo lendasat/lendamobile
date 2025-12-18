@@ -11,7 +11,10 @@ class HistoricalPriceData {
   final String timestamp;
   final String price;
 
-  const HistoricalPriceData({required this.timestamp, required this.price});
+  const HistoricalPriceData({
+    required this.timestamp,
+    required this.price,
+  });
 
   @override
   int get hashCode => timestamp.hashCode ^ price.hashCode;
@@ -28,7 +31,9 @@ class HistoricalPriceData {
 class HistoricalPriceResponse {
   final List<HistoricalPriceData> prices;
 
-  const HistoricalPriceResponse({required this.prices});
+  const HistoricalPriceResponse({
+    required this.prices,
+  });
 
   @override
   int get hashCode => prices.hashCode;

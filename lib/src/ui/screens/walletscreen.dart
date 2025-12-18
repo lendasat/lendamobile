@@ -539,7 +539,7 @@ class WalletScreenState extends State<WalletScreen> {
 
   Widget _buildDynamicGradient() {
     return Container(
-      height: 320,
+      height: 280,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -605,7 +605,7 @@ class WalletScreenState extends State<WalletScreen> {
 
   Widget _buildChartWidget() {
     if (_bitcoinPriceData.isEmpty || _isBalanceLoading) {
-      return const SizedBox(height: 320);
+      return const SizedBox(height: 280);
     }
 
     // Transform price data to historical balance value (balance at time × price)
@@ -618,7 +618,7 @@ class WalletScreenState extends State<WalletScreen> {
     }).toList();
 
     return SizedBox(
-      height: 320,
+      height: 280,
       child: BitcoinPriceChart(
         data: balanceChartData,
         alpha: 255,
@@ -738,17 +738,24 @@ class WalletScreenState extends State<WalletScreen> {
     double balanceChange = 0.0;
 
     if (_bitcoinPriceData.isNotEmpty) {
-      final firstPrice = _bitcoinPriceData.first.price;
-      final lastPrice = _bitcoinPriceData.last.price;
-      final diff = lastPrice - firstPrice;
-      percentChange = firstPrice != 0 ? (diff / firstPrice) * 100 : 0.0;
-      isPositive = diff >= 0;
+      // Calculate portfolio value change (balance at time × price) to match the chart and gradient
+      final firstData = _bitcoinPriceData.first;
+      final lastData = _bitcoinPriceData.last;
 
-      balanceChange = firstPrice != 0
-          ? _getSelectedBalance() * (diff / firstPrice)
-          : 0.0;
-      final btcToFiat = _getCurrentBtcPrice();
-      balanceChangeInFiat = balanceChange * btcToFiat;
+      final firstBalance = _getBalanceAtTimestamp(firstData.time);
+      final lastBalance = _getBalanceAtTimestamp(lastData.time);
+
+      final firstValue = firstData.price * firstBalance;
+      final lastValue = lastData.price * lastBalance;
+
+      final valueDiff = lastValue - firstValue;
+      percentChange = firstValue != 0 ? (valueDiff / firstValue) * 100 : 0.0;
+      isPositive = valueDiff >= 0 || valueDiff.abs() < 0.001;
+
+      // Balance change in fiat is the portfolio value difference
+      balanceChangeInFiat = valueDiff;
+      // Balance change in BTC
+      balanceChange = _getCurrentBtcPrice() > 0 ? valueDiff / _getCurrentBtcPrice() : 0.0;
     }
 
     // Convert balance change to sats

@@ -9,7 +9,8 @@
       "Bash(cargo ndk:*)",
       "Bash(mkdir:*)",
       "Bash(export ANDROID_NDK_HOME=~/android-sdk/android-ndk-r27c)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(cargo check:*)"
     ],
     "deny": [],
     "ask": []

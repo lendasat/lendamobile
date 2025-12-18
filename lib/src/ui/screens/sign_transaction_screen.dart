@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/lnurl_service.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_success_screen.dart';
 
 class SignTransactionScreen extends StatefulWidget {
@@ -41,6 +42,10 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
     setState(() {
       _isLoading = true;
     });
+
+    // Suppress payment notifications during send to avoid showing "payment received"
+    // when change from the outgoing transaction is detected
+    PaymentOverlayService().startSuppression();
 
     try {
       String? invoiceToPaymentRequest;
@@ -104,6 +109,12 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
                   '${AppLocalizations.of(context)!.transactionFailed} ${e.toString()}')),
         );
       }
+    } finally {
+      // Stop suppression after a delay to allow change transaction to settle
+      // without showing a "payment received" notification
+      Future.delayed(const Duration(seconds: 5), () {
+        PaymentOverlayService().stopSuppression();
+      });
     }
   }
 

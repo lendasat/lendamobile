@@ -3,6 +3,7 @@ import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/screens/swap_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -243,10 +244,15 @@ class SwapSuccessScreen extends StatelessWidget {
               // View details button
               TextButton(
                 onPressed: () {
-                  // TODO: Navigate to swap details or transaction history
+                  // Navigate to swap detail screen
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => SwapDetailScreen(swapId: swapId),
+                    ),
+                  );
                 },
                 child: Text(
-                  'View Swap History',
+                  'View Swap Details',
                   style: TextStyle(
                     color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                   ),

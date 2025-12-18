@@ -114,17 +114,23 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
         logger.i(
             "Global payment received! TXID: ${payment.txid}, Amount: ${payment.amountSats} sats");
 
-        // Show the payment overlay
-        PaymentOverlayService().showPaymentReceivedOverlay(
-          context: context,
-          payment: payment,
-          onDismiss: () {
-            // Refresh wallet data
-            _walletKey.currentState?.fetchWalletData();
-          },
-        );
+        // Check if notifications are suppressed (e.g., during swap/send operations)
+        final overlayService = PaymentOverlayService();
+        if (overlayService.suppressPaymentNotifications) {
+          logger.i("Payment notification suppressed (likely change from outgoing tx)");
+        } else {
+          // Show the payment overlay
+          overlayService.showPaymentReceivedOverlay(
+            context: context,
+            payment: payment,
+            onDismiss: () {
+              // Refresh wallet data
+              _walletKey.currentState?.fetchWalletData();
+            },
+          );
+        }
 
-        // Also refresh wallet immediately
+        // Always refresh wallet data (even if notification suppressed)
         _walletKey.currentState?.fetchWalletData();
 
         // Small delay before restarting monitoring
