@@ -5,6 +5,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as rust_api;
 import 'package:ark_flutter/src/rust/models/moonpay.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/moonpay_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -197,6 +198,14 @@ class _SellScreenState extends State<SellScreen> {
             dismissButtonStyle: SafariViewControllerDismissButtonStyle.close,
             entersReaderIfAvailable: false,
           ),
+        );
+
+        // Track bitcoin sell transaction
+        await AnalyticsService().trackBitcoinTransaction(
+          amountSats: sats,
+          type: 'sell',
+          fiatCurrency: 'usd',
+          provider: 'moonpay',
         );
       } catch (e) {
         throw Exception('Could not launch MoonPay: $e');

@@ -105,88 +105,6 @@ class SettingsViewState extends State<SettingsView> {
     );
   }
 
-  void _showChartTimeRangeDialog(UserPreferencesService userPrefs) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? AppTheme.black90
-            : Colors.white,
-        title: Text(
-          'Chart Time Range',
-          style: TextStyle(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? AppTheme.white90
-                : AppTheme.black90,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: ChartTimeRange.values.map((range) {
-            final isSelected = userPrefs.chartTimeRange == range;
-            final label = _getTimeRangeLabel(range);
-            return ListTile(
-              leading: Icon(
-                _getTimeRangeIcon(range),
-                color: isSelected
-                    ? Colors.orange
-                    : Theme.of(context).brightness == Brightness.dark
-                        ? AppTheme.white60
-                        : AppTheme.black60,
-              ),
-              title: Text(
-                label,
-                style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.white90
-                      : AppTheme.black90,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-              trailing: isSelected
-                  ? const Icon(Icons.check, color: Colors.orange)
-                  : null,
-              onTap: () {
-                userPrefs.setChartTimeRange(range);
-                Navigator.pop(context);
-              },
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  String _getTimeRangeLabel(ChartTimeRange range) {
-    switch (range) {
-      case ChartTimeRange.day:
-        return '1 Day';
-      case ChartTimeRange.week:
-        return '1 Week';
-      case ChartTimeRange.month:
-        return '1 Month';
-      case ChartTimeRange.year:
-        return '1 Year';
-      case ChartTimeRange.max:
-        return 'All Time';
-    }
-  }
-
-  IconData _getTimeRangeIcon(ChartTimeRange range) {
-    switch (range) {
-      case ChartTimeRange.day:
-        return Icons.today;
-      case ChartTimeRange.week:
-        return Icons.date_range;
-      case ChartTimeRange.month:
-        return Icons.calendar_month;
-      case ChartTimeRange.year:
-        return Icons.calendar_today;
-      case ChartTimeRange.max:
-        return Icons.all_inclusive;
-    }
-  }
-
   /// Builds the Recovery Options tile with status indicator dot
   /// The dot color indicates recovery setup status:
   /// - Red: No recovery options set up
@@ -347,7 +265,7 @@ class SettingsViewState extends State<SettingsView> {
                       builder: (context, userPrefs, _) => ArkListTile(
                         leading: RoundedButtonWidget(
                           iconData: Icons.show_chart_rounded,
-                          onTap: () => _showChartTimeRangeDialog(userPrefs),
+                          onTap: () => controller.switchTab('chart_time_range'),
                           size: AppTheme.iconSize * 1.5,
                           buttonType: ButtonType.transparent,
                         ),
@@ -374,7 +292,7 @@ class SettingsViewState extends State<SettingsView> {
                             ),
                           ],
                         ),
-                        onTap: () => _showChartTimeRangeDialog(userPrefs),
+                        onTap: () => controller.switchTab('chart_time_range'),
                       ),
                     ),
 
@@ -454,6 +372,25 @@ class SettingsViewState extends State<SettingsView> {
                       onTap: () => controller.switchTab('feedback'),
                     ),
 
+                    // Claim Gifts
+                    ArkListTile(
+                      leading: RoundedButtonWidget(
+                        iconData: Icons.card_giftcard_rounded,
+                        onTap: () => controller.switchTab('claim_sats'),
+                        size: AppTheme.iconSize * 1.5,
+                        buttonType: ButtonType.transparent,
+                      ),
+                      text: 'Claim Gifts',
+                      trailing: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: AppTheme.iconSize * 0.75,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppTheme.white60
+                            : AppTheme.black60,
+                      ),
+                      onTap: () => controller.switchTab('claim_sats'),
+                    ),
+
                     // Reset Wallet
                     ArkListTile(
                       leading: RoundedButtonWidget(
@@ -463,15 +400,12 @@ class SettingsViewState extends State<SettingsView> {
                         buttonType: ButtonType.transparent,
                       ),
                       text: AppLocalizations.of(context)!.resetWallet,
-                      titleStyle: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
                       trailing: Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: AppTheme.iconSize * 0.75,
-                        color: Colors.red.withValues(alpha: 0.6),
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppTheme.white60
+                            : AppTheme.black60,
                       ),
                       onTap: _showResetWalletDialog,
                     ),

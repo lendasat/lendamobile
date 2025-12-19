@@ -59,8 +59,26 @@ class LendaSwapService extends ChangeNotifier {
       // Load trading pairs
       await refreshTradingPairs();
 
-      // Load existing swaps
+      // Load existing swaps from local storage
       await refreshSwaps();
+
+      // If no local swaps, try to recover from server
+      // This handles wallet restore scenarios where local storage is empty
+      // but the user has previous swaps associated with their mnemonic
+      if (_swaps.isEmpty) {
+        try {
+          logger.i('No local swaps found, attempting to recover from server...');
+          final recoveredSwaps = await lendaswap_api.lendaswapRecoverSwaps();
+          if (recoveredSwaps.isNotEmpty) {
+            _swaps = recoveredSwaps;
+            logger.i('Recovered ${recoveredSwaps.length} swaps from server');
+            notifyListeners();
+          }
+        } catch (e) {
+          // Recovery is best-effort, don't fail initialization
+          logger.w('Could not recover swaps from server: $e');
+        }
+      }
     } catch (e) {
       logger.e('Error initializing LendaSwap: $e');
       rethrow;

@@ -4,6 +4,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 
 class MnemonicInputScreen extends StatefulWidget {
   const MnemonicInputScreen({super.key});
@@ -281,21 +282,23 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // PageView for mnemonic input
-                SizedBox(
-                  height: 320,
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged: (val) {
-                      setState(() {
-                        _onLastPage = (val == 2);
-                      });
-                    },
-                    children: [
-                      _buildInputPage(0), // Words 1-4
-                      _buildInputPage(1), // Words 5-8
-                      _buildInputPage(2), // Words 9-12
-                    ],
+                // PageView for mnemonic input - masked for PostHog session replay
+                PostHogMaskWidget(
+                  child: SizedBox(
+                    height: 320,
+                    child: PageView(
+                      controller: _pageController,
+                      onPageChanged: (val) {
+                        setState(() {
+                          _onLastPage = (val == 2);
+                        });
+                      },
+                      children: [
+                        _buildInputPage(0), // Words 1-4
+                        _buildInputPage(1), // Words 5-8
+                        _buildInputPage(2), // Words 9-12
+                      ],
+                    ),
                   ),
                 ),
 

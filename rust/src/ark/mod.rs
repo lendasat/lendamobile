@@ -232,7 +232,16 @@ pub async fn setup_client_hd(
 
     let info = client.server_info.clone();
 
-    ARK_CLIENT.set(RwLock::new(Arc::new(client)));
+    // Check if ARK_CLIENT is already initialized (e.g., after wallet reset without app restart)
+    // If so, overwrite the RwLock content instead of calling set() which only works once
+    if let Some(existing_lock) = ARK_CLIENT.try_get() {
+        let mut guard = existing_lock.write();
+        *guard = Arc::new(client);
+        tracing::info!("Replaced existing ARK_CLIENT with new wallet");
+    } else {
+        ARK_CLIENT.set(RwLock::new(Arc::new(client)));
+        tracing::info!("Initialized new ARK_CLIENT");
+    }
 
     tracing::info!(server_pk = ?info.signer_pk, "Connected to server with HD wallet");
 
@@ -261,10 +270,56 @@ pub(crate) async fn nsec(data_dir: String, network: Network) -> Result<nostr::Se
     Ok(sk)
 }
 
-/// Delete the wallet mnemonic file
+/// Delete the wallet mnemonic file and associated user data
+///
+/// This includes:
+/// - The mnemonic file
+/// - LendaSwap swap storage (lendaswap_swaps/ and lendaswap_key_index)
+/// - LendaSat auth tokens (lendasat_auth.json)
+///
+/// Note: Swaps can be recovered from the server using `recover_swaps()` after
+/// restoring the wallet with the same mnemonic, as they are associated with
+/// the user's xpub on the server.
+///
+/// TODO: In the future, consider storing swap history in the cloud associated
+/// with the user account instead of locally. This would provide:
+/// - Cross-device sync
+/// - Automatic backup
+/// - Better user experience after wallet restore
 pub fn delete_wallet(data_dir: String) -> Result<()> {
+    use std::fs;
+
+    // Delete mnemonic file
     if mnemonic_exists(&data_dir) {
         delete_mnemonic_file(&data_dir)?;
     }
+
+    // Delete LendaSwap swap storage directory
+    let swaps_dir = Path::new(&data_dir).join("lendaswap_swaps");
+    if swaps_dir.exists() {
+        fs::remove_dir_all(&swaps_dir).map_err(|e| {
+            anyhow!("Failed to delete lendaswap_swaps directory: {}", e)
+        })?;
+        tracing::info!("Deleted lendaswap_swaps directory");
+    }
+
+    // Delete LendaSwap key index file
+    let key_index_file = Path::new(&data_dir).join("lendaswap_key_index");
+    if key_index_file.exists() {
+        fs::remove_file(&key_index_file).map_err(|e| {
+            anyhow!("Failed to delete lendaswap_key_index file: {}", e)
+        })?;
+        tracing::info!("Deleted lendaswap_key_index file");
+    }
+
+    // Delete LendaSat auth tokens
+    let lendasat_auth_file = Path::new(&data_dir).join("lendasat_auth.json");
+    if lendasat_auth_file.exists() {
+        fs::remove_file(&lendasat_auth_file).map_err(|e| {
+            anyhow!("Failed to delete lendasat_auth.json file: {}", e)
+        })?;
+        tracing::info!("Deleted lendasat_auth.json file");
+    }
+
     Ok(())
 }

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:provider/provider.dart';
 
 /// Recovery key view with multi-step flow:
@@ -496,44 +497,46 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
             ),
             const SizedBox(height: AppTheme.elementSpacing),
 
-            // Recovery phrase display
-            Container(
-              padding: const EdgeInsets.all(AppTheme.cardPadding),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.black.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-                border: Border.all(
+            // Recovery phrase display - masked for PostHog session replay
+            PostHogMaskWidget(
+              child: Container(
+                padding: const EdgeInsets.all(AppTheme.cardPadding),
+                decoration: BoxDecoration(
                   color: isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.black.withValues(alpha: 0.1),
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.1),
+                  ),
                 ),
-              ),
-              child: Column(
-                children: [
-                  if (_mnemonic != null) _buildMnemonicGrid(_mnemonic!),
+                child: Column(
+                  children: [
+                    if (_mnemonic != null) _buildMnemonicGrid(_mnemonic!),
 
-                  const SizedBox(height: AppTheme.cardPadding),
+                    const SizedBox(height: AppTheme.cardPadding),
 
-                  // Copy button
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _copyToClipboard,
-                      icon: const Icon(Icons.copy),
-                      label: Text(AppLocalizations.of(context)!.copyToClipboard),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.colorBitcoin,
-                        side: const BorderSide(color: AppTheme.colorBitcoin),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    // Copy button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _copyToClipboard,
+                        icon: const Icon(Icons.copy),
+                        label: Text(AppLocalizations.of(context)!.copyToClipboard),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.colorBitcoin,
+                          side: const BorderSide(color: AppTheme.colorBitcoin),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: AppTheme.cardPadding * 2),
@@ -633,35 +636,42 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
             ),
             const SizedBox(height: AppTheme.cardPadding * 1.5),
 
-            // Word input fields
-            for (int i = 0; i < _verifyWordIndices.length; i++) ...[
-              Text(
-                'Word #${_verifyWordIndices[i] + 1}',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
+            // Word input fields - masked for PostHog session replay
+            PostHogMaskWidget(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (int i = 0; i < _verifyWordIndices.length; i++) ...[
+                    Text(
+                      'Word #${_verifyWordIndices[i] + 1}',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _wordControllers[i],
+                      decoration: InputDecoration(
+                        hintText: AppLocalizations.of(context)!.enterWord,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppTheme.colorBitcoin, width: 2),
+                        ),
+                      ),
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textInputAction: i < _verifyWordIndices.length - 1
+                          ? TextInputAction.next
+                          : TextInputAction.done,
+                    ),
+                    const SizedBox(height: AppTheme.cardPadding),
+                  ],
+                ],
               ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _wordControllers[i],
-                decoration: InputDecoration(
-                  hintText: AppLocalizations.of(context)!.enterWord,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.colorBitcoin, width: 2),
-                  ),
-                ),
-                autocorrect: false,
-                enableSuggestions: false,
-                textInputAction: i < _verifyWordIndices.length - 1
-                    ? TextInputAction.next
-                    : TextInputAction.done,
-              ),
-              const SizedBox(height: AppTheme.cardPadding),
-            ],
+            ),
 
             // Error message
             if (_verificationError != null)

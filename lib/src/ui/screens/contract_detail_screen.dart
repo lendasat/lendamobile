@@ -11,7 +11,6 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 /// Screen to view contract details and perform actions.
 class ContractDetailScreen extends StatefulWidget {
@@ -398,11 +397,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             _buildStatusHeader(),
             const SizedBox(height: AppTheme.cardPadding),
 
-            // Deposit address (if awaiting deposit)
-            if (_contract!.isAwaitingDeposit && _contract!.contractAddress != null) ...[
-              _buildDepositCard(),
-              const SizedBox(height: AppTheme.cardPadding),
-            ],
+            // NOTE: Deposit card removed - collateral is now auto-sent from loan_offer_detail_screen
 
             // Loan details
             _buildLoanDetails(),
@@ -520,70 +515,6 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
               color: badgeColor,
               fontWeight: FontWeight.bold,
             ),
-      ),
-    );
-  }
-
-  Widget _buildDepositCard() {
-    return GlassContainer(
-      customColor: Colors.orange.withValues(alpha: 0.1),
-      padding: const EdgeInsets.all(AppTheme.cardPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.account_balance_wallet, color: Colors.orange),
-              SizedBox(width: 8),
-              Text(
-                'Deposit Collateral',
-                style: TextStyle(
-                  color: Colors.orange,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-          Text(
-            'Send ${_contract!.collateralBtc.toStringAsFixed(6)} BTC to the address below:',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: AppTheme.cardPadding),
-          Center(
-            child: QrImageView(
-              data: _contract!.contractAddress!,
-              size: 180,
-              backgroundColor: Colors.white,
-            ),
-          ),
-          const SizedBox(height: AppTheme.cardPadding),
-          GlassContainer(
-            padding: const EdgeInsets.all(AppTheme.elementSpacing),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _contract!.contractAddress!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.copy, size: 20),
-                  onPressed: () => _copyToClipboard(
-                    _contract!.contractAddress!,
-                    'Address',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

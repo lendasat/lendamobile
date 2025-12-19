@@ -1,5 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
@@ -76,6 +77,7 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
 
   Future<void> _handleContinue() async {
     final email = _emailController.text.trim().toLowerCase();
+    logger.i('[SIGNUP] Starting signup flow with email: $email');
 
     // Validate email
     if (email.isEmpty) {
@@ -98,16 +100,20 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
     });
 
     try {
+      logger.i('[SIGNUP] Step 1: Getting application support directory...');
       final dataDir = await getApplicationSupportDirectory();
+      logger.i('[SIGNUP] Step 1 DONE: dataDir = ${dataDir.path}');
 
-      // Clear any previous recovery status flags
+      logger.i('[SIGNUP] Step 2: Clearing previous recovery status...');
       await _settingsService.clearWordRecoveryStatus();
+      logger.i('[SIGNUP] Step 2 DONE');
+
+      logger.i('[SIGNUP] Step 3: Checking settings - network: $_network, esplora: $_esploraUrl, arkServer: $_arkServerUrl, boltz: $_boltzUrl');
 
       String aspId;
 
       if (widget.isRestore && widget.mnemonicWords != null) {
-        // Restore existing wallet from mnemonic
-        logger.i('Restoring wallet from mnemonic');
+        logger.i('[SIGNUP] Step 4: Restoring wallet from mnemonic...');
         aspId = await restoreWallet(
           mnemonicWords: widget.mnemonicWords!,
           dataDir: dataDir.path,
@@ -116,9 +122,9 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
           server: _arkServerUrl!,
           boltzUrl: _boltzUrl!,
         );
+        logger.i('[SIGNUP] Step 4 DONE: Wallet restored, aspId: $aspId');
       } else {
-        // Create new wallet
-        logger.i('Creating new wallet');
+        logger.i('[SIGNUP] Step 4: Creating new wallet...');
         aspId = await setupNewWallet(
           dataDir: dataDir.path,
           network: _network!,
@@ -126,39 +132,42 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
           server: _arkServerUrl!,
           boltzUrl: _boltzUrl!,
         );
+        logger.i('[SIGNUP] Step 4 DONE: Wallet created, aspId: $aspId');
       }
 
-      logger.i("Wallet setup complete, aspId: $aspId");
+      // Track wallet creation and identify user
+      logger.i('[SIGNUP] Step 4.5: Identifying user for analytics...');
+      await AnalyticsService().identifyUser();
+      await AnalyticsService().trackWalletCreated(isRestore: widget.isRestore);
+      logger.i('[SIGNUP] Step 4.5 DONE: User identified');
 
-      // Initialize Lendasat using the service
-      // The service handles network mapping and API URL selection internally,
-      // ensuring consistent key derivation between registration and authentication
-      logger.i('Initializing Lendasat for registration');
+      logger.i('[SIGNUP] Step 5: Initializing Lendasat service...');
       await _lendasatService.initialize();
+      logger.i('[SIGNUP] Step 5 DONE: Lendasat initialized');
 
       // Register with Lendasat using the email
-      // Log the pubkey being registered for debugging
+      logger.i('[SIGNUP] Step 6: Getting public key for registration...');
       try {
         final registrationPubkey = await _lendasatService.getPublicKey();
-        logger.i('Registering with Lendasat, email: $email, pubkey: $registrationPubkey');
+        logger.i('[SIGNUP] Step 6 DONE: pubkey: $registrationPubkey');
       } catch (e) {
-        logger.w('Could not get pubkey for logging: $e');
+        logger.w('[SIGNUP] Step 6 WARNING: Could not get pubkey: $e');
       }
 
+      logger.i('[SIGNUP] Step 7: Registering with Lendasat...');
       try {
         final userId = await _lendasatService.register(
           email: email,
           name: 'Lendasat User',
           inviteCode: 'LAS-651K4',
         );
-        logger.i('Lendasat registration successful, userId: $userId');
+        logger.i('[SIGNUP] Step 7 DONE: Registration successful, userId: $userId');
 
-        // Save email for future reference
+        logger.i('[SIGNUP] Step 8: Saving user email...');
         await _settingsService.setUserEmail(email);
+        logger.i('[SIGNUP] Step 8 DONE');
       } catch (e) {
-        // Log but don't fail - user can still use the wallet
-        // They might already be registered or registration might fail
-        logger.w('Lendasat registration failed (non-fatal): $e');
+        logger.w('[SIGNUP] Step 7 WARNING: Lendasat registration failed (non-fatal): $e');
 
         // Check if it's "already registered" error - that's fine
         if (!e.toString().toLowerCase().contains('already') &&
@@ -177,15 +186,17 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
         }
       }
 
-      // Navigate to dashboard
+      logger.i('[SIGNUP] Step 9: Navigating to dashboard...');
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => BottomNav(aspId: aspId)),
           (route) => false,
         );
       }
-    } catch (e) {
-      logger.e("Failed to setup wallet: $e");
+      logger.i('[SIGNUP] COMPLETE!');
+    } catch (e, stackTrace) {
+      logger.e('[SIGNUP] FAILED with error: $e');
+      logger.e('[SIGNUP] Stack trace: $stackTrace');
       if (mounted) {
         setState(() {
           _errorMessage = e.toString();
@@ -218,88 +229,97 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
-              Text(
-                AppLocalizations.of(context)!.enterYourEmail,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                AppLocalizations.of(context)!.emailSignupDescription,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Email input
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                autocorrect: false,
-                enabled: !_isLoading,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 16,
-                ),
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.email,
-                  hintText: 'you@example.com',
-                  prefixIcon: Icon(
-                    Icons.email_outlined,
-                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.orange, width: 2),
-                  ),
-                  errorText: _errorMessage,
-                ),
-                onChanged: (_) {
-                  if (_errorMessage != null) {
-                    setState(() {
-                      _errorMessage = null;
-                    });
-                  }
-                },
-                onSubmitted: (_) => _handleContinue(),
-              ),
-              const SizedBox(height: 16),
-
-              // Info text
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 18,
-                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context)!.emailUsageInfo,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header
+                      Text(
+                        AppLocalizations.of(context)!.enterYourEmail,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      Text(
+                        AppLocalizations.of(context)!.emailSignupDescription,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Email input
+                      TextField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        autocorrect: false,
+                        enabled: !_isLoading,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 16,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.email,
+                          hintText: 'you@example.com',
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          ),
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.orange, width: 2),
+                          ),
+                          errorText: _errorMessage,
+                        ),
+                        onChanged: (_) {
+                          if (_errorMessage != null) {
+                            setState(() {
+                              _errorMessage = null;
+                            });
+                          }
+                        },
+                        onSubmitted: (_) => _handleContinue(),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Info text
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 18,
+                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.emailUsageInfo,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
 
-              const Spacer(),
+              const SizedBox(height: 16),
 
               // Continue button
               SizedBox(

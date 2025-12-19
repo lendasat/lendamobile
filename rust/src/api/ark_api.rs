@@ -224,6 +224,13 @@ pub fn get_mnemonic(data_dir: String) -> Result<String> {
 }
 
 pub async fn reset_wallet(data_dir: String) -> Result<()> {
+    // First, reset all cached clients to ensure fresh state on next init
+    // This is critical for cases where the app doesn't fully restart after reset
+    crate::lendaswap::reset_client().await;
+    crate::api::lendasat_api::reset_lendasat_state().await;
+    tracing::info!("All client caches cleared");
+
+    // Then delete the wallet files
     crate::ark::delete_wallet(data_dir)
 }
 

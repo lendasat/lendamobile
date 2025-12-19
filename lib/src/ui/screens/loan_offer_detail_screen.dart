@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
@@ -36,8 +37,6 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   late TextEditingController _addressController;
 
   bool _isCreating = false;
-  String _processingStatus = '';
-  double _calculatedCollateral = 0;
   double _calculatedInterest = 0;
   double _originationFee = 0;
   double _originationFeeAmount = 0;
@@ -75,12 +74,9 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     _originationFee = widget.offer.getOriginationFee(duration);
     _originationFeeAmount = amount * _originationFee;
 
-    // Calculate collateral needed (based on LTV)
-    // Assuming BTC price ~$100,000 for demo calculation
-    // In production, this would come from a price feed
-    const btcPrice = 100000.0;
-    final totalLoan = amount + _calculatedInterest + _originationFeeAmount;
-    _calculatedCollateral = (totalLoan / widget.offer.minLtv) / btcPrice;
+    // NOTE: Collateral amount is NOT calculated locally.
+    // LendaSat API provides the exact collateral amount after contract approval.
+    // This matches the lendasat/wallet web app approach.
 
     setState(() {});
   }
@@ -98,31 +94,9 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       return;
     }
 
-    // Check wallet balance first
-    final balance = await ark_api.balance();
-    final requiredSats = BigInt.from(_calculatedCollateral * 100000000);
+    setState(() => _isCreating = true);
 
-    if (balance.offchain.confirmedSats < requiredSats) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Insufficient balance. Need ${_calculatedCollateral.toStringAsFixed(6)} BTC for collateral.',
-            ),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
-      }
-      return;
-    }
-
-    setState(() {
-      _isCreating = true;
-      _processingStatus = 'Creating loan request...';
-    });
-
-    // Suppress payment notifications during collateral send to avoid showing
-    // "payment received" when change from the outgoing transaction is detected
+    // Suppress payment notifications during collateral send
     PaymentOverlayService().startSuppression();
 
     try {
@@ -130,7 +104,9 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       final duration = int.parse(_durationController.text);
       final address = _addressController.text.trim();
 
-      // Step 1: Create the contract
+      logger.i('[Loan] Creating contract: offer=${widget.offer.id}, amount=\$$amount, duration=$duration days');
+
+      // Create the contract - LendaSat returns it with collateral info once approved
       final contract = await _lendasatService.createContract(
         offerId: widget.offer.id,
         loanAmount: amount,
@@ -138,88 +114,44 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
         borrowerLoanAddress: address,
       );
 
-      logger.i('Contract created: ${contract.id}, status: ${contract.status}');
+      logger.i('[Loan] Contract ${contract.id}: status=${contract.statusText}, collateral=${contract.collateralSats} sats');
 
-      // Step 2: Wait for approval (auto-lender should approve quickly)
-      if (mounted) {
-        setState(() => _processingStatus = 'Waiting for approval...');
+      // Check if we have what we need to send collateral
+      if (contract.contractAddress == null || contract.collateralSats <= 0) {
+        throw Exception('Contract not ready: ${contract.statusText}');
       }
 
-      Contract approvedContract = contract;
+      // Send collateral (like web wallet's onSendToAddress - just send it)
+      final collateralSats = BigInt.from(contract.collateralSats.toInt());
+      final collateralAddress = contract.contractAddress!;
 
-      // Poll for approval (max 60 seconds)
-      for (int i = 0; i < 30; i++) {
-        if (!mounted) return;
-
-        approvedContract = await _lendasatService.getContract(contract.id);
-
-        if (approvedContract.status == ContractStatus.approved ||
-            approvedContract.status == ContractStatus.collateralSeen ||
-            approvedContract.status == ContractStatus.collateralConfirmed) {
-          break;
-        }
-
-        if (approvedContract.status == ContractStatus.rejected ||
-            approvedContract.status == ContractStatus.cancelled ||
-            approvedContract.status == ContractStatus.requestExpired) {
-          throw Exception('Loan request was ${approvedContract.statusText}');
-        }
-
-        await Future.delayed(const Duration(seconds: 2));
-      }
-
-      // Check if approved and has collateral address
-      if (approvedContract.contractAddress == null) {
-        throw Exception('No collateral address received. Status: ${approvedContract.statusText}');
-      }
-
-      // Step 3: Send collateral from Arkade wallet
-      if (mounted) {
-        setState(() => _processingStatus = 'Sending collateral...');
-      }
-
-      final collateralSats = BigInt.from(approvedContract.collateralSats.toInt());
-      final collateralAddress = approvedContract.contractAddress!;
-
-      logger.i('Sending $collateralSats sats to $collateralAddress');
+      logger.i('[Loan] Sending $collateralSats sats to $collateralAddress');
 
       final txid = await ark_api.send(
         address: collateralAddress,
         amountSats: collateralSats,
       );
 
-      logger.i('Collateral sent! TXID: $txid');
+      logger.i('[Loan] Collateral sent! TXID: $txid');
 
-      // Step 4: Wait for collateral confirmation
-      if (mounted) {
-        setState(() => _processingStatus = 'Confirming collateral...');
-      }
-
-      // Poll for collateral confirmation (max 60 seconds)
-      Contract finalContract = approvedContract;
-      for (int i = 0; i < 30; i++) {
-        if (!mounted) return;
-
-        finalContract = await _lendasatService.getContract(contract.id);
-
-        if (finalContract.status == ContractStatus.collateralSeen ||
-            finalContract.status == ContractStatus.collateralConfirmed ||
-            finalContract.status == ContractStatus.principalGiven) {
-          break;
-        }
-
-        await Future.delayed(const Duration(seconds: 2));
-      }
+      // Track analytics
+      await AnalyticsService().trackLoanTransaction(
+        amountSats: contract.collateralSats.toInt(),
+        type: 'borrow',
+        loanId: contract.id,
+        interestRate: widget.offer.interestRate,
+        durationDays: duration,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Loan created and collateral deposited!'),
+            content: Text('Collateral sent! Loan is being processed.'),
             backgroundColor: AppTheme.successColor,
           ),
         );
 
-        // Navigate to contract detail
+        // Navigate to contract detail - it will show live status updates
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -228,7 +160,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
         );
       }
     } catch (e) {
-      logger.e('Error creating contract: $e');
+      logger.e('[Loan] Error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -239,13 +171,8 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isCreating = false;
-          _processingStatus = '';
-        });
+        setState(() => _isCreating = false);
       }
-      // Stop suppression after a delay to allow change transaction to settle
-      // without showing a "payment received" notification
       Future.delayed(const Duration(seconds: 5), () {
         PaymentOverlayService().stopSuppression();
       });
@@ -355,19 +282,9 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                       ),
                       const SizedBox(height: AppTheme.cardPadding),
                       Text(
-                        _processingStatus,
+                        'Processing...',
                         style: Theme.of(context).textTheme.titleMedium,
                         textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppTheme.elementSpacing),
-                      Text(
-                        'Please wait...',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.6),
-                            ),
                       ),
                     ],
                   ),
@@ -678,7 +595,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
           ),
         ),
         const SizedBox(height: AppTheme.cardPadding),
-        // Collateral Card
+        // Collateral Card - amount provided by LendaSat API after contract approval
         GlassContainer(
           padding: const EdgeInsets.all(AppTheme.cardPadding),
           customColor: AppTheme.colorBitcoin.withValues(alpha: 0.1),
@@ -704,7 +621,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
               const SizedBox(height: AppTheme.cardPadding),
               Center(
                 child: Text(
-                  '~${_calculatedCollateral.toStringAsFixed(6)} BTC',
+                  'Calculated on submit',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppTheme.colorBitcoin,
@@ -714,7 +631,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
               const SizedBox(height: AppTheme.elementSpacing),
               Center(
                 child: Text(
-                  'Based on ${(widget.offer.minLtv * 100).toStringAsFixed(0)}% LTV',
+                  'Based on ${(widget.offer.minLtv * 100).toStringAsFixed(0)}% LTV at current BTC price',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context)
                             .colorScheme

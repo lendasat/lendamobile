@@ -4,11 +4,12 @@ import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/screens/swap_detail_screen.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Screen shown when a swap completes successfully.
-class SwapSuccessScreen extends StatelessWidget {
+class SwapSuccessScreen extends StatefulWidget {
   final SwapToken sourceToken;
   final SwapToken targetToken;
   final String sourceAmount;
@@ -25,6 +26,36 @@ class SwapSuccessScreen extends StatelessWidget {
     required this.swapId,
     this.txHash,
   });
+
+  @override
+  State<SwapSuccessScreen> createState() => _SwapSuccessScreenState();
+}
+
+class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _trackSwap();
+  }
+
+  Future<void> _trackSwap() async {
+    // Parse amount to sats (BTC amount * 100_000_000)
+    int amountSats = 0;
+    try {
+      if (widget.sourceToken.isBtc) {
+        amountSats = (double.parse(widget.sourceAmount) * 100000000).toInt();
+      } else if (widget.targetToken.isBtc) {
+        amountSats = (double.parse(widget.targetAmount) * 100000000).toInt();
+      }
+    } catch (_) {}
+
+    await AnalyticsService().trackSwapTransaction(
+      amountSats: amountSats,
+      fromAsset: widget.sourceToken.symbol,
+      toAsset: widget.targetToken.symbol,
+      swapId: widget.swapId,
+    );
+  }
 
   Future<void> _copyToClipboard(BuildContext context, String text) async {
     await Clipboard.setData(ClipboardData(text: text));
@@ -91,7 +122,7 @@ class SwapSuccessScreen extends StatelessWidget {
                       // From
                       Row(
                         children: [
-                          TokenIcon(token: sourceToken, size: 40),
+                          TokenIcon(token: widget.sourceToken, size: 40),
                           const SizedBox(width: AppTheme.elementSpacing),
                           Expanded(
                             child: Column(
@@ -109,9 +140,9 @@ class SwapSuccessScreen extends StatelessWidget {
                                       ),
                                 ),
                                 Text(
-                                  sourceToken.isBtc
-                                      ? '$sourceAmount BTC'
-                                      : '\$$sourceAmount ${sourceToken.symbol}',
+                                  widget.sourceToken.isBtc
+                                      ? '${widget.sourceAmount} BTC'
+                                      : '\$${widget.sourceAmount} ${widget.sourceToken.symbol}',
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleMedium
@@ -164,7 +195,7 @@ class SwapSuccessScreen extends StatelessWidget {
                       // To
                       Row(
                         children: [
-                          TokenIcon(token: targetToken, size: 40),
+                          TokenIcon(token: widget.targetToken, size: 40),
                           const SizedBox(width: AppTheme.elementSpacing),
                           Expanded(
                             child: Column(
@@ -182,9 +213,9 @@ class SwapSuccessScreen extends StatelessWidget {
                                       ),
                                 ),
                                 Text(
-                                  targetToken.isBtc
-                                      ? '$targetAmount BTC'
-                                      : '\$$targetAmount ${targetToken.symbol}',
+                                  widget.targetToken.isBtc
+                                      ? '${widget.targetAmount} BTC'
+                                      : '\$${widget.targetAmount} ${widget.targetToken.symbol}',
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleMedium
@@ -213,18 +244,18 @@ class SwapSuccessScreen extends StatelessWidget {
                       _buildDetailRow(
                         context,
                         'Swap ID',
-                        _truncateId(swapId),
+                        _truncateId(widget.swapId),
                         isDarkMode,
-                        onTap: () => _copyToClipboard(context, swapId),
+                        onTap: () => _copyToClipboard(context, widget.swapId),
                       ),
-                      if (txHash != null) ...[
+                      if (widget.txHash != null) ...[
                         const SizedBox(height: AppTheme.elementSpacing),
                         _buildDetailRow(
                           context,
                           'Transaction',
-                          _truncateId(txHash!),
+                          _truncateId(widget.txHash!),
                           isDarkMode,
-                          onTap: () => _copyToClipboard(context, txHash!),
+                          onTap: () => _copyToClipboard(context, widget.txHash!),
                         ),
                       ],
                     ],
@@ -247,7 +278,7 @@ class SwapSuccessScreen extends StatelessWidget {
                   // Navigate to swap detail screen
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                      builder: (context) => SwapDetailScreen(swapId: swapId),
+                      builder: (context) => SwapDetailScreen(swapId: widget.swapId),
                     ),
                   );
                 },

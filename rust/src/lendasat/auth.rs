@@ -27,6 +27,16 @@ fn get_keypair_lock() -> &'static RwLock<Option<Keypair>> {
     LENDASAT_KEYPAIR.get_or_init(|| RwLock::new(None))
 }
 
+/// Clear the cached Lendasat keypair.
+/// This MUST be called when the wallet is reset to ensure a new keypair
+/// is derived from the new mnemonic.
+pub async fn reset_keypair_cache() {
+    let lock = get_keypair_lock();
+    let mut guard = lock.write().await;
+    *guard = None;
+    tracing::info!("Lendasat keypair cache cleared");
+}
+
 /// Get or derive the Lendasat keypair from the wallet mnemonic.
 async fn get_or_derive_keypair(data_dir: &str, network: Network) -> Result<Keypair> {
     let lock = get_keypair_lock();

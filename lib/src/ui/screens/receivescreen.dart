@@ -4,6 +4,7 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -20,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Receive type enum for address display
@@ -310,6 +312,18 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   }
 
   void _showPaymentReceivedOverlay(PaymentReceived payment) {
+    // Track receive transaction
+    final transactionType = _receiveType == ReceiveType.lightning
+        ? 'lightning'
+        : _receiveType == ReceiveType.ark
+            ? 'ark'
+            : 'onchain';
+    AnalyticsService().trackReceiveTransaction(
+      amountSats: payment.amountSats.toInt(),
+      transactionType: transactionType,
+      txId: payment.txid,
+    );
+
     PaymentOverlayService().showPaymentReceivedOverlay(
       context: context,
       payment: payment,
@@ -709,49 +723,52 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       child: Center(
         child: Column(
           children: [
-            CustomPaint(
-              foregroundPainter:
-                  isLight ? BorderPainterBlack() : BorderPainter(),
-              child: Container(
-                margin: const EdgeInsets.all(AppTheme.cardPadding),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: AppTheme.cardRadiusBigger,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppTheme.cardPadding / 1.25),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      PrettyQrView.data(
-                        data: isLoading ? "loading..." : qrData,
-                        decoration: PrettyQrDecoration(
-                          shape: const PrettyQrSmoothSymbol(roundFactor: 1),
-                          image: isLoading
-                              ? null
-                              : PrettyQrDecorationImage(
-                                  image: _getQrCenterImage(),
-                                ),
-                        ),
-                        errorCorrectLevel: QrErrorCorrectLevel.H,
-                      ),
-                      if (isLoading)
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
+            // QR code masked for PostHog session replay (contains sensitive address)
+            PostHogMaskWidget(
+              child: CustomPaint(
+                foregroundPainter:
+                    isLight ? BorderPainterBlack() : BorderPainter(),
+                child: Container(
+                  margin: const EdgeInsets.all(AppTheme.cardPadding),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: AppTheme.cardRadiusBigger,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTheme.cardPadding / 1.25),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        PrettyQrView.data(
+                          data: isLoading ? "loading..." : qrData,
+                          decoration: PrettyQrDecoration(
+                            shape: const PrettyQrSmoothSymbol(roundFactor: 1),
+                            image: isLoading
+                                ? null
+                                : PrettyQrDecorationImage(
+                                    image: _getQrCenterImage(),
+                                  ),
                           ),
-                          child: const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: AppTheme.colorBitcoin,
+                          errorCorrectLevel: QrErrorCorrectLevel.H,
+                        ),
+                        if (isLoading)
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                color: AppTheme.colorBitcoin,
+                              ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -777,18 +794,20 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
     return ArkListTile(
       text: label,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.copy,
-              color: Theme.of(context).hintColor,
-              size: AppTheme.cardPadding * 0.75),
-          const SizedBox(width: AppTheme.elementSpacing / 2),
-          Text(
-            _trimAddress(_getRawAddress()),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
+      trailing: PostHogMaskWidget(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.copy,
+                color: Theme.of(context).hintColor,
+                size: AppTheme.cardPadding * 0.75),
+            const SizedBox(width: AppTheme.elementSpacing / 2),
+            Text(
+              _trimAddress(_getRawAddress()),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
       ),
       onTap: _copyAddress,
     );

@@ -29,6 +29,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
@@ -158,6 +159,35 @@ class WalletScreenState extends State<WalletScreen> {
     });
   }
 
+  /// Determines if a balance change should be considered positive (green) or negative (red).
+  /// Uses balance-aware logic to properly handle edge cases:
+  /// - Both balances zero: neutral (green) - new user or always empty
+  /// - Had balance, now zero: loss (red) - user withdrew/spent everything
+  /// - Had zero, now have balance: gain (green) - user received first deposit
+  /// - Otherwise: compare portfolio values
+  bool _isBalanceChangePositive(double firstBalance, double lastBalance, double firstValue, double lastValue) {
+    // 1 satoshi threshold for "essentially zero" (handles floating point precision)
+    const satoshiThreshold = 0.00000001;
+
+    // Case 1: Both balances essentially zero - neutral state, show green
+    if (firstBalance < satoshiThreshold && lastBalance < satoshiThreshold) {
+      return true;
+    }
+
+    // Case 2: Had balance, now zero - definite loss (-100%), show red
+    if (firstBalance >= satoshiThreshold && lastBalance < satoshiThreshold) {
+      return false;
+    }
+
+    // Case 3: Had zero, now have balance - definite gain, show green
+    if (firstBalance < satoshiThreshold && lastBalance >= satoshiThreshold) {
+      return true;
+    }
+
+    // Case 4: Normal portfolio value comparison
+    return lastValue >= firstValue;
+  }
+
   bool _isPriceChangePositive() {
     if (_bitcoinPriceData.isEmpty) return true;
 
@@ -171,9 +201,7 @@ class WalletScreenState extends State<WalletScreen> {
     final firstValue = firstData.price * firstBalance;
     final lastValue = lastData.price * lastBalance;
 
-    final diff = lastValue - firstValue;
-
-    return diff >= 0 || diff.abs() < 0.001;
+    return _isBalanceChangePositive(firstBalance, lastBalance, firstValue, lastValue);
   }
 
   /// Fetches all wallet data (balance, transactions, and swaps)
@@ -567,16 +595,16 @@ class WalletScreenState extends State<WalletScreen> {
     // Process regular transactions
     for (final tx in _transactions) {
       final txTimestamp = tx.map(
-        boarding: (t) => t.confirmedAt ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000),
-        round: (t) => t.createdAt,
-        redeem: (t) => t.createdAt,
+        boarding: (t) => (t.confirmedAt is BigInt ? (t.confirmedAt as BigInt).toInt() : t.confirmedAt as int?) ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+        round: (t) => t.createdAt is BigInt ? (t.createdAt as BigInt).toInt() : t.createdAt as int,
+        redeem: (t) => t.createdAt is BigInt ? (t.createdAt as BigInt).toInt() : t.createdAt as int,
       );
 
       if (txTimestamp > timestampSec) {
         final amountSats = tx.map(
           boarding: (t) => t.amountSats.toInt(),
-          round: (t) => t.amountSats,
-          redeem: (t) => -t.amountSats, // Redeem reduces Ark balance
+          round: (t) => t.amountSats is BigInt ? (t.amountSats as BigInt).toInt() : t.amountSats as int,
+          redeem: (t) => t.amountSats is BigInt ? -(t.amountSats as BigInt).toInt() : -(t.amountSats as int), // Redeem reduces Ark balance
         );
         amountAfterTimestamp += amountSats / 100000000.0;
       }
@@ -680,39 +708,42 @@ class WalletScreenState extends State<WalletScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          GestureDetector(
-            onTap: _toggleDisplayUnit,
-            onLongPress: _toggleBalanceType,
-            behavior: HitTestBehavior.opaque,
-            child: currencyService.showCoinBalance
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        userPrefs.balancesVisible ? formattedSats : '********',
-                        style:
-                            Theme.of(context).textTheme.displayLarge?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        AppTheme.satoshiIcon,
-                        size: 40,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ],
-                  )
-                : Text(
-                    userPrefs.balancesVisible
-                        ? currencyService.formatAmount(
-                            _getSelectedBalance() * _getCurrentBtcPrice())
-                        : '${currencyService.symbol}****.**',
-                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
+          // Balance display masked for PostHog session replay
+          PostHogMaskWidget(
+            child: GestureDetector(
+              onTap: _toggleDisplayUnit,
+              onLongPress: _toggleBalanceType,
+              behavior: HitTestBehavior.opaque,
+              child: currencyService.showCoinBalance
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          userPrefs.balancesVisible ? formattedSats : '********',
+                          style:
+                              Theme.of(context).textTheme.displayLarge?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          AppTheme.satoshiIcon,
+                          size: 40,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
-                  ),
+                      ],
+                    )
+                  : Text(
+                      userPrefs.balancesVisible
+                          ? currencyService.formatAmount(
+                              _getSelectedBalance() * _getCurrentBtcPrice())
+                          : '${currencyService.symbol}****.**',
+                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                    ),
+            ),
           ),
         ],
       ),
@@ -749,8 +780,27 @@ class WalletScreenState extends State<WalletScreen> {
       final lastValue = lastData.price * lastBalance;
 
       final valueDiff = lastValue - firstValue;
-      percentChange = firstValue != 0 ? (valueDiff / firstValue) * 100 : 0.0;
-      isPositive = valueDiff >= 0 || valueDiff.abs() < 0.001;
+
+      // Use the same balance-aware logic for consistency with gradient/chart
+      isPositive = _isBalanceChangePositive(firstBalance, lastBalance, firstValue, lastValue);
+
+      // Calculate percent change with proper edge case handling
+      const satoshiThreshold = 0.00000001;
+      if (firstBalance < satoshiThreshold && lastBalance < satoshiThreshold) {
+        // Both zero: no change
+        percentChange = 0.0;
+      } else if (firstBalance >= satoshiThreshold && lastBalance < satoshiThreshold) {
+        // Had balance, now zero: -100% loss
+        percentChange = -100.0;
+      } else if (firstBalance < satoshiThreshold && lastBalance >= satoshiThreshold) {
+        // Had zero, now have balance: can't calculate meaningful %, show 0
+        percentChange = 0.0;
+      } else if (firstValue != 0) {
+        // Normal calculation
+        percentChange = (valueDiff / firstValue) * 100;
+      } else {
+        percentChange = 0.0;
+      }
 
       // Balance change in fiat is the portfolio value difference
       balanceChangeInFiat = valueDiff;
@@ -865,16 +915,17 @@ class WalletScreenState extends State<WalletScreen> {
           //     fallbackIcon: Icons.sell_outlined,
           //   ),
           // ),
-          Flexible(
-            child: BitNetImageWithTextButton(
-              "Buy",
-              _handleBuy,
-              width: AppTheme.cardPadding * 2.5,
-              height: AppTheme.cardPadding * 2.5,
-              fallbackIcon: FontAwesomeIcons.btc,
-              fallbackIconSize: AppTheme.iconSize * 1.5,
-            ),
-          ),
+          // Buy button - commented out for now (feature not stable)
+          // Flexible(
+          //   child: BitNetImageWithTextButton(
+          //     "Buy",
+          //     _handleBuy,
+          //     width: AppTheme.cardPadding * 2.5,
+          //     height: AppTheme.cardPadding * 2.5,
+          //     fallbackIcon: FontAwesomeIcons.btc,
+          //     fallbackIconSize: AppTheme.iconSize * 1.5,
+          //   ),
+          // ),
         ],
       ),
     );

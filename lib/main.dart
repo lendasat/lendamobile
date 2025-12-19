@@ -19,6 +19,7 @@ import 'package:provider/provider.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 
 Future setupLogger() async {
   buildLogger(false);
@@ -46,6 +47,33 @@ Future setupLogger() async {
 }
 
 final SettingsService _settingsService = SettingsService();
+
+Future<void> _initPostHog() async {
+  final apiKey = dotenv.env['POSTHOG_API_KEY'];
+  final host = dotenv.env['POSTHOG_HOST'];
+
+  if (apiKey == null || apiKey.isEmpty) {
+    logger.w('PostHog API key not found in .env, skipping initialization');
+    return;
+  }
+
+  final config = PostHogConfig(apiKey);
+
+  // Basic configuration
+  if (host != null && host.isNotEmpty) {
+    config.host = host;
+  }
+  config.captureApplicationLifecycleEvents = true;
+  config.debug = false; // Set to true for development
+
+  // Enable session replay
+  config.sessionReplay = true;
+  // Don't mask all text/images globally - use PostHogMaskWidget for specific sensitive areas
+  config.sessionReplayConfig.maskAllTexts = false;
+  config.sessionReplayConfig.maskAllImages = false;
+
+  await Posthog().setup(config);
+}
 
 Future<Widget> determineStartScreen() async {
   try {
@@ -98,6 +126,9 @@ Future<void> main() async {
   await RustLib.init();
   await setupLogger();
 
+  // Initialize PostHog with session replay (after logger is ready)
+  await _initPostHog();
+
   // Initialize timezone database
   tz.initializeTimeZones();
 
@@ -114,43 +145,47 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (context) => ThemeProvider()..loadSavedTheme(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => LanguageService()..loadSavedLanguage(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => TimezoneService()..loadSavedTimezone(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => CurrencyPreferenceService()..loadSavedCurrency(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => TransactionFilterService(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => SettingsController(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => UserPreferencesService()..loadPreferences(),
-        ),
-      ],
-      child: Consumer2<ThemeProvider, LanguageService>(
-        builder: (context, themeProvider, languageService, _) => MaterialApp(
-          title: 'Ark - Flutter - Sample',
-          theme: themeProvider.getMaterialTheme(),
-          locale: languageService.currentLocale,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: LanguageService.supportedLocales,
-          home: startScreen,
+    return PostHogWidget(
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: (context) => ThemeProvider()..loadSavedTheme(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => LanguageService()..loadSavedLanguage(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => TimezoneService()..loadSavedTimezone(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) =>
+                CurrencyPreferenceService()..loadSavedCurrency(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => TransactionFilterService(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => SettingsController(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => UserPreferencesService()..loadPreferences(),
+          ),
+        ],
+        child: Consumer2<ThemeProvider, LanguageService>(
+          builder: (context, themeProvider, languageService, _) => MaterialApp(
+            title: 'Ark - Flutter - Sample',
+            theme: themeProvider.getMaterialTheme(),
+            locale: languageService.currentLocale,
+            navigatorObservers: [PosthogObserver()],
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: LanguageService.supportedLocales,
+            home: startScreen,
+          ),
         ),
       ),
     );

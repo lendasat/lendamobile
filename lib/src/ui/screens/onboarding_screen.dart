@@ -74,81 +74,83 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Logo and Header
               Expanded(
-                flex: 2,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Lendasat',
-                      style: TextStyle(
-                        fontSize: 64,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Logo and Header
+                      const SizedBox(height: 32),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Lendasat',
+                            style: TextStyle(
+                              fontSize: 64,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          RichText(
+                            text: _buildStyledTagline(context),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    RichText(
-                      text: _buildStyledTagline(context),
-                    ),
-                  ],
+                      const SizedBox(height: 48),
+
+                      // Option Selection
+                      Text(
+                        AppLocalizations.of(context)!.chooseAnOption,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // New Wallet Option
+                      _buildOptionCard(
+                        title: AppLocalizations.of(context)!.createNewWallet,
+                        subtitle: AppLocalizations.of(context)!
+                            .generateANewSecureWallet,
+                        option: 'new',
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Existing Wallet Option
+                      _buildOptionCard(
+                        title:
+                            AppLocalizations.of(context)!.restoreExistingWallet,
+                        subtitle: AppLocalizations.of(context)!
+                            .useYourSecretKeyToAccessYourWallet,
+                        option: 'existing',
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Email Recovery Option (Coming Soon - disabled)
+                      _buildOptionCard(
+                        title: AppLocalizations.of(context)!.recoverWithEmail,
+                        subtitle: AppLocalizations.of(context)!.comingSoon,
+                        option: 'email_recovery',
+                        isDisabled: true,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Debug Mode Option (only in debug builds)
+                      _buildOptionCard(
+                        title: 'Debug Mode',
+                        subtitle: 'Skip wallet setup and enter app directly',
+                        option: 'debug',
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
-              // Option Selection
-              Expanded(
-                flex: 4,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppLocalizations.of(context)!.chooseAnOption,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // New Wallet Option
-                    _buildOptionCard(
-                      title: AppLocalizations.of(context)!.createNewWallet,
-                      subtitle: AppLocalizations.of(context)!
-                          .generateANewSecureWallet,
-                      option: 'new',
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Existing Wallet Option
-                    _buildOptionCard(
-                      title:
-                          AppLocalizations.of(context)!.restoreExistingWallet,
-                      subtitle: AppLocalizations.of(context)!
-                          .useYourSecretKeyToAccessYourWallet,
-                      option: 'existing',
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Email Recovery Option (Coming Soon - disabled)
-                    _buildOptionCard(
-                      title: AppLocalizations.of(context)!.recoverWithEmail,
-                      subtitle: AppLocalizations.of(context)!.comingSoon,
-                      option: 'email_recovery',
-                      isDisabled: true,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Debug Mode Option (only in debug builds)
-                    _buildOptionCard(
-                      title: 'Debug Mode',
-                      subtitle: 'Skip wallet setup and enter app directly',
-                      option: 'debug',
-                    ),
-                  ],
-                ),
-              ),
+              const SizedBox(height: 16),
 
               // Continue Button
               SizedBox(

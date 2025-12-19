@@ -2,16 +2,40 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 
-class TransactionSuccessScreen extends StatelessWidget {
+class TransactionSuccessScreen extends StatefulWidget {
   final String aspId;
   final double amount;
+  final String transactionType; // 'onchain' or 'offchain'
+  final String? txId;
 
   const TransactionSuccessScreen({
     super.key,
     required this.aspId,
     required this.amount,
+    this.transactionType = 'offchain',
+    this.txId,
   });
+
+  @override
+  State<TransactionSuccessScreen> createState() => _TransactionSuccessScreenState();
+}
+
+class _TransactionSuccessScreenState extends State<TransactionSuccessScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _trackTransaction();
+  }
+
+  Future<void> _trackTransaction() async {
+    await AnalyticsService().trackSendTransaction(
+      amountSats: widget.amount.toInt(),
+      transactionType: widget.transactionType,
+      txId: widget.txId,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +93,7 @@ class TransactionSuccessScreen extends StatelessWidget {
 
                   // Transaction details
                   Text(
-                    '${amount.toInt()} SATS ${AppLocalizations.of(context)!.sentSuccessfully}',
+                    '${widget.amount.toInt()} SATS ${AppLocalizations.of(context)!.sentSuccessfully}',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 16,

@@ -19,6 +19,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:bolt11_decoder/bolt11_decoder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:provider/provider.dart';
 
 /// SendScreen - BitNet-style send interface with Provider state management
@@ -639,31 +640,33 @@ class SendScreenState extends State<SendScreen>
                             ),
                       ),
                       const SizedBox(height: 4),
-                      // Address display with copy
+                      // Address display with copy - masked for PostHog
                       if (_hasValidAddress)
-                        GestureDetector(
-                          onTap: _copyAddress,
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.copy_rounded,
-                                color: Theme.of(context).hintColor,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  _addressController.text,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(context).hintColor,
-                                      ),
+                        PostHogMaskWidget(
+                          child: GestureDetector(
+                            onTap: _copyAddress,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.copy_rounded,
+                                  color: Theme.of(context).hintColor,
+                                  size: 14,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    _addressController.text,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(context).hintColor,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         )
                       else
@@ -706,19 +709,22 @@ class SendScreenState extends State<SendScreen>
                     ),
                     child: Row(
                       children: [
+                        // Address input masked for PostHog session replay
                         Expanded(
-                          child: TextField(
-                            controller: _addressController,
-                            focusNode: _addressFocusNode,
-                            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.cardPadding,
-                                vertical: AppTheme.elementSpacing,
+                          child: PostHogMaskWidget(
+                            child: TextField(
+                              controller: _addressController,
+                              focusNode: _addressFocusNode,
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: AppTheme.cardPadding,
+                                  vertical: AppTheme.elementSpacing,
+                                ),
+                                hintText: l10n.bitcoinOrArkAddress,
+                                hintStyle: TextStyle(color: Theme.of(context).hintColor),
                               ),
-                              hintText: l10n.bitcoinOrArkAddress,
-                              hintStyle: TextStyle(color: Theme.of(context).hintColor),
                             ),
                           ),
                         ),

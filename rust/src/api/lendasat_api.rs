@@ -35,6 +35,21 @@ fn get_state_lock() -> &'static RwLock<Option<LendasatState>> {
     LENDASAT_STATE.get_or_init(|| RwLock::new(None))
 }
 
+/// Reset the Lendasat client state.
+/// This MUST be called when the wallet is reset to ensure fresh state
+/// with the new mnemonic/user.
+pub async fn reset_lendasat_state() {
+    // Reset the keypair cache first
+    crate::lendasat::auth::reset_keypair_cache().await;
+
+    // Reset the client state
+    let lock = get_state_lock();
+    let mut guard = lock.write().await;
+    *guard = None;
+    LENDASAT_INITIALIZED.store(false, Ordering::SeqCst);
+    tracing::info!("Lendasat state reset");
+}
+
 // ============================================================================
 // Initialization
 // ============================================================================

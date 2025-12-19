@@ -425,13 +425,13 @@ class _SwapScreenState extends State<SwapScreen> {
 
         // Step 1: Check wallet balance before creating swap
         final walletBalance = await ark_api.balance();
-        final availableSats = walletBalance.offchain.totalSats.toInt();
+        final availableSats = walletBalance.offchain.totalSats;
 
         // Parse BTC amount to sats for balance check
         final btcValue = double.tryParse(btcAmount) ?? 0;
         final estimatedSats = (btcValue * 100000000).toInt();
 
-        if (availableSats < estimatedSats) {
+        if (availableSats < BigInt.from(estimatedSats)) {
           throw Exception(
             'Insufficient balance. Available: $availableSats sats, Required: ~$estimatedSats sats',
           );
@@ -453,7 +453,9 @@ class _SwapScreenState extends State<SwapScreen> {
         logger.i('Auto-funding swap $swapId: sending $satsToSend sats to $htlcAddress');
 
         // Verify we have enough for the actual amount (may differ slightly from estimate)
-        if (availableSats < satsToSend) {
+        // satsToSend is PlatformInt64 (int on native, BigInt on web), convert to BigInt for comparison
+        final satsToSendBigInt = BigInt.from(satsToSend);
+        if (availableSats < satsToSendBigInt) {
           // Swap was created but we can't fund it - still navigate to show status
           logger.e('Insufficient balance for funding. Swap created but not funded.');
           if (mounted) {
@@ -473,7 +475,7 @@ class _SwapScreenState extends State<SwapScreen> {
           try {
             final fundingTxid = await ark_api.send(
               address: htlcAddress,
-              amountSats: BigInt.from(satsToSend),
+              amountSats: satsToSendBigInt,
             );
             logger.i('Swap funded successfully. TXID: $fundingTxid');
           } catch (fundingError) {

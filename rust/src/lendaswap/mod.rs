@@ -36,6 +36,17 @@ fn get_client_lock() -> &'static RwLock<Option<LendaSwapClient>> {
     LENDASWAP_CLIENT.get_or_init(|| RwLock::new(None))
 }
 
+/// Reset the LendaSwap client.
+/// This MUST be called when the wallet is reset to ensure a new client
+/// is created with the new mnemonic.
+pub async fn reset_client() {
+    let lock = get_client_lock();
+    let mut guard = lock.write().await;
+    *guard = None;
+    LENDASWAP_INITIALIZED.store(false, Ordering::SeqCst);
+    tracing::info!("LendaSwap client reset");
+}
+
 /// Initialize the LendaSwap client.
 ///
 /// This should be called after the Ark wallet is initialized and the mnemonic exists.

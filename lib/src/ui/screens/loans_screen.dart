@@ -1,21 +1,17 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
-import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/screens/loan_offer_detail_screen.dart';
 import 'package:ark_flutter/src/ui/screens/contract_detail_screen.dart';
-import 'package:ark_flutter/src/ui/screens/settings/settings.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 /// Main Lendasat Loans screen with offers and contracts.
 class LoansScreen extends StatefulWidget {
@@ -37,7 +33,7 @@ class _LoansScreenState extends State<LoansScreen> {
   // Debug info
   String? _debugPubkey;
   String? _debugDerivationPath;
-  bool _showDebugInfo = true; // Set to false for production
+  bool _showDebugInfo = false; // Debug info disabled for production
 
   @override
   void initState() {
@@ -138,22 +134,6 @@ class _LoansScreenState extends State<LoansScreen> {
     }
   }
 
-  /// Open the settings bottom sheet.
-  void _openSettings() {
-    final settingsController = context.read<SettingsController>();
-    settingsController.resetToMain();
-
-    arkBottomSheet(
-      context: context,
-      height: MediaQuery.of(context).size.height * 0.85,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      child: Settings(aspId: widget.aspId),
-    ).then((_) {
-      // Re-initialize Lendasat to check auth status
-      _initializeLendasat();
-    });
-  }
-
   Future<void> _refresh() async {
     try {
       await Future.wait([
@@ -192,7 +172,7 @@ class _LoansScreenState extends State<LoansScreen> {
       appBar: ArkAppBar(
         context: context,
         hasBackButton: false,
-        text: 'Loans',
+        text: 'Loans & Leverage',
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

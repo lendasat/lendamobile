@@ -13,6 +13,12 @@ part 'lendasat_api.freezed.dart';
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ContractSummary`, `LendasatState`, `OfferSummary`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `from`, `from`
 
+/// Reset the Lendasat client state.
+/// This MUST be called when the wallet is reset to ensure fresh state
+/// with the new mnemonic/user.
+Future<void> resetLendasatState() =>
+    RustLib.instance.api.crateApiLendasatApiResetLendasatState();
+
 /// Initialize the Lendasat client.
 ///
 /// - `data_dir`: Directory for storing auth data and mnemonic
