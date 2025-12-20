@@ -1,4 +1,5 @@
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
@@ -47,7 +48,9 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
       } else if (widget.targetToken.isBtc) {
         amountSats = (double.parse(widget.targetAmount) * 100000000).toInt();
       }
-    } catch (_) {}
+    } catch (e) {
+      logger.w('Failed to parse swap amount for analytics: $e');
+    }
 
     await AnalyticsService().trackSwapTransaction(
       amountSats: amountSats,

@@ -168,9 +168,9 @@ class LendaSwapService extends ChangeNotifier {
 
   /// Create an EVM to BTC swap (buy BTC with EVM tokens).
   /// [sourceAmount] is the amount in source token units (e.g., 50 for USDC, 0.02 for XAUt)
+  /// User sends tokens from their external wallet (MetaMask, etc.) to the returned HTLC address.
   Future<lendaswap_api.EvmToBtcSwapResult> createBuyBtcSwap({
     required String targetArkAddress,
-    required String userEvmAddress,
     required double sourceAmount,
     required String sourceToken,
     required String sourceChain,
@@ -179,7 +179,8 @@ class LendaSwapService extends ChangeNotifier {
     try {
       final result = await lendaswap_api.lendaswapCreateEvmToBtcSwap(
         targetArkAddress: targetArkAddress,
-        userEvmAddress: userEvmAddress,
+        // Placeholder - user sends from external wallet, we don't need their address
+        userEvmAddress: '0x0000000000000000000000000000000000000000',
         sourceAmountUsd: sourceAmount, // API still uses this name but it's actually token amount
         sourceToken: sourceToken,
         sourceChain: sourceChain,

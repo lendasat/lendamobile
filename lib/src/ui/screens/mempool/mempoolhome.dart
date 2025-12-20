@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
@@ -284,7 +285,12 @@ class _MempoolHomeState extends State<MempoolHome> {
   /// Load Fear & Greed data from RapidAPI
   Future<void> _loadFearGreedData() async {
     try {
-      final fgiResponse = await mempool_api.getFearGreedIndex();
+      final apiKey = dotenv.env['RAPIDAPI_KEY'] ?? '';
+      if (apiKey.isEmpty) {
+        debugPrint('RAPIDAPI_KEY not found in .env');
+        return;
+      }
+      final fgiResponse = await mempool_api.getFearGreedIndex(apiKey: apiKey);
 
       if (mounted) {
         setState(() {

@@ -221,7 +221,7 @@ pub async fn get_transaction(txid: &str, base_url: &str) -> Result<BitcoinTransa
 
 /// Get Fear & Greed Index from RapidAPI
 /// Returns the current fear and greed index along with historical comparisons
-pub async fn get_fear_greed_index() -> Result<FearGreedIndex> {
+pub async fn get_fear_greed_index(api_key: String) -> Result<FearGreedIndex> {
     tracing::info!("Fetching Fear & Greed Index from RapidAPI");
 
     let url = "https://fear-and-greed-index.p.rapidapi.com/v1/fgi";
@@ -229,7 +229,7 @@ pub async fn get_fear_greed_index() -> Result<FearGreedIndex> {
     let client = reqwest::Client::new();
     let response = client
         .get(url)
-        .header("X-RapidAPI-Key", "REDACTED_API_KEY")
+        .header("X-RapidAPI-Key", api_key)
         .header("X-RapidAPI-Host", "fear-and-greed-index.p.rapidapi.com")
         .send()
         .await

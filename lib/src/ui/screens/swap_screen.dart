@@ -366,8 +366,10 @@ class _SwapScreenState extends State<SwapScreen> {
       // BTC -> EVM: Need to get EVM address (where to receive stablecoins)
       _showEvmAddressInput();
     } else if (sourceToken.isEvm && targetToken.isBtc) {
-      // EVM -> BTC: Need to get both EVM address (source) and BTC address (target)
-      _showEvmToBtcAddressInput();
+      // EVM -> BTC: Go directly to confirmation
+      // User will send from their external wallet (MetaMask, etc.)
+      // BTC will be received to wallet's Arkade address automatically
+      _showConfirmation();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Invalid swap pair')),
@@ -383,44 +385,24 @@ class _SwapScreenState extends State<SwapScreen> {
         tokenSymbol: targetToken.symbol,
         network: targetToken.network,
         onAddressConfirmed: (address) {
-          _showConfirmation(
-            targetEvmAddress: address,
-            sourceEvmAddress: null,
-            targetBtcAddress: null,
-          );
+          _showConfirmation(targetEvmAddress: address);
         },
       ),
     );
   }
 
-  /// Show EVM address input sheet (for EVM -> BTC swaps)
-  /// Only asks for user's EVM address - BTC will be received to wallet's Arkade address automatically
-  void _showEvmToBtcAddressInput() {
-    arkBottomSheet(
-      context: context,
-      child: EvmAddressInputSheet(
-        tokenSymbol: sourceToken.symbol,
-        network: sourceToken.network,
-        isSourceAddress: true, // This is the source address (where user sends from)
-        onAddressConfirmed: (evmAddress) {
-          _showConfirmation(
-            targetEvmAddress: null,
-            sourceEvmAddress: evmAddress,
-            targetBtcAddress: null, // Will be auto-filled with wallet's Arkade address
-          );
-        },
-      ),
-    );
-  }
+  // NOTE: _showEvmToBtcAddressInput was removed - for EVM → BTC swaps,
+  // we no longer ask for the user's EVM address since they send from their
+  // external wallet (MetaMask, etc.). The swap is created with a placeholder
+  // address, and the processing screen shows the deposit address.
 
   /// Show swap confirmation sheet
   void _showConfirmation({
     String? targetEvmAddress,
-    String? sourceEvmAddress,
-    String? targetBtcAddress,
   }) {
     // Determine which address to display in confirmation
-    final displayAddress = targetEvmAddress ?? targetBtcAddress;
+    // For EVM→BTC, no address to show (user sends from external wallet)
+    final displayAddress = targetEvmAddress;
 
     // Determine display amounts based on token type
     String displaySourceAmount;
@@ -456,11 +438,7 @@ class _SwapScreenState extends State<SwapScreen> {
         protocolFeePercent: 0.25,
         targetAddress: displayAddress,
         isLoading: isLoading,
-        onConfirm: () => _executeSwap(
-          targetEvmAddress: targetEvmAddress,
-          sourceEvmAddress: sourceEvmAddress,
-          targetBtcAddress: targetBtcAddress,
-        ),
+        onConfirm: () => _executeSwap(targetEvmAddress: targetEvmAddress),
       ),
     );
   }
@@ -468,8 +446,6 @@ class _SwapScreenState extends State<SwapScreen> {
   /// Execute the swap
   Future<void> _executeSwap({
     String? targetEvmAddress,
-    String? sourceEvmAddress,
-    String? targetBtcAddress,
   }) async {
     setState(() => isLoading = true);
     Navigator.pop(context); // Close confirmation sheet
@@ -566,14 +542,10 @@ class _SwapScreenState extends State<SwapScreen> {
           }
         }
       } else {
-        // EVM -> BTC swap: Auto-use wallet's Arkade address for receiving
-        String arkadeAddress = targetBtcAddress ?? '';
-        if (arkadeAddress.isEmpty) {
-          // Fetch wallet's Arkade address automatically
-          final addresses = await ark_api.address();
-          arkadeAddress = addresses.offchain;
-          logger.i('Auto-using wallet Arkade address: $arkadeAddress');
-        }
+        // EVM -> BTC swap: Use wallet's Arkade address for receiving
+        final addresses = await ark_api.address();
+        final arkadeAddress = addresses.offchain;
+        logger.i('Using wallet Arkade address: $arkadeAddress');
 
         // For stablecoins, token amount = usd amount (1:1)
         // For non-stablecoins (e.g., XAUT), use the calculated token amount
@@ -583,7 +555,6 @@ class _SwapScreenState extends State<SwapScreen> {
 
         final result = await _swapService.createBuyBtcSwap(
           targetArkAddress: arkadeAddress,
-          userEvmAddress: sourceEvmAddress!,
           sourceAmount: sourceAmountValue,
           sourceToken: sourceToken.tokenId,
           sourceChain: sourceToken.chainId,

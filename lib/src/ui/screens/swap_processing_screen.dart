@@ -6,6 +6,7 @@ import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/qr_border_painter.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -13,6 +14,7 @@ import 'package:ark_flutter/src/ui/screens/swap_success_screen.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 /// Screen that shows the processing status of an ongoing swap.
 class SwapProcessingScreen extends StatefulWidget {
@@ -98,24 +100,24 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
 
   /// Attempt to auto-claim the swap if it's ready.
   Future<void> _attemptAutoClaim(SwapInfo swap) async {
-    // Don't attempt if already claiming or already attempted
-    if (_isClaimingGelato || _hasAttemptedClaim) return;
+    // Don't attempt if already claiming
+    if (_isClaimingGelato) return;
 
     // BTC → EVM swaps: claim via Gelato when server has funded
-    if (swap.canClaimGelato) {
+    if (swap.canClaimGelato && !_hasAttemptedClaim) {
       logger.i('Auto-claiming BTC→EVM swap ${swap.id} via Gelato');
       setState(() {
         _isClaimingGelato = true;
-        _hasAttemptedClaim = true;
       });
 
       try {
         await _swapService.claimGelato(swap.id);
         logger.i('Gelato claim submitted for swap ${swap.id}');
-        // Claim submitted, polling will detect completion
+        // Only mark as attempted on success - polling will detect completion
+        setState(() => _hasAttemptedClaim = true);
       } catch (e) {
         logger.e('Failed to auto-claim via Gelato: $e');
-        // Don't show error - let user manually retry if needed
+        // Don't mark as attempted on failure - allow retry on next poll
       } finally {
         if (mounted) {
           setState(() => _isClaimingGelato = false);
@@ -124,20 +126,20 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     }
 
     // EVM → BTC swaps: claim VHTLC when server has funded
-    if (swap.canClaimVhtlc) {
+    if (swap.canClaimVhtlc && !_hasAttemptedClaim) {
       logger.i('Auto-claiming EVM→BTC swap ${swap.id} via VHTLC');
       setState(() {
         _isClaimingGelato = true; // reuse flag
-        _hasAttemptedClaim = true;
       });
 
       try {
         final txid = await _swapService.claimVhtlc(swap.id);
         logger.i('VHTLC claimed for swap ${swap.id}, txid: $txid');
-        // Claim submitted, polling will detect completion
+        // Only mark as attempted on success - polling will detect completion
+        setState(() => _hasAttemptedClaim = true);
       } catch (e) {
         logger.e('Failed to auto-claim VHTLC: $e');
-        // Don't show error - let user manually retry if needed
+        // Don't mark as attempted on failure - allow retry on next poll
       } finally {
         if (mounted) {
           setState(() => _isClaimingGelato = false);
@@ -460,7 +462,38 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: AppTheme.elementSpacing),
+            const SizedBox(height: AppTheme.cardPadding),
+            // QR Code
+            Center(
+              child: GestureDetector(
+                onTap: () => _copyToClipboard(depositAddress),
+                child: CustomPaint(
+                  foregroundPainter: isDarkMode ? BorderPainter() : BorderPainterBlack(),
+                  child: Container(
+                    margin: const EdgeInsets.all(AppTheme.elementSpacing),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: AppTheme.cardRadiusBigger,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppTheme.elementSpacing),
+                      child: SizedBox(
+                        width: 200,
+                        height: 200,
+                        child: PrettyQrView.data(
+                          data: depositAddress,
+                          decoration: const PrettyQrDecoration(
+                            shape: PrettyQrSmoothSymbol(roundFactor: 1),
+                          ),
+                          errorCorrectLevel: QrErrorCorrectLevel.H,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
             // Address/Invoice
             GestureDetector(
               onTap: () => _copyToClipboard(depositAddress),

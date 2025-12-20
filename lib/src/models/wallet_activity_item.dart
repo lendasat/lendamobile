@@ -88,12 +88,15 @@ class SwapActivityItem implements WalletActivityItem {
   /// Get USD amount for the swap.
   double get usdAmount => swap.targetAmountUsd;
 
-  /// Get the target token symbol (e.g., "USDC", "USDT").
+  /// Get the EVM token symbol (e.g., "USDC", "USDT").
+  /// For BTC → EVM swaps, this is the target token.
+  /// For EVM → BTC swaps, this is the source token.
   String get tokenSymbol {
-    // Parse from targetToken field (e.g., "usdc_pol" -> "USDC")
-    final token = swap.targetToken;
+    // Always show the EVM token (the non-BTC token in the swap)
+    final token = isBtcToEvm ? swap.targetToken : swap.sourceToken;
     if (token.contains('usdc')) return 'USDC';
     if (token.contains('usdt')) return 'USDT';
+    if (token.contains('xaut')) return 'XAUt';
     if (token.contains('btc')) return 'BTC';
     return token.toUpperCase();
   }

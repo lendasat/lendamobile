@@ -764,7 +764,7 @@ class SendScreenState extends State<SendScreen>
             bitcoinUnit: CurrencyType.sats,
             swapped: false,
             autoConvert: true,
-            bitcoinPrice: _bitcoinPrice ?? 65000.0,
+            bitcoinPrice: _bitcoinPrice ?? 0,
             lowerBound: 0,
             upperBound: widget.availableSats.toInt(),
             boundType: CurrencyType.sats,

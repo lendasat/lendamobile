@@ -126,7 +126,8 @@ abstract class RustLibApi extends BaseApi {
   Future<List<Block>> crateApiMempoolApiGetBlocksAtHeight(
       {required BigInt height});
 
-  Future<FearGreedIndex> crateApiMempoolApiGetFearGreedIndex();
+  Future<FearGreedIndex> crateApiMempoolApiGetFearGreedIndex(
+      {required String apiKey});
 
   Future<HashrateData> crateApiGetHashrateData({required String period});
 
@@ -697,10 +698,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<FearGreedIndex> crateApiMempoolApiGetFearGreedIndex() {
+  Future<FearGreedIndex> crateApiMempoolApiGetFearGreedIndex(
+      {required String apiKey}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(apiKey, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 14, port: port_);
       },
@@ -709,7 +712,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData: sse_decode_AnyhowException,
       ),
       constMeta: kCrateApiMempoolApiGetFearGreedIndexConstMeta,
-      argValues: [],
+      argValues: [apiKey],
       apiImpl: this,
     ));
   }
@@ -717,7 +720,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiMempoolApiGetFearGreedIndexConstMeta =>
       const TaskConstMeta(
         debugName: "get_fear_greed_index",
-        argNames: [],
+        argNames: ["apiKey"],
       );
 
   @override

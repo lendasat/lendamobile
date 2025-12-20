@@ -11,6 +11,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/screens/swap_processing_screen.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -682,14 +683,51 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
     return content;
   }
 
+  void _navigateToDeposit() {
+    if (_swapInfo == null) return;
+
+    final sourceToken = _getSourceToken();
+    final targetToken = _getTargetToken();
+    final btcAmount = (_swapInfo!.sourceAmountSats.toInt() / 100000000).toStringAsFixed(8);
+    final tokenAmount = _swapInfo!.targetAmountUsd.toStringAsFixed(
+        sourceToken.isStablecoin || targetToken.isStablecoin ? 2 : 6);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SwapProcessingScreen(
+          swapId: widget.swapId,
+          sourceToken: sourceToken,
+          targetToken: targetToken,
+          sourceAmount: sourceToken.isBtc ? btcAmount : tokenAmount,
+          targetAmount: targetToken.isBtc ? btcAmount : tokenAmount,
+        ),
+      ),
+    );
+  }
+
   Widget _buildActionButtons(BuildContext context, SwapStatusSimple status) {
     final canClaim = _swapInfo?.canClaimGelato == true || _swapInfo?.canClaimVhtlc == true;
     final canRefund = _swapInfo?.canRefund == true;
+    final isWaitingForDeposit = status == SwapStatusSimple.waitingForDeposit;
+    // Only show deposit button for EVM → BTC swaps (user needs to send EVM tokens)
+    final showDepositButton = isWaitingForDeposit &&
+        _swapInfo?.direction == 'evm_to_btc' &&
+        _swapInfo?.depositAddress != null;
 
-    if (!canClaim && !canRefund) return const SizedBox.shrink();
+    if (!canClaim && !canRefund && !showDepositButton) return const SizedBox.shrink();
 
     return Column(
       children: [
+        // Deposit button for pending EVM → BTC swaps
+        if (showDepositButton) ...[
+          LongButtonWidget(
+            title: 'Deposit',
+            customWidth: double.infinity,
+            onTap: _navigateToDeposit,
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+        ],
         // Claim section
         if (canClaim) ...[
           GlassContainer(

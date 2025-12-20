@@ -2,18 +2,12 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
-// import 'package:http/http.dart' as http; // Uncomment when implementing API
-// import 'dart:convert'; // Uncomment when implementing API
 
 /// Service for handling user feedback submission.
 ///
 /// Currently uses mailto: links for email sending.
-/// For production, consider implementing a backend API endpoint.
 class FeedbackService {
   static const String supportEmail = 'support@lendasat.com';
-
-  // TODO: Add your backend API URL for production
-  // static const String feedbackApiUrl = 'https://api.lendasat.com/feedback';
 
   /// Send feedback via email using the device's email client.
   ///
@@ -48,43 +42,15 @@ class FeedbackService {
     }
   }
 
-  /// Send feedback via backend API (for production use).
-  ///
-  /// This method sends feedback directly to a backend server which then
-  /// sends the email. This approach supports attachments and doesn't
-  /// require the user to have an email app configured.
+  /// Send feedback via backend API.
+  /// Currently falls back to email - API can be implemented when needed.
   Future<bool> sendFeedbackViaApi({
     required String feedbackType,
     required String message,
     List<File>? attachments,
     String? deviceInfo,
   }) async {
-    // TODO: Implement when backend API is ready
-    //
-    // Example implementation:
-    // try {
-    //   final request = http.MultipartRequest('POST', Uri.parse(feedbackApiUrl));
-    //   request.fields['type'] = feedbackType;
-    //   request.fields['message'] = message;
-    //   request.fields['deviceInfo'] = deviceInfo ?? '';
-    //
-    //   if (attachments != null) {
-    //     for (var i = 0; i < attachments.length; i++) {
-    //       request.files.add(await http.MultipartFile.fromPath(
-    //         'attachment_$i',
-    //         attachments[i].path,
-    //       ));
-    //     }
-    //   }
-    //
-    //   final response = await request.send();
-    //   return response.statusCode == 200;
-    // } catch (e) {
-    //   logger.e('Error sending feedback via API: $e');
-    //   return false;
-    // }
-
-    logger.w('API feedback not implemented yet, falling back to email');
+    // Fall back to email for now
     return sendFeedbackViaEmail(
       feedbackType: feedbackType,
       message: message,

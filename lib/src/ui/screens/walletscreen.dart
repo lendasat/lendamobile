@@ -356,9 +356,10 @@ class WalletScreenState extends State<WalletScreen> {
     }
   }
 
-  /// Get current BTC price in USD from price data
+  /// Get current BTC price in USD from price data.
+  /// Returns 0 if price data is not yet loaded - UI should handle this case.
   double _getCurrentBtcPrice() {
-    if (_bitcoinPriceData.isEmpty) return 65000.0; // Fallback
+    if (_bitcoinPriceData.isEmpty) return 0;
     return _bitcoinPriceData.last.price;
   }
 
@@ -980,6 +981,7 @@ class WalletScreenState extends State<WalletScreen> {
       loading: _isTransactionFetching,
       hideAmounts: !userPrefs.balancesVisible,
       showBtcAsMain: currencyService.showCoinBalance,
+      bitcoinPrice: _getCurrentBtcPrice(),
     );
   }
 }

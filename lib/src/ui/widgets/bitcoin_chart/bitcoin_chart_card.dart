@@ -349,6 +349,8 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
                                   _trackballDataNotifier.value = null,
                               lineColor:
                                   isPositive ? Colors.green : Colors.red,
+                              // Key for forcing rebuild on time range change
+                              chartKey: 'btc-chart-${_getTimeRangeKey(_selectedTimeRange)}',
                             );
                           },
                         ),

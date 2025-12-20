@@ -45,5 +45,5 @@ Future<BitcoinTransaction> getTransaction(
 
 /// Get Fear & Greed Index from RapidAPI
 /// Returns the current fear and greed index along with historical comparisons
-Future<FearGreedIndex> getFearGreedIndex() =>
-    RustLib.instance.api.crateApiMempoolApiGetFearGreedIndex();
+Future<FearGreedIndex> getFearGreedIndex({required String apiKey}) =>
+    RustLib.instance.api.crateApiMempoolApiGetFearGreedIndex(apiKey: apiKey);

@@ -540,11 +540,13 @@ fn wire__crate__api__mempool_api__get_fear_greed_index_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_api_key = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
-                        let output_ok = crate::api::mempool_api::get_fear_greed_index().await?;
+                        let output_ok =
+                            crate::api::mempool_api::get_fear_greed_index(api_api_key).await?;
                         Ok(output_ok)
                     })()
                     .await,

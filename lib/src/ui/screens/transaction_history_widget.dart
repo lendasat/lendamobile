@@ -24,6 +24,7 @@ class TransactionHistoryWidget extends StatefulWidget {
   final bool loading;
   final bool hideAmounts;
   final bool showBtcAsMain;
+  final double? bitcoinPrice;
 
   const TransactionHistoryWidget({
     super.key,
@@ -33,6 +34,7 @@ class TransactionHistoryWidget extends StatefulWidget {
     required this.loading,
     this.hideAmounts = false,
     this.showBtcAsMain = true,
+    this.bitcoinPrice,
   });
 
   @override
@@ -225,6 +227,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
           aspId: widget.aspId,
           hideAmounts: widget.hideAmounts,
           showBtcAsMain: widget.showBtcAsMain,
+          bitcoinPrice: widget.bitcoinPrice,
         ),
       );
     });
@@ -398,6 +401,7 @@ class _ActivityContainer extends StatelessWidget {
   final String aspId;
   final bool hideAmounts;
   final bool showBtcAsMain;
+  final double? bitcoinPrice;
 
   const _ActivityContainer({
     super.key,
@@ -405,6 +409,7 @@ class _ActivityContainer extends StatelessWidget {
     required this.aspId,
     required this.hideAmounts,
     required this.showBtcAsMain,
+    this.bitcoinPrice,
   });
 
   @override
@@ -423,12 +428,14 @@ class _ActivityContainer extends StatelessWidget {
                     aspId: aspId,
                     hideAmounts: hideAmounts,
                     showBtcAsMain: showBtcAsMain,
+                    bitcoinPrice: bitcoinPrice,
                   );
                 } else if (item is SwapActivityItem) {
                   return _SwapItemWidget(
                     swapItem: item,
                     hideAmounts: hideAmounts,
                     showBtcAsMain: showBtcAsMain,
+                    bitcoinPrice: bitcoinPrice,
                   );
                 }
                 return const SizedBox.shrink();
@@ -447,12 +454,14 @@ class _TransactionItemWidget extends StatelessWidget {
   final String aspId;
   final bool hideAmounts;
   final bool showBtcAsMain;
+  final double? bitcoinPrice;
 
   const _TransactionItemWidget({
     required this.transaction,
     required this.aspId,
     required this.hideAmounts,
     required this.showBtcAsMain,
+    this.bitcoinPrice,
   });
 
   void _navigateToTransactionDetail(
@@ -536,10 +545,11 @@ class _TransactionItemWidget extends StatelessWidget {
 
     final amountBtc = amountSats / 100000000;
 
+    // Use actual BTC price, with fallback only if not available
+    final btcPriceUsd = bitcoinPrice ?? 0;
     final exchangeRates = currencyService.exchangeRates;
-    final btcToFiatRate =
-        (exchangeRates?.rates[currencyService.code] ?? 1) * 93000.0;
-    final amountFiat = amountBtc * btcToFiatRate;
+    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1;
+    final amountFiat = amountBtc * btcPriceUsd * fiatRate;
 
     Color statusColor;
     if (isSettled) {
@@ -688,11 +698,13 @@ class _SwapItemWidget extends StatelessWidget {
   final SwapActivityItem swapItem;
   final bool hideAmounts;
   final bool showBtcAsMain;
+  final double? bitcoinPrice;
 
   const _SwapItemWidget({
     required this.swapItem,
     required this.hideAmounts,
     required this.showBtcAsMain,
+    this.bitcoinPrice,
   });
 
   void _navigateToSwapDetail(BuildContext context) {

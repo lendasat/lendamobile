@@ -58,8 +58,8 @@ class _BuyScreenState extends State<BuyScreen> {
   String _inputState = 'under';
   int _allowedAmountDifference = 0;
 
-  // Use fake price for now (matching dashboard_screen.dart pattern)
-  final double _btcToUsdRate = 65000.0;
+  /// Get current BTC price from MoonPay quote, or 0 if not available.
+  double get _btcToUsdRate => _currentQuote?.exchangeRate ?? 0;
 
   @override
   void initState() {
