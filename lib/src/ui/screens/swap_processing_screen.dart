@@ -359,6 +359,18 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   }
 
   Widget _buildSwapSummary(BuildContext context, bool isDarkMode) {
+    // Format amounts based on token type
+    String formatAmount(SwapToken token, String amount) {
+      if (token.isBtc) {
+        return '$amount BTC';
+      } else if (token.isStablecoin) {
+        return '\$$amount';
+      } else {
+        // Non-stablecoin (XAUT, etc.) - show amount with symbol
+        return '$amount ${token.symbol}';
+      }
+    }
+
     return GlassContainer(
       borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
       child: Padding(
@@ -372,15 +384,13 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
                   TokenIcon(token: widget.sourceToken, size: 40),
                   const SizedBox(height: 8),
                   Text(
-                    widget.sourceToken.isBtc
-                        ? '${widget.sourceAmount} BTC'
-                        : '\$${widget.sourceAmount}',
+                    formatAmount(widget.sourceToken, widget.sourceAmount),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                   ),
                   Text(
-                    widget.sourceToken.symbol,
+                    '${widget.sourceToken.symbol} (${widget.sourceToken.network})',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
@@ -403,15 +413,13 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
                   TokenIcon(token: widget.targetToken, size: 40),
                   const SizedBox(height: 8),
                   Text(
-                    widget.targetToken.isBtc
-                        ? '${widget.targetAmount} BTC'
-                        : '\$${widget.targetAmount}',
+                    formatAmount(widget.targetToken, widget.targetAmount),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                   ),
                   Text(
-                    widget.targetToken.symbol,
+                    '${widget.targetToken.symbol} (${widget.targetToken.network})',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
@@ -523,7 +531,9 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
             _buildDetailRow(
               context,
               'Direction',
-              _swapInfo!.isBtcToEvm ? 'BTC → Stablecoin' : 'Stablecoin → BTC',
+              _swapInfo!.isBtcToEvm
+                  ? 'BTC → ${widget.targetToken.symbol} (${widget.targetToken.network})'
+                  : '${widget.sourceToken.symbol} (${widget.sourceToken.network}) → BTC',
               isDarkMode,
             ),
             const SizedBox(height: AppTheme.elementSpacing),

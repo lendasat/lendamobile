@@ -221,6 +221,7 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
     if (_swapInfo == null) return SwapToken.bitcoin;
     final token = _swapInfo!.sourceToken.toLowerCase();
     if (token.contains('btc')) return SwapToken.bitcoin;
+    if (token.contains('xaut')) return SwapToken.xautEthereum;
     if (token.contains('usdc') && token.contains('pol')) {
       return SwapToken.usdcPolygon;
     }
@@ -240,6 +241,7 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
     if (_swapInfo == null) return SwapToken.usdcPolygon;
     final token = _swapInfo!.targetToken.toLowerCase();
     if (token.contains('btc')) return SwapToken.bitcoin;
+    if (token.contains('xaut')) return SwapToken.xautEthereum;
     if (token.contains('usdc') && token.contains('pol')) {
       return SwapToken.usdcPolygon;
     }
@@ -436,10 +438,23 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
 
   Widget _buildSwapSummary(BuildContext context, SwapToken sourceToken,
       SwapToken targetToken, bool isDarkMode) {
-    final sourceAmount = _swapInfo != null
+    final btcAmount = _swapInfo != null
         ? ((_swapInfo!.sourceAmountSats.toInt()) / 100000000).toStringAsFixed(8)
         : '0';
-    final targetAmount = _swapInfo?.targetAmountUsd.toStringAsFixed(2) ?? '0.00';
+    final tokenAmount = _swapInfo?.targetAmountUsd.toStringAsFixed(
+        sourceToken.isStablecoin || targetToken.isStablecoin ? 2 : 6) ?? '0.00';
+
+    // Format amount based on token type
+    String formatTokenAmount(SwapToken token, String amount) {
+      if (token.isBtc) {
+        return '$btcAmount BTC';
+      } else if (token.isStablecoin) {
+        return '\$$amount';
+      } else {
+        // Non-stablecoin (XAUT, etc.)
+        return '$amount ${token.symbol}';
+      }
+    }
 
     return GlassContainer(
       borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
@@ -465,13 +480,19 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
                             ),
                       ),
                       Text(
-                        sourceToken.isBtc
-                            ? '$sourceAmount BTC'
-                            : '\$$targetAmount ${sourceToken.symbol}',
+                        formatTokenAmount(sourceToken, tokenAmount),
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
+                      ),
+                      Text(
+                        '${sourceToken.symbol} (${sourceToken.network})',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
+                            ),
                       ),
                     ],
                   ),
@@ -525,9 +546,7 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
                             ),
                       ),
                       Text(
-                        targetToken.isBtc
-                            ? '$sourceAmount BTC'
-                            : '\$$targetAmount ${targetToken.symbol}',
+                        formatTokenAmount(targetToken, tokenAmount),
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
@@ -536,6 +555,14 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
                                       ? AppTheme.successColor
                                       : null,
                                 ),
+                      ),
+                      Text(
+                        '${targetToken.symbol} (${targetToken.network})',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
+                            ),
                       ),
                     ],
                   ),
@@ -571,8 +598,8 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
               context,
               'Direction',
               _swapInfo!.direction == 'btc_to_evm'
-                  ? 'BTC → Stablecoin'
-                  : 'Stablecoin → BTC',
+                  ? 'BTC → ${_getTargetToken().symbol} (${_getTargetToken().network})'
+                  : '${_getSourceToken().symbol} (${_getSourceToken().network}) → BTC',
               isDarkMode,
             ),
             const SizedBox(height: AppTheme.elementSpacing),
@@ -680,7 +707,7 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
                   Expanded(
                     child: Text(
                       _swapInfo!.canClaimGelato
-                          ? 'Your swap is ready! Claim your stablecoins now.'
+                          ? 'Your swap is ready! Claim your ${_getTargetToken().symbol} now.'
                           : 'Your swap is ready! Claim your BTC now.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.successColor,
@@ -693,7 +720,7 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
           ),
           const SizedBox(height: AppTheme.cardPadding),
           LongButtonWidget(
-            title: _swapInfo!.canClaimGelato ? 'Claim Stablecoins' : 'Claim BTC',
+            title: _swapInfo!.canClaimGelato ? 'Claim ${_getTargetToken().symbol}' : 'Claim BTC',
             customWidth: double.infinity,
             state: _isClaiming ? ButtonState.loading : ButtonState.idle,
             onTap: _isClaiming ? null : _handleClaim,

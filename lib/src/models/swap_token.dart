@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
 
 /// Supported tokens for LendaSwap
+///
+/// NOTE: Ethereum tokens (usdcEthereum, usdtEthereum, xautEthereum) are kept
+/// in the enum for backwards compatibility with existing swaps, but are
+/// disabled for new swaps because Gelato gasless claiming is not supported
+/// on Ethereum mainnet.
+///
+/// TODO: Re-enable Ethereum tokens once WalletConnect integration is added.
+/// Users will need to connect their Ethereum wallet and pay gas fees to claim.
+/// See: https://docs.walletconnect.com/
 enum SwapToken {
   // Bitcoin (uses Arkade under the hood)
   bitcoin,
-  // Polygon
+  // Polygon (supports Gelato gasless swaps)
   usdcPolygon,
   usdtPolygon,
-  // Ethereum
+  // Ethereum (disabled - requires WalletConnect for gas fees)
+  // TODO: Re-enable with WalletConnect integration
   usdcEthereum,
   usdtEthereum,
   xautEthereum,
@@ -219,17 +229,24 @@ extension SwapTokenExtension on SwapToken {
   /// Get all BTC tokens (just Bitcoin now)
   static List<SwapToken> get btcTokens => [SwapToken.bitcoin];
 
-  /// Get all EVM tokens
+  /// Get all EVM tokens available for swapping.
+  /// Currently only Polygon tokens - Ethereum tokens are disabled because
+  /// Gelato gasless claiming is not supported on Ethereum mainnet.
+  /// TODO: Re-enable Ethereum tokens with WalletConnect integration
   static List<SwapToken> get evmTokens => [
         SwapToken.usdcPolygon,
         SwapToken.usdtPolygon,
-        SwapToken.usdcEthereum,
-        SwapToken.usdtEthereum,
-        SwapToken.xautEthereum,
+        // Ethereum tokens disabled until WalletConnect is integrated:
+        // SwapToken.usdcEthereum,
+        // SwapToken.usdtEthereum,
+        // SwapToken.xautEthereum,
       ];
 
-  /// Get all tokens
-  static List<SwapToken> get allTokens => SwapToken.values;
+  /// Get all tokens available for swapping (excludes disabled Ethereum tokens)
+  static List<SwapToken> get allTokens => [
+        SwapToken.bitcoin,
+        ...evmTokens,
+      ];
 
   /// Get valid target tokens for a given source token
   static List<SwapToken> getValidTargets(SwapToken source) {

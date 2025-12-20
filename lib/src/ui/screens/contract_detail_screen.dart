@@ -463,9 +463,10 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       logger.i('[LoanRepay] Repaying \$${amountToRepay.toStringAsFixed(2)} to $repaymentAddress');
 
       // Create the swap - BTC to stablecoin, sent to repayment address
+      // For loan repayment, amount is in USD which equals token amount for stablecoins
       final result = await _swapService.createSellBtcSwap(
         targetEvmAddress: repaymentAddress,
-        targetAmountUsd: amountToRepay,
+        targetAmount: amountToRepay,
         targetToken: targetToken.tokenId,
         targetChain: targetToken.chainId,
       );

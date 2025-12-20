@@ -35,10 +35,14 @@ class _SwapScreenState extends State<SwapScreen> {
   // Amount values (stored as strings for precise decimal handling)
   String btcAmount = '';
   String usdAmount = '';
+  String tokenAmount = ''; // For non-stablecoin tokens like XAUT
 
   // Input mode: true = show USD as main input, false = show native token
   bool sourceShowUsd = false;
   bool targetShowUsd = true; // Target defaults to USD for stablecoins
+
+  // Approximate XAUt (gold) price - 1 XAUt ≈ 1 oz gold
+  static const double xautUsdPrice = 2650.0;
 
   // Bitcoin price data
   List<PriceData> _bitcoinPriceData = [];
@@ -134,10 +138,19 @@ class _SwapScreenState extends State<SwapScreen> {
           final btc = double.tryParse(value) ?? 0;
           usdAmount = btc > 0 ? formatUsd(btcToUsd(btc)) : '';
         }
-      } else {
-        // Source is stablecoin (USD)
+      } else if (sourceToken.isStablecoin) {
+        // Source is stablecoin (1 token = $1)
         usdAmount = value;
+        tokenAmount = value;
         final usd = double.tryParse(value) ?? 0;
+        btcAmount = usd > 0 ? formatBtc(usdToBtc(usd)) : '';
+      } else {
+        // Source is non-stablecoin (e.g., XAUT)
+        // User enters token amount, we convert to USD
+        tokenAmount = value;
+        final tokens = double.tryParse(value) ?? 0;
+        final usd = tokens * xautUsdPrice;
+        usdAmount = usd > 0 ? formatUsd(usd) : '';
         btcAmount = usd > 0 ? formatBtc(usdToBtc(usd)) : '';
       }
 
@@ -158,10 +171,19 @@ class _SwapScreenState extends State<SwapScreen> {
           final btc = double.tryParse(value) ?? 0;
           usdAmount = btc > 0 ? formatUsd(btcToUsd(btc)) : '';
         }
-      } else {
-        // Target is stablecoin
+      } else if (targetToken.isStablecoin) {
+        // Target is stablecoin (1 token = $1)
         usdAmount = value;
+        tokenAmount = value;
         final usd = double.tryParse(value) ?? 0;
+        btcAmount = usd > 0 ? formatBtc(usdToBtc(usd)) : '';
+      } else {
+        // Target is non-stablecoin (e.g., XAUT)
+        // User enters token amount, we convert to USD
+        tokenAmount = value;
+        final tokens = double.tryParse(value) ?? 0;
+        final usd = tokens * xautUsdPrice;
+        usdAmount = usd > 0 ? formatUsd(usd) : '';
         btcAmount = usd > 0 ? formatBtc(usdToBtc(usd)) : '';
       }
 
@@ -173,17 +195,42 @@ class _SwapScreenState extends State<SwapScreen> {
   void _updateTargetAmount() {
     if (targetToken.isBtc) {
       _targetController.text = targetShowUsd ? usdAmount : btcAmount;
-    } else {
-      // Target is stablecoin - show USD amount
+    } else if (targetToken.isStablecoin) {
+      // Target is stablecoin - show USD amount (1:1 with token)
       _targetController.text = usdAmount;
+      tokenAmount = usdAmount; // For stablecoins, token amount = USD amount
+    } else {
+      // Target is non-stablecoin (e.g., XAUT) - convert USD to token amount
+      final usd = double.tryParse(usdAmount) ?? 0;
+      if (usd > 0) {
+        final tokens = usd / xautUsdPrice;
+        tokenAmount = tokens.toStringAsFixed(6);
+        _targetController.text = tokenAmount;
+      } else {
+        tokenAmount = '';
+        _targetController.text = '';
+      }
     }
   }
 
   void _updateSourceAmount() {
     if (sourceToken.isBtc) {
       _sourceController.text = sourceShowUsd ? usdAmount : btcAmount;
-    } else {
+    } else if (sourceToken.isStablecoin) {
+      // Source is stablecoin - show USD amount (1:1 with token)
       _sourceController.text = usdAmount;
+      tokenAmount = usdAmount;
+    } else {
+      // Source is non-stablecoin (e.g., XAUT) - convert USD to token amount
+      final usd = double.tryParse(usdAmount) ?? 0;
+      if (usd > 0) {
+        final tokens = usd / xautUsdPrice;
+        tokenAmount = tokens.toStringAsFixed(6);
+        _sourceController.text = tokenAmount;
+      } else {
+        tokenAmount = '';
+        _sourceController.text = '';
+      }
     }
   }
 
@@ -375,13 +422,33 @@ class _SwapScreenState extends State<SwapScreen> {
     // Determine which address to display in confirmation
     final displayAddress = targetEvmAddress ?? targetBtcAddress;
 
+    // Determine display amounts based on token type
+    String displaySourceAmount;
+    String displayTargetAmount;
+
+    if (sourceToken.isBtc) {
+      displaySourceAmount = btcAmount;
+    } else if (sourceToken.isStablecoin) {
+      displaySourceAmount = usdAmount;
+    } else {
+      displaySourceAmount = tokenAmount; // XAUT
+    }
+
+    if (targetToken.isBtc) {
+      displayTargetAmount = btcAmount;
+    } else if (targetToken.isStablecoin) {
+      displayTargetAmount = usdAmount;
+    } else {
+      displayTargetAmount = tokenAmount; // XAUT
+    }
+
     arkBottomSheet(
       context: context,
       child: SwapConfirmationSheet(
         sourceToken: sourceToken,
         targetToken: targetToken,
-        sourceAmount: sourceToken.isBtc ? btcAmount : usdAmount,
-        targetAmount: targetToken.isBtc ? btcAmount : usdAmount,
+        sourceAmount: displaySourceAmount,
+        targetAmount: displayTargetAmount,
         sourceAmountUsd: usdAmount,
         targetAmountUsd: usdAmount,
         exchangeRate: btcUsdPrice,
@@ -438,9 +505,15 @@ class _SwapScreenState extends State<SwapScreen> {
         }
 
         // Step 2: Create the swap
+        // For stablecoins, token amount = usd amount (1:1)
+        // For non-stablecoins (e.g., XAUT), use the calculated token amount
+        final targetAmountValue = targetToken.isStablecoin
+            ? usd
+            : (double.tryParse(tokenAmount) ?? 0);
+
         final result = await _swapService.createSellBtcSwap(
           targetEvmAddress: targetEvmAddress!,
-          targetAmountUsd: usd,
+          targetAmount: targetAmountValue,
           targetToken: targetToken.tokenId,
           targetChain: targetToken.chainId,
         );
@@ -502,10 +575,16 @@ class _SwapScreenState extends State<SwapScreen> {
           logger.i('Auto-using wallet Arkade address: $arkadeAddress');
         }
 
+        // For stablecoins, token amount = usd amount (1:1)
+        // For non-stablecoins (e.g., XAUT), use the calculated token amount
+        final sourceAmountValue = sourceToken.isStablecoin
+            ? usd
+            : (double.tryParse(tokenAmount) ?? 0);
+
         final result = await _swapService.createBuyBtcSwap(
           targetArkAddress: arkadeAddress,
           userEvmAddress: sourceEvmAddress!,
-          sourceAmountUsd: usd,
+          sourceAmount: sourceAmountValue,
           sourceToken: sourceToken.tokenId,
           sourceChain: sourceToken.chainId,
         );
@@ -514,6 +593,26 @@ class _SwapScreenState extends State<SwapScreen> {
 
       // Navigate to processing screen
       if (mounted) {
+        // For display, use the correct amount based on token type
+        String displaySourceAmount;
+        String displayTargetAmount;
+
+        if (sourceToken.isBtc) {
+          displaySourceAmount = btcAmount;
+        } else if (sourceToken.isStablecoin) {
+          displaySourceAmount = usdAmount;
+        } else {
+          displaySourceAmount = tokenAmount; // XAUT and other non-stablecoins
+        }
+
+        if (targetToken.isBtc) {
+          displayTargetAmount = btcAmount;
+        } else if (targetToken.isStablecoin) {
+          displayTargetAmount = usdAmount;
+        } else {
+          displayTargetAmount = tokenAmount; // XAUT and other non-stablecoins
+        }
+
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -521,8 +620,8 @@ class _SwapScreenState extends State<SwapScreen> {
               swapId: swapId,
               sourceToken: sourceToken,
               targetToken: targetToken,
-              sourceAmount: sourceToken.isBtc ? btcAmount : usdAmount,
-              targetAmount: targetToken.isBtc ? btcAmount : usdAmount,
+              sourceAmount: displaySourceAmount,
+              targetAmount: displayTargetAmount,
             ),
           ),
         );

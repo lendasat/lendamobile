@@ -138,10 +138,11 @@ class LendaSwapService extends ChangeNotifier {
     }
   }
 
-  /// Create a BTC to EVM swap (sell BTC for stablecoins).
+  /// Create a BTC to EVM swap (sell BTC for EVM tokens).
+  /// [targetAmount] is the amount in target token units (e.g., 50 for USDC, 0.02 for XAUt)
   Future<lendaswap_api.BtcToEvmSwapResult> createSellBtcSwap({
     required String targetEvmAddress,
-    required double targetAmountUsd,
+    required double targetAmount,
     required String targetToken,
     required String targetChain,
     String? referralCode,
@@ -149,7 +150,7 @@ class LendaSwapService extends ChangeNotifier {
     try {
       final result = await lendaswap_api.lendaswapCreateBtcToEvmSwap(
         targetEvmAddress: targetEvmAddress,
-        targetAmountUsd: targetAmountUsd,
+        targetAmountUsd: targetAmount, // API still uses this name but it's actually token amount
         targetToken: targetToken,
         targetChain: targetChain,
         referralCode: referralCode,
@@ -165,11 +166,12 @@ class LendaSwapService extends ChangeNotifier {
     }
   }
 
-  /// Create an EVM to BTC swap (buy BTC with stablecoins).
+  /// Create an EVM to BTC swap (buy BTC with EVM tokens).
+  /// [sourceAmount] is the amount in source token units (e.g., 50 for USDC, 0.02 for XAUt)
   Future<lendaswap_api.EvmToBtcSwapResult> createBuyBtcSwap({
     required String targetArkAddress,
     required String userEvmAddress,
-    required double sourceAmountUsd,
+    required double sourceAmount,
     required String sourceToken,
     required String sourceChain,
     String? referralCode,
@@ -178,7 +180,7 @@ class LendaSwapService extends ChangeNotifier {
       final result = await lendaswap_api.lendaswapCreateEvmToBtcSwap(
         targetArkAddress: targetArkAddress,
         userEvmAddress: userEvmAddress,
-        sourceAmountUsd: sourceAmountUsd,
+        sourceAmountUsd: sourceAmount, // API still uses this name but it's actually token amount
         sourceToken: sourceToken,
         sourceChain: sourceChain,
         referralCode: referralCode,
