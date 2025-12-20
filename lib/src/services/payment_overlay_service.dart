@@ -13,9 +13,6 @@ class PaymentOverlayService {
   factory PaymentOverlayService() => _instance;
   PaymentOverlayService._internal();
 
-  OverlayEntry? _currentOverlay;
-  AnimationController? _animationController;
-
   /// Flag to suppress payment notifications during swap/send operations.
   /// When true, the global payment monitor should not show "payment received"
   /// notifications (e.g., when change from an outgoing tx is detected).
@@ -34,9 +31,6 @@ class PaymentOverlayService {
     _suppressPaymentNotifications = false;
   }
 
-  /// Global navigator key for overlay access
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
   /// Show a payment received overlay at the top of the screen
   Future<void> showPaymentReceivedOverlay({
     required BuildContext context,
@@ -44,47 +38,51 @@ class PaymentOverlayService {
     VoidCallback? onDismiss,
     Duration duration = const Duration(seconds: 4),
   }) async {
-    // Remove any existing overlay
-    hideOverlay();
-
     // Haptic feedback for success
     await HapticFeedback.mediumImpact();
 
-    final overlay = Overlay.of(context);
+    final overlayState = Overlay.of(context);
 
-    // Create animation controller
-    _animationController = AnimationController(
+    // Create animation controller with the overlay as ticker provider
+    final animationController = AnimationController(
       duration: const Duration(milliseconds: 350),
-      vsync: overlay,
+      vsync: overlayState,
     );
 
     final offsetAnimation = Tween<Offset>(
       begin: const Offset(0, -1),
       end: Offset.zero,
     ).animate(CurvedAnimation(
-      parent: _animationController!,
+      parent: animationController,
       curve: Curves.elasticOut,
     ));
 
-    _currentOverlay = OverlayEntry(
+    // Track if already dismissed to prevent double-dismiss
+    bool isDismissed = false;
+
+    late final OverlayEntry overlay;
+
+    void dismiss() {
+      if (isDismissed) return;
+      isDismissed = true;
+      overlay.remove();
+      animationController.dispose();
+      onDismiss?.call();
+    }
+
+    overlay = OverlayEntry(
       builder: (context) => _PaymentReceivedOverlayWidget(
         payment: payment,
         animation: offsetAnimation,
-        onDismiss: () {
-          hideOverlay();
-          onDismiss?.call();
-        },
+        onDismiss: dismiss,
       ),
     );
 
-    overlay.insert(_currentOverlay!);
-    _animationController!.forward();
+    overlayState.insert(overlay);
+    animationController.forward();
 
     // Auto-dismiss after duration
-    Future.delayed(duration, () {
-      hideOverlay();
-      onDismiss?.call();
-    });
+    Future.delayed(duration, dismiss);
   }
 
   /// Show a simple success overlay
@@ -93,37 +91,47 @@ class PaymentOverlayService {
     required String message,
     Duration duration = const Duration(seconds: 3),
   }) async {
-    hideOverlay();
-
     await HapticFeedback.lightImpact();
 
-    final overlay = Overlay.of(context);
+    final overlayState = Overlay.of(context);
 
-    _animationController = AnimationController(
+    final animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
-      vsync: overlay,
+      vsync: overlayState,
     );
 
     final offsetAnimation = Tween<Offset>(
       begin: const Offset(0, -1),
       end: Offset.zero,
     ).animate(CurvedAnimation(
-      parent: _animationController!,
+      parent: animationController,
       curve: Curves.easeOut,
     ));
 
-    _currentOverlay = OverlayEntry(
+    bool isDismissed = false;
+
+    late final OverlayEntry overlay;
+
+    void dismiss() {
+      if (isDismissed) return;
+      isDismissed = true;
+      overlay.remove();
+      animationController.dispose();
+    }
+
+    overlay = OverlayEntry(
       builder: (context) => _SimpleOverlayWidget(
         message: message,
         color: AppTheme.successColor,
         animation: offsetAnimation,
+        onDismiss: dismiss,
       ),
     );
 
-    overlay.insert(_currentOverlay!);
-    _animationController!.forward();
+    overlayState.insert(overlay);
+    animationController.forward();
 
-    Future.delayed(duration, hideOverlay);
+    Future.delayed(duration, dismiss);
   }
 
   /// Show an error overlay
@@ -132,45 +140,47 @@ class PaymentOverlayService {
     required String message,
     Duration duration = const Duration(seconds: 3),
   }) async {
-    hideOverlay();
-
     await HapticFeedback.heavyImpact();
 
-    final overlay = Overlay.of(context);
+    final overlayState = Overlay.of(context);
 
-    _animationController = AnimationController(
+    final animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
-      vsync: overlay,
+      vsync: overlayState,
     );
 
     final offsetAnimation = Tween<Offset>(
       begin: const Offset(0, -1),
       end: Offset.zero,
     ).animate(CurvedAnimation(
-      parent: _animationController!,
+      parent: animationController,
       curve: Curves.easeOut,
     ));
 
-    _currentOverlay = OverlayEntry(
+    bool isDismissed = false;
+
+    late final OverlayEntry overlay;
+
+    void dismiss() {
+      if (isDismissed) return;
+      isDismissed = true;
+      overlay.remove();
+      animationController.dispose();
+    }
+
+    overlay = OverlayEntry(
       builder: (context) => _SimpleOverlayWidget(
         message: message,
         color: AppTheme.errorColor,
         animation: offsetAnimation,
+        onDismiss: dismiss,
       ),
     );
 
-    overlay.insert(_currentOverlay!);
-    _animationController!.forward();
+    overlayState.insert(overlay);
+    animationController.forward();
 
-    Future.delayed(duration, hideOverlay);
-  }
-
-  /// Hide the current overlay
-  void hideOverlay() {
-    _currentOverlay?.remove();
-    _currentOverlay = null;
-    _animationController?.dispose();
-    _animationController = null;
+    Future.delayed(duration, dismiss);
   }
 }
 
@@ -342,11 +352,13 @@ class _SimpleOverlayWidget extends StatelessWidget {
   final String message;
   final Color color;
   final Animation<Offset> animation;
+  final VoidCallback onDismiss;
 
   const _SimpleOverlayWidget({
     required this.message,
     required this.color,
     required this.animation,
+    required this.onDismiss,
   });
 
   @override
@@ -360,30 +372,33 @@ class _SimpleOverlayWidget extends StatelessWidget {
       right: 0,
       child: SlideTransition(
         position: animation,
-        child: Material(
-          type: MaterialType.transparency,
-          child: Container(
-            padding: EdgeInsets.only(
-              top: topPadding + AppTheme.elementSpacing,
-              bottom: AppTheme.cardPadding,
-              left: AppTheme.cardPadding,
-              right: AppTheme.cardPadding,
-            ),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(AppTheme.borderRadiusBig),
-                bottomRight: Radius.circular(AppTheme.borderRadiusBig),
+        child: GestureDetector(
+          onTap: onDismiss,
+          child: Material(
+            type: MaterialType.transparency,
+            child: Container(
+              padding: EdgeInsets.only(
+                top: topPadding + AppTheme.elementSpacing,
+                bottom: AppTheme.cardPadding,
+                left: AppTheme.cardPadding,
+                right: AppTheme.cardPadding,
               ),
-            ),
-            child: Center(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: darken(color, 80),
-                  fontWeight: FontWeight.w600,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(AppTheme.borderRadiusBig),
+                  bottomRight: Radius.circular(AppTheme.borderRadiusBig),
                 ),
-                textAlign: TextAlign.center,
+              ),
+              child: Center(
+                child: Text(
+                  message,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: darken(color, 80),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
           ),

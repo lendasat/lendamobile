@@ -10,7 +10,10 @@
       "Bash(mkdir:*)",
       "Bash(export ANDROID_NDK_HOME=~/android-sdk/android-ndk-r27c)",
       "Bash(grep:*)",
-      "Bash(cargo check:*)"
+      "Bash(cargo check:*)",
+      "Bash(cargo clean:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

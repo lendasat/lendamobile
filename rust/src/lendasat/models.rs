@@ -392,11 +392,25 @@ pub struct CreateContractRequest {
     pub client_contract_id: Option<String>,
 }
 
+/// Serializes Option<f64> as null when None (instead of skipping the field)
+fn serialize_option_f64_as_null<S>(value: &Option<f64>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    match value {
+        Some(v) => serializer.serialize_some(v),
+        None => serializer.serialize_none(),
+    }
+}
+
 /// Request body for marking installment as paid
 #[derive(Debug, Clone, Serialize)]
 pub struct InstallmentPaidRequest {
     pub installment_id: String,
     pub payment_id: String, // txid
+    /// Optional amount paid (server requires field to be present, can be null)
+    #[serde(serialize_with = "serialize_option_f64_as_null")]
+    pub amount: Option<f64>,
 }
 
 /// Response from pubkey challenge request
@@ -511,6 +525,31 @@ pub struct BroadcastArkClaimRequest {
 #[derive(Debug, Clone, Deserialize)]
 pub struct BroadcastTxResponse {
     pub txid: String,
+}
+
+/// Response from GET /settle-ark endpoint
+/// Used when contract.requires_ark_settlement is true (VTXOs are recoverable)
+#[derive(Debug, Clone, Deserialize)]
+pub struct SettleArkPsbtResponse {
+    pub intent_message: String,
+    pub intent_proof: String,
+    pub forfeit_psbts: Vec<String>,
+    pub delegate_cosigner_pk: String,
+    pub user_pk: String,
+    pub derivation_path: Option<String>,
+}
+
+/// Request body for POST /finish-settle-ark
+#[derive(Debug, Clone, Serialize)]
+pub struct FinishSettleArkRequest {
+    pub intent_psbt: String,
+    pub forfeit_psbts: Vec<String>,
+}
+
+/// Response from finish-settle-ark (commitment txid)
+#[derive(Debug, Clone, Deserialize)]
+pub struct FinishSettleArkResponse {
+    pub commitment_txid: String,
 }
 
 /// Offer filters for API query

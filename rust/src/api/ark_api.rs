@@ -218,6 +218,22 @@ pub async fn nsec(data_dir: String) -> Result<String> {
     Ok(nsec.to_bech32()?)
 }
 
+/// Get the Nostr public key (npub) derived from the wallet mnemonic
+/// Note: Nostr keys are network-independent, so we use Bitcoin mainnet for derivation
+///
+/// This is the CANONICAL USER IDENTIFIER used for:
+/// - PostHog analytics user identification
+/// - Cross-service user correlation
+/// - Any feature requiring a consistent user ID
+///
+/// Returns the public key in bech32 format (npub1...)
+pub async fn npub(data_dir: String) -> Result<String> {
+    // Nostr keys are not network-specific, but we need a network for xpriv derivation
+    // Using mainnet as the standard (the derived key will be the same regardless)
+    let npub = crate::ark::npub(data_dir, Network::Bitcoin).await?;
+    Ok(npub.to_bech32()?)
+}
+
 /// Get the mnemonic words for backup (only available for HD wallets)
 pub fn get_mnemonic(data_dir: String) -> Result<String> {
     crate::ark::get_mnemonic(data_dir)

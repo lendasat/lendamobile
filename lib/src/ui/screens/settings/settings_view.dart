@@ -1,9 +1,12 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/lendasat_service.dart';
+import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/mempool/mempoolhome.dart';
+import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
@@ -12,7 +15,6 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:restart_app/restart_app.dart';
 import 'package:provider/provider.dart';
 
 class SettingsView extends StatefulWidget {
@@ -83,12 +85,17 @@ class SettingsViewState extends State<SettingsView> {
               await resetWallet(dataDir: dataDir.path);
               await _settingsService.resetToDefaults();
 
+              // Reset service singletons so they re-initialize with new wallet
+              LendaSwapService().reset();
+              LendasatService().reset();
+
               if (context.mounted) {
-                Restart.restartApp(
-                  notificationTitle:
-                      AppLocalizations.of(context)!.restartingApp,
-                  notificationBody: AppLocalizations.of(context)!
-                      .pleaseTapHereToOpenTheAppAgain,
+                // Navigate to OnboardingScreen and remove all previous routes
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (context) => const OnboardingScreen(),
+                  ),
+                  (route) => false,
                 );
               }
             },

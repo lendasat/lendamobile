@@ -1,7 +1,13 @@
 import 'dart:async';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/models/swap_token.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
+import 'package:ark_flutter/src/services/lendaswap_service.dart' show LendaSwapService;
+import 'package:ark_flutter/src/services/payment_overlay_service.dart';
+import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
+import 'package:ark_flutter/src/ui/screens/swap_processing_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
@@ -27,10 +33,13 @@ class ContractDetailScreen extends StatefulWidget {
 
 class _ContractDetailScreenState extends State<ContractDetailScreen> {
   final LendasatService _lendasatService = LendasatService();
+  final LendaSwapService _swapService = LendaSwapService();
 
   Contract? _contract;
   bool _isLoading = true;
   bool _isActionLoading = false;
+  bool _isRepaying = false;
+  bool _isMarkingPaid = false;
   String? _errorMessage;
   Timer? _pollTimer;
 
@@ -172,15 +181,11 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   Future<void> _showClaimSheet() async {
     if (_contract == null) return;
 
-    // Get fee rate first
-    final feeRate = await _showFeeRateDialog();
-    if (feeRate == null) return;
-
     setState(() => _isActionLoading = true);
 
     try {
       if (_contract!.isArkCollateral) {
-        // Ark collateral claim - use automatic signing
+        // Ark collateral claim - no fee rate needed (offchain)
         final txid = await _lendasatService.claimArkCollateral(
           contractId: widget.contractId,
         );
@@ -195,7 +200,13 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           await _refreshContract();
         }
       } else {
-        // Standard Bitcoin claim - use automatic signing
+        // Standard Bitcoin claim - need fee rate for on-chain tx
+        final feeRate = await _showFeeRateDialog();
+        if (feeRate == null) {
+          setState(() => _isActionLoading = false);
+          return;
+        }
+
         final txid = await _lendasatService.claimCollateral(
           contractId: widget.contractId,
           feeRate: feeRate,
@@ -270,6 +281,465 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     }
   }
 
+  /// Pay collateral for an approved contract that's awaiting deposit.
+  Future<void> _payCollateral() async {
+    if (_contract == null) return;
+
+    // Verify contract is ready for collateral (use effectiveCollateralSats which has initialCollateralSats fallback)
+    if (_contract!.contractAddress == null || _contract!.effectiveCollateralSats <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Contract not ready for collateral yet. Please wait.'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+      return;
+    }
+
+    // Confirm with user
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pay Collateral'),
+        content: Text(
+          'Send ${_contract!.effectiveCollateralBtc.toStringAsFixed(6)} BTC as collateral for this loan?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Pay'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isActionLoading = true);
+
+    // Suppress payment notifications during collateral send
+    PaymentOverlayService().startSuppression();
+
+    try {
+      final collateralSats = BigInt.from(_contract!.effectiveCollateralSats);
+      final collateralAddress = _contract!.contractAddress!;
+
+      logger.i('[Loan] Sending $collateralSats sats to $collateralAddress');
+
+      final txid = await ark_api.send(
+        address: collateralAddress,
+        amountSats: collateralSats,
+      );
+
+      logger.i('[Loan] Collateral sent! TXID: $txid');
+
+      // Track analytics
+      await AnalyticsService().trackLoanTransaction(
+        amountSats: _contract!.effectiveCollateralSats,
+        type: 'borrow',
+        loanId: _contract!.id,
+        interestRate: _contract!.interestRate,
+        durationDays: _contract!.durationDays,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Collateral sent! Loan is being processed.'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+        await _refreshContract();
+      }
+    } catch (e) {
+      logger.e('[Loan] Error sending collateral: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isActionLoading = false);
+      }
+      Future.delayed(const Duration(seconds: 5), () {
+        PaymentOverlayService().stopSuppression();
+      });
+    }
+  }
+
+  /// Repay the loan using Lendaswap - swaps BTC to stablecoin and sends to repayment address.
+  Future<void> _repayWithLendaswap() async {
+    if (_contract == null || !_contract!.canRepayWithLendaswap) return;
+
+    final targetToken = _contract!.repaymentSwapToken!;
+    final repaymentAddress = _contract!.loanRepaymentAddress!;
+    final amountToRepay = _contract!.balanceOutstanding;
+
+    // Confirm with user
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Repay with Lendaswap'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Repay \$${amountToRepay.toStringAsFixed(2)} using Lendaswap?',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'This will swap BTC from your wallet to ${targetToken.symbol} '
+              'and send it to the lender\'s repayment address.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Powered by Lendaswap',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Repay'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isRepaying = true);
+    PaymentOverlayService().startSuppression();
+
+    try {
+      // Initialize swap service if needed
+      if (!_swapService.isInitialized) {
+        await _swapService.initialize();
+      }
+
+      // Check wallet balance
+      final walletBalance = await ark_api.balance();
+      final availableSats = walletBalance.offchain.totalSats;
+
+      logger.i('[LoanRepay] Repaying \$${amountToRepay.toStringAsFixed(2)} to $repaymentAddress');
+
+      // Create the swap - BTC to stablecoin, sent to repayment address
+      final result = await _swapService.createSellBtcSwap(
+        targetEvmAddress: repaymentAddress,
+        targetAmountUsd: amountToRepay,
+        targetToken: targetToken.tokenId,
+        targetChain: targetToken.chainId,
+      );
+
+      logger.i('[LoanRepay] Swap created: ${result.swapId}, sending ${result.satsToSend} sats to ${result.arkadeHtlcAddress}');
+
+      // Check if we have enough balance
+      final satsToSend = BigInt.from(result.satsToSend);
+      if (availableSats < satsToSend) {
+        throw Exception(
+          'Insufficient balance. Available: $availableSats sats, Required: ${result.satsToSend} sats',
+        );
+      }
+
+      // Fund the swap by sending BTC to the HTLC address
+      final fundingTxid = await ark_api.send(
+        address: result.arkadeHtlcAddress,
+        amountSats: satsToSend,
+      );
+
+      logger.i('[LoanRepay] Swap funded! TXID: $fundingTxid');
+
+      // Track analytics - using loan transaction with repay type
+      await AnalyticsService().trackLoanTransaction(
+        amountSats: result.satsToSend,
+        type: 'repay',
+        loanId: _contract!.id,
+        interestRate: _contract!.interestRate,
+        durationDays: _contract!.durationDays,
+      );
+
+      if (mounted) {
+        // Calculate BTC amount from sats for display
+        final btcAmount = (result.satsToSend / 100000000).toStringAsFixed(8);
+
+        // Navigate to swap processing screen to monitor the swap
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SwapProcessingScreen(
+              swapId: result.swapId,
+              sourceToken: SwapToken.bitcoin,
+              targetToken: targetToken,
+              sourceAmount: btcAmount,
+              targetAmount: amountToRepay.toStringAsFixed(2),
+            ),
+          ),
+        ).then((_) {
+          // Refresh contract status when returning
+          _refreshContract();
+        });
+      }
+    } catch (e) {
+      logger.e('[LoanRepay] Error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Repayment failed: ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isRepaying = false);
+      }
+      Future.delayed(const Duration(seconds: 5), () {
+        PaymentOverlayService().stopSuppression();
+      });
+    }
+  }
+
+  /// Show dialog to mark an installment as already paid with transaction ID.
+  Future<void> _showMarkAsPaidDialog() async {
+    if (_contract == null) return;
+
+    // Get unpaid installments
+    final unpaidInstallments = _contract!.installments
+        .where((i) =>
+            i.status != InstallmentStatus.paid &&
+            i.status != InstallmentStatus.confirmed)
+        .toList();
+
+    if (unpaidInstallments.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('All installments are already paid.'),
+          backgroundColor: AppTheme.successColor,
+        ),
+      );
+      return;
+    }
+
+    // Default to first unpaid installment
+    Installment selectedInstallment = unpaidInstallments.first;
+    final txidController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Confirm Payment'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+              Text(
+                'Enter the transaction ID of your payment to confirm repayment.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+
+              // Installment selector (if multiple)
+              if (unpaidInstallments.length > 1) ...[
+                Text(
+                  'Select Installment',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.7),
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.2),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: DropdownButton<Installment>(
+                    value: selectedInstallment,
+                    isExpanded: true,
+                    underline: const SizedBox(),
+                    items: unpaidInstallments.map((i) {
+                      return DropdownMenuItem(
+                        value: i,
+                        child: Text(
+                          '\$${i.totalPayment.toStringAsFixed(2)} - Due ${_formatDate(i.dueDate)}',
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(() => selectedInstallment = value);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ] else ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.payments,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '\$${selectedInstallment.totalPayment.toStringAsFixed(2)} due ${_formatDate(selectedInstallment.dueDate)}',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Transaction ID input
+              Text(
+                'Transaction ID',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.7),
+                    ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: txidController,
+                decoration: const InputDecoration(
+                  hintText: 'Enter transaction ID or hash',
+                  border: OutlineInputBorder(),
+                ),
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                ),
+                maxLines: 2,
+              ),
+            ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (txidController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a transaction ID'),
+                      backgroundColor: AppTheme.errorColor,
+                    ),
+                  );
+                  return;
+                }
+                Navigator.pop(context, true);
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isMarkingPaid = true);
+
+    try {
+      await _lendasatService.markInstallmentPaid(
+        contractId: _contract!.id,
+        installmentId: selectedInstallment.id,
+        paymentTxid: txidController.text.trim(),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Payment confirmed! Refreshing contract...'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+        await _refreshContract();
+      }
+    } catch (e) {
+      logger.e('Error marking installment paid: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isMarkingPaid = false);
+      }
+    }
+  }
+
   Future<int?> _showFeeRateDialog() async {
     final controller = TextEditingController(text: '10');
 
@@ -336,10 +806,23 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   }
 
   Widget _buildErrorView() {
+    // Extract user-friendly error message
+    String displayMessage = _errorMessage ?? 'Unknown error';
+    if (displayMessage.contains('401 Unauthorized') || displayMessage.contains('Invalid token')) {
+      displayMessage = 'Session expired. Please go back and try again.';
+    } else if (displayMessage.contains('AnyhowException')) {
+      // Clean up Rust error format
+      final match = RegExp(r'AnyhowException\(([^)]+)').firstMatch(displayMessage);
+      if (match != null) {
+        displayMessage = match.group(1) ?? displayMessage;
+      }
+    }
+
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, size: 64, color: AppTheme.errorColor),
@@ -350,7 +833,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             ),
             const SizedBox(height: AppTheme.elementSpacing),
             Text(
-              _errorMessage!,
+              displayMessage,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppTheme.cardPadding),
@@ -407,8 +890,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             _buildCollateralDetails(),
             const SizedBox(height: AppTheme.cardPadding),
 
-            // Repayment schedule (if active)
-            if (_contract!.installments.isNotEmpty) ...[
+            // Repayment schedule (if active loan or has installments)
+            if (_contract!.isActiveLoan || _contract!.installments.isNotEmpty) ...[
               _buildRepaymentSchedule(),
               const SizedBox(height: AppTheme.cardPadding),
             ],
@@ -427,6 +910,46 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Contract ID row
+          Row(
+            children: [
+              Text(
+                'Contract',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+              ),
+              const Spacer(),
+              _buildStatusBadge(),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _contract!.id,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: () => _copyToClipboard(_contract!.id, 'Contract ID'),
+                child: Icon(
+                  Icons.copy,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          // Loan amount and lender
           Row(
             children: [
               Expanded(
@@ -450,7 +973,6 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                   ],
                 ),
               ),
-              _buildStatusBadge(),
             ],
           ),
 
@@ -546,18 +1068,18 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             '\$${_contract!.remainingBalance.toStringAsFixed(2)}',
           ),
           _buildDetailRow('Expires', _formatDate(_contract!.expiry)),
-          if (_contract!.loanRepaymentAddress != null)
-            _buildDetailRow(
-              'Repayment Address',
-              _truncateAddress(_contract!.loanRepaymentAddress!),
-              copyValue: _contract!.loanRepaymentAddress,
-            ),
         ],
       ),
     );
   }
 
   Widget _buildCollateralDetails() {
+    // Use deposited amount if available, otherwise fall back to effective collateral
+    final collateralBtc = _contract!.depositedBtc > 0
+        ? _contract!.depositedBtc
+        : _contract!.effectiveCollateralBtc;
+    final collateralSats = collateralBtc * 100000000;
+
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
@@ -569,16 +1091,16 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           ),
           const SizedBox(height: AppTheme.cardPadding),
           _buildDetailRow(
-            'Required',
-            '${_contract!.collateralBtc.toStringAsFixed(6)} BTC',
+            'Amount',
+            '${collateralSats.toStringAsFixed(0)} sats',
           ),
           _buildDetailRow(
-            'Deposited',
-            '${_contract!.depositedBtc.toStringAsFixed(6)} BTC',
+            '',
+            '${collateralBtc.toStringAsFixed(8)} BTC',
           ),
           _buildDetailRow(
-            'Initial LTV',
-            '${(_contract!.initialLtv * 100).toStringAsFixed(0)}%',
+            'LTV',
+            '${(_contract!.initialLtv * 100).toStringAsFixed(1)}%',
           ),
           _buildDetailRow(
             'Liquidation Price',
@@ -588,6 +1110,43 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             'Type',
             _contract!.isArkCollateral ? 'Arkade (Instant)' : 'On-chain',
           ),
+          if (_contract!.contractAddress != null) ...[
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              'Contract Address',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _contract!.contractAddress!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          fontSize: 10,
+                        ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () => _copyToClipboard(
+                    _contract!.contractAddress!,
+                    'Contract Address',
+                  ),
+                  child: Icon(
+                    Icons.copy,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -604,6 +1163,91 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppTheme.cardPadding),
+
+          // Repayment summary for active loans
+          if (_contract!.isActiveLoan) ...[
+            _buildDetailRow(
+              'Total Repayment',
+              '\$${_contract!.totalRepayment.toStringAsFixed(2)}',
+            ),
+            _buildDetailRow(
+              'Amount Paid',
+              '\$${(_contract!.totalRepayment - _contract!.balanceOutstanding).toStringAsFixed(2)}',
+            ),
+            _buildDetailRow(
+              'Outstanding',
+              '\$${_contract!.balanceOutstanding.toStringAsFixed(2)}',
+            ),
+            // Show BTC repayment address for manual payments
+            if (_contract!.btcLoanRepaymentAddress != null &&
+                _contract!.btcLoanRepaymentAddress!.isNotEmpty) ...[
+              const SizedBox(height: AppTheme.elementSpacing),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'BTC Repayment Address',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _contract!.btcLoanRepaymentAddress!,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  fontFamily: 'monospace',
+                                  fontSize: 11,
+                                ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: () => _copyToClipboard(
+                            _contract!.btcLoanRepaymentAddress!,
+                            'BTC Repayment Address',
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              Icons.copy,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: AppTheme.cardPadding),
+            Divider(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+          ],
+
+          // Installments list
           ..._contract!.installments.map((installment) => _buildInstallmentRow(installment)),
         ],
       ),
@@ -675,20 +1319,76 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
   Widget _buildActions() {
     final canCancel = _contract!.status == ContractStatus.requested;
+    // Can pay collateral if approved and has collateral info (use effectiveCollateralSats for fallback)
+    final canPayCollateral = _contract!.status == ContractStatus.approved &&
+        _contract!.contractAddress != null &&
+        _contract!.effectiveCollateralSats > 0;
+    // Full width for buttons
+    final buttonWidth = MediaQuery.of(context).size.width - AppTheme.cardPadding * 2;
 
     return Column(
       children: [
-        if (_contract!.canClaim)
+        // Pay Collateral button for approved contracts awaiting deposit
+        if (canPayCollateral)
+          LongButtonWidget(
+            title: _isActionLoading
+                ? 'Sending...'
+                : 'Pay Collateral (${_contract!.effectiveCollateralBtc.toStringAsFixed(6)} BTC)',
+            buttonType: ButtonType.primary,
+            customWidth: buttonWidth,
+            onTap: _isActionLoading ? null : _payCollateral,
+          ),
+        // Repay with Lendaswap button for active loans
+        if (_contract!.canRepayWithLendaswap) ...[
+          if (canPayCollateral) const SizedBox(height: AppTheme.elementSpacing),
+          LongButtonWidget(
+            title: _isRepaying
+                ? 'Processing...'
+                : 'Repay \$${_contract!.balanceOutstanding.toStringAsFixed(2)} with Lendaswap',
+            buttonType: ButtonType.primary,
+            customWidth: buttonWidth,
+            buttonGradient: const LinearGradient(
+              colors: [Color(0xFF8247E5), Color(0xFF6C3DC1)], // Lendaswap purple gradient
+            ),
+            onTap: _isRepaying || _isActionLoading ? null : _repayWithLendaswap,
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: Text(
+              'Powered by Lendaswap',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+            ),
+          ),
+        ],
+        // "I Already Paid" button for active loans with outstanding balance
+        if (_contract!.isActiveLoan && _contract!.balanceOutstanding > 0) ...[
+          const SizedBox(height: AppTheme.elementSpacing),
+          LongButtonWidget(
+            title: _isMarkingPaid ? 'Confirming...' : 'I Already Paid',
+            buttonType: ButtonType.secondary,
+            customWidth: buttonWidth,
+            onTap: _isMarkingPaid || _isActionLoading || _isRepaying
+                ? null
+                : _showMarkAsPaidDialog,
+          ),
+        ],
+        if (_contract!.canClaim) ...[
+          if (canPayCollateral || _contract!.canRepayWithLendaswap) const SizedBox(height: AppTheme.elementSpacing),
           LongButtonWidget(
             title: _isActionLoading ? 'Loading...' : 'Claim Collateral',
             buttonType: ButtonType.primary,
+            customWidth: buttonWidth,
             onTap: _isActionLoading ? null : _showClaimSheet,
           ),
+        ],
         if (_contract!.canRecover) ...[
           const SizedBox(height: AppTheme.elementSpacing),
           LongButtonWidget(
             title: _isActionLoading ? 'Loading...' : 'Recover Collateral',
             buttonType: ButtonType.primary,
+            customWidth: buttonWidth,
             onTap: _isActionLoading ? null : _showRecoverSheet,
           ),
         ],
@@ -697,6 +1397,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: _isActionLoading ? 'Loading...' : 'Cancel Request',
             buttonType: ButtonType.secondary,
+            customWidth: buttonWidth,
             onTap: _isActionLoading ? null : _cancelContract,
           ),
         ],
@@ -710,39 +1411,51 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.7),
-                ),
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                value,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              if (copyValue != null) ...[
-                const SizedBox(width: 4),
-                InkWell(
-                  onTap: () => _copyToClipboard(copyValue, label),
-                  child: Icon(
-                    Icons.copy,
-                    size: 16,
+          Flexible(
+            flex: 2,
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withValues(alpha: 0.5),
+                        .withValues(alpha: 0.7),
+                  ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            flex: 3,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Text(
+                    value,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                    textAlign: TextAlign.end,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (copyValue != null) ...[
+                  const SizedBox(width: 4),
+                  InkWell(
+                    onTap: () => _copyToClipboard(copyValue, label),
+                    child: Icon(
+                      Icons.copy,
+                      size: 16,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ],
       ),
@@ -758,8 +1471,4 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     }
   }
 
-  String _truncateAddress(String address) {
-    if (address.length <= 16) return address;
-    return '${address.substring(0, 8)}...${address.substring(address.length - 8)}';
-  }
 }

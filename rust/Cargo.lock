@@ -151,7 +151,7 @@ checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 [[package]]
 name = "ark-bdk-wallet"
 version = "0.7.0"
-source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=201aeac#201aeac14d1258e09c00e957ef86e9b682d8150e"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28#09b073269c944a25eef5e1f92fd2ae2a5ef2ea28"
 dependencies = [
  "anyhow",
  "ark-client",
@@ -170,7 +170,7 @@ dependencies = [
 [[package]]
 name = "ark-client"
 version = "0.7.0"
-source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=201aeac#201aeac14d1258e09c00e957ef86e9b682d8150e"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28#09b073269c944a25eef5e1f92fd2ae2a5ef2ea28"
 dependencies = [
  "ark-core",
  "ark-grpc",
@@ -207,7 +207,7 @@ dependencies = [
 [[package]]
 name = "ark-core"
 version = "0.7.0"
-source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=201aeac#201aeac14d1258e09c00e957ef86e9b682d8150e"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28#09b073269c944a25eef5e1f92fd2ae2a5ef2ea28"
 dependencies = [
  "ark-secp256k1",
  "bech32",
@@ -225,7 +225,7 @@ dependencies = [
 [[package]]
 name = "ark-grpc"
 version = "0.7.0"
-source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=201aeac#201aeac14d1258e09c00e957ef86e9b682d8150e"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28#09b073269c944a25eef5e1f92fd2ae2a5ef2ea28"
 dependencies = [
  "ark-core",
  "async-stream",
@@ -243,7 +243,7 @@ dependencies = [
 [[package]]
 name = "ark-rest"
 version = "0.7.0"
-source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=201aeac#201aeac14d1258e09c00e957ef86e9b682d8150e"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28#09b073269c944a25eef5e1f92fd2ae2a5ef2ea28"
 dependencies = [
  "ark-core",
  "base64 0.22.1",
@@ -265,7 +265,7 @@ dependencies = [
 [[package]]
 name = "ark-rs"
 version = "0.7.0"
-source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=201aeac#201aeac14d1258e09c00e957ef86e9b682d8150e"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28#09b073269c944a25eef5e1f92fd2ae2a5ef2ea28"
 dependencies = [
  "ark-core",
 ]
@@ -273,7 +273,7 @@ dependencies = [
 [[package]]
 name = "ark-secp256k1"
 version = "0.31.0"
-source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=201aeac#201aeac14d1258e09c00e957ef86e9b682d8150e"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28#09b073269c944a25eef5e1f92fd2ae2a5ef2ea28"
 dependencies = [
  "bitcoin_hashes",
  "rand 0.9.2",
@@ -2046,6 +2046,7 @@ dependencies = [
 [[package]]
 name = "lendaswap-core"
 version = "0.1.0"
+source = "git+https://github.com/lendasat/lendaswap.git?tag=0.0.61#7a80566a65e27479b032fa5f156f37685fea49b1"
 dependencies = [
  "anyhow",
  "ark-rest",
@@ -3475,7 +3476,7 @@ dependencies = [
 [[package]]
 name = "secp256k1-sys"
 version = "0.11.0"
-source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=201aeac#201aeac14d1258e09c00e957ef86e9b682d8150e"
+source = "git+https://github.com/ArkLabsHQ/ark-rs.git?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28#09b073269c944a25eef5e1f92fd2ae2a5ef2ea28"
 dependencies = [
  "cc",
 ]

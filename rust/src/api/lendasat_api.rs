@@ -637,6 +637,7 @@ pub async fn lendasat_mark_installment_paid(
     let request = InstallmentPaidRequest {
         installment_id,
         payment_id: payment_txid,
+        amount: None, // Server will verify amount from txid
     };
 
     let response = state
@@ -839,6 +840,87 @@ pub async fn lendasat_broadcast_claim_ark_tx(
     tracing::info!("Ark claim tx broadcast: {}", broadcast_response.txid);
 
     Ok(broadcast_response.txid)
+}
+
+// ============================================================================
+// Ark Settlement (for recoverable VTXOs)
+// ============================================================================
+
+/// Get the PSBTs for settling Ark collateral when VTXOs are recoverable.
+/// Use this instead of claim-ark when contract.requires_ark_settlement is true.
+pub async fn lendasat_get_settle_ark_psbt(contract_id: String) -> Result<SettleArkPsbtResponse> {
+    let lock = get_state_lock();
+    let guard = lock.read().await;
+    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+
+    let headers = get_auth_headers(state).await?;
+
+    let url = format!("{}/api/contracts/{}/settle-ark", state.base_url, contract_id);
+
+    let response = state
+        .http_client
+        .get(&url)
+        .headers(headers)
+        .send()
+        .await
+        .map_err(|e| anyhow!("Failed to get settle Ark PSBTs: {}", e))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let text = response.text().await.unwrap_or_default();
+        bail!("Failed to get settle Ark PSBTs ({}): {}", status, text);
+    }
+
+    let settle_response: SettleArkPsbtResponse = response
+        .json()
+        .await
+        .map_err(|e| anyhow!("Failed to parse settle Ark response: {}", e))?;
+
+    Ok(settle_response)
+}
+
+/// Finish Ark collateral settlement by submitting signed PSBTs.
+pub async fn lendasat_finish_settle_ark(
+    contract_id: String,
+    signed_intent_psbt: String,
+    signed_forfeit_psbts: Vec<String>,
+) -> Result<String> {
+    let lock = get_state_lock();
+    let guard = lock.read().await;
+    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+
+    let headers = get_auth_headers(state).await?;
+
+    let url = format!("{}/api/contracts/{}/finish-settle-ark", state.base_url, contract_id);
+
+    let request = FinishSettleArkRequest {
+        intent_psbt: signed_intent_psbt,
+        forfeit_psbts: signed_forfeit_psbts,
+    };
+
+    let response = state
+        .http_client
+        .post(&url)
+        .headers(headers)
+        .json(&request)
+        .send()
+        .await
+        .map_err(|e| anyhow!("Failed to finish settle Ark: {}", e))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let text = response.text().await.unwrap_or_default();
+        bail!("Failed to finish settle Ark ({}): {}", status, text);
+    }
+
+    let finish_response: FinishSettleArkResponse = response
+        .json()
+        .await
+        .map_err(|e| anyhow!("Failed to parse finish settle response: {}", e))?;
+
+    tracing::info!("Ark settlement finished, commitment txid: {}", finish_response.commitment_txid);
+
+    Ok(finish_response.commitment_txid)
 }
 
 // ============================================================================

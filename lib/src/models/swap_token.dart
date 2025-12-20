@@ -44,7 +44,7 @@ extension SwapTokenExtension on SwapToken {
       case SwapToken.usdtEthereum:
         return 'USDT';
       case SwapToken.xautEthereum:
-        return 'XAUT';
+        return 'XAUt'; // Official Tether Gold symbol
     }
   }
 
@@ -62,7 +62,7 @@ extension SwapTokenExtension on SwapToken {
       case SwapToken.usdtEthereum:
         return 'USDT (Ethereum)';
       case SwapToken.xautEthereum:
-        return 'Gold (Ethereum)';
+        return 'XAUt (Ethereum)';
     }
   }
 

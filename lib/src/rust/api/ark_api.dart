@@ -80,6 +80,18 @@ Future<void> settle() => RustLib.instance.api.crateApiArkApiSettle();
 Future<String> nsec({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiNsec(dataDir: dataDir);
 
+/// Get the Nostr public key (npub) derived from the wallet mnemonic
+/// Note: Nostr keys are network-independent, so we use Bitcoin mainnet for derivation
+///
+/// This is the CANONICAL USER IDENTIFIER used for:
+/// - PostHog analytics user identification
+/// - Cross-service user correlation
+/// - Any feature requiring a consistent user ID
+///
+/// Returns the public key in bech32 format (npub1...)
+Future<String> npub({required String dataDir}) =>
+    RustLib.instance.api.crateApiArkApiNpub(dataDir: dataDir);
+
 /// Get the mnemonic words for backup (only available for HD wallets)
 Future<String> getMnemonic({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiGetMnemonic(dataDir: dataDir);

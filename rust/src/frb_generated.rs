@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -737918204;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 34272460;
 
 // Section: executor
 
@@ -1185,6 +1185,49 @@ fn wire__crate__api__lendasat_api__lendasat_create_contract_impl(
         },
     )
 }
+fn wire__crate__api__lendasat_api__lendasat_finish_settle_ark_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_finish_settle_ark",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contract_id = <String>::sse_decode(&mut deserializer);
+            let api_signed_intent_psbt = <String>::sse_decode(&mut deserializer);
+            let api_signed_forfeit_psbts = <Vec<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::lendasat_api::lendasat_finish_settle_ark(
+                            api_contract_id,
+                            api_signed_intent_psbt,
+                            api_signed_forfeit_psbts,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__lendasat_api__lendasat_get_claim_ark_psbt_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1517,6 +1560,44 @@ fn wire__crate__api__lendasat_api__lendasat_get_recover_psbt_impl(
                             api_fee_rate,
                         )
                         .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__lendasat_api__lendasat_get_settle_ark_psbt_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "lendasat_get_settle_ark_psbt",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contract_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::lendasat_api::lendasat_get_settle_ark_psbt(api_contract_id)
+                                .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -2639,6 +2720,42 @@ fn wire__crate__api__moonpay_api__moonpay_get_quote_impl(
                     (move || async move {
                         let output_ok =
                             crate::api::moonpay_api::moonpay_get_quote(api_server_url).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__ark_api__npub_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "npub",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_data_dir = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::ark_api::npub(api_data_dir).await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -5016,6 +5133,26 @@ impl SseDecode for crate::lendasat::models::RepaymentPlan {
     }
 }
 
+impl SseDecode for crate::lendasat::models::SettleArkPsbtResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_intentMessage = <String>::sse_decode(deserializer);
+        let mut var_intentProof = <String>::sse_decode(deserializer);
+        let mut var_forfeitPsbts = <Vec<String>>::sse_decode(deserializer);
+        let mut var_delegateCosignerPk = <String>::sse_decode(deserializer);
+        let mut var_userPk = <String>::sse_decode(deserializer);
+        let mut var_derivationPath = <Option<String>>::sse_decode(deserializer);
+        return crate::lendasat::models::SettleArkPsbtResponse {
+            intent_message: var_intentMessage,
+            intent_proof: var_intentProof,
+            forfeit_psbts: var_forfeitPsbts,
+            delegate_cosigner_pk: var_delegateCosignerPk,
+            user_pk: var_userPk,
+            derivation_path: var_derivationPath,
+        };
+    }
+}
+
 impl SseDecode for crate::lendaswap::SwapInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -5332,220 +5469,233 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        32 => wire__crate__api__lendasat_api__lendasat_get_claim_ark_psbt_impl(
+        32 => wire__crate__api__lendasat_api__lendasat_finish_settle_ark_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        33 => wire__crate__api__lendasat_api__lendasat_get_claim_psbt_impl(
+        33 => wire__crate__api__lendasat_api__lendasat_get_claim_ark_psbt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        34 => wire__crate__api__lendasat_api__lendasat_get_contract_impl(
+        34 => wire__crate__api__lendasat_api__lendasat_get_claim_psbt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        35 => wire__crate__api__lendasat_api__lendasat_get_contracts_impl(
+        35 => wire__crate__api__lendasat_api__lendasat_get_contract_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        36 => wire__crate__api__lendasat_api__lendasat_get_derivation_path_impl(
+        36 => wire__crate__api__lendasat_api__lendasat_get_contracts_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        37 => wire__crate__api__lendasat_api__lendasat_get_offer_impl(
+        37 => wire__crate__api__lendasat_api__lendasat_get_derivation_path_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        38 => wire__crate__api__lendasat_api__lendasat_get_offers_impl(
+        38 => wire__crate__api__lendasat_api__lendasat_get_offer_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        39 => wire__crate__api__lendasat_api__lendasat_get_public_key_impl(
+        39 => wire__crate__api__lendasat_api__lendasat_get_offers_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        40 => wire__crate__api__lendasat_api__lendasat_get_recover_psbt_impl(
+        40 => wire__crate__api__lendasat_api__lendasat_get_public_key_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        41 => wire__crate__api__lendasat_api__lendasat_init_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__lendasat_api__lendasat_is_authenticated_impl(
+        41 => wire__crate__api__lendasat_api__lendasat_get_recover_psbt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        43 => wire__crate__api__lendasat_api__lendasat_is_initialized_impl(
+        42 => wire__crate__api__lendasat_api__lendasat_get_settle_ark_psbt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        44 => {
+        43 => wire__crate__api__lendasat_api__lendasat_init_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__lendasat_api__lendasat_is_authenticated_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        45 => wire__crate__api__lendasat_api__lendasat_is_initialized_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        46 => {
             wire__crate__api__lendasat_api__lendasat_logout_impl(port, ptr, rust_vec_len, data_len)
         }
-        45 => wire__crate__api__lendasat_api__lendasat_mark_installment_paid_impl(
+        47 => wire__crate__api__lendasat_api__lendasat_mark_installment_paid_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        46 => wire__crate__api__lendasat_api__lendasat_register_impl(
+        48 => wire__crate__api__lendasat_api__lendasat_register_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        47 => wire__crate__api__lendasat_api__lendasat_sign_psbt_impl(
+        49 => wire__crate__api__lendasat_api__lendasat_sign_psbt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        48 => wire__crate__api__lendaswap_api__lendaswap_claim_gelato_impl(
+        50 => wire__crate__api__lendaswap_api__lendaswap_claim_gelato_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        49 => wire__crate__api__lendaswap_api__lendaswap_claim_vhtlc_impl(
+        51 => wire__crate__api__lendaswap_api__lendaswap_claim_vhtlc_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        50 => wire__crate__api__lendaswap_api__lendaswap_create_btc_to_evm_swap_impl(
+        52 => wire__crate__api__lendaswap_api__lendaswap_create_btc_to_evm_swap_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        51 => wire__crate__api__lendaswap_api__lendaswap_create_evm_to_btc_swap_impl(
+        53 => wire__crate__api__lendaswap_api__lendaswap_create_evm_to_btc_swap_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        52 => wire__crate__api__lendaswap_api__lendaswap_create_evm_to_lightning_swap_impl(
+        54 => wire__crate__api__lendaswap_api__lendaswap_create_evm_to_lightning_swap_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        53 => wire__crate__api__lendaswap_api__lendaswap_delete_swap_impl(
+        55 => wire__crate__api__lendaswap_api__lendaswap_delete_swap_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        54 => wire__crate__api__lendaswap_api__lendaswap_get_asset_pairs_impl(
+        56 => wire__crate__api__lendaswap_api__lendaswap_get_asset_pairs_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        55 => wire__crate__api__lendaswap_api__lendaswap_get_quote_impl(
+        57 => wire__crate__api__lendaswap_api__lendaswap_get_quote_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        56 => wire__crate__api__lendaswap_api__lendaswap_get_swap_impl(
+        58 => wire__crate__api__lendaswap_api__lendaswap_get_swap_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        57 => {
+        59 => {
             wire__crate__api__lendaswap_api__lendaswap_init_impl(port, ptr, rust_vec_len, data_len)
         }
-        59 => wire__crate__api__lendaswap_api__lendaswap_list_swaps_impl(
+        61 => wire__crate__api__lendaswap_api__lendaswap_list_swaps_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        60 => wire__crate__api__lendaswap_api__lendaswap_recover_swaps_impl(
+        62 => wire__crate__api__lendaswap_api__lendaswap_recover_swaps_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        61 => wire__crate__api__lendaswap_api__lendaswap_refund_vhtlc_impl(
+        63 => wire__crate__api__lendaswap_api__lendaswap_refund_vhtlc_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        62 => {
+        64 => {
             wire__crate__api__ark_api__load_existing_wallet_impl(port, ptr, rust_vec_len, data_len)
         }
-        63 => wire__crate__api__moonpay_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
-        64 => wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
+        65 => wire__crate__api__moonpay_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
+        66 => wire__crate__api__moonpay_api__moonpay_encrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        65 => wire__crate__api__moonpay_get_currency_limits_impl(port, ptr, rust_vec_len, data_len),
-        66 => wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
+        67 => wire__crate__api__moonpay_get_currency_limits_impl(port, ptr, rust_vec_len, data_len),
+        68 => wire__crate__api__moonpay_api__moonpay_get_currency_limits_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        67 => wire__crate__api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len),
-        68 => {
+        69 => wire__crate__api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len),
+        70 => {
             wire__crate__api__moonpay_api__moonpay_get_quote_impl(port, ptr, rust_vec_len, data_len)
         }
-        69 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
-        70 => wire__crate__api__ark_api__pay_ln_invoice_impl(port, ptr, rust_vec_len, data_len),
-        71 => wire__crate__api__lendasat_api__reset_lendasat_state_impl(
+        71 => wire__crate__api__ark_api__npub_impl(port, ptr, rust_vec_len, data_len),
+        72 => wire__crate__api__ark_api__nsec_impl(port, ptr, rust_vec_len, data_len),
+        73 => wire__crate__api__ark_api__pay_ln_invoice_impl(port, ptr, rust_vec_len, data_len),
+        74 => wire__crate__api__lendasat_api__reset_lendasat_state_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        72 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
-        73 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
-        74 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
-        75 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
-        76 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
-        77 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
-        78 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
+        75 => wire__crate__api__ark_api__reset_wallet_impl(port, ptr, rust_vec_len, data_len),
+        76 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
+        77 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
+        78 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
+        79 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
+        80 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
+        81 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        79 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
-        80 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
+        82 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
+        83 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        81 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
-        82 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
-        83 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
+        84 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
+        85 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
+        86 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -5560,7 +5710,7 @@ fn pde_ffi_dispatcher_sync_impl(
     match func_id {
         3 => wire__crate__api__currency_code_impl(ptr, rust_vec_len, data_len),
         20 => wire__crate__api__get_supported_currencies_impl(ptr, rust_vec_len, data_len),
-        58 => wire__crate__api__lendaswap_api__lendaswap_is_initialized_impl(
+        60 => wire__crate__api__lendaswap_api__lendaswap_is_initialized_impl(
             ptr,
             rust_vec_len,
             data_len,
@@ -6959,6 +7109,31 @@ impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::RepaymentPlan>
     for crate::lendasat::models::RepaymentPlan
 {
     fn into_into_dart(self) -> crate::lendasat::models::RepaymentPlan {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::lendasat::models::SettleArkPsbtResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.intent_message.into_into_dart().into_dart(),
+            self.intent_proof.into_into_dart().into_dart(),
+            self.forfeit_psbts.into_into_dart().into_dart(),
+            self.delegate_cosigner_pk.into_into_dart().into_dart(),
+            self.user_pk.into_into_dart().into_dart(),
+            self.derivation_path.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::lendasat::models::SettleArkPsbtResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::lendasat::models::SettleArkPsbtResponse>
+    for crate::lendasat::models::SettleArkPsbtResponse
+{
+    fn into_into_dart(self) -> crate::lendasat::models::SettleArkPsbtResponse {
         self
     }
 }
@@ -8509,6 +8684,18 @@ impl SseEncode for crate::lendasat::models::RepaymentPlan {
             },
             serializer,
         );
+    }
+}
+
+impl SseEncode for crate::lendasat::models::SettleArkPsbtResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.intent_message, serializer);
+        <String>::sse_encode(self.intent_proof, serializer);
+        <Vec<String>>::sse_encode(self.forfeit_psbts, serializer);
+        <String>::sse_encode(self.delegate_cosigner_pk, serializer);
+        <String>::sse_encode(self.user_pk, serializer);
+        <Option<String>>::sse_encode(self.derivation_path, serializer);
     }
 }
 

@@ -270,6 +270,22 @@ pub(crate) async fn nsec(data_dir: String, network: Network) -> Result<nostr::Se
     Ok(sk)
 }
 
+/// Get the Nostr public key (npub) derived from the mnemonic
+/// Uses the NIP-06 Nostr derivation path: m/44'/1237'/0'/0/0
+///
+/// This is the CANONICAL USER IDENTIFIER used across all services:
+/// - PostHog analytics
+/// - User identification
+/// - Cross-service correlation
+///
+/// All other keys (Arkade, Lendasat, LendaSwap) are service-specific
+/// and derived at different paths for security isolation.
+pub(crate) async fn npub(data_dir: String, network: Network) -> Result<nostr::PublicKey> {
+    let sk = nsec(data_dir, network).await?;
+    let keys = nostr::Keys::new(sk);
+    Ok(keys.public_key())
+}
+
 /// Delete the wallet mnemonic file and associated user data
 ///
 /// This includes:

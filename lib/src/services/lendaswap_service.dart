@@ -24,6 +24,16 @@ class LendaSwapService extends ChangeNotifier {
   List<lendaswap_api.TradingPair> get tradingPairs => _tradingPairs;
   List<SwapInfo> get swaps => _swaps;
 
+  /// Reset the service state. Call this when wallet is reset.
+  void reset() {
+    _isInitialized = false;
+    _isInitializing = false;
+    _tradingPairs = [];
+    _swaps = [];
+    notifyListeners();
+    logger.i('LendaSwapService reset');
+  }
+
   /// Initialize LendaSwap client.
   /// Should be called after wallet is initialized and mnemonic exists.
   Future<void> initialize() async {

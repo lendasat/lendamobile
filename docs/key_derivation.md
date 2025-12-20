@@ -8,6 +8,25 @@ This document describes the unified key derivation architecture that enables a s
 - **Cross-platform sync** - Same mnemonic works everywhere
 - **Service interoperability** - All apps derive from same master seed
 - **Standard compliance** - Uses BIP39/BIP32 industry standards
+- **Consistent identity** - Nostr pubkey (npub) is the canonical user ID
+
+## User Identity
+
+### Canonical User Identifier: Nostr Public Key (npub)
+
+The **Nostr public key** derived at path `m/44/0/0/0/0` is the **canonical user identifier** used across all services:
+
+- **PostHog analytics** - User identification and tracking
+- **Cross-service correlation** - Consistent user ID regardless of which service
+- **Future features** - Any feature requiring a consistent user ID
+
+**Why Nostr pubkey?**
+- Nostr is designed as an identity/social layer
+- Network-independent (same key on mainnet/testnet)
+- Becoming a Bitcoin ecosystem identity standard
+- Already implemented and available
+
+**Important:** Each service (Arkade, Lendasat, LendaSwap) has its **own separate keys** derived at different paths for **security isolation**. These service-specific keys should NOT be used for user identification - only the Nostr pubkey provides a consistent identity.
 
 ## Current Implementation
 
@@ -21,17 +40,17 @@ Mnemonic (12 words)
     ▼
 Master Xpriv (from BIP39 seed)
     │
+    ├─→ ★ Nostr Identity (CANONICAL USER ID) ★
+    │   └─→ m/44/0/0/0/0          (LendaSat SDK) → npub for PostHog, analytics
+    │
     ├─→ Arkade Bip32KeyProvider
     │   └─→ m/83696968'/11811'/0/{index}  (Arkade Default)
     │
-    ├─→ Nostr Identity
-    │   └─→ m/44/0/0/0/0          (LendaSat SDK)
+    ├─→ Lendasat
+    │   └─→ m/10101'/0'/0         (Contract signing keys)
     │
-    ├─→ LendaSwap (future)
-    │   └─→ m/83696968'/121923'/{index}'
-    │
-    └─→ Lendasat (future)
-        └─→ m/10101'/0'/{index}'
+    └─→ LendaSwap
+        └─→ m/83696968'/121923'/{index}'  (Swap keys)
 ```
 
 ### Key Files
@@ -67,16 +86,22 @@ Master Xpriv (from BIP39 seed)
           │                   │                   │                   │
           ▼                   ▼                   ▼                   ▼
 ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│   Ark Wallet    │ │   LendaSwap     │ │    Lendasat     │ │     Nostr       │
-│   (Arkade SDK)  │ │   (Future)      │ │   (Future)      │ │                 │
+│   ★ NOSTR ★     │ │   Ark Wallet    │ │    Lendasat     │ │   LendaSwap     │
+│  USER IDENTITY  │ │   (Arkade SDK)  │ │                 │ │                 │
 │                 │ │                 │ │                 │ │                 │
-│ m/83696968'     │ │ m/83696968'     │ │ m/10101'        │ │ m/44/0          │
-│   /11811'/0     │ │   /121923'      │ │   /0'           │ │   /0/0          │
-│   /{index}      │ │   /{index}'     │ │   /{index}'     │ │   /0            │
-│ Arkade Default  │ │                 │ │                 │ │                 │
-│ (not BIP84)     │ │ Swap keys       │ │ Collateral keys │ │ LendaSat SDK    │
-│                 │ │ (HTLC secrets)  │ │ (loan contracts)│ │ Social identity │
+│ m/44/0          │ │ m/83696968'     │ │ m/10101'        │ │ m/83696968'     │
+│   /0/0          │ │   /11811'/0     │ │   /0'/0         │ │   /121923'      │
+│   /0            │ │   /{index}      │ │                 │ │   /{index}'     │
+│                 │ │                 │ │                 │ │                 │
+│ PostHog ID      │ │ Arkade Default  │ │ Collateral keys │ │ Swap keys       │
+│ Analytics       │ │ (not BIP84)     │ │ (loan signing)  │ │ (HTLC secrets)  │
+│ Cross-service   │ │                 │ │                 │ │                 │
 └─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘
+        ▲
+        │
+   CANONICAL USER ID
+   (use npub for all
+    identification)
 ```
 
 ## Derivation Paths Reference
@@ -85,10 +110,12 @@ Master Xpriv (from BIP39 seed)
 
 | Service | Purpose | Derivation Path | Standard | Status |
 |---------|---------|-----------------|----------|--------|
+| **Nostr** | **User Identity (npub)** | `m/44/0/0/0/0` | LendaSat SDK | **Implemented** |
 | **Ark SDK** | HD Wallet | `m/83696968'/11811'/0/{i}` | Arkade Default | **Implemented** |
-| **Nostr** | Identity | `m/44/0/0/0/0` | LendaSat SDK | **Implemented** |
-| **LendaSwap** | Swap keys | `m/83696968'/121923'/{i}'` | BIP-85 | Planned |
-| **Lendasat** | Contract keys | `m/10101'/0'/{i}'` | Custom | Planned |
+| **Lendasat** | Contract keys | `m/10101'/0'/0` | Custom | **Implemented** |
+| **LendaSwap** | Swap keys | `m/83696968'/121923'/{i}'` | BIP-85 | **Implemented** |
+
+> **Note:** The Nostr pubkey is listed first because it serves as the **canonical user identifier** across all services. All other keys are service-specific and isolated for security.
 
 ### Path Constants (Rust)
 
@@ -297,8 +324,33 @@ Future<String> getMnemonic({required String dataDir});
 Future<bool> isHdWallet({required String dataDir});
 Future<bool> isLegacyWallet({required String dataDir});
 
-/// Get Nostr identity (nsec)
+/// Get Nostr secret key (nsec) - for Nostr signing
 Future<String> nsec({required String dataDir});
+
+/// Get Nostr public key (npub) - CANONICAL USER IDENTIFIER
+/// Use this for analytics, user identification, and cross-service correlation
+Future<String> npub({required String dataDir});
+```
+
+### User Identification (PostHog)
+
+```dart
+// lib/src/services/analytics_service.dart
+
+/// Identify user with their Nostr public key (npub)
+/// This is the canonical user identifier across all services
+Future<void> identifyUser() async {
+  final dataDir = await getApplicationSupportDirectory();
+  final npub = await ark.npub(dataDir: dataDir.path);
+
+  await Posthog().identify(
+    userId: npub,
+    userProperties: {
+      'npub': npub,
+      'identified_at': DateTime.now().toIso8601String(),
+    },
+  );
+}
 ```
 
 ## Testing Vectors

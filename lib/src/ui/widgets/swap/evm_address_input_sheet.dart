@@ -126,114 +126,135 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
         text: appBarText,
         hasBackButton: false,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppTheme.cardPadding * 2),
-            // Info text
-            Text(
-              infoText,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: MediaQuery.of(context).size.height -
+                MediaQuery.of(context).padding.top -
+                MediaQuery.of(context).padding.bottom -
+                kToolbarHeight -
+                (AppTheme.cardPadding * 2),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Top content
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: AppTheme.cardPadding * 2),
+                  // Info text
+                  Text(
+                    infoText,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
                   ),
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-            // Address input
-            GlassContainer(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.cardPadding,
-                  vertical: AppTheme.elementSpacing * 0.5,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _addressController,
-                        onChanged: _onAddressChanged,
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                          fontSize: 14,
-                          fontFamily: 'monospace',
-                        ),
-                        decoration: InputDecoration(
-                          hintText: '0x...',
-                          hintStyle: TextStyle(
-                            color:
-                                isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                  const SizedBox(height: AppTheme.cardPadding),
+                  // Address input
+                  GlassContainer(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.cardPadding,
+                        vertical: AppTheme.elementSpacing * 0.5,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _addressController,
+                              onChanged: _onAddressChanged,
+                              style: TextStyle(
+                                color: isDarkMode ? Colors.white : Colors.black,
+                                fontSize: 14,
+                                fontFamily: 'monospace',
+                              ),
+                              decoration: InputDecoration(
+                                hintText: '0x...',
+                                hintStyle: TextStyle(
+                                  color:
+                                      isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                                ),
+                                border: InputBorder.none,
+                                errorText: _errorText,
+                                errorStyle: const TextStyle(
+                                  color: AppTheme.errorColor,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
                           ),
-                          border: InputBorder.none,
-                          errorText: _errorText,
-                          errorStyle: const TextStyle(
-                            color: AppTheme.errorColor,
-                            fontSize: 12,
+                          // Paste button
+                          IconButton(
+                            onPressed: _pasteFromClipboard,
+                            icon: Icon(
+                              Icons.paste_rounded,
+                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              size: 20,
+                            ),
+                            tooltip: 'Paste',
                           ),
+                          // QR scan button
+                          IconButton(
+                            onPressed: _openQrScanner,
+                            icon: Icon(
+                              Icons.qr_code_scanner_rounded,
+                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              size: 20,
+                            ),
+                            tooltip: 'Scan QR',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.elementSpacing),
+                  // Warning text
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        size: 16,
+                        color: Colors.orange,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Make sure this is a ${widget.network} address. Sending to wrong network may result in loss of funds.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.orange,
+                              ),
                         ),
                       ),
-                    ),
-                    // Paste button
-                    IconButton(
-                      onPressed: _pasteFromClipboard,
-                      icon: Icon(
-                        Icons.paste_rounded,
-                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                        size: 20,
-                      ),
-                      tooltip: 'Paste',
-                    ),
-                    // QR scan button
-                    IconButton(
-                      onPressed: _openQrScanner,
-                      icon: Icon(
-                        Icons.qr_code_scanner_rounded,
-                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                        size: 20,
-                      ),
-                      tooltip: 'Scan QR',
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            // Warning text
-            Row(
-              children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  size: 16,
-                  color: Colors.orange,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Make sure this is a ${widget.network} address. Sending to wrong network may result in loss of funds.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.orange,
-                        ),
+              // Bottom button
+              Column(
+                children: [
+                  const SizedBox(height: AppTheme.cardPadding),
+                  // Confirm button
+                  LongButtonWidget(
+                    title: 'Continue',
+                    customWidth: double.infinity,
+                    state: _isValid ? ButtonState.idle : ButtonState.disabled,
+                    onTap: _isValid
+                        ? () {
+                            final address = _addressController.text;
+                            Navigator.pop(context);
+                            widget.onAddressConfirmed(address);
+                          }
+                        : null,
                   ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            // Confirm button
-            LongButtonWidget(
-              title: 'Continue',
-              customWidth: double.infinity,
-              state: _isValid ? ButtonState.idle : ButtonState.disabled,
-              onTap: _isValid
-                  ? () {
-                      final address = _addressController.text;
-                      Navigator.pop(context);
-                      widget.onAddressConfirmed(address);
-                    }
-                  : null,
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-          ],
+                  const SizedBox(height: AppTheme.cardPadding),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -37,9 +37,14 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   late TextEditingController _addressController;
 
   bool _isCreating = false;
+  String _processingStep = 'Processing...';
   double _calculatedInterest = 0;
   double _originationFee = 0;
   double _originationFeeAmount = 0;
+
+  // Polling configuration
+  static const int _maxPollingAttempts = 60; // 60 attempts = ~60 seconds
+  static const Duration _pollingInterval = Duration(seconds: 1);
 
   @override
   void initState() {
@@ -94,7 +99,10 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       return;
     }
 
-    setState(() => _isCreating = true);
+    setState(() {
+      _isCreating = true;
+      _processingStep = 'Creating loan request...';
+    });
 
     // Suppress payment notifications during collateral send
     PaymentOverlayService().startSuppression();
@@ -106,23 +114,34 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
 
       logger.i('[Loan] Creating contract: offer=${widget.offer.id}, amount=\$$amount, duration=$duration days');
 
-      // Create the contract - LendaSat returns it with collateral info once approved
-      final contract = await _lendasatService.createContract(
+      // Create the contract - initially in "Requested" status
+      var contract = await _lendasatService.createContract(
         offerId: widget.offer.id,
         loanAmount: amount,
         durationDays: duration,
         borrowerLoanAddress: address,
       );
 
-      logger.i('[Loan] Contract ${contract.id}: status=${contract.statusText}, collateral=${contract.collateralSats} sats');
+      logger.i('[Loan] Contract ${contract.id}: status=${contract.statusText}, collateral=${contract.effectiveCollateralSats} sats');
 
-      // Check if we have what we need to send collateral
-      if (contract.contractAddress == null || contract.collateralSats <= 0) {
-        throw Exception('Contract not ready: ${contract.statusText}');
+      // If contract not yet ready, poll for approval
+      // Use effectiveCollateralSats which falls back to initialCollateralSats
+      if (contract.contractAddress == null || contract.effectiveCollateralSats <= 0) {
+        if (mounted) {
+          setState(() => _processingStep = 'Waiting for approval...');
+        }
+
+        // Poll until approved or timeout
+        contract = await _waitForContractApproval(contract.id);
       }
 
-      // Send collateral (like web wallet's onSendToAddress - just send it)
-      final collateralSats = BigInt.from(contract.collateralSats.toInt());
+      // Now we have an approved contract with collateral info
+      if (mounted) {
+        setState(() => _processingStep = 'Sending collateral...');
+      }
+
+      // Send collateral using effectiveCollateralSats (has initialCollateralSats fallback)
+      final collateralSats = BigInt.from(contract.effectiveCollateralSats);
       final collateralAddress = contract.contractAddress!;
 
       logger.i('[Loan] Sending $collateralSats sats to $collateralAddress');
@@ -136,7 +155,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
 
       // Track analytics
       await AnalyticsService().trackLoanTransaction(
-        amountSats: contract.collateralSats.toInt(),
+        amountSats: contract.effectiveCollateralSats,
         type: 'borrow',
         loanId: contract.id,
         interestRate: widget.offer.interestRate,
@@ -177,6 +196,54 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
         PaymentOverlayService().stopSuppression();
       });
     }
+  }
+
+  /// Polls the contract status until it's approved and has collateral info.
+  /// Throws an exception if it times out or the contract is rejected.
+  Future<Contract> _waitForContractApproval(String contractId) async {
+    logger.i('[Loan] Waiting for contract $contractId to be approved...');
+
+    for (int attempt = 0; attempt < _maxPollingAttempts; attempt++) {
+      await Future.delayed(_pollingInterval);
+
+      if (!mounted) {
+        throw Exception('Screen closed');
+      }
+
+      final contract = await _lendasatService.getContract(contractId);
+
+      logger.d('[Loan] Poll ${attempt + 1}/$_maxPollingAttempts: status=${contract.statusText}, '
+          'address=${contract.contractAddress != null ? "present" : "null"}, '
+          'effectiveCollateral=${contract.effectiveCollateralSats} sats');
+
+      // Check if contract is ready (has collateral address and amount)
+      if (contract.contractAddress != null && contract.effectiveCollateralSats > 0) {
+        logger.i('[Loan] Contract approved! Collateral: ${contract.effectiveCollateralSats} sats to ${contract.contractAddress}');
+        return contract;
+      }
+
+      // Check for rejection or cancellation
+      if (contract.status == ContractStatus.rejected ||
+          contract.status == ContractStatus.cancelled ||
+          contract.status == ContractStatus.requestExpired) {
+        throw Exception('Contract ${contract.statusText.toLowerCase()}');
+      }
+
+      // Update UI with progress - show different message once approved
+      if (mounted) {
+        final statusMsg = contract.status == ContractStatus.approved
+            ? 'Preparing collateral...'
+            : 'Waiting for approval...';
+        setState(() => _processingStep = '$statusMsg (${attempt + 1}s)');
+      }
+    }
+
+    // Timeout - provide helpful message based on current status
+    final lastContract = await _lendasatService.getContract(contractId);
+    if (lastContract.status == ContractStatus.approved) {
+      throw Exception('Collateral details pending. Check your contracts in a moment.');
+    }
+    throw Exception('Approval timeout. Please check your contracts later.');
   }
 
   Future<void> _openKycLink() async {
@@ -282,7 +349,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                       ),
                       const SizedBox(height: AppTheme.cardPadding),
                       Text(
-                        'Processing...',
+                        _processingStep,
                         style: Theme.of(context).textTheme.titleMedium,
                         textAlign: TextAlign.center,
                       ),

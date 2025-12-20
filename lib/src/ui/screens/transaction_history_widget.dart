@@ -167,6 +167,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         }).toList();
       }
 
+      // Always ensure sorted by timestamp (newest first) after all filtering
+      allActivity.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
       _filteredActivity = allActivity;
     });
   }

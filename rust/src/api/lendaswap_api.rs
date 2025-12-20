@@ -176,7 +176,7 @@ pub async fn lendaswap_create_btc_to_evm_swap(
         ln_invoice: response.ln_invoice,
         arkade_htlc_address: response.htlc_address_arkade,
         sats_to_send: response.sats_receive,
-        target_amount_usd: response.common.usd_amount,
+        target_amount_usd: response.common.asset_amount,
         fee_sats: response.common.fee_sats,
     })
 }
@@ -238,7 +238,7 @@ pub async fn lendaswap_create_evm_to_btc_swap(
     Ok(EvmToBtcSwapResult {
         swap_id: response.common.id.to_string(),
         evm_htlc_address: response.htlc_address_evm,
-        source_amount_usd: response.common.usd_amount,
+        source_amount_usd: response.common.asset_amount,
         sats_to_receive: response.sats_receive,
         fee_sats: response.common.fee_sats,
         source_token_address: response.source_token_address,
@@ -278,7 +278,7 @@ pub async fn lendaswap_create_evm_to_lightning_swap(
     Ok(EvmToBtcSwapResult {
         swap_id: response.common.id.to_string(),
         evm_htlc_address: response.htlc_address_evm,
-        source_amount_usd: response.common.usd_amount,
+        source_amount_usd: response.common.asset_amount,
         sats_to_receive: response.sats_receive,
         fee_sats: response.common.fee_sats,
         source_token_address: response.source_token_address,

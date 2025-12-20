@@ -14,12 +14,12 @@ base64 = "0.22"
 lendasat-sdk = { path = "/home/weltitob/lendasat/lendasat/client-sdk", package = "client-sdk" }
 # SRP authentication
 srp = "0.6.0"
-ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
-ark-client = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac", default-features = false, features = ["tls-webpki-roots"] }
-ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
+ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "09b073269c944a25eef5e1f92fd2ae2a5ef2ea28" }
+ark-client = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "09b073269c944a25eef5e1f92fd2ae2a5ef2ea28", default-features = false, features = ["tls-webpki-roots"] }
+ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "09b073269c944a25eef5e1f92fd2ae2a5ef2ea28" }
 
-# LendaSwap SDK
-lendaswap-core = { path = "/home/weltitob/lendasat/lendaswap/client-sdk/core" }
+# LendaSwap SDK from GitHub (tag 0.0.61)
+lendaswap-core = { git = "https://github.com/lendasat/lendaswap.git", tag = "0.0.61", package = "lendaswap-core" }
 rust_decimal = { version = "1", features = ["serde-with-float"] }
 time = { version = "0.3", features = ["serde", "formatting", "parsing", "macros"] }
 uuid = { version = "1.0", features = ["v4", "serde"] }
@@ -57,7 +57,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 # Patch to resolve dependency conflict between arkade-os/rust-sdk and ArkLabsHQ/ark-rs
 # Both repos use the same rev but different URLs - redirect to use a single source
 [patch."https://github.com/arkade-os/rust-sdk"]
-ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
-ark-rest = { git = "https://github.com/ArkLabsHQ/ark-rs.git", package = "ark-rest", rev = "201aeac" }
-ark-rs = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
-ark-secp256k1 = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aeac" }
+ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "09b073269c944a25eef5e1f92fd2ae2a5ef2ea28" }
+ark-rest = { git = "https://github.com/ArkLabsHQ/ark-rs.git", package = "ark-rest", rev = "09b073269c944a25eef5e1f92fd2ae2a5ef2ea28" }
+ark-rs = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "09b073269c944a25eef5e1f92fd2ae2a5ef2ea28" }
+ark-secp256k1 = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "09b073269c944a25eef5e1f92fd2ae2a5ef2ea28" }

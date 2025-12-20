@@ -677,3 +677,44 @@ enum RepaymentPlan {
   interestOnlyMonthly,
   ;
 }
+
+/// Response from GET /settle-ark endpoint
+/// Used when contract.requires_ark_settlement is true (VTXOs are recoverable)
+class SettleArkPsbtResponse {
+  final String intentMessage;
+  final String intentProof;
+  final List<String> forfeitPsbts;
+  final String delegateCosignerPk;
+  final String userPk;
+  final String? derivationPath;
+
+  const SettleArkPsbtResponse({
+    required this.intentMessage,
+    required this.intentProof,
+    required this.forfeitPsbts,
+    required this.delegateCosignerPk,
+    required this.userPk,
+    this.derivationPath,
+  });
+
+  @override
+  int get hashCode =>
+      intentMessage.hashCode ^
+      intentProof.hashCode ^
+      forfeitPsbts.hashCode ^
+      delegateCosignerPk.hashCode ^
+      userPk.hashCode ^
+      derivationPath.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SettleArkPsbtResponse &&
+          runtimeType == other.runtimeType &&
+          intentMessage == other.intentMessage &&
+          intentProof == other.intentProof &&
+          forfeitPsbts == other.forfeitPsbts &&
+          delegateCosignerPk == other.delegateCosignerPk &&
+          userPk == other.userPk &&
+          derivationPath == other.derivationPath;
+}

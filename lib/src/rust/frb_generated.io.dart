@@ -435,6 +435,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RepaymentPlan dco_decode_repayment_plan(dynamic raw);
 
   @protected
+  SettleArkPsbtResponse dco_decode_settle_ark_psbt_response(dynamic raw);
+
+  @protected
   SwapInfo dco_decode_swap_info(dynamic raw);
 
   @protected
@@ -912,6 +915,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RepaymentPlan sse_decode_repayment_plan(SseDeserializer deserializer);
+
+  @protected
+  SettleArkPsbtResponse sse_decode_settle_ark_psbt_response(
+      SseDeserializer deserializer);
 
   @protected
   SwapInfo sse_decode_swap_info(SseDeserializer deserializer);
@@ -1422,6 +1429,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_repayment_plan(RepaymentPlan self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_settle_ark_psbt_response(
+      SettleArkPsbtResponse self, SseSerializer serializer);
 
   @protected
   void sse_encode_swap_info(SwapInfo self, SseSerializer serializer);

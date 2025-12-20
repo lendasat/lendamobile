@@ -159,6 +159,23 @@ Future<String> lendasatBroadcastClaimArkTx(
         signedArkPsbt: signedArkPsbt,
         signedCheckpointPsbts: signedCheckpointPsbts);
 
+/// Get the PSBTs for settling Ark collateral when VTXOs are recoverable.
+/// Use this instead of claim-ark when contract.requires_ark_settlement is true.
+Future<SettleArkPsbtResponse> lendasatGetSettleArkPsbt(
+        {required String contractId}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatGetSettleArkPsbt(contractId: contractId);
+
+/// Finish Ark collateral settlement by submitting signed PSBTs.
+Future<String> lendasatFinishSettleArk(
+        {required String contractId,
+        required String signedIntentPsbt,
+        required List<String> signedForfeitPsbts}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatFinishSettleArk(
+        contractId: contractId,
+        signedIntentPsbt: signedIntentPsbt,
+        signedForfeitPsbts: signedForfeitPsbts);
+
 /// Get the PSBT for recovering collateral from an expired contract.
 Future<ClaimPsbtResponse> lendasatGetRecoverPsbt(
         {required String contractId, required int feeRate}) =>

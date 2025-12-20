@@ -17,7 +17,15 @@ class TransactionActivityItem implements WalletActivityItem {
 
   @override
   int get timestamp => transaction.map(
-        boarding: (tx) => DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        boarding: (tx) {
+          // Boarding transactions use confirmedAt if available, otherwise 0 (will sort to bottom)
+          if (tx.confirmedAt != null) {
+            return tx.confirmedAt is BigInt
+                ? (tx.confirmedAt as BigInt).toInt()
+                : tx.confirmedAt as int;
+          }
+          return 0; // Unconfirmed boarding txs sort to bottom
+        },
         round: (tx) => tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
         redeem: (tx) => tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
       );
