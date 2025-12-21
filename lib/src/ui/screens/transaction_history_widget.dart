@@ -8,6 +8,8 @@ import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
@@ -593,9 +595,13 @@ class _TransactionItemWidget extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Avatar(
+                      RoundedButtonWidget(
+                        iconData: amountSats >= 0 ? Icons.south_west : Icons.north_east,
+                        iconColor: amountSats >= 0 ? AppTheme.successColor : AppTheme.colorBitcoin,
+                        backgroundColor: (amountSats >= 0 ? AppTheme.successColor : AppTheme.colorBitcoin).withValues(alpha: 0.15),
+                        buttonType: ButtonType.secondary,
                         size: AppTheme.cardPadding * 2,
-                        isNft: false,
+                        iconSize: AppTheme.cardPadding * 0.9,
                       ),
                       const SizedBox(width: AppTheme.elementSpacing * 0.75),
                       Column(
@@ -777,18 +783,13 @@ class _SwapItemWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Swap icon
-                      Container(
-                        width: AppTheme.cardPadding * 2,
-                        height: AppTheme.cardPadding * 2,
-                        decoration: BoxDecoration(
-                          color: AppTheme.colorBitcoin.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(AppTheme.cardPadding),
-                        ),
-                        child: const Icon(
-                          Icons.swap_horiz_rounded,
-                          color: AppTheme.colorBitcoin,
-                          size: AppTheme.cardPadding * 1.2,
-                        ),
+                      RoundedButtonWidget(
+                        iconData: swapItem.isBtcToEvm ? Icons.north_east : Icons.south_west,
+                        iconColor: AppTheme.colorBitcoin,
+                        backgroundColor: AppTheme.colorBitcoin.withValues(alpha: 0.15),
+                        buttonType: ButtonType.secondary,
+                        size: AppTheme.cardPadding * 2,
+                        iconSize: AppTheme.cardPadding * 0.9,
                       ),
                       const SizedBox(width: AppTheme.elementSpacing * 0.75),
                       Column(
