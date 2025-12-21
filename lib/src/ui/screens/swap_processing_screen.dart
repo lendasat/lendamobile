@@ -5,7 +5,7 @@ import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/qr_border_painter.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
@@ -198,7 +198,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         text: 'Swap in Progress',
         hasBackButton: true,

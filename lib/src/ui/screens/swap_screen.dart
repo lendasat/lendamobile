@@ -5,7 +5,7 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
@@ -786,7 +786,7 @@ class _SwapScreenState extends State<SwapScreen> {
       context: context,
       extendBodyBehindAppBar: true,
       resizeToAvoidBottomInset: true,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         text: "Swap",
         context: context,
         hasBackButton: false,
@@ -1353,7 +1353,7 @@ class _TokenSelectorSheetState extends State<_TokenSelectorSheet> {
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         text: title,
         hasBackButton: false,

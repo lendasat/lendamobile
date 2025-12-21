@@ -2,6 +2,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
@@ -45,22 +46,10 @@ class _TransactionSuccessScreenState extends State<TransactionSuccessScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(
-          AppLocalizations.of(context)!.success,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(
-            color: Theme.of(context).colorScheme.surface,
-            height: 1.0,
-          ),
-        ),
+      appBar: BitNetAppBar(
+        context: context,
+        hasBackButton: false,
+        text: AppLocalizations.of(context)!.success,
       ),
       body: Column(
         children: [

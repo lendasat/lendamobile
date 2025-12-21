@@ -14,7 +14,7 @@ import 'package:ark_flutter/src/models/mempool_new/chartline.dart';
 import 'package:ark_flutter/src/models/mempool_new/hash_chart_model.dart'
     as chart_models;
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/mempool/blocks_list_view.dart';
 import 'package:ark_flutter/src/ui/widgets/mempool/block_header.dart';
 import 'package:ark_flutter/src/ui/widgets/mempool/block_health_widget.dart';
@@ -511,7 +511,7 @@ class _MempoolHomeState extends State<MempoolHome> {
                   preferredSize: Size(0, 0),
                   child: SizedBox(),
                 )
-              : ArkAppBar(
+              : BitNetAppBar(
                   context: context,
                   text: AppLocalizations.of(context)!.blockchain,
                   onTap: () => Navigator.of(context).pop(),

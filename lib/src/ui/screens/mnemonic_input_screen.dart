@@ -1,5 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/ui/screens/email_signup_screen.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
@@ -236,24 +237,9 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          AppLocalizations.of(context)!.restoreExistingWallet,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+      appBar: BitNetAppBar(
+        context: context,
+        text: AppLocalizations.of(context)!.restoreExistingWallet,
       ),
       body: SafeArea(
         child: SingleChildScrollView(

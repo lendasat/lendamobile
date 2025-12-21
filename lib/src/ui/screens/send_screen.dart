@@ -10,7 +10,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -604,6 +604,12 @@ class SendScreenState extends State<SendScreen>
     );
   }
 
+  /// Truncates an address for display (shows first 10 and last 10 chars)
+  String _truncateAddress(String address) {
+    if (address.length <= 24) return address;
+    return '${address.substring(0, 10)}...${address.substring(address.length - 10)}';
+  }
+
   /// Resets all form values to their defaults
   /// Can be called when user wants to clear and start over
   void resetValues() {
@@ -627,7 +633,7 @@ class SendScreenState extends State<SendScreen>
       context: context,
       extendBodyBehindAppBar: true,
       resizeToAvoidBottomInset: false,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         text: l10n.sendBitcoin,
         hasBackButton: true,
@@ -696,6 +702,9 @@ class SendScreenState extends State<SendScreen>
                           // Available balance display
                           const SizedBox(height: AppTheme.cardPadding),
                           _buildAvailableBalance(context, l10n),
+                          // Transaction details preview
+                          const SizedBox(height: AppTheme.cardPadding),
+                          _buildTransactionDetails(context, l10n),
                         ],
                       ),
                     ],
@@ -903,6 +912,90 @@ class SendScreenState extends State<SendScreen>
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).hintColor,
                   ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionDetails(BuildContext context, AppLocalizations l10n) {
+    final amountSats = double.tryParse(_satController.text) ?? 0;
+    if (!_hasValidAddress || amountSats <= 0) {
+      return const SizedBox.shrink();
+    }
+
+    const networkFees = 0; // Ark has 0 fees
+    final total = amountSats.toInt() + networkFees;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.elementSpacing),
+      child: GlassContainer(
+        opacity: 0.05,
+        borderRadius: AppTheme.cardRadiusSmall,
+        padding: const EdgeInsets.all(AppTheme.elementSpacing),
+        child: Column(
+          children: [
+            // Address row
+            ArkListTile(
+              margin: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.elementSpacing * 0.75,
+                vertical: AppTheme.elementSpacing * 0.5,
+              ),
+              text: l10n.address,
+              trailing: Text(
+                _truncateAddress(_addressController.text),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+            ),
+            // Amount row
+            ArkListTile(
+              margin: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.elementSpacing * 0.75,
+                vertical: AppTheme.elementSpacing * 0.5,
+              ),
+              text: l10n.amount,
+              trailing: Text(
+                '${amountSats.toInt()} SATS',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+            ),
+            // Network Fees row
+            ArkListTile(
+              margin: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.elementSpacing * 0.75,
+                vertical: AppTheme.elementSpacing * 0.5,
+              ),
+              text: l10n.networkFees,
+              trailing: Text(
+                '$networkFees SATS',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+            ),
+            // Total row
+            ArkListTile(
+              margin: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.elementSpacing * 0.75,
+                vertical: AppTheme.elementSpacing * 0.5,
+              ),
+              text: l10n.total,
+              trailing: Text(
+                '$total SATS',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
             ),
           ],
         ),

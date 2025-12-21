@@ -3,7 +3,7 @@ import 'package:ark_flutter/src/services/feedback_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/theme.dart';
@@ -139,7 +139,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     return ArkScaffold(
       extendBodyBehindAppBar: true,
       context: context,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         text: 'Feedback',
         context: context,
         hasBackButton: true,

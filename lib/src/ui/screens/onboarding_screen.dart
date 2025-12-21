@@ -5,7 +5,7 @@ import 'package:ark_flutter/src/ui/screens/mnemonic_input_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
@@ -88,7 +88,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return ArkScaffold(
       extendBodyBehindAppBar: true,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         hasBackButton: false,
       ),

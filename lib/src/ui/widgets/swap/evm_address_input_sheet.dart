@@ -1,6 +1,6 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -121,7 +121,7 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         text: appBarText,
         hasBackButton: false,

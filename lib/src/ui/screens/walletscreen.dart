@@ -193,15 +193,16 @@ class WalletScreenState extends State<WalletScreen> {
 
     // Calculate portfolio value change (balance at time × price)
     final firstData = _bitcoinPriceData.first;
-    final lastData = _bitcoinPriceData.last;
-
+    
+    // Compare first point with the ACTUAL current state (not the last price point which might be stale)
     final firstBalance = _getBalanceAtTimestamp(firstData.time);
-    final lastBalance = _getBalanceAtTimestamp(lastData.time);
+    final currentBalance = _getSelectedBalance();
+    final currentPrice = _getCurrentBtcPrice();
 
     final firstValue = firstData.price * firstBalance;
-    final lastValue = lastData.price * lastBalance;
+    final currentValue = currentPrice * currentBalance;
 
-    return _isBalanceChangePositive(firstBalance, lastBalance, firstValue, lastValue);
+    return _isBalanceChangePositive(firstBalance, currentBalance, firstValue, currentValue);
   }
 
   /// Fetches all wallet data (balance, transactions, and swaps)
@@ -617,7 +618,8 @@ class WalletScreenState extends State<WalletScreen> {
         final swapDate = DateTime.parse(swap.createdAt);
         final swapTimestampSec = swapDate.millisecondsSinceEpoch ~/ 1000;
 
-        if (swapTimestampSec > timestampSec && swap.status == SwapStatusSimple.completed) {
+        if (swapTimestampSec > timestampSec &&
+            (swap.status == SwapStatusSimple.completed || swap.status == SwapStatusSimple.waitingForDeposit || swap.status == SwapStatusSimple.processing)) {
           final sats = swap.sourceAmountSats.toInt();
           // Negative when selling BTC (btc_to_evm), positive when buying BTC
           final amountBtc = swap.direction == 'btc_to_evm' ? -sats : sats;
@@ -646,13 +648,21 @@ class WalletScreenState extends State<WalletScreen> {
       );
     }).toList();
 
+    // Append current state as the final point to ensure immediate visual updates for new transactions
+    final currentBalance = _getSelectedBalance();
+    final currentPrice = _getCurrentBtcPrice();
+    balanceChartData.add(PriceData(
+      time: DateTime.now().millisecondsSinceEpoch,
+      price: currentPrice * currentBalance,
+    ));
+
     return SizedBox(
       height: AppTheme.cardPadding * 16,
       child: BitcoinPriceChart(
         data: balanceChartData,
         alpha: 255,
         trackballActivationMode: null,
-        lineColor: _isPriceChangePositive() ? Colors.green : Colors.red,
+        lineColor: _isPriceChangePositive() ? AppTheme.successColor : AppTheme.errorColor,
       ),
     );
   }

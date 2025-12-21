@@ -5,7 +5,7 @@ import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
@@ -265,7 +265,7 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         text: 'Swap Details',
         hasBackButton: true,
@@ -902,7 +902,7 @@ class _RefundAddressSheetState extends State<_RefundAddressSheet> {
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         text: 'Refund Address',
         hasBackButton: false,

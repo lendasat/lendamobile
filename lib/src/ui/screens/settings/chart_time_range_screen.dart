@@ -1,6 +1,6 @@
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -50,7 +50,7 @@ class ChartTimeRangeScreen extends StatelessWidget {
     return ArkScaffold(
       extendBodyBehindAppBar: true,
       context: context,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         text: 'Chart Time Range',
         context: context,
         onTap: () => controller.resetToMain(),

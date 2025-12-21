@@ -2,7 +2,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -126,7 +126,7 @@ class _TokenSelectorSheetState extends State<_TokenSelectorSheet> {
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         text: title,
         hasBackButton: false,

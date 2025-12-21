@@ -4,7 +4,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/qr_scanner_overlay.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -95,7 +95,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       context: context,
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.black,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         text: l10n?.scanQrCode ?? 'Scan QR Code',
         hasBackButton: true,

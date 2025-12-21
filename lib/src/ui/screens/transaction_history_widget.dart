@@ -579,8 +579,8 @@ class _TransactionItemWidget extends StatelessWidget {
                     children: [
                       RoundedButtonWidget(
                         iconData: amountSats >= 0 ? Icons.south_west : Icons.north_east,
-                        iconColor: amountSats >= 0 ? AppTheme.successColor : AppTheme.colorBitcoin,
-                        backgroundColor: (amountSats >= 0 ? AppTheme.successColor : AppTheme.colorBitcoin).withValues(alpha: 0.15),
+                        iconColor: amountSats >= 0 ? AppTheme.successColor : AppTheme.errorColor,
+                        backgroundColor: (amountSats >= 0 ? AppTheme.successColor : AppTheme.errorColor).withValues(alpha: 0.15),
                         buttonType: ButtonType.secondary,
                         size: AppTheme.cardPadding * 2,
                         iconSize: AppTheme.cardPadding * 0.9,

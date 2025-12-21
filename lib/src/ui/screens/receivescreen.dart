@@ -10,7 +10,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
@@ -438,7 +438,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ArkScaffold(
         context: context,
-        appBar: ArkAppBar(
+        appBar: BitNetAppBar(
           context: context,
           hasBackButton: false,
           text: "Select Receive Type",
@@ -555,7 +555,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ArkScaffold(
         context: context,
-        appBar: ArkAppBar(
+        appBar: BitNetAppBar(
           context: context,
           hasBackButton: false,
           text: AppLocalizations.of(context)!.setAmount,
@@ -625,7 +625,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         text: l10n.receiveLower,
         onTap: () => Navigator.pop(context),

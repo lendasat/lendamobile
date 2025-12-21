@@ -8,6 +8,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -214,16 +215,9 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+      appBar: BitNetAppBar(
+        context: context,
+        text: '',
       ),
       body: SafeArea(
         child: Padding(

@@ -1,7 +1,7 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
@@ -24,7 +24,7 @@ class _ChangeTimezoneState extends State<ChangeTimezone> {
     return ArkScaffold(
       extendBodyBehindAppBar: true,
       context: context,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         text: AppLocalizations.of(context)!.timezone,
         context: context,
         hasBackButton: true,

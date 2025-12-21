@@ -2,7 +2,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -169,7 +169,7 @@ class _LoansScreenState extends State<LoansScreen> {
   Widget build(BuildContext context) {
     return ArkScaffold(
       context: context,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         hasBackButton: false,
         text: 'Loans & Leverage',
@@ -613,42 +613,6 @@ class _OfferCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Limited time offer badge
-                Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.colorBitcoin.withValues(alpha: 0.15),
-                        Colors.red.withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppTheme.colorBitcoin.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        '🔥',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Limited time offer — super cheap!',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.colorBitcoin,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-
                 // Header row with lender and interest
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -744,12 +708,6 @@ class _OfferCard extends StatelessWidget {
                       ),
                     ),
                     _buildAssetChip(context, offer.loanAssetDisplayName, isLoan: true),
-                    const Spacer(),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -779,6 +737,42 @@ class _OfferCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+
+                // Limited time offer badge
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.colorBitcoin.withValues(alpha: 0.15),
+                        Colors.red.withValues(alpha: 0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppTheme.colorBitcoin.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        '🔥',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Limited time offer — super cheap!',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.colorBitcoin,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

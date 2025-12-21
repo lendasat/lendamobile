@@ -2,6 +2,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/ui/screens/receivescreen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:flutter/material.dart';
 
 class AmountInputScreen extends StatefulWidget {
@@ -58,24 +59,9 @@ class AmountInputScreenState extends State<AmountInputScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.enterAmount,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(
-            color: Theme.of(context).colorScheme.surface,
-            height: 1.0,
-          ),
-        ),
+      appBar: BitNetAppBar(
+        context: context,
+        text: AppLocalizations.of(context)!.enterAmount,
       ),
       body: Column(
         children: [

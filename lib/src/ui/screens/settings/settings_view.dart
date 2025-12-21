@@ -8,7 +8,7 @@ import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
@@ -176,7 +176,7 @@ class SettingsViewState extends State<SettingsView> {
     return ArkScaffold(
       extendBodyBehindAppBar: true,
       context: context,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         text: AppLocalizations.of(context)!.settings,
         context: context,
         hasBackButton: false,

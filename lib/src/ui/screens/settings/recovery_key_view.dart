@@ -3,7 +3,7 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
@@ -208,7 +208,7 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
     return ArkScaffold(
       extendBodyBehindAppBar: true,
       context: context,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         text: appBarTitle,
         context: context,
         hasBackButton: true,

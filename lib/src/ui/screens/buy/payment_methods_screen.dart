@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:ark_flutter/l10n/app_localizations.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -52,7 +52,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
 
     return ArkScaffold(
       context: context,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         hasBackButton: true,
         text: l10n.paymentMethods,

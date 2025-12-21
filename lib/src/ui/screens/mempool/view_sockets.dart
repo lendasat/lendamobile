@@ -1,5 +1,5 @@
 import 'package:ark_flutter/theme.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:flutter/material.dart';
 
@@ -17,7 +17,7 @@ class ViewSockets extends StatelessWidget {
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
         text: 'Socket Data',
         onTap: () => Navigator.pop(context),

@@ -9,7 +9,7 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/ui/screens/swap_processing_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -785,9 +785,9 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   Widget build(BuildContext context) {
     return ArkScaffold(
       context: context,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         context: context,
-        text: 'Loan Details',
+        text: 'Contract Details',
         onTap: () => Navigator.pop(context),
         actions: [
           IconButton(

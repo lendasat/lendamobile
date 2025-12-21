@@ -4,7 +4,7 @@ import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
@@ -145,7 +145,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,
-      appBar: ArkAppBar(
+      appBar: BitNetAppBar(
         text: l10n.transactionDetails,
         context: context,
         onTap: () {
@@ -337,7 +337,6 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   children: [
                                                     Icon(
                                                       isSent ? Icons.north_east : Icons.south_west,
-                                                      color: isSent ? AppTheme.colorBitcoin : AppTheme.successColor,
                                                       size: 18,
                                                     ),
                                                     const SizedBox(width: 6),
@@ -345,10 +344,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                       isSent ? l10n.sent : l10n.received,
                                                       style: Theme.of(context)
                                                           .textTheme
-                                                          .titleMedium!
-                                                          .copyWith(
-                                                            color: isSent ? AppTheme.colorBitcoin : AppTheme.successColor,
-                                                          ),
+                                                          .titleMedium,
                                                     ),
                                                   ],
                                                 ),
@@ -832,7 +828,6 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                       children: [
                                         Icon(
                                           isSent ? Icons.north_east : Icons.south_west,
-                                          color: isSent ? AppTheme.colorBitcoin : AppTheme.successColor,
                                           size: 18,
                                         ),
                                         const SizedBox(width: 6),
@@ -840,10 +835,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                           isSent ? l10n.sent : l10n.received,
                                           style: Theme.of(context)
                                               .textTheme
-                                              .titleMedium!
-                                              .copyWith(
-                                                color: isSent ? AppTheme.colorBitcoin : AppTheme.successColor,
-                                              ),
+                                              .titleMedium,
                                         ),
                                       ],
                                     ),
@@ -1034,7 +1026,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
         extendBodyBehindAppBar: true,
         backgroundColor: Theme.of(context).colorScheme.surface,
         context: context,
-        appBar: ArkAppBar(
+        appBar: BitNetAppBar(
           context: context,
           hasBackButton: false,
           text: l10n.inputs,
@@ -1119,7 +1111,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
         extendBodyBehindAppBar: true,
         backgroundColor: Theme.of(context).colorScheme.surface,
         context: context,
-        appBar: ArkAppBar(
+        appBar: BitNetAppBar(
           context: context,
           hasBackButton: false,
           text: l10n.outputs,

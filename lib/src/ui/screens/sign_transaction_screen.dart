@@ -3,6 +3,7 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/lnurl_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
@@ -125,26 +126,10 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.signTransaction,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: _isLoading
-            ? null
-            : IconButton(
-                icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
-                onPressed: () => Navigator.pop(context),
-              ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(
-            color: Theme.of(context).colorScheme.surface,
-            height: 1.0,
-          ),
-        ),
+      appBar: BitNetAppBar(
+        context: context,
+        text: AppLocalizations.of(context)!.signTransaction,
+        hasBackButton: !_isLoading,
       ),
       body: _isLoading
           ? const Center(
