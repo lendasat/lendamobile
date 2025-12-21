@@ -86,10 +86,14 @@ pub async fn address(amount: Option<u64>) -> Result<Addresses> {
     let boarding = addresses.boarding.to_string();
     let offchain = addresses.offchain.encode();
     let lightning = addresses.boltz_swap;
+    // BIP21 requires amount in BTC, not satoshis
     let amount = match amount {
         None => "".to_string(),
-        Some(a) => {
-            format!("&amount={}", a)
+        Some(sats) => {
+            let btc = sats as f64 / 100_000_000.0;
+            // Format with up to 8 decimal places, removing trailing zeros
+            let btc_str = format!("{:.8}", btc).trim_end_matches('0').trim_end_matches('.').to_string();
+            format!("&amount={}", btc_str)
         }
     };
 
@@ -100,7 +104,8 @@ pub async fn address(amount: Option<u64>) -> Result<Addresses> {
         }
     };
 
-    let bip21 = format!("bitcoin:{boarding}?arkade={offchain}{lightning_invoice}{amount}",);
+    // Use 'ark=' for compatibility with lendasat/wallet
+    let bip21 = format!("bitcoin:{boarding}?ark={offchain}{lightning_invoice}{amount}",);
     Ok(Addresses {
         boarding,
         offchain,

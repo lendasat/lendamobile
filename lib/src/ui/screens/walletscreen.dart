@@ -568,7 +568,7 @@ class WalletScreenState extends State<WalletScreen> {
 
   Widget _buildDynamicGradient() {
     return Container(
-      height: 250,
+      height: AppTheme.cardPadding * 16,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -634,7 +634,7 @@ class WalletScreenState extends State<WalletScreen> {
 
   Widget _buildChartWidget() {
     if (_bitcoinPriceData.isEmpty || _isBalanceLoading) {
-      return const SizedBox(height: 250);
+      return SizedBox(height: AppTheme.cardPadding * 16);
     }
 
     // Transform price data to historical balance value (balance at time × price)
@@ -647,7 +647,7 @@ class WalletScreenState extends State<WalletScreen> {
     }).toList();
 
     return SizedBox(
-      height: 250,
+      height: AppTheme.cardPadding * 16,
       child: BitcoinPriceChart(
         data: balanceChartData,
         alpha: 255,

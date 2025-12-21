@@ -36,7 +36,6 @@ class BitcoinPriceChart extends StatefulWidget {
 class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
   double? _fixedYMin;
   double? _fixedYMax;
-  bool _isTrackballActive = false;
 
   @override
   void initState() {
@@ -85,16 +84,14 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
     // Determine line color: use provided lineColor or default to green
     final chartLineColor = widget.lineColor ?? Colors.green;
 
-    // Build trackball behavior matching bitnetgithub implementation
+    // Build trackball behavior matching bitnetgithub implementation exactly
     final trackballBehavior = widget.trackballActivationMode != null
         ? TrackballBehavior(
             enable: true,
             activationMode: widget.trackballActivationMode!,
-            // Use tooltipSettings instead of tooltipDisplayMode for proper control
             tooltipSettings: const InteractiveTooltip(
               enable: false, // Disable tooltip since we use custom header
             ),
-            hideDelay: 1000, // Auto-hide after 1 second - CRITICAL for proper UX
             lineType: TrackballLineType.vertical,
             lineColor: Colors.grey[400],
             lineWidth: 2,
@@ -114,17 +111,20 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
         plotAreaBorderWidth: 0,
         // Disable axis animation to prevent visual glitches during hover
         enableAxisAnimation: false,
-        primaryXAxis: const DateTimeAxis(
+        // Use NumericAxis like BitNetGithub for consistent trackball behavior
+        primaryXAxis: const NumericAxis(
           isVisible: false,
-          axisLine: AxisLine(width: 0),
+          edgeLabelPlacement: EdgeLabelPlacement.none,
           majorGridLines: MajorGridLines(width: 0),
           minorGridLines: MinorGridLines(width: 0),
+          majorTickLines: MajorTickLines(width: 0),
         ),
         primaryYAxis: NumericAxis(
           isVisible: false,
           axisLine: const AxisLine(width: 0),
           majorGridLines: const MajorGridLines(width: 0),
           minorGridLines: const MinorGridLines(width: 0),
+          majorTickLines: const MajorTickLines(width: 0),
           plotOffset: 0,
           edgeLabelPlacement: EdgeLabelPlacement.none,
           minimum: _fixedYMin,
@@ -143,28 +143,37 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
               : <PlotBand>[],
         ),
         trackballBehavior: trackballBehavior,
-        // Track when touch starts
-        onChartTouchInteractionDown: (ChartTouchInteractionArgs args) {
-          _isTrackballActive = true;
-        },
+        // Track when trackball position changes - matching BitNetGithub implementation
+        // Use label/header instead of dataPointIndex for reliable fast-swipe support
         onTrackballPositionChanging: (TrackballArgs args) {
-          if (widget.trackballDataNotifier != null && _isTrackballActive) {
-            final pointIndex = args.chartPointInfo.dataPointIndex;
-            if (pointIndex != null && pointIndex < widget.data.length) {
-              widget.trackballDataNotifier!.value = widget.data[pointIndex];
+          if (widget.trackballDataNotifier != null &&
+              args.chartPointInfo.yPosition != null) {
+            // Parse the values directly from chart point info (like BitNetGithub)
+            // label = y-axis value (price), header = x-axis value (time)
+            final label = args.chartPointInfo.label;
+            final header = args.chartPointInfo.header;
+            if (label != null && header != null) {
+              final price = double.tryParse(label);
+              final time = double.tryParse(header)?.round();
+              if (price != null && time != null) {
+                widget.trackballDataNotifier!.value = PriceData(
+                  time: time,
+                  price: price,
+                );
+              }
             }
           }
         },
         onChartTouchInteractionUp: (ChartTouchInteractionArgs args) {
-          _isTrackballActive = false;
           widget.onChartTouchEnd?.call();
         },
         margin: EdgeInsets.zero,
-        series: <CartesianSeries<PriceData, DateTime>>[
-          SplineSeries<PriceData, DateTime>(
+        // Use SplineSeries with double for X-axis like BitNetGithub
+        series: <SplineSeries<PriceData, double>>[
+          SplineSeries<PriceData, double>(
             dataSource: widget.data,
-            xValueMapper: (PriceData price, _) =>
-                DateTime.fromMillisecondsSinceEpoch(price.time),
+            // Map time as double (milliseconds) like BitNetGithub
+            xValueMapper: (PriceData price, _) => price.time.toDouble(),
             yValueMapper: (PriceData price, _) => price.price,
             color: chartLineColor,
             width: 2,

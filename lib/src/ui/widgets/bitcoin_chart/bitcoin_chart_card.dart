@@ -321,9 +321,9 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
 
             const SizedBox(height: 16),
 
-            // Chart Section
+            // Chart Section - height matches BitNetGithub (cardPadding * 16)
             SizedBox(
-              height: 250,
+              height: AppTheme.cardPadding * 16,
               child: _isLoading
                   ? const Center(
                       child: CircularProgressIndicator(

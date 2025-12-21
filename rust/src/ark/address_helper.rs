@@ -53,10 +53,14 @@ pub fn decode_bip21(uri: &str) -> Result<DecodedUri> {
         options = Some(map);
     }
 
+    // Check for ark address in scheme or query params (supports both 'ark' and legacy 'arkade')
     let ark_address = if scheme.starts_with("ark") {
         let address = ArkAddress::decode(destination.as_str())?;
         Some(address)
-    } else if let Some(address) = options.as_ref().and_then(|o| o.get("ark").cloned()) {
+    } else if let Some(address) = options
+        .as_ref()
+        .and_then(|o| o.get("ark").or_else(|| o.get("arkade")).cloned())
+    {
         let address = ArkAddress::decode(address.as_str())?;
         Some(address)
     } else {

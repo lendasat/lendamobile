@@ -88,13 +88,6 @@ class _BitcoinChartDetailScreenState extends State<BitcoinChartDetailScreen> {
                     },
                     fallbackIcon: Icons.sync_rounded,
                   ),
-                  BitNetImageWithTextButton(
-                    'Buy',
-                    () {
-                      Navigator.of(context).pushNamed('/buy');
-                    },
-                    fallbackIcon: Icons.currency_bitcoin,
-                  ),
                 ],
               ),
             ),
