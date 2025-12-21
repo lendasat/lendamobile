@@ -454,7 +454,7 @@ class WalletScreenState extends State<WalletScreen> {
 
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: MediaQuery.of(context).size.height * 0.7,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Settings(aspId: widget.aspId),
     );
@@ -568,7 +568,7 @@ class WalletScreenState extends State<WalletScreen> {
 
   Widget _buildDynamicGradient() {
     return Container(
-      height: 280,
+      height: 250,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -634,7 +634,7 @@ class WalletScreenState extends State<WalletScreen> {
 
   Widget _buildChartWidget() {
     if (_bitcoinPriceData.isEmpty || _isBalanceLoading) {
-      return const SizedBox(height: 280);
+      return const SizedBox(height: 250);
     }
 
     // Transform price data to historical balance value (balance at time × price)
@@ -647,7 +647,7 @@ class WalletScreenState extends State<WalletScreen> {
     }).toList();
 
     return SizedBox(
-      height: 280,
+      height: 250,
       child: BitcoinPriceChart(
         data: balanceChartData,
         alpha: 255,
@@ -1001,11 +1001,11 @@ class WalletChartWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (priceData.isEmpty) {
-      return const SizedBox(height: 250);
+      return const SizedBox(height: 220);
     }
 
     return SizedBox(
-      height: 250,
+      height: 220,
       child: SfCartesianChart(
         enableAxisAnimation: false,
         plotAreaBorderWidth: 0,

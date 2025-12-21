@@ -19,6 +19,8 @@ import 'package:ark_flutter/theme.dart';
 import 'package:bolt11_decoder/bolt11_decoder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -49,6 +51,10 @@ class SendScreenState extends State<SendScreen>
   final TextEditingController _currController = TextEditingController();
   final FocusNode _amountFocusNode = FocusNode();
   final FocusNode _addressFocusNode = FocusNode();
+
+  // Image picker and scanner for QR from gallery
+  final ImagePicker _imagePicker = ImagePicker();
+  MobileScannerController? _scannerController;
 
   // State
   final bool _isLoading = false;
@@ -111,6 +117,7 @@ class SendScreenState extends State<SendScreen>
     _amountFocusNode.dispose();
     _addressFocusNode.dispose();
     _expandController.dispose();
+    _scannerController?.dispose();
     super.dispose();
   }
 
@@ -333,6 +340,63 @@ class SendScreenState extends State<SendScreen>
 
     if (result != null && result is String && mounted) {
       _parseScannedData(result);
+    }
+  }
+
+  /// Paste address from clipboard
+  Future<void> _pasteFromClipboard() async {
+    try {
+      final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+      if (clipboardData?.text != null && clipboardData!.text!.isNotEmpty) {
+        final text = clipboardData.text!.trim();
+        _parseScannedData(text);
+      }
+    } catch (e) {
+      logger.e('Error pasting from clipboard: $e');
+    }
+  }
+
+  /// Pick image from gallery and scan for QR code
+  Future<void> _pickImageAndScan() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+      );
+
+      if (image != null) {
+        // Create scanner controller if needed
+        _scannerController ??= MobileScannerController();
+
+        final BarcodeCapture? result = await _scannerController!.analyzeImage(
+          image.path,
+        );
+
+        if (result != null && result.barcodes.isNotEmpty) {
+          final String? code = result.barcodes.first.rawValue;
+          if (code != null && mounted) {
+            _parseScannedData(code);
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('No QR code found in image'),
+                backgroundColor: AppTheme.errorColor,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      logger.e('Error picking/scanning image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error scanning image: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
     }
   }
 
@@ -845,7 +909,7 @@ class SendScreenState extends State<SendScreen>
               ),
             ),
           ),
-          // Button container
+          // Show quick action buttons when no valid address, otherwise show send button
           Container(
             width: double.infinity,
             color: Theme.of(context).scaffoldBackgroundColor,
@@ -854,60 +918,142 @@ class SendScreenState extends State<SendScreen>
               right: AppTheme.cardPadding,
               bottom: AppTheme.cardPadding,
             ),
-            child: GestureDetector(
-              onTap: canSend ? _handleContinue : null,
-              child: Container(
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: canSend
-                      ? const LinearGradient(
-                          colors: [
-                            AppTheme.colorBitcoin,
-                            AppTheme.colorPrimaryGradient,
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        )
-                      : null,
-                  color: canSend ? null : Theme.of(context).colorScheme.secondary,
-                  borderRadius: AppTheme.cardRadiusBig,
-                  boxShadow: canSend
-                      ? [
-                          BoxShadow(
-                            color:
-                                AppTheme.colorBitcoin.withValues(alpha: 0.4),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                            spreadRadius: 0,
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Center(
-                  child: _isLoading
-                      ? SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              canSend ? Colors.black : Theme.of(context).hintColor,
-                            ),
-                          ),
-                        )
-                      : Text(
-                          l10n.sendNow,
-                          style: TextStyle(
-                            color: canSend ? Colors.black : Theme.of(context).hintColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                ),
-              ),
-            ),
+            child: _hasValidAddress
+                ? _buildSendButtonContent(context, l10n, canSend)
+                : _buildQuickActionButtons(context),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSendButtonContent(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool canSend,
+  ) {
+    return GestureDetector(
+      onTap: canSend ? _handleContinue : null,
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: canSend
+              ? const LinearGradient(
+                  colors: [
+                    AppTheme.colorBitcoin,
+                    AppTheme.colorPrimaryGradient,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                )
+              : null,
+          color: canSend ? null : Theme.of(context).colorScheme.secondary,
+          borderRadius: AppTheme.cardRadiusBig,
+          boxShadow: canSend
+              ? [
+                  BoxShadow(
+                    color: AppTheme.colorBitcoin.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                    spreadRadius: 0,
+                  ),
+                ]
+              : null,
+        ),
+        child: Center(
+          child: _isLoading
+              ? SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      canSend ? Colors.black : Theme.of(context).hintColor,
+                    ),
+                  ),
+                )
+              : Text(
+                  l10n.sendNow,
+                  style: TextStyle(
+                    color: canSend ? Colors.black : Theme.of(context).hintColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButtons(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark ? AppTheme.white90 : AppTheme.black90;
+    const buttonSize = 56.0;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Left side buttons: Image, QR Scan, Paste
+        Row(
+          children: [
+            // Image/Gallery button
+            _buildQuickActionButton(
+              icon: Icons.image_rounded,
+              onTap: _pickImageAndScan,
+              iconColor: iconColor,
+              size: buttonSize,
+            ),
+            const SizedBox(width: AppTheme.elementSpacing),
+            // QR Scan button
+            _buildQuickActionButton(
+              icon: Icons.qr_code_scanner_rounded,
+              onTap: _handleQRScan,
+              iconColor: iconColor,
+              size: buttonSize,
+            ),
+            const SizedBox(width: AppTheme.elementSpacing),
+            // Paste button
+            _buildQuickActionButton(
+              icon: Icons.content_paste_rounded,
+              onTap: _pasteFromClipboard,
+              iconColor: iconColor,
+              size: buttonSize,
+            ),
+          ],
+        ),
+        // Right side: Close button
+        _buildQuickActionButton(
+          icon: Icons.close_rounded,
+          onTap: () => Navigator.pop(context),
+          iconColor: iconColor,
+          size: buttonSize,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    required Color iconColor,
+    required double size,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(size / 2),
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            color: iconColor,
+            size: 24,
+          ),
+        ),
       ),
     );
   }

@@ -651,12 +651,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                         title: "$_timerMin:$_timerSec",
                         onTap: _refreshLightningInvoice,
                       )
-                    : RoundedButtonWidget(
-                        size: AppTheme.cardPadding * 1.5,
-                        buttonType: ButtonType.transparent,
-                        iconData: FontAwesomeIcons.arrowsRotate,
-                        onTap: _refreshAddress,
-                      ),
+                    : const SizedBox.shrink(),
               ),
             ],
           ),
