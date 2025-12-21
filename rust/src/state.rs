@@ -12,6 +12,9 @@ use std::sync::Arc;
 
 pub static LOG_STREAM_SINK: InitCell<RwLock<Arc<StreamSink<LogEntry>>>> = InitCell::new();
 
+/// Store esplora URL for creating separate esplora clients when needed
+pub static ESPLORA_URL: InitCell<RwLock<String>> = InitCell::new();
+
 /// Unified key provider wrapper for HD wallets using Bip32KeyProvider
 pub enum UnifiedKeyProvider {
     Hd(Bip32KeyProvider),

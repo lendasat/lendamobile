@@ -1,7 +1,9 @@
 use crate::ark::address_helper::{decode_bip21, is_ark_address, is_bip21, is_btc_address};
-use crate::state::{ArkClient, ARK_CLIENT};
+use crate::ark::esplora::EsploraClient;
+use crate::state::{ArkClient, ARK_CLIENT, ESPLORA_URL};
 use anyhow::Result;
 use anyhow::{anyhow, bail};
+use ark_client::Blockchain;
 use ark_client::lightning_invoice::Bolt11Invoice;
 use ark_client::{OffChainBalance, SwapAmount};
 use ark_core::ArkAddress;
@@ -237,6 +239,16 @@ pub async fn get_boarding_utxos() -> Result<Vec<BoardingUtxo>> {
                 Arc::clone(&*guard)
             };
 
+            // Get the stored esplora URL to create a separate esplora client
+            let esplora_url = ESPLORA_URL
+                .try_get()
+                .ok_or_else(|| anyhow!("Esplora URL not initialized"))?
+                .read()
+                .clone();
+
+            let esplora = EsploraClient::new(&esplora_url)
+                .map_err(|e| anyhow!("Could not create esplora client: {e:#}"))?;
+
             // Get all boarding addresses
             let boarding_addresses = client
                 .get_boarding_addresses()
@@ -246,8 +258,7 @@ pub async fn get_boarding_utxos() -> Result<Vec<BoardingUtxo>> {
 
             // Query esplora for UTXOs at each boarding address
             for address in boarding_addresses {
-                let address_utxos = client
-                    .blockchain()
+                let address_utxos = esplora
                     .find_outpoints(&address)
                     .await
                     .map_err(|e| anyhow!("Could not find outpoints: {e:#}"))?;

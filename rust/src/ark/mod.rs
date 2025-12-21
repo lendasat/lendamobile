@@ -11,7 +11,7 @@ use crate::ark::mnemonic_file::{
     ARK_BASE_DERIVATION_PATH, NOSTR_DERIVATION_PATH,
 };
 use crate::ark::storage::InMemoryDb;
-use crate::state::{UnifiedKeyProvider, ARK_CLIENT};
+use crate::state::{UnifiedKeyProvider, ARK_CLIENT, ESPLORA_URL};
 use anyhow::{anyhow, Result};
 use ark_client::{Bip32KeyProvider, OfflineClient, SqliteSwapStorage};
 use bitcoin::bip32::{DerivationPath, Xpriv};
@@ -241,6 +241,14 @@ pub async fn setup_client_hd(
     } else {
         ARK_CLIENT.set(RwLock::new(Arc::new(client)));
         tracing::info!("Initialized new ARK_CLIENT");
+    }
+
+    // Store esplora URL for later use (e.g., querying boarding UTXOs)
+    if let Some(existing_lock) = ESPLORA_URL.try_get() {
+        let mut guard = existing_lock.write();
+        *guard = esplora_url;
+    } else {
+        ESPLORA_URL.set(RwLock::new(esplora_url));
     }
 
     tracing::info!(server_pk = ?info.signer_pk, "Connected to server with HD wallet");
