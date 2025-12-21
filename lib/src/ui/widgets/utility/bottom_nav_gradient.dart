@@ -9,7 +9,7 @@ class BottomNavGradient extends StatelessWidget {
     final baseColor = isLight ? Colors.grey.shade200 : Colors.black;
 
     return Container(
-      height: 42, // ~cardPadding * 1.75
+      height: 28, // ~cardPadding * 1.75
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,

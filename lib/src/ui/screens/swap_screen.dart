@@ -523,6 +523,7 @@ class _SwapScreenState extends State<SwapScreen> {
   void _showEvmAddressInput() {
     arkBottomSheet(
       context: context,
+      height: MediaQuery.of(context).size.height * 0.7,
       child: EvmAddressInputSheet(
         tokenSymbol: targetToken.symbol,
         network: targetToken.network,

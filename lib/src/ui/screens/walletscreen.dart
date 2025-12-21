@@ -213,6 +213,12 @@ class WalletScreenState extends State<WalletScreen> {
       _fetchTransactions(),
       _fetchSwaps(),
     ]);
+
+    // Update gradient colors AFTER all data is fetched to ensure
+    // balance, transactions, and swaps are all up-to-date for the calculation
+    if (_bitcoinPriceData.isNotEmpty && mounted) {
+      _updateGradientColors();
+    }
   }
 
   Future<void> _fetchSwaps() async {
@@ -227,10 +233,6 @@ class WalletScreenState extends State<WalletScreen> {
         setState(() {
           _swaps = _swapService.swaps;
         });
-        // Recalculate gradient colors now that we have swap history
-        if (_bitcoinPriceData.isNotEmpty) {
-          _updateGradientColors();
-        }
       }
       logger.i("Fetched ${_swaps.length} swaps");
     } catch (e) {
@@ -250,10 +252,6 @@ class WalletScreenState extends State<WalletScreen> {
         _isTransactionFetching = false;
         _transactions = transactions;
       });
-      // Recalculate gradient colors now that we have transaction history
-      if (_bitcoinPriceData.isNotEmpty) {
-        _updateGradientColors();
-      }
       logger.i("Fetched ${transactions.length} transactions");
     } catch (e) {
       logger.e("Error fetching transaction history: $e");
@@ -594,7 +592,8 @@ class WalletScreenState extends State<WalletScreen> {
     // Sum all transaction amounts that occurred AFTER the target timestamp
     double amountAfterTimestamp = 0.0;
 
-    // Process regular transactions
+    // Process regular transactions from the rust backend
+    // These include all boarding, round, and redeem transactions
     for (final tx in _transactions) {
       final txTimestamp = tx.map(
         boarding: (t) => (t.confirmedAt is BigInt ? (t.confirmedAt as BigInt).toInt() : t.confirmedAt as int?) ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000),
@@ -602,35 +601,24 @@ class WalletScreenState extends State<WalletScreen> {
         redeem: (t) => t.createdAt is BigInt ? (t.createdAt as BigInt).toInt() : t.createdAt as int,
       );
 
+      // Only count transactions that happened AFTER our target point
       if (txTimestamp > timestampSec) {
         final amountSats = tx.map(
           boarding: (t) => t.amountSats.toInt(),
           round: (t) => t.amountSats is BigInt ? (t.amountSats as BigInt).toInt() : t.amountSats as int,
-          redeem: (t) => t.amountSats is BigInt ? -(t.amountSats as BigInt).toInt() : -(t.amountSats as int), // Redeem reduces Ark balance
+          // Redeem transactions already have the correct sign from the backend (negative for outgoing)
+          redeem: (t) => t.amountSats is BigInt ? (t.amountSats as BigInt).toInt() : t.amountSats as int,
         );
         amountAfterTimestamp += amountSats / 100000000.0;
       }
     }
 
-    // Process swaps (BTC to EVM = outgoing, EVM to BTC = incoming)
-    for (final swap in _swaps) {
-      try {
-        final swapDate = DateTime.parse(swap.createdAt);
-        final swapTimestampSec = swapDate.millisecondsSinceEpoch ~/ 1000;
-
-        if (swapTimestampSec > timestampSec &&
-            (swap.status == SwapStatusSimple.completed || swap.status == SwapStatusSimple.waitingForDeposit || swap.status == SwapStatusSimple.processing)) {
-          final sats = swap.sourceAmountSats.toInt();
-          // Negative when selling BTC (btc_to_evm), positive when buying BTC
-          final amountBtc = swap.direction == 'btc_to_evm' ? -sats : sats;
-          amountAfterTimestamp += amountBtc / 100000000.0;
-        }
-      } catch (e) {
-        // Skip swaps with invalid dates
-      }
-    }
+    // NOTE: Swaps are NOT processed here because they result in boarding/round transactions
+    // which are already captured in the _transactions list. Processing them again results in double-counting.
 
     // Balance at timestamp = current balance - changes that happened after
+    // Current: 100. Received: 50. Before: 100 - 50 = 50.
+    // Current: 50. Sent: 50. Before: 50 - (-50) = 100.
     return (currentBalance - amountAfterTimestamp).clamp(0.0, double.infinity);
   }
 
@@ -657,7 +645,7 @@ class WalletScreenState extends State<WalletScreen> {
     ));
 
     return SizedBox(
-      height: AppTheme.cardPadding * 16,
+      height: AppTheme.cardPadding * 11,
       child: BitcoinPriceChart(
         data: balanceChartData,
         alpha: 255,

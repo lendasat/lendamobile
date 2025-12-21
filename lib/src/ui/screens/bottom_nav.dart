@@ -31,6 +31,9 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
   String? _arkAddress;
   String? _boardingAddress;
 
+  // Track balance to detect payments received while backgrounded
+  BigInt? _lastKnownBalance;
+
   // Key for WalletScreen to trigger refresh
   final GlobalKey<WalletScreenState> _walletKey = GlobalKey<WalletScreenState>();
 
@@ -61,10 +64,91 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       // Restart payment monitoring when app resumes
       logger.i("App resumed, restarting global payment monitoring");
+      // Check for payments received while backgrounded
+      _checkForMissedPayments();
       _restartPaymentMonitoring();
     } else if (state == AppLifecycleState.paused) {
+      // Store current balance before pausing
+      _storeCurrentBalance();
       // Stop monitoring when app is paused
       _isMonitoringPayments = false;
+    }
+  }
+
+  /// Store the current balance before the app goes to background
+  Future<void> _storeCurrentBalance() async {
+    try {
+      final balanceResult = await balance();
+      _lastKnownBalance = balanceResult.offchain.totalSats;
+      logger.i("Stored balance before pause: $_lastKnownBalance sats");
+    } catch (e) {
+      logger.e("Error storing balance before pause: $e");
+    }
+  }
+
+  /// Check if any payments were received while the app was backgrounded
+  Future<void> _checkForMissedPayments() async {
+    if (_lastKnownBalance == null) return;
+
+    try {
+      final balanceResult = await balance();
+      final currentBalance = balanceResult.offchain.totalSats;
+      final previousBalance = _lastKnownBalance!;
+
+      logger.i("Checking for missed payments - Previous: $previousBalance, Current: $currentBalance");
+
+      if (currentBalance > previousBalance) {
+        final difference = currentBalance - previousBalance;
+        logger.i("Balance increased by $difference sats while backgrounded!");
+
+        // Get the latest transaction to show in the overlay
+        final transactions = await txHistory();
+        if (transactions.isNotEmpty) {
+          // Find the most recent incoming transaction
+          for (final tx in transactions) {
+            final BigInt txAmount = tx.map(
+              boarding: (t) => t.amountSats,
+              round: (t) => t.amountSats,
+              redeem: (t) => t.amountSats,
+            ) as BigInt;
+
+            final txid = tx.map(
+              boarding: (t) => t.txid,
+              round: (t) => t.txid,
+              redeem: (t) => t.txid,
+            );
+
+            // Check if this is a positive (incoming) transaction
+            if (txAmount > BigInt.zero) {
+              final overlayService = PaymentOverlayService();
+              if (!overlayService.suppressPaymentNotifications && mounted) {
+                // Create a PaymentReceived object for the overlay
+                final payment = PaymentReceived(
+                  txid: txid,
+                  amountSats: txAmount,
+                );
+
+                overlayService.showPaymentReceivedOverlay(
+                  context: context,
+                  payment: payment,
+                  onDismiss: () {
+                    _walletKey.currentState?.fetchWalletData();
+                  },
+                );
+              }
+              break; // Only show overlay for the most recent incoming tx
+            }
+          }
+        }
+
+        // Refresh wallet data
+        _walletKey.currentState?.fetchWalletData();
+      }
+
+      // Update the last known balance
+      _lastKnownBalance = currentBalance;
+    } catch (e) {
+      logger.e("Error checking for missed payments: $e");
     }
   }
 

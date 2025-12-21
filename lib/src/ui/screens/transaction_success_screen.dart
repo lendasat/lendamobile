@@ -58,26 +58,13 @@ class _TransactionSuccessScreenState extends State<TransactionSuccessScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Success icon
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: AppTheme.colorBitcoin,
-                      borderRadius: BorderRadius.circular(4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF7E71F0)
-                              .withAlpha((0.5 * 255).round()),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.check,
-                      color: Theme.of(context).colorScheme.onSurface,
-                      size: 40,
+                  // Success Bani image
+                  SizedBox(
+                    width: 150,
+                    height: 150,
+                    child: Image.asset(
+                      'assets/images/bani/bani_success.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
                   const SizedBox(height: 32),

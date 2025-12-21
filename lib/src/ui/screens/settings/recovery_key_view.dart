@@ -34,15 +34,125 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   int _currentStep = 0; // 0: warning, 1: show mnemonic, 2: confirm, 3: success
 
   // For confirmation step
-  final List<TextEditingController> _wordControllers = [];
-  final List<int> _verifyWordIndices = []; // Random word indices to verify
+  final List<TextEditingController> _wordControllers = List.generate(12, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(12, (_) => FocusNode());
+  final PageController _confirmPageController = PageController();
+  bool _onLastPage = false;
   bool _isVerifying = false;
   String? _verificationError;
+  List<String> _bipWords = [];
 
   @override
   void initState() {
     super.initState();
     _fetchRecoveryData();
+    _loadBipWords();
+
+    // Add focus listeners for auto-navigation
+    for (int i = 0; i < _focusNodes.length; i++) {
+      _focusNodes[i].addListener(() => _onFocusChange(i));
+    }
+
+    // Add text change listeners for paste detection
+    for (int i = 0; i < _wordControllers.length; i++) {
+      _wordControllers[i].addListener(() => _onTextChanged(i));
+    }
+  }
+
+  Future<void> _loadBipWords() async {
+    try {
+      final String bipWordsText = await rootBundle.loadString('assets/textfiles/bip_words.txt');
+      setState(() {
+        _bipWords = bipWordsText.split(' ');
+      });
+    } catch (e) {
+      logger.e("Error loading BIP words: $e");
+    }
+  }
+
+  void _onFocusChange(int index) {
+    if (_focusNodes[index].hasFocus && _confirmPageController.hasClients) {
+      int pageIndex = index ~/ 4;
+      if (_confirmPageController.page?.round() != pageIndex) {
+        _confirmPageController.animateToPage(
+          pageIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+  }
+
+  void _onTextChanged(int index) {
+    String text = _wordControllers[index].text.trim();
+
+    // Check for pasted mnemonic (multiple words)
+    List<String> words = text
+        .split(RegExp(r'[,\s]+'))
+        .where((word) => word.isNotEmpty)
+        .map((word) => word.trim().toLowerCase())
+        .toList();
+
+    if (words.length >= 12) {
+      _autoFillMnemonic(words);
+    }
+  }
+
+  void _autoFillMnemonic(List<String> words) async {
+    int wordCount = words.length > 12 ? 12 : words.length;
+
+    for (int i = 0; i < wordCount && i < _wordControllers.length; i++) {
+      if (_wordControllers[i].text != words[i]) {
+        _wordControllers[i].text = words[i];
+      }
+    }
+
+    setState(() {});
+
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    if (wordCount == 12 && _confirmPageController.hasClients) {
+      _confirmPageController.animateToPage(
+        2, // Last page
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+      setState(() {
+        _onLastPage = true;
+      });
+    }
+
+    if (mounted) {
+      FocusScope.of(context).unfocus();
+    }
+  }
+
+  void _moveToNextField() {
+    int currentFocusIndex = _focusNodes.indexWhere((node) => node.hasFocus);
+    if (currentFocusIndex == -1 || currentFocusIndex == _focusNodes.length - 1) {
+      return;
+    }
+
+    if ((currentFocusIndex + 1) % 4 == 0) {
+      _nextConfirmPage();
+    }
+
+    _focusNodes[currentFocusIndex].unfocus();
+    FocusScope.of(context).requestFocus(_focusNodes[currentFocusIndex + 1]);
+    setState(() {});
+  }
+
+  void _nextConfirmPage() async {
+    if (_confirmPageController.hasClients) {
+      await _confirmPageController.nextPage(
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeIn,
+      );
+    }
+  }
+
+  bool _isValidWord(String word) {
+    return _bipWords.contains(word.toLowerCase());
   }
 
   @override
@@ -50,6 +160,10 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
     for (var controller in _wordControllers) {
       controller.dispose();
     }
+    for (var node in _focusNodes) {
+      node.dispose();
+    }
+    _confirmPageController.dispose();
     super.dispose();
   }
 
@@ -62,7 +176,6 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
         _mnemonic = mnemonic;
         _isLoading = false;
       });
-      _setupVerificationWords();
     } catch (err) {
       logger.e("Error getting recovery data: $err");
       setState(() {
@@ -73,21 +186,13 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
     }
   }
 
-  void _setupVerificationWords() {
-    if (_mnemonic == null) return;
-
-    final words = _mnemonic!.split(' ');
-
-    // Select 4 random word indices for verification
-    final indices = List<int>.generate(words.length, (i) => i);
-    indices.shuffle();
-    _verifyWordIndices.clear();
-    _verifyWordIndices.addAll(indices.take(4).toList()..sort());
-
-    // Create controllers for verification
-    _wordControllers.clear();
-    for (var i = 0; i < 4; i++) {
-      _wordControllers.add(TextEditingController());
+  void _clearWordControllers() {
+    for (var controller in _wordControllers) {
+      controller.clear();
+    }
+    _onLastPage = false;
+    if (_confirmPageController.hasClients) {
+      _confirmPageController.jumpToPage(0);
     }
   }
 
@@ -108,25 +213,22 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
     });
 
     final words = _mnemonic!.split(' ');
-    bool allCorrect = true;
 
-    for (int i = 0; i < _verifyWordIndices.length; i++) {
-      final expectedWord = words[_verifyWordIndices[i]].toLowerCase().trim();
-      final enteredWord = _wordControllers[i].text.toLowerCase().trim();
+    // Check all 12 words
+    final enteredMnemonic = _wordControllers
+        .map((controller) => controller.text.trim().toLowerCase())
+        .join(' ');
+    final expectedMnemonic = words.map((w) => w.toLowerCase()).join(' ');
 
-      if (expectedWord != enteredWord) {
-        allCorrect = false;
-        break;
-      }
-    }
-
-    if (allCorrect) {
+    if (enteredMnemonic == expectedMnemonic) {
       _completeRecoverySetup();
     } else {
       setState(() {
         _isVerifying = false;
         _verificationError = AppLocalizations.of(context)!.incorrectWordsPleaseTryAgain;
       });
+      // Reset to first page on error
+      _clearWordControllers();
     }
   }
 
@@ -534,7 +636,7 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
               customWidth: double.infinity,
               customHeight: 56,
               onTap: () {
-                _setupVerificationWords();
+                _clearWordControllers();
                 setState(() {
                   _currentStep = 2;
                 });
@@ -549,7 +651,7 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   }
 
   Widget _buildConfirmMnemonicView(bool isDark) {
-    if (_mnemonic == null || _verifyWordIndices.isEmpty) {
+    if (_mnemonic == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -557,7 +659,7 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: AppTheme.cardPadding),
 
@@ -606,49 +708,58 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
                 ],
               ),
             ),
-            const SizedBox(height: AppTheme.cardPadding * 1.5),
+            const SizedBox(height: AppTheme.cardPadding),
 
-            // Word input fields - masked for PostHog session replay
+            // PageView for mnemonic input - masked for PostHog session replay
             PostHogMaskWidget(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (int i = 0; i < _verifyWordIndices.length; i++) ...[
-                    Text(
-                      'Word #${_verifyWordIndices[i] + 1}',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _wordControllers[i],
-                      decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.enterWord,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppTheme.colorBitcoin, width: 2),
-                        ),
-                      ),
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      textInputAction: i < _verifyWordIndices.length - 1
-                          ? TextInputAction.next
-                          : TextInputAction.done,
-                    ),
-                    const SizedBox(height: AppTheme.cardPadding),
+              child: SizedBox(
+                height: 320,
+                child: PageView(
+                  controller: _confirmPageController,
+                  onPageChanged: (val) {
+                    setState(() {
+                      _onLastPage = (val == 2);
+                    });
+                  },
+                  children: [
+                    _buildConfirmInputPage(0), // Words 1-4
+                    _buildConfirmInputPage(1), // Words 5-8
+                    _buildConfirmInputPage(2), // Words 9-12
                   ],
-                ],
+                ),
               ),
             ),
+
+            const SizedBox(height: AppTheme.elementSpacing),
+
+            // Page indicator
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(3, (index) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: _confirmPageController.hasClients &&
+                         (_confirmPageController.page?.round() ?? 0) == index ? 24 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _confirmPageController.hasClients &&
+                           (_confirmPageController.page?.round() ?? 0) == index
+                        ? AppTheme.colorBitcoin
+                        : Theme.of(context).hintColor.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                );
+              }),
+            ),
+
+            const SizedBox(height: AppTheme.cardPadding),
 
             // Error message
             if (_verificationError != null)
               Container(
                 padding: const EdgeInsets.all(AppTheme.elementSpacing),
+                margin: const EdgeInsets.only(bottom: AppTheme.cardPadding),
                 decoration: BoxDecoration(
                   color: AppTheme.errorColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -667,15 +778,15 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
                 ),
               ),
 
-            const SizedBox(height: AppTheme.cardPadding),
-
-            // Verify button
+            // Action button
             LongButtonWidget(
-              title: AppLocalizations.of(context)!.verify,
+              title: _onLastPage
+                  ? AppLocalizations.of(context)!.verify
+                  : 'Next',
               customWidth: double.infinity,
               customHeight: 56,
               isLoading: _isVerifying,
-              onTap: _verifyWords,
+              onTap: _onLastPage ? _verifyWords : _nextConfirmPage,
             ),
 
             const SizedBox(height: AppTheme.elementSpacing),
@@ -696,6 +807,109 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
             const SizedBox(height: AppTheme.cardPadding * 2),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildConfirmInputPage(int pageIndex) {
+    int startIndex = pageIndex * 4;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(4, (i) {
+          int wordIndex = startIndex + i;
+          return _buildConfirmWordField(wordIndex);
+        }),
+      ),
+    );
+  }
+
+  Widget _buildConfirmWordField(int index) {
+    final controller = _wordControllers[index];
+    final focusNode = _focusNodes[index];
+    final bool isValid = controller.text.isNotEmpty && _isValidWord(controller.text);
+    final bool isInvalid = controller.text.isNotEmpty && !_isValidWord(controller.text);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: controller,
+        focusNode: focusNode,
+        style: TextStyle(
+          color: isValid
+              ? AppTheme.successColor
+              : (isInvalid ? AppTheme.errorColor : Theme.of(context).colorScheme.onSurface),
+          fontSize: 16,
+        ),
+        decoration: InputDecoration(
+          hintText: '${index + 1}.',
+          hintStyle: TextStyle(
+            color: Theme.of(context).hintColor,
+            fontSize: 16,
+          ),
+          prefixIcon: Container(
+            width: 48,
+            alignment: Alignment.center,
+            child: Text(
+              '${index + 1}.',
+              style: TextStyle(
+                color: Theme.of(context).hintColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          filled: true,
+          fillColor: Theme.of(context).colorScheme.surface,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: isValid
+                  ? AppTheme.successColor.withValues(alpha: 0.5)
+                  : (isInvalid
+                      ? AppTheme.errorColor.withValues(alpha: 0.5)
+                      : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: isValid
+                  ? AppTheme.successColor
+                  : (isInvalid ? AppTheme.errorColor : AppTheme.colorBitcoin),
+              width: 2,
+            ),
+          ),
+        ),
+        textInputAction: index < 11 ? TextInputAction.next : TextInputAction.done,
+        autocorrect: false,
+        enableSuggestions: false,
+        onChanged: (value) {
+          setState(() {});
+          // Auto-advance if valid word is complete
+          if (_isValidWord(value.trim().toLowerCase())) {
+            final matches = _bipWords.where((w) => w.startsWith(value.toLowerCase())).toList();
+            final longestMatch = matches.isEmpty ? 0 : matches.map((w) => w.length).reduce((a, b) => a > b ? a : b);
+            if (value.length == longestMatch) {
+              _moveToNextField();
+            }
+          }
+        },
+        onFieldSubmitted: (_) {
+          if (index < 11) {
+            _moveToNextField();
+          } else {
+            FocusScope.of(context).unfocus();
+          }
+        },
       ),
     );
   }
