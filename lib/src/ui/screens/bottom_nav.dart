@@ -36,6 +36,8 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
 
   // Key for WalletScreen to trigger refresh
   final GlobalKey<WalletScreenState> _walletKey = GlobalKey<WalletScreenState>();
+  // Key for SwapScreen to unfocus text fields
+  final GlobalKey<SwapScreenState> _swapKey = GlobalKey<SwapScreenState>();
 
   @override
   void initState() {
@@ -43,7 +45,7 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _screens = [
       WalletScreen(key: _walletKey, aspId: widget.aspId),
-      const SwapScreen(),
+      SwapScreen(key: _swapKey),
       LoansScreen(aspId: widget.aspId),
     ];
 
@@ -243,6 +245,9 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
   }
 
   void _onItemTapped(int index) {
+    // Dismiss keyboard and unfocus swap screen when switching tabs
+    FocusScope.of(context).unfocus();
+    _swapKey.currentState?.unfocusAll();
     setState(() {
       _selectedIndex = index;
     });

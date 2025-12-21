@@ -618,62 +618,48 @@ class _OfferCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Lender avatar
+                    // Lender avatar - compact white background
                     Container(
-                      width: 40,
-                      height: 40,
+                      width: 28,
+                      height: 28,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-                            Theme.of(context).colorScheme.primary,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          width: 1,
                         ),
-                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
                         child: Text(
                           offer.lender.name[0].toUpperCase(),
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontSize: 12,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     // Lender name and verified badge
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              Text(
-                                offer.lender.name,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              if (offer.lender.vetted) ...[
-                                const SizedBox(width: 4),
-                                const Icon(
-                                  Icons.verified_rounded,
-                                  size: 14,
-                                  color: AppTheme.colorBitcoin,
-                                ),
-                              ],
-                            ],
-                          ),
                           Text(
-                            '${offer.lender.successfulContracts} loans completed',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            offer.lender.name,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
                           ),
+                          if (offer.lender.vetted) ...[
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.verified_rounded,
+                              size: 14,
+                              color: AppTheme.colorBitcoin,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -685,7 +671,7 @@ class _OfferCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        offer.interestRatePercent,
+                        '${offer.interestRatePercent} APY',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.primary,

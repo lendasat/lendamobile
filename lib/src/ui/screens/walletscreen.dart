@@ -448,6 +448,9 @@ class WalletScreenState extends State<WalletScreen> {
   }
 
   void _handleSettings() {
+    // Dismiss any active keyboard/focus before opening settings
+    FocusScope.of(context).unfocus();
+
     final settingsController = context.read<SettingsController>();
     settingsController.resetToMain();
 
@@ -787,11 +790,17 @@ class WalletScreenState extends State<WalletScreen> {
       // Calculate percent change with proper edge case handling
       const satoshiThreshold = 0.00000001;
       if (firstBalance < satoshiThreshold && currentBalance < satoshiThreshold) {
-        percentChange = 0.0;
+        // No balance before or now - show BTC price change
+        if (firstData.price > 0) {
+          percentChange = ((currentPrice - firstData.price) / firstData.price) * 100;
+        } else {
+          percentChange = 0.0;
+        }
       } else if (firstBalance >= satoshiThreshold && currentBalance < satoshiThreshold) {
         percentChange = -100.0;
       } else if (firstBalance < satoshiThreshold && currentBalance >= satoshiThreshold) {
-        percentChange = 0.0; // Significant gain from zero, but % is infinite/undefined
+        // Went from zero to having balance - use special infinity marker
+        percentChange = double.infinity;
       } else if (firstValue != 0) {
         percentChange = (valueDiff / firstValue) * 100;
       } else {
@@ -857,8 +866,9 @@ class WalletScreenState extends State<WalletScreen> {
                   ),
             const SizedBox(width: 8),
             BitNetPercentWidget(
-              priceChange:
-                  '${isPositive ? '+' : ''}${percentChange.toStringAsFixed(2)}%',
+              priceChange: percentChange.isInfinite
+                  ? '+∞%'
+                  : '${isPositive ? '+' : ''}${percentChange.toStringAsFixed(2)}%',
               shouldHideAmount: true,
             ),
           ],

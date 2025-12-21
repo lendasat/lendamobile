@@ -45,7 +45,7 @@ class RoundedButtonWidget extends StatelessWidget {
       case ButtonType.transparent:
         bgColor = isLight
             ? Colors.black.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.1);
+            : const Color(0xFF2A2A2A); // Solid dark grey for dark mode
         fgColor = iconColor ?? Theme.of(context).colorScheme.onSurface;
         border = isLight
             ? Border.all(color: Colors.black.withValues(alpha: 0.1), width: 1)

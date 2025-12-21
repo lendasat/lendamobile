@@ -28,10 +28,10 @@ class SwapScreen extends StatefulWidget {
   const SwapScreen({super.key});
 
   @override
-  State<SwapScreen> createState() => _SwapScreenState();
+  SwapScreenState createState() => SwapScreenState();
 }
 
-class _SwapScreenState extends State<SwapScreen> {
+class SwapScreenState extends State<SwapScreen> {
   // Selected tokens
   SwapToken sourceToken = SwapToken.bitcoin;
   SwapToken targetToken = SwapToken.usdcPolygon;
@@ -76,10 +76,11 @@ class _SwapScreenState extends State<SwapScreen> {
   // Swap service
   final LendaSwapService _swapService = LendaSwapService();
 
-
-  // Text controllers
+  // Text controllers and focus nodes
   final TextEditingController _sourceController = TextEditingController();
   final TextEditingController _targetController = TextEditingController();
+  final FocusNode _sourceFocusNode = FocusNode();
+  final FocusNode _targetFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -105,8 +106,16 @@ class _SwapScreenState extends State<SwapScreen> {
     _quoteDebounceTimer?.cancel();
     _sourceController.dispose();
     _targetController.dispose();
+    _sourceFocusNode.dispose();
+    _targetFocusNode.dispose();
     scrollController.dispose();
     super.dispose();
+  }
+
+  /// Unfocus all text fields - called when screen becomes invisible
+  void unfocusAll() {
+    _sourceFocusNode.unfocus();
+    _targetFocusNode.unfocus();
   }
 
   /// Fetch quote from LendaSwap API with debouncing
@@ -964,6 +973,7 @@ class _SwapScreenState extends State<SwapScreen> {
                             token: sourceToken,
                             cardTitle: "Sell",
                             controller: _sourceController,
+                            focusNode: _sourceFocusNode,
                             showUsdMode: sourceShowUsd,
                             conversionText: _getSourceConversionText(),
                             onAmountChanged: _onSourceAmountChanged,
@@ -981,6 +991,7 @@ class _SwapScreenState extends State<SwapScreen> {
                             token: targetToken,
                             cardTitle: "Buy",
                             controller: _targetController,
+                            focusNode: _targetFocusNode,
                             showUsdMode: targetShowUsd,
                             conversionText: _getTargetConversionText(),
                             onAmountChanged: _onTargetAmountChanged,
@@ -1048,6 +1059,7 @@ class _SwapScreenState extends State<SwapScreen> {
                 title: _getButtonTitle(),
                 customWidth: MediaQuery.of(context).size.width -
                     AppTheme.cardPadding * 2,
+                buttonType: _isAmountValid ? ButtonType.solid : ButtonType.transparent,
                 state: isLoading
                     ? ButtonState.loading
                     : (_isAmountTooSmall ? ButtonState.disabled : ButtonState.idle),
@@ -1183,6 +1195,7 @@ class _SwapAmountCard extends StatelessWidget {
   final SwapToken token;
   final String cardTitle;
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final bool showUsdMode;
   final String conversionText;
   final ValueChanged<String> onAmountChanged;
@@ -1198,6 +1211,7 @@ class _SwapAmountCard extends StatelessWidget {
     required this.token,
     required this.cardTitle,
     required this.controller,
+    this.focusNode,
     required this.showUsdMode,
     required this.conversionText,
     required this.onAmountChanged,
@@ -1291,6 +1305,7 @@ class _SwapAmountCard extends StatelessWidget {
                     Expanded(
                       child: TextField(
                         controller: controller,
+                        focusNode: focusNode,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: !(token.isBtc && !showUsdMode && btcUnit == CurrencyType.sats),
                         ),

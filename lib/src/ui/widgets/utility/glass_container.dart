@@ -61,7 +61,16 @@ class GlassContainer extends StatelessWidget {
     return RepaintBoundary(
       child: Container(
         margin: margin,
+        height: height,
+        width: width,
+        padding: padding,
         decoration: BoxDecoration(
+          // Solid colors for better performance and cleaner look
+          color: customColor ??
+              (Theme.of(context).brightness == Brightness.light
+                  ? Colors.white.withValues(alpha: 0.9)
+                  : const Color(0xFF2A2A2A)), // Solid dark grey for dark mode
+          borderRadius: radius,
           // Performance optimization: only apply shadows when needed
           boxShadow: customShadow != null
               ? customShadow!
@@ -71,24 +80,7 @@ class GlassContainer extends StatelessWidget {
                       ? [] // No shadows in light mode
                       : [AppTheme.boxShadowSuperSmall], // Minimal shadow in dark mode
         ),
-        child: ClipRRect(
-          borderRadius: radius,
-          child: Container(
-            height: height,
-            width: width,
-            decoration: BoxDecoration(
-              // Simplified color calculation for better performance
-              color: customColor ??
-                  (Theme.of(context).brightness == Brightness.light
-                      ? Colors.white.withValues(alpha: 0.9)
-                      : Colors.white.withValues(alpha: opacity)),
-              borderRadius: radius,
-              // border: border,
-            ),
-            padding: padding,
-            child: child,
-          ),
-        ),
+        child: child,
       ),
     );
   }
