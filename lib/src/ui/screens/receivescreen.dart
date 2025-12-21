@@ -517,13 +517,25 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                   size: AppTheme.cardPadding * 1.25,
                   onTap: () {
                     Navigator.of(context).pop();
-                    setState(() => _receiveType = ReceiveType.lightning);
+                    setState(() {
+                      _receiveType = ReceiveType.lightning;
+                      // Set default amount for Lightning if not already set
+                      if ((_currentAmount ?? 0) <= 0) {
+                        _currentAmount = _defaultLightningAmount;
+                      }
+                    });
                     _fetchLightningInvoice();
                   },
                 ),
                 onTap: () {
                   Navigator.of(context).pop();
-                  setState(() => _receiveType = ReceiveType.lightning);
+                  setState(() {
+                    _receiveType = ReceiveType.lightning;
+                    // Set default amount for Lightning if not already set
+                    if ((_currentAmount ?? 0) <= 0) {
+                      _currentAmount = _defaultLightningAmount;
+                    }
+                  });
                   _fetchLightningInvoice();
                 },
               ),
@@ -539,7 +551,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.5,
+      height: MediaQuery.of(context).size.height * 0.75,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ArkScaffold(
         context: context,

@@ -1,5 +1,6 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
+import 'package:ark_flutter/src/services/amount_widget_service.dart' show CurrencyType;
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
@@ -36,11 +37,16 @@ class _SwapScreenState extends State<SwapScreen> {
   // Amount values (stored as strings for precise decimal handling)
   String btcAmount = '';
   String usdAmount = '';
+  String satsAmount = ''; // Sats amount (parallel to btcAmount)
   String tokenAmount = ''; // For non-stablecoin tokens like XAUT
 
   // Input mode: true = show USD as main input, false = show native token
   bool sourceShowUsd = false;
   bool targetShowUsd = true; // Target defaults to USD for stablecoins
+
+  // BTC unit tracking for auto-switching between sats and BTC
+  CurrencyType _sourceBtcUnit = CurrencyType.sats;
+  CurrencyType _targetBtcUnit = CurrencyType.sats;
 
   // Approximate XAUt (gold) price - 1 XAUt ≈ 1 oz gold
   static const double xautUsdPrice = 2650.0;
@@ -125,34 +131,94 @@ class _SwapScreenState extends State<SwapScreen> {
     return sats.toString();
   }
 
+  /// Check if BTC unit should switch based on amount thresholds
+  /// Returns (newUnit, convertedAmount)
+  /// Thresholds: >= 100M sats -> BTC, < 0.001 BTC -> sats
+  (CurrencyType, String) _checkBtcUnitThreshold(double amount, CurrencyType currentUnit) {
+    if (currentUnit == CurrencyType.sats) {
+      // If sats >= 1 BTC (100,000,000), switch to BTC
+      if (amount >= 100000000) {
+        return (CurrencyType.bitcoin, formatBtc(amount / 100000000));
+      }
+      return (CurrencyType.sats, amount.toInt().toString());
+    } else {
+      // If BTC < 0.001 (100,000 sats), switch to sats
+      if (amount < 0.001 && amount > 0) {
+        return (CurrencyType.sats, (amount * 100000000).round().toString());
+      }
+      return (CurrencyType.bitcoin, formatBtc(amount));
+    }
+  }
+
   void _onSourceAmountChanged(String value) {
     setState(() {
       if (sourceToken.isBtc) {
         if (sourceShowUsd) {
-          // User entered USD, convert to BTC
+          // User entered USD, convert to BTC and sats
           usdAmount = value;
           final usd = double.tryParse(value) ?? 0;
-          btcAmount = usd > 0 ? formatBtc(usdToBtc(usd)) : '';
+          final btc = usd > 0 ? usdToBtc(usd) : 0.0;
+          btcAmount = btc > 0 ? formatBtc(btc) : '';
+          satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
         } else {
-          // User entered BTC
-          btcAmount = value;
-          final btc = double.tryParse(value) ?? 0;
-          usdAmount = btc > 0 ? formatUsd(btcToUsd(btc)) : '';
+          // User entering sats or BTC based on current unit
+          if (_sourceBtcUnit == CurrencyType.sats) {
+            // User entering sats (integers)
+            satsAmount = value;
+            final sats = double.tryParse(value) ?? 0;
+            final btc = sats / 100000000;
+            btcAmount = sats > 0 ? btc.toString() : '';
+            usdAmount = sats > 0 ? formatUsd(btcToUsd(btc)) : '';
+
+            // Check for auto-switch to BTC
+            if (sats > 0) {
+              final (newUnit, newAmount) = _checkBtcUnitThreshold(sats, CurrencyType.sats);
+              if (newUnit != _sourceBtcUnit) {
+                _sourceBtcUnit = newUnit;
+                // Update controller text after setState completes
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _sourceController.text = newAmount;
+                });
+              }
+            }
+          } else {
+            // User entering BTC (decimals)
+            btcAmount = value;
+            final btc = double.tryParse(value) ?? 0;
+            satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
+            usdAmount = btc > 0 ? formatUsd(btcToUsd(btc)) : '';
+
+            // Check for auto-switch to sats
+            if (btc > 0) {
+              final (newUnit, newAmount) = _checkBtcUnitThreshold(btc, CurrencyType.bitcoin);
+              if (newUnit != _sourceBtcUnit) {
+                _sourceBtcUnit = newUnit;
+                // Update controller text after setState completes
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _sourceController.text = newAmount;
+                });
+              }
+            }
+          }
         }
       } else if (sourceToken.isStablecoin) {
         // Source is stablecoin (1 token = $1)
         usdAmount = value;
         tokenAmount = value;
         final usd = double.tryParse(value) ?? 0;
-        btcAmount = usd > 0 ? formatBtc(usdToBtc(usd)) : '';
+        final btc = usd > 0 ? usdToBtc(usd) : 0.0;
+        btcAmount = btc > 0 ? formatBtc(btc) : '';
+        satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
       } else {
         // Source is non-stablecoin (e.g., XAUT)
         // User enters token amount, we convert to USD
         tokenAmount = value;
         final tokens = double.tryParse(value) ?? 0;
         final usd = tokens * xautUsdPrice;
+        final btc = usd > 0 ? usdToBtc(usd) : 0.0;
         usdAmount = usd > 0 ? formatUsd(usd) : '';
-        btcAmount = usd > 0 ? formatBtc(usdToBtc(usd)) : '';
+        btcAmount = btc > 0 ? formatBtc(btc) : '';
+        satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
       }
 
       // Update target amount
@@ -164,28 +230,69 @@ class _SwapScreenState extends State<SwapScreen> {
     setState(() {
       if (targetToken.isBtc) {
         if (targetShowUsd) {
+          // User entered USD, convert to BTC and sats
           usdAmount = value;
           final usd = double.tryParse(value) ?? 0;
-          btcAmount = usd > 0 ? formatBtc(usdToBtc(usd)) : '';
+          final btc = usd > 0 ? usdToBtc(usd) : 0.0;
+          btcAmount = btc > 0 ? formatBtc(btc) : '';
+          satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
         } else {
-          btcAmount = value;
-          final btc = double.tryParse(value) ?? 0;
-          usdAmount = btc > 0 ? formatUsd(btcToUsd(btc)) : '';
+          // User entering sats or BTC based on current unit
+          if (_targetBtcUnit == CurrencyType.sats) {
+            // User entering sats (integers)
+            satsAmount = value;
+            final sats = double.tryParse(value) ?? 0;
+            final btc = sats / 100000000;
+            btcAmount = sats > 0 ? btc.toString() : '';
+            usdAmount = sats > 0 ? formatUsd(btcToUsd(btc)) : '';
+
+            // Check for auto-switch to BTC
+            if (sats > 0) {
+              final (newUnit, newAmount) = _checkBtcUnitThreshold(sats, CurrencyType.sats);
+              if (newUnit != _targetBtcUnit) {
+                _targetBtcUnit = newUnit;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _targetController.text = newAmount;
+                });
+              }
+            }
+          } else {
+            // User entering BTC (decimals)
+            btcAmount = value;
+            final btc = double.tryParse(value) ?? 0;
+            satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
+            usdAmount = btc > 0 ? formatUsd(btcToUsd(btc)) : '';
+
+            // Check for auto-switch to sats
+            if (btc > 0) {
+              final (newUnit, newAmount) = _checkBtcUnitThreshold(btc, CurrencyType.bitcoin);
+              if (newUnit != _targetBtcUnit) {
+                _targetBtcUnit = newUnit;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _targetController.text = newAmount;
+                });
+              }
+            }
+          }
         }
       } else if (targetToken.isStablecoin) {
         // Target is stablecoin (1 token = $1)
         usdAmount = value;
         tokenAmount = value;
         final usd = double.tryParse(value) ?? 0;
-        btcAmount = usd > 0 ? formatBtc(usdToBtc(usd)) : '';
+        final btc = usd > 0 ? usdToBtc(usd) : 0.0;
+        btcAmount = btc > 0 ? formatBtc(btc) : '';
+        satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
       } else {
         // Target is non-stablecoin (e.g., XAUT)
         // User enters token amount, we convert to USD
         tokenAmount = value;
         final tokens = double.tryParse(value) ?? 0;
         final usd = tokens * xautUsdPrice;
+        final btc = usd > 0 ? usdToBtc(usd) : 0.0;
         usdAmount = usd > 0 ? formatUsd(usd) : '';
-        btcAmount = usd > 0 ? formatBtc(usdToBtc(usd)) : '';
+        btcAmount = btc > 0 ? formatBtc(btc) : '';
+        satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
       }
 
       // Update source amount
@@ -195,7 +302,12 @@ class _SwapScreenState extends State<SwapScreen> {
 
   void _updateTargetAmount() {
     if (targetToken.isBtc) {
-      _targetController.text = targetShowUsd ? usdAmount : btcAmount;
+      if (targetShowUsd) {
+        _targetController.text = usdAmount;
+      } else {
+        // Show sats or BTC based on current unit
+        _targetController.text = _targetBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
+      }
     } else if (targetToken.isStablecoin) {
       // Target is stablecoin - show USD amount (1:1 with token)
       _targetController.text = usdAmount;
@@ -216,7 +328,12 @@ class _SwapScreenState extends State<SwapScreen> {
 
   void _updateSourceAmount() {
     if (sourceToken.isBtc) {
-      _sourceController.text = sourceShowUsd ? usdAmount : btcAmount;
+      if (sourceShowUsd) {
+        _sourceController.text = usdAmount;
+      } else {
+        // Show sats or BTC based on current unit
+        _sourceController.text = _sourceBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
+      }
     } else if (sourceToken.isStablecoin) {
       // Source is stablecoin - show USD amount (1:1 with token)
       _sourceController.text = usdAmount;
@@ -239,7 +356,11 @@ class _SwapScreenState extends State<SwapScreen> {
     setState(() {
       sourceShowUsd = !sourceShowUsd;
       if (sourceToken.isBtc) {
-        _sourceController.text = sourceShowUsd ? usdAmount : btcAmount;
+        if (sourceShowUsd) {
+          _sourceController.text = usdAmount;
+        } else {
+          _sourceController.text = _sourceBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
+        }
       }
     });
   }
@@ -248,7 +369,11 @@ class _SwapScreenState extends State<SwapScreen> {
     setState(() {
       targetShowUsd = !targetShowUsd;
       if (targetToken.isBtc) {
-        _targetController.text = targetShowUsd ? usdAmount : btcAmount;
+        if (targetShowUsd) {
+          _targetController.text = usdAmount;
+        } else {
+          _targetController.text = _targetBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
+        }
       }
     });
   }
@@ -327,14 +452,20 @@ class _SwapScreenState extends State<SwapScreen> {
   String _getSourceConversionText() {
     if (sourceToken.isBtc) {
       if (sourceShowUsd) {
-        // Showing USD, display BTC equivalent
+        // Showing USD, display sats/BTC equivalent based on unit
+        if (_sourceBtcUnit == CurrencyType.sats) {
+          return satsAmount.isNotEmpty ? '≈ $satsAmount sats' : '≈ 0 sats';
+        }
         return btcAmount.isNotEmpty ? '≈ $btcAmount BTC' : '≈ 0 BTC';
       } else {
-        // Showing BTC, display USD equivalent
+        // Showing sats/BTC, display USD equivalent
         return usdAmount.isNotEmpty ? '≈ \$$usdAmount' : '≈ \$0.00';
       }
     } else {
-      // Stablecoin - always show BTC equivalent
+      // Stablecoin - show sats/BTC equivalent based on unit
+      if (_sourceBtcUnit == CurrencyType.sats) {
+        return satsAmount.isNotEmpty ? '≈ $satsAmount sats' : '≈ 0 sats';
+      }
       return btcAmount.isNotEmpty ? '≈ $btcAmount BTC' : '≈ 0 BTC';
     }
   }
@@ -343,11 +474,20 @@ class _SwapScreenState extends State<SwapScreen> {
   String _getTargetConversionText() {
     if (targetToken.isBtc) {
       if (targetShowUsd) {
+        // Showing USD, display sats/BTC equivalent based on unit
+        if (_targetBtcUnit == CurrencyType.sats) {
+          return satsAmount.isNotEmpty ? '≈ $satsAmount sats' : '≈ 0 sats';
+        }
         return btcAmount.isNotEmpty ? '≈ $btcAmount BTC' : '≈ 0 BTC';
       } else {
+        // Showing sats/BTC, display USD equivalent
         return usdAmount.isNotEmpty ? '≈ \$$usdAmount' : '≈ \$0.00';
       }
     } else {
+      // Stablecoin - show sats/BTC equivalent based on unit
+      if (_targetBtcUnit == CurrencyType.sats) {
+        return satsAmount.isNotEmpty ? '≈ $satsAmount sats' : '≈ 0 sats';
+      }
       return btcAmount.isNotEmpty ? '≈ $btcAmount BTC' : '≈ 0 BTC';
     }
   }
@@ -682,6 +822,7 @@ class _SwapScreenState extends State<SwapScreen> {
                             showBalance: true,
                             label: 'sell',
                             isTopCard: true,
+                            btcUnit: _sourceBtcUnit,
                           ),
                           const SizedBox(height: 4),
                           // TARGET CARD (You Buy)
@@ -698,6 +839,7 @@ class _SwapScreenState extends State<SwapScreen> {
                             showBalance: false,
                             label: 'buy',
                             isTopCard: false,
+                            btcUnit: _targetBtcUnit,
                           ),
                         ],
                       ),
@@ -877,6 +1019,7 @@ class _SwapAmountCard extends StatelessWidget {
   final bool showBalance;
   final String? label;
   final bool isTopCard;
+  final CurrencyType btcUnit; // Current BTC unit (sats or bitcoin)
 
   const _SwapAmountCard({
     required this.token,
@@ -891,6 +1034,7 @@ class _SwapAmountCard extends StatelessWidget {
     required this.showBalance,
     this.label,
     this.isTopCard = true,
+    this.btcUnit = CurrencyType.sats,
   });
 
   void _showTokenSelector(BuildContext context) {
@@ -910,7 +1054,8 @@ class _SwapAmountCard extends StatelessWidget {
 
   String _getPlaceholder() {
     if (token.isBtc && !showUsdMode) {
-      return '0';
+      // Sats use integer placeholder, BTC uses decimal
+      return btcUnit == CurrencyType.sats ? '0' : '0.00000000';
     }
     return '0.00';
   }
@@ -919,6 +1064,7 @@ class _SwapAmountCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final showDollarPrefix = showUsdMode || !token.isBtc;
+    final showBtcPrefix = token.isBtc && !showUsdMode;
 
     return GlassContainer(
       borderRadius: AppTheme.borderRadiusMid,
@@ -956,17 +1102,33 @@ class _SwapAmountCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                    // Sats/BTC icon prefix (switches based on btcUnit)
+                    if (showBtcPrefix)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4.0),
+                        child: Icon(
+                          btcUnit == CurrencyType.sats
+                              ? AppTheme.satoshiIcon
+                              : Icons.currency_bitcoin,
+                          size: 32,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                      ),
                     // Amount input
                     Expanded(
                       child: TextField(
                         controller: controller,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: !(token.isBtc && !showUsdMode && btcUnit == CurrencyType.sats),
                         ),
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d*\.?\d{0,8}$'),
-                          ),
+                          // Use digits only for sats, decimals for BTC/USD
+                          if (token.isBtc && !showUsdMode && btcUnit == CurrencyType.sats)
+                            FilteringTextInputFormatter.digitsOnly
+                          else
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d{0,8}$'),
+                            ),
                         ],
                         style: TextStyle(
                           fontSize: 32,
@@ -1009,14 +1171,47 @@ class _SwapAmountCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          conversionText,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                        // Show Bitcoin icon if conversion text shows BTC
+                        if (conversionText.endsWith('BTC')) ...[
+                          Icon(
+                            Icons.currency_bitcoin,
+                            size: 14,
                             color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                           ),
-                        ),
+                          const SizedBox(width: 2),
+                          Text(
+                            conversionText.replaceAll(' BTC', ''),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            ),
+                          ),
+                        ] else if (conversionText.endsWith('sats')) ...[
+                          // Show Satoshi icon for sats
+                          Icon(
+                            AppTheme.satoshiIcon,
+                            size: 14,
+                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            conversionText.replaceAll(' sats', ''),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            ),
+                          ),
+                        ] else
+                          Text(
+                            conversionText,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            ),
+                          ),
                         if (onToggleMode != null) ...[
                           const SizedBox(width: 4),
                           Icon(

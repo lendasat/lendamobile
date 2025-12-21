@@ -341,24 +341,24 @@ class SettingsViewState extends State<SettingsView> {
                     // Recovery Options (with status indicator dot)
                     _buildRecoveryOptionsTile(context, controller),
 
-                    // Recovery Key
-                    ArkListTile(
-                      leading: RoundedButtonWidget(
-                        iconData: Icons.key_rounded,
-                        onTap: () => controller.switchTab('recovery'),
-                        size: AppTheme.iconSize * 1.5,
-                        buttonType: ButtonType.transparent,
-                      ),
-                      text: AppLocalizations.of(context)!.viewRecoveryKey,
-                      trailing: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: AppTheme.iconSize * 0.75,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppTheme.white60
-                            : AppTheme.black60,
-                      ),
-                      onTap: () => controller.switchTab('recovery'),
-                    ),
+                    // Recovery Key - temporarily disabled (already included in Recovery Options)
+                    // ArkListTile(
+                    //   leading: RoundedButtonWidget(
+                    //     iconData: Icons.key_rounded,
+                    //     onTap: () => controller.switchTab('recovery'),
+                    //     size: AppTheme.iconSize * 1.5,
+                    //     buttonType: ButtonType.transparent,
+                    //   ),
+                    //   text: AppLocalizations.of(context)!.viewRecoveryKey,
+                    //   trailing: Icon(
+                    //     Icons.arrow_forward_ios_rounded,
+                    //     size: AppTheme.iconSize * 0.75,
+                    //     color: Theme.of(context).brightness == Brightness.dark
+                    //         ? AppTheme.white60
+                    //         : AppTheme.black60,
+                    //   ),
+                    //   onTap: () => controller.switchTab('recovery'),
+                    // ),
 
                     // Feedback / Report Bug - temporarily disabled
                     // ArkListTile(
