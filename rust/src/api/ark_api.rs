@@ -214,6 +214,32 @@ pub async fn settle() -> Result<()> {
     Ok(())
 }
 
+/// Represents a pending boarding UTXO (on-chain funds waiting to be settled)
+pub struct BoardingUtxo {
+    pub txid: String,
+    pub amount_sats: u64,
+    pub is_confirmed: bool,
+}
+
+/// Get pending boarding UTXOs (on-chain funds at the boarding address that haven't been settled yet)
+pub async fn get_boarding_utxos() -> Result<Vec<BoardingUtxo>> {
+    let utxos = crate::ark::client::get_boarding_utxos().await?;
+    Ok(utxos
+        .into_iter()
+        .map(|u| BoardingUtxo {
+            txid: u.txid,
+            amount_sats: u.amount.to_sat(),
+            is_confirmed: u.is_confirmed,
+        })
+        .collect())
+}
+
+/// Get the total pending balance in sats (on-chain funds waiting to be settled)
+pub async fn get_pending_balance() -> Result<u64> {
+    let amount = crate::ark::client::get_pending_balance().await?;
+    Ok(amount.to_sat())
+}
+
 /// Get the Nostr secret key (nsec) derived from the wallet mnemonic
 /// Note: Nostr keys are network-independent, so we use Bitcoin mainnet for derivation
 pub async fn nsec(data_dir: String) -> Result<String> {

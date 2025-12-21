@@ -75,6 +75,14 @@ Future<LnPaymentResult> payLnInvoice({required String invoice}) =>
 
 Future<void> settle() => RustLib.instance.api.crateApiArkApiSettle();
 
+/// Get pending boarding UTXOs (on-chain funds at the boarding address that haven't been settled yet)
+Future<List<BoardingUtxo>> getBoardingUtxos() =>
+    RustLib.instance.api.crateApiArkApiGetBoardingUtxos();
+
+/// Get the total pending balance in sats (on-chain funds waiting to be settled)
+Future<BigInt> getPendingBalance() =>
+    RustLib.instance.api.crateApiArkApiGetPendingBalance();
+
 /// Get the Nostr secret key (nsec) derived from the wallet mnemonic
 /// Note: Nostr keys are network-independent, so we use Bitcoin mainnet for derivation
 Future<String> nsec({required String dataDir}) =>
@@ -159,6 +167,32 @@ class Balance {
       other is Balance &&
           runtimeType == other.runtimeType &&
           offchain == other.offchain;
+}
+
+/// Represents a pending boarding UTXO (on-chain funds waiting to be settled)
+class BoardingUtxo {
+  final String txid;
+  final BigInt amountSats;
+  final bool isConfirmed;
+
+  const BoardingUtxo({
+    required this.txid,
+    required this.amountSats,
+    required this.isConfirmed,
+  });
+
+  @override
+  int get hashCode =>
+      txid.hashCode ^ amountSats.hashCode ^ isConfirmed.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BoardingUtxo &&
+          runtimeType == other.runtimeType &&
+          txid == other.txid &&
+          amountSats == other.amountSats &&
+          isConfirmed == other.isConfirmed;
 }
 
 class BoltzSwap {

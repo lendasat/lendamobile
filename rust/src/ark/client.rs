@@ -216,6 +216,69 @@ pub async fn settle() -> Result<()> {
     Ok(())
 }
 
+/// Represents a pending boarding UTXO (on-chain funds waiting to be settled)
+pub struct BoardingUtxo {
+    pub txid: String,
+    pub amount: Amount,
+    pub is_confirmed: bool,
+}
+
+/// Get pending boarding UTXOs (on-chain funds at the boarding address that haven't been settled yet)
+pub async fn get_boarding_utxos() -> Result<Vec<BoardingUtxo>> {
+    let maybe_client = ARK_CLIENT.try_get();
+
+    match maybe_client {
+        None => {
+            bail!("Ark client not initialized");
+        }
+        Some(client) => {
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+
+            // Get all boarding addresses
+            let boarding_addresses = client
+                .get_boarding_addresses()
+                .map_err(|e| anyhow!("Could not get boarding addresses: {e:#}"))?;
+
+            let mut utxos = Vec::new();
+
+            // Query esplora for UTXOs at each boarding address
+            for address in boarding_addresses {
+                let address_utxos = client
+                    .blockchain()
+                    .find_outpoints(&address)
+                    .await
+                    .map_err(|e| anyhow!("Could not find outpoints: {e:#}"))?;
+
+                for utxo in address_utxos {
+                    utxos.push(BoardingUtxo {
+                        txid: utxo.outpoint.txid.to_string(),
+                        amount: utxo.amount,
+                        is_confirmed: utxo.confirmation_blocktime.is_some(),
+                    });
+                }
+            }
+
+            tracing::info!(
+                "Found {} boarding UTXOs with total {} sats",
+                utxos.len(),
+                utxos.iter().map(|u| u.amount.to_sat()).sum::<u64>()
+            );
+
+            Ok(utxos)
+        }
+    }
+}
+
+/// Get the total pending balance (on-chain funds waiting to be settled)
+pub async fn get_pending_balance() -> Result<Amount> {
+    let utxos = get_boarding_utxos().await?;
+    let total = utxos.iter().map(|u| u.amount).sum();
+    Ok(total)
+}
+
 /// Result of paying a Lightning invoice via submarine swap
 pub struct LnPaymentResult {
     pub swap_id: String,

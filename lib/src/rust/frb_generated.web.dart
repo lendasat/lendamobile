@@ -80,6 +80,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BlockExtras dco_decode_block_extras(dynamic raw);
 
   @protected
+  BoardingUtxo dco_decode_boarding_utxo(dynamic raw);
+
+  @protected
   BoltzSwap dco_decode_boltz_swap(dynamic raw);
 
   @protected
@@ -233,6 +236,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<Block> dco_decode_list_block(dynamic raw);
+
+  @protected
+  List<BoardingUtxo> dco_decode_list_boarding_utxo(dynamic raw);
 
   @protected
   List<Contract> dco_decode_list_contract(dynamic raw);
@@ -525,6 +531,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BlockExtras sse_decode_block_extras(SseDeserializer deserializer);
 
   @protected
+  BoardingUtxo sse_decode_boarding_utxo(SseDeserializer deserializer);
+
+  @protected
   BoltzSwap sse_decode_boltz_swap(SseDeserializer deserializer);
 
   @protected
@@ -691,6 +700,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<Block> sse_decode_list_block(SseDeserializer deserializer);
+
+  @protected
+  List<BoardingUtxo> sse_decode_list_boarding_utxo(
+      SseDeserializer deserializer);
 
   @protected
   List<Contract> sse_decode_list_contract(SseDeserializer deserializer);
@@ -1009,6 +1022,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_block_extras(BlockExtras self, SseSerializer serializer);
 
   @protected
+  void sse_encode_boarding_utxo(BoardingUtxo self, SseSerializer serializer);
+
+  @protected
   void sse_encode_boltz_swap(BoltzSwap self, SseSerializer serializer);
 
   @protected
@@ -1188,6 +1204,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_block(List<Block> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_boarding_utxo(
+      List<BoardingUtxo> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_contract(List<Contract> self, SseSerializer serializer);

@@ -66,6 +66,10 @@ class WalletScreenState extends State<WalletScreen> {
   final LendasatService _lendasatService = LendasatService();
   int _lockedCollateralSats = 0;
 
+  // On-chain boarding balance (pending settle)
+  int _boardingBalanceSats = 0;
+  bool _isSettling = false;
+
   // Balance values
   double _pendingBalance = 0.0;
   double _confirmedBalance = 0.0;
@@ -218,12 +222,18 @@ class WalletScreenState extends State<WalletScreen> {
       _fetchTransactions(),
       _fetchSwaps(),
       _fetchLockedCollateral(),
+      _fetchBoardingBalance(),
     ]);
 
     // Update gradient colors AFTER all data is fetched to ensure
     // balance, transactions, and swaps are all up-to-date for the calculation
     if (_bitcoinPriceData.isNotEmpty && mounted) {
       _updateGradientColors();
+    }
+
+    // Auto-settle if there are confirmed boarding UTXOs
+    if (_boardingBalanceSats > 0 && !_isSettling) {
+      _settleBoarding();
     }
   }
 
@@ -274,6 +284,62 @@ class WalletScreenState extends State<WalletScreen> {
     } catch (e) {
       // Silently handle errors - locked collateral display is optional
       logger.w("Could not fetch locked collateral: $e");
+    }
+  }
+
+  /// Fetch on-chain boarding balance (funds waiting to be settled into Ark)
+  Future<void> _fetchBoardingBalance() async {
+    try {
+      final pendingBalance = await getPendingBalance();
+      if (mounted) {
+        setState(() {
+          _boardingBalanceSats = pendingBalance.toInt();
+        });
+      }
+      if (pendingBalance > BigInt.zero) {
+        logger.i("Boarding balance: $pendingBalance sats (pending settle)");
+      }
+    } catch (e) {
+      // Silently handle errors - boarding balance display is optional
+      logger.w("Could not fetch boarding balance: $e");
+    }
+  }
+
+  /// Settle boarding UTXOs (convert on-chain funds to Ark VTXOs)
+  Future<void> _settleBoarding() async {
+    if (_isSettling || _boardingBalanceSats == 0) return;
+
+    setState(() {
+      _isSettling = true;
+    });
+
+    try {
+      logger.i("Settling $_boardingBalanceSats sats from boarding address...");
+      await settle();
+      logger.i("Settle completed successfully!");
+
+      // Refresh balance after settle
+      await _fetchBalance();
+      await _fetchBoardingBalance();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Funds settled successfully!'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      logger.e("Error settling boarding UTXOs: $e");
+      // Don't show error to user - settle will be retried on next refresh
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSettling = false;
+        });
+      }
     }
   }
 
@@ -571,6 +637,10 @@ class WalletScreenState extends State<WalletScreen> {
                           const SizedBox(height: AppTheme.elementSpacing * 0.5),
                           _buildLockedCollateralDisplay(),
                         ],
+                        if (_boardingBalanceSats > 0) ...[
+                          const SizedBox(height: AppTheme.elementSpacing * 0.5),
+                          _buildBoardingBalanceDisplay(),
+                        ],
                         const SizedBox(height: AppTheme.elementSpacing),
                         _buildPriceChangeIndicators(),
                         const SizedBox(height: AppTheme.cardPadding * 1.5),
@@ -840,6 +910,64 @@ class WalletScreenState extends State<WalletScreen> {
                 'locked',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBoardingBalanceDisplay() {
+    final currencyService = context.watch<CurrencyPreferenceService>();
+    final userPrefs = context.watch<UserPreferencesService>();
+
+    final formattedSats = _formatSatsAmount(_boardingBalanceSats);
+    final boardingBtc = _boardingBalanceSats / 100000000.0;
+    final boardingFiat = boardingBtc * _getCurrentBtcPrice();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+      child: PostHogMaskWidget(
+        child: GestureDetector(
+          onTap: _isSettling ? null : _settleBoarding,
+          behavior: HitTestBehavior.opaque,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isSettling)
+                SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    color: AppTheme.colorBitcoin,
+                  ),
+                )
+              else
+                Icon(
+                  FontAwesomeIcons.arrowDown,
+                  size: 12,
+                  color: AppTheme.colorBitcoin,
+                ),
+              const SizedBox(width: 6),
+              Text(
+                userPrefs.balancesVisible
+                    ? (currencyService.showCoinBalance
+                        ? '$formattedSats sats'
+                        : currencyService.formatAmount(boardingFiat))
+                    : '****',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.colorBitcoin,
+                    ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                _isSettling ? 'settling...' : 'incoming',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.colorBitcoin.withValues(alpha: 0.7),
                     ),
               ),
             ],

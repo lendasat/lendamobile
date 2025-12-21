@@ -376,28 +376,18 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-                  Theme.of(context).colorScheme.primary,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              border: Border.all(
+                color: Colors.black.withValues(alpha: 0.1),
+                width: 1,
+              ),
             ),
             child: Center(
               child: Text(
                 widget.offer.lender.name[0].toUpperCase(),
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black,
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
                 ),
