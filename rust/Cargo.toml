@@ -11,7 +11,7 @@ anyhow = "1"
 base64 = "0.22"
 
 # Lendasat SDK for wallet encryption (email recovery)
-lendasat-sdk = { path = "/home/weltitob/lendasat/lendasat/client-sdk", package = "client-sdk" }
+lendasat-sdk = { git = "https://github.com/lendasat/lendasat.git", branch = "feat/arkrs-update", package = "client-sdk" }
 # SRP authentication
 srp = "0.6.0"
 ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "09b073269c944a25eef5e1f92fd2ae2a5ef2ea28" }
