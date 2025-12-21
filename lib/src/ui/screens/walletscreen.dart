@@ -567,7 +567,7 @@ class WalletScreenState extends State<WalletScreen> {
 
   Widget _buildDynamicGradient() {
     return Container(
-      height: AppTheme.cardPadding * 16,
+      height: AppTheme.cardPadding * 12,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,

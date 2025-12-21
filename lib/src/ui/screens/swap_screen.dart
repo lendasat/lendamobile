@@ -505,7 +505,27 @@ class _SwapScreenState extends State<SwapScreen> {
     _fetchQuoteDebounced();
   }
 
+  /// Minimum swap amount in sats
+  static const int _minSwapSats = 1000;
+
+  /// Check if current amount is below minimum
+  bool get _isAmountTooSmall {
+    final btc = double.tryParse(btcAmount) ?? 0;
+    final sats = (btc * 100000000).round();
+    return sats > 0 && sats < _minSwapSats;
+  }
+
+  /// Check if amount is valid for swap
+  bool get _isAmountValid {
+    final btc = double.tryParse(btcAmount) ?? 0;
+    final sats = (btc * 100000000).round();
+    return sats >= _minSwapSats;
+  }
+
   String _getButtonTitle() {
+    if (_isAmountTooSmall) {
+      return "Amount too small (min 1,000 sats)";
+    }
     return "Swap ${sourceToken.symbol} to ${targetToken.symbol}";
   }
 
@@ -1028,8 +1048,10 @@ class _SwapScreenState extends State<SwapScreen> {
                 title: _getButtonTitle(),
                 customWidth: MediaQuery.of(context).size.width -
                     AppTheme.cardPadding * 2,
-                state: isLoading ? ButtonState.loading : ButtonState.idle,
-                onTap: _initiateSwap,
+                state: isLoading
+                    ? ButtonState.loading
+                    : (_isAmountTooSmall ? ButtonState.disabled : ButtonState.idle),
+                onTap: _isAmountValid ? _initiateSwap : null,
               ),
             ),
           ),

@@ -398,57 +398,103 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
       borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Row(
+        child: Column(
           children: [
             // From
-            Expanded(
-              child: Column(
-                children: [
-                  TokenIcon(token: widget.sourceToken, size: 40),
-                  const SizedBox(height: 8),
-                  Text(
-                    formatAmount(widget.sourceToken, widget.sourceAmount),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+            Row(
+              children: [
+                TokenIcon(token: widget.sourceToken, size: 40),
+                const SizedBox(width: AppTheme.elementSpacing),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'From',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            ),
+                      ),
+                      Text(
+                        '${widget.sourceToken.symbol} (${widget.sourceToken.network})',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '${widget.sourceToken.symbol} (${widget.sourceToken.network})',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                        ),
+                ),
+                Text(
+                  formatAmount(widget.sourceToken, widget.sourceAmount),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+            // Divider with arrow
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppTheme.elementSpacing),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: isDarkMode
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.black.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Icon(
+                      Icons.arrow_downward_rounded,
+                      size: 20,
+                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: isDarkMode
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.black.withValues(alpha: 0.1),
+                    ),
                   ),
                 ],
-              ),
-            ),
-            // Arrow
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Icon(
-                Icons.arrow_forward_rounded,
-                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
               ),
             ),
             // To
-            Expanded(
-              child: Column(
-                children: [
-                  TokenIcon(token: widget.targetToken, size: 40),
-                  const SizedBox(height: 8),
-                  Text(
-                    formatAmount(widget.targetToken, widget.targetAmount),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+            Row(
+              children: [
+                TokenIcon(token: widget.targetToken, size: 40),
+                const SizedBox(width: AppTheme.elementSpacing),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'To',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            ),
+                      ),
+                      Text(
+                        '${widget.targetToken.symbol} (${widget.targetToken.network})',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '${widget.targetToken.symbol} (${widget.targetToken.network})',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                        ),
-                  ),
-                ],
-              ),
+                ),
+                Text(
+                  formatAmount(widget.targetToken, widget.targetAmount),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
             ),
           ],
         ),
@@ -759,8 +805,42 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
 
   String _formatTimestamp(String timestamp) {
     try {
-      final date = DateTime.parse(timestamp);
-      return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+      // Handle format like "2025-12-21 19:04:15.0 +00:00:00"
+      String normalizedTimestamp = timestamp;
+
+      // Remove the unusual timezone format (+00:00:00 or -00:00:00)
+      if (timestamp.contains(' +') || timestamp.contains(' -')) {
+        final parts = timestamp.split(RegExp(r' [+-]'));
+        if (parts.isNotEmpty) {
+          normalizedTimestamp = parts[0].trim();
+        }
+      }
+
+      // Replace space between date and time with 'T' for ISO format
+      normalizedTimestamp = normalizedTimestamp.replaceFirst(' ', 'T');
+
+      final date = DateTime.parse(normalizedTimestamp).toLocal();
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inSeconds < 60) {
+        return '${difference.inSeconds} seconds ago';
+      } else if (difference.inMinutes < 60) {
+        final minutes = difference.inMinutes;
+        return '$minutes ${minutes == 1 ? 'minute' : 'minutes'} ago';
+      } else if (difference.inHours < 24) {
+        final hours = difference.inHours;
+        return '$hours ${hours == 1 ? 'hour' : 'hours'} ago';
+      } else if (difference.inDays < 30) {
+        final days = difference.inDays;
+        return '$days ${days == 1 ? 'day' : 'days'} ago';
+      } else if (difference.inDays < 365) {
+        final months = (difference.inDays / 30).floor();
+        return '$months ${months == 1 ? 'month' : 'months'} ago';
+      } else {
+        final years = (difference.inDays / 365).floor();
+        return '$years ${years == 1 ? 'year' : 'years'} ago';
+      }
     } catch (e) {
       return timestamp;
     }
