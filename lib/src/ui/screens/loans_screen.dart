@@ -184,7 +184,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     slivers: [
                       // Debug info (development only)
                       if (_showDebugInfo)
-                        SliverToBoxAdapter(child: _buildDebugCard()),
+                        SliverToBoxAdapter(child: _buildDebugCard(context)),
 
                       // Auth banner (if not authenticated)
                       if (!_lendasatService.isAuthenticated)
@@ -263,7 +263,7 @@ class _LoansScreenState extends State<LoansScreen> {
     );
   }
 
-  Widget _buildDebugCard() {
+  Widget _buildDebugCard(BuildContext context) {
     return GlassContainer(
       margin: const EdgeInsets.all(AppTheme.cardPadding),
       padding: const EdgeInsets.all(AppTheme.cardPadding),
@@ -272,16 +272,16 @@ class _LoansScreenState extends State<LoansScreen> {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.bug_report,
                 size: 20,
-                color: Colors.orange,
+                color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 8),
               Text(
                 'Debug Info',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.orange,
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
               ),
@@ -589,84 +589,138 @@ class _OfferCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.elementSpacing),
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: AppTheme.colorBitcoin.withValues(alpha: 0.1),
+            color: Colors.black.withValues(alpha: 0.08),
             offset: const Offset(0, 4),
-            blurRadius: 12,
+            blurRadius: 16,
             spreadRadius: -2,
           ),
         ],
-        borderRadius: AppTheme.cardRadiusSmall,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: GlassContainer(
-        borderRadius: AppTheme.cardRadiusSmall,
+        borderRadius: 16,
         child: InkWell(
           onTap: onTap,
-          borderRadius: AppTheme.cardRadiusSmall,
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(AppTheme.cardPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header row
+                // Header row with lender and interest
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // Lender avatar
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                            Theme.of(context).colorScheme.primary,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          offer.lender.name[0].toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Lender name and verified badge
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            offer.name,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -0.2,
-                                ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(
-                                Icons.person_outline,
-                                size: 12,
-                                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                              ),
-                              const SizedBox(width: 4),
                               Text(
-                                'by ${offer.lender.name}',
-                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                                      fontWeight: FontWeight.w500,
+                                offer.lender.name,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
                                     ),
                               ),
+                              if (offer.lender.vetted) ...[
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.verified_rounded,
+                                  size: 14,
+                                  color: AppTheme.successColor,
+                                ),
+                              ],
                             ],
+                          ),
+                          Text(
+                            '${offer.lender.successfulContracts} loans completed',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                                ),
                           ),
                         ],
                       ),
                     ),
-                    _buildStatusBadge(context),
+                    // Interest rate highlight
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        offer.interestRatePercent,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: AppTheme.cardPadding),
-  
+                const SizedBox(height: 16),
+
+                // Asset flow indicator
+                Row(
+                  children: [
+                    _buildAssetChip(context, 'BTC', isLoan: false),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 14,
+                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                      ),
+                    ),
+                    _buildAssetChip(context, offer.loanAssetDisplayName, isLoan: true),
+                    const Spacer(),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
                 // Details row
                 Row(
                   children: [
-                    Expanded(
-                      child: _buildInfoItem(
-                        context,
-                        'Interest',
-                        offer.interestRatePercent,
-                        highlight: true,
-                      ),
-                    ),
                     Expanded(
                       child: _buildInfoItem(
                         context,
@@ -681,22 +735,13 @@ class _OfferCard extends StatelessWidget {
                         offer.durationRange,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.cardPadding),
-  
-                // Asset info - more clean
-                Row(
-                  children: [
-                    _buildAssetChip(context, offer.loanAssetDisplayName, isLoan: true),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 14,
-                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                    Expanded(
+                      child: _buildInfoItem(
+                        context,
+                        'Min LTV',
+                        '${(offer.minLtv * 100).toStringAsFixed(0)}%',
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    _buildAssetChip(context, offer.collateralAssetDisplayName),
                   ],
                 ),
               ],
@@ -707,36 +752,6 @@ class _OfferCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(BuildContext context) {
-    Color badgeColor;
-    String text;
-
-    if (offer.isAvailable) {
-      badgeColor = AppTheme.successColor;
-      text = 'AVAILABLE';
-    } else {
-      badgeColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
-      text = 'UNAVAILABLE';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: badgeColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: badgeColor.withValues(alpha: 0.2), width: 1),
-      ),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: badgeColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 10,
-              letterSpacing: 0.5,
-            ),
-      ),
-    );
-  }
 
   Widget _buildInfoItem(BuildContext context, String label, String value, {bool highlight = false}) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -758,7 +773,7 @@ class _OfferCard extends StatelessWidget {
           value,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: highlight ? AppTheme.colorBitcoin : null,
+                color: highlight ? Theme.of(context).colorScheme.primary : null,
               ),
         ),
       ],
@@ -766,32 +781,22 @@ class _OfferCard extends StatelessWidget {
   }
 
   Widget _buildAssetChip(BuildContext context, String label, {bool isLoan = false}) {
-    final color = isLoan ? Theme.of(context).colorScheme.primary : AppTheme.colorBitcoin;
-    
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final color = isDarkMode ? AppTheme.white70 : AppTheme.black70;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        color: (isDarkMode ? Colors.white : Colors.black).withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isLoan ? Icons.monetization_on : Icons.lock,
-            size: 10,
-            color: color,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
-                ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+            ),
       ),
     );
   }
@@ -874,7 +879,7 @@ class _ContractCard extends StatelessWidget {
                 // Mini stats
                 Row(
                   children: [
-                    _buildMiniInfo(context, 'Interest', '${(contract.interestRate * 100).toStringAsFixed(1)}%'),
+                    _buildMiniInfo(context, 'Interest', '${(contract.interestRate * 100).toStringAsFixed(1)}% APY'),
                     const SizedBox(width: 16),
                     _buildMiniInfo(context, 'Due', _formatDate(DateTime.parse(contract.expiry))),
                     const Spacer(),
@@ -969,7 +974,7 @@ class _ContractCard extends StatelessWidget {
         return AppTheme.successColor;
       case ContractStatus.requested:
       case ContractStatus.approved:
-        return Colors.orange;
+        return Colors.blue;
       case ContractStatus.collateralSeen:
       case ContractStatus.collateralConfirmed:
         return Colors.blue;

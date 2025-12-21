@@ -1084,7 +1084,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           _buildDetailRow('INTEREST', '\$${_contract!.interest.toStringAsFixed(2)}'),
           _buildDetailRow(
             'INTEREST RATE',
-            '${(_contract!.interestRate * 100).toStringAsFixed(2)}%',
+            '${(_contract!.interestRate * 100).toStringAsFixed(2)}% APY',
             highlight: true,
           ),
           _buildDetailRow('DURATION', '${_contract!.durationDays} days'),

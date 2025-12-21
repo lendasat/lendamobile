@@ -2,6 +2,7 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
@@ -360,28 +361,14 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
             const SizedBox(height: AppTheme.cardPadding * 2),
 
             // Continue button
-            SizedBox(
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () {
-                  logger.i("Button pressed! Current step: $_currentStep");
-                  _proceedToShowMnemonic();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.colorBitcoin,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  AppLocalizations.of(context)!.iUnderstand,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            LongButtonWidget(
+              title: AppLocalizations.of(context)!.iUnderstand,
+              customWidth: double.infinity,
+              customHeight: 56,
+              onTap: () {
+                logger.i("Button pressed! Current step: $_currentStep");
+                _proceedToShowMnemonic();
+              },
             ),
           ],
         ),
@@ -542,31 +529,16 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
             const SizedBox(height: AppTheme.cardPadding * 2),
 
             // Continue to verify button
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () {
-                  _setupVerificationWords();
-                  setState(() {
-                    _currentStep = 2;
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.colorBitcoin,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  AppLocalizations.of(context)!.continueToVerify,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            LongButtonWidget(
+              title: AppLocalizations.of(context)!.continueToVerify,
+              customWidth: double.infinity,
+              customHeight: 56,
+              onTap: () {
+                _setupVerificationWords();
+                setState(() {
+                  _currentStep = 2;
+                });
+              },
             ),
 
             const SizedBox(height: AppTheme.cardPadding * 2),
@@ -698,35 +670,12 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
             const SizedBox(height: AppTheme.cardPadding),
 
             // Verify button
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isVerifying ? null : _verifyWords,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.colorBitcoin,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isVerifying
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Text(
-                        AppLocalizations.of(context)!.verify,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-              ),
+            LongButtonWidget(
+              title: AppLocalizations.of(context)!.verify,
+              customWidth: double.infinity,
+              customHeight: 56,
+              isLoading: _isVerifying,
+              onTap: _verifyWords,
             ),
 
             const SizedBox(height: AppTheme.elementSpacing),
@@ -791,26 +740,11 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppTheme.cardPadding * 2),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () => controller.resetToMain(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.colorBitcoin,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  AppLocalizations.of(context)!.done,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            LongButtonWidget(
+              title: AppLocalizations.of(context)!.done,
+              customWidth: double.infinity,
+              customHeight: 56,
+              onTap: () => controller.resetToMain(),
             ),
           ],
         ),

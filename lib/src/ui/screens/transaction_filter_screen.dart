@@ -1,6 +1,7 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/transaction_filter_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -210,26 +211,12 @@ class TransactionFilterScreen extends StatelessWidget {
             bottom: AppTheme.paddingL,
             left: AppTheme.paddingM,
             right: AppTheme.paddingM,
-            child: ElevatedButton(
-              onPressed: () {
+            child: LongButtonWidget(
+              title: AppLocalizations.of(context)!.apply,
+              customHeight: 56,
+              onTap: () {
                 Navigator.pop(context);
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.colorBitcoin,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                AppLocalizations.of(context)!.apply,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
             ),
           ),
         ],

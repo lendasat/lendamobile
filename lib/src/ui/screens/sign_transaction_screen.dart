@@ -2,6 +2,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/lnurl_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
@@ -190,24 +191,11 @@ class SignTransactionScreenState extends State<SignTransactionScreen> {
                   const Spacer(),
 
                   // Sign button
-                  ElevatedButton(
-                    onPressed: _handleSign,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.colorBitcoin,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context)!.tapToSign,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                  LongButtonWidget(
+                    title: AppLocalizations.of(context)!.tapToSign,
+                    customWidth: double.infinity,
+                    customHeight: 56,
+                    onTap: _handleSign,
                   ),
                 ],
               ),

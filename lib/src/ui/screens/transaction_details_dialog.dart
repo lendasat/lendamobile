@@ -2,6 +2,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -206,18 +207,11 @@ class TransactionDetailsDialog extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => _handleSettlement(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.colorBitcoin,
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size(double.infinity, 48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(AppLocalizations.of(context)!.settle,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  LongButtonWidget(
+                    title: AppLocalizations.of(context)!.settle,
+                    customWidth: double.infinity,
+                    customHeight: 48,
+                    onTap: () => _handleSettlement(context),
                   ),
                 ],
               )

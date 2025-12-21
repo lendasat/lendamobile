@@ -115,7 +115,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                     maxWidth: AppTheme.cardPadding * 10,
                   ),
                   child: Image.asset(
-                    'assets/images/bani/bani_login.png',
+                    'assets/images/bani/bani_register.png',
                     fit: BoxFit.contain,
                   ),
                 ),

@@ -1,5 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/ui/screens/email_signup_screen.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -328,28 +329,13 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
                 const SizedBox(height: 32),
 
                 // Action button
-                SizedBox(
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _onLastPage ? _handleRestore : _nextPage,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      _onLastPage
-                          ? AppLocalizations.of(context)!.restoreExistingWallet
-                          : 'Next',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                LongButtonWidget(
+                  title: _onLastPage
+                      ? AppLocalizations.of(context)!.restoreExistingWallet
+                      : 'Next',
+                  customWidth: double.infinity,
+                  customHeight: 56,
+                  onTap: _onLastPage ? _handleRestore : _nextPage,
                 ),
               ],
             ),

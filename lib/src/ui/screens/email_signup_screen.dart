@@ -4,6 +4,8 @@ import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
@@ -271,10 +273,24 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
                             color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                           ),
                           filled: true,
-                          fillColor: Theme.of(context).colorScheme.surface,
+                          fillColor: isDarkMode
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.03),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                            borderSide: BorderSide(
+                              color: isDarkMode
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : Colors.black.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: isDarkMode
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : Colors.black.withValues(alpha: 0.1),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -322,38 +338,14 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
               const SizedBox(height: 16),
 
               // Continue button
-              SizedBox(
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _handleContinue,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.black),
-                            strokeWidth: 3,
-                          ),
-                        )
-                      : Text(
-                          widget.isRestore
-                              ? AppLocalizations.of(context)!.restoreWallet
-                              : AppLocalizations.of(context)!.createWallet,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                ),
+              LongButtonWidget(
+                title: widget.isRestore
+                    ? AppLocalizations.of(context)!.restoreWallet
+                    : AppLocalizations.of(context)!.createWallet,
+                customWidth: double.infinity,
+                customHeight: 56,
+                isLoading: _isLoading,
+                onTap: _handleContinue,
               ),
             ],
           ),

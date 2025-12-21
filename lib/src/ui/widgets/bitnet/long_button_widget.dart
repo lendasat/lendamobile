@@ -191,25 +191,19 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
                                   textAlign: TextAlign.center,
                                   style: widget.titleStyle ??
                                       widget.textStyle ??
-                                      theme.textTheme.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.w700,
+                                      TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
                                         color: widget.textColor ??
                                             (widget.buttonType ==
                                                         ButtonType.solid ||
                                                     widget.buttonType ==
                                                         ButtonType.primary
-                                                ? theme.colorScheme.onPrimary
+                                                ? const Color(0xFF1A0A00) // Very dark brown for solid buttons
                                                 : theme.brightness ==
                                                         Brightness.light
                                                     ? AppTheme.black70
                                                     : AppTheme.white90),
-                                        shadows: [
-                                          Shadow(
-                                            color: Colors.black.withValues(alpha: 0.15),
-                                            blurRadius: 2,
-                                            offset: const Offset(0, 1),
-                                          ),
-                                        ],
                                       ),
                                 ),
                               ),

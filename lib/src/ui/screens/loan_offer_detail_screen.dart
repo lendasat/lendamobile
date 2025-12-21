@@ -281,10 +281,6 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Offer header
-                  _buildOfferHeader(),
-                  const SizedBox(height: AppTheme.cardPadding),
-
                   // Lender info
                   _buildLenderCard(),
                   const SizedBox(height: AppTheme.cardPadding),
@@ -310,14 +306,19 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                   // Create button
                   LongButtonWidget(
                     title: _isCreating ? 'Processing...' : 'Create Loan Request',
-                buttonType:
-                    widget.offer.isAvailable && !_isCreating && _lendasatService.isAuthenticated
+                    customWidth: MediaQuery.of(context).size.width -
+                        AppTheme.cardPadding * 2,
+                    buttonType: widget.offer.isAvailable &&
+                            !_isCreating &&
+                            _lendasatService.isAuthenticated
                         ? ButtonType.primary
                         : ButtonType.secondary,
-                onTap: widget.offer.isAvailable && !_isCreating && _lendasatService.isAuthenticated
-                    ? _createContract
-                    : null,
-              ),
+                    onTap: widget.offer.isAvailable &&
+                            !_isCreating &&
+                            _lendasatService.isAuthenticated
+                        ? _createContract
+                        : null,
+                  ),
 
               if (!_lendasatService.isAuthenticated)
                 Padding(
@@ -344,8 +345,8 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const CircularProgressIndicator(
-                        color: AppTheme.colorBitcoin,
+                      CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(height: AppTheme.cardPadding),
                       Text(
@@ -363,98 +364,6 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     );
   }
 
-  Widget _buildOfferHeader() {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(
-                widget.offer.name,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.8,
-                    ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            _buildStatusBadge(),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            _buildAssetChip(widget.offer.loanAssetDisplayName, isLoan: true),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Icon(
-                Icons.arrow_forward_rounded,
-                size: 16,
-                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-              ),
-            ),
-            _buildAssetChip(widget.offer.collateralAssetDisplayName),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatusBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: widget.offer.isAvailable
-            ? AppTheme.successColor.withValues(alpha: 0.1)
-            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: widget.offer.isAvailable
-              ? AppTheme.successColor.withValues(alpha: 0.2)
-              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Text(
-        widget.offer.isAvailable ? 'AVAILABLE' : 'UNAVAILABLE',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: widget.offer.isAvailable
-                  ? AppTheme.successColor
-                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
-      ),
-    );
-  }
-
-  Widget _buildAssetChip(String label, {bool isLoan = false}) {
-    final color = isLoan ? Theme.of(context).colorScheme.primary : AppTheme.colorBitcoin;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(isLoan ? Icons.monetization_on : Icons.lock, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildLenderCard() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -549,20 +458,95 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppTheme.cardPadding),
-          _buildDetailRow('Interest Rate', widget.offer.interestRatePercent),
+          // Collateral → Payout visual flow
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: AppTheme.elementSpacing),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Collateral side
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        'COLLATERAL',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 9,
+                              letterSpacing: 0.5,
+                            ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Bitcoin',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      Text(
+                        '(Arkade)',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Arrow
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+                // Payout side
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        'PAYOUT',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 9,
+                              letterSpacing: 0.5,
+                            ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'USDC',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      Text(
+                        '(Polygon)',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildDetailRow('Interest Rate', '${widget.offer.interestRatePercent} APY'),
           _buildDetailRow('Loan Amount', widget.offer.loanAmountRange),
           _buildDetailRow('Duration', widget.offer.durationRange),
           _buildDetailRow(
             'Min LTV',
             '${(widget.offer.minLtv * 100).toStringAsFixed(0)}%',
-          ),
-          _buildDetailRow(
-            'Payout',
-            widget.offer.loanPayout == LoanPayout.direct
-                ? 'Direct'
-                : widget.offer.loanPayout == LoanPayout.moonCardInstant
-                    ? 'Moon Card Instant'
-                    : 'Indirect',
           ),
         ],
       ),
@@ -596,28 +580,16 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   }
 
   Widget _buildLoanConfiguration() {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.settings_input_component_rounded,
-                size: 18,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Configure Your Loan',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            ],
+          Text(
+            'Configure Your Loan',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: AppTheme.cardPadding),
 
@@ -659,12 +631,15 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
 
           // Address input
           _buildSpecialField(
-            label: 'PAYOUT ADDRESS',
+            label: 'PAYOUT ADDRESS (POLYGON USDC)',
             controller: _addressController,
-            hint: 'Recipient address',
-            helper: 'Where you will receive the loan funds.',
+            hint: '0x...',
+            helper: 'Enter your Polygon wallet address to receive USDC.',
             validator: (value) {
               if (value == null || value.trim().isEmpty) return 'Required';
+              if (!value.trim().startsWith('0x') || value.trim().length != 42) {
+                return 'Enter a valid Polygon address (0x...)';
+              }
               return null;
             },
           ),
@@ -737,7 +712,6 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   }
 
   Widget _buildCalculatedTerms() {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final amount = double.tryParse(_amountController.text) ?? 0;
     final totalRepayment = amount + _calculatedInterest + _originationFeeAmount;
 
@@ -749,21 +723,11 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.summarize_rounded,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Loan Summary',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
+              Text(
+                'Loan Summary',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: AppTheme.cardPadding),
               _buildSummaryRow('PRINCIPAL', '\$${amount.toStringAsFixed(2)}'),
@@ -788,71 +752,6 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                 isLarge: true,
               ),
             ],
-          ),
-        ),
-        const SizedBox(height: AppTheme.cardPadding),
-        // Collateral Card
-        Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.colorBitcoin.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-          ),
-          child: GlassContainer(
-            padding: const EdgeInsets.all(AppTheme.cardPadding),
-            customColor: AppTheme.colorBitcoin.withValues(alpha: 0.03),
-            borderRadius: AppTheme.borderRadiusMid,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.lock_rounded,
-                      color: AppTheme.colorBitcoin,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'REQUIRED COLLATERAL',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppTheme.colorBitcoin,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.0,
-                          ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        'CALCULATED ON SUBMIT',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.colorBitcoin,
-                              letterSpacing: -0.5,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Based on ${(widget.offer.minLtv * 100).toStringAsFixed(0)}% LTV at current market price',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ],
@@ -887,7 +786,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             style: TextStyle(
               fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
               fontSize: isLarge ? 18 : 14,
-              color: highlight ? AppTheme.colorBitcoin : (isLarge ? Theme.of(context).colorScheme.primary : null),
+              color: highlight ? Theme.of(context).colorScheme.primary : (isLarge ? Theme.of(context).colorScheme.primary : null),
             ),
           ),
         ],

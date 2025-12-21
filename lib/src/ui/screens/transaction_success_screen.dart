@@ -1,5 +1,7 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
@@ -107,32 +109,17 @@ class _TransactionSuccessScreenState extends State<TransactionSuccessScreen> {
           // Back to wallet button
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Navigate back to the dashboard/wallet
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                  logger.i(AppLocalizations.of(context)!
-                      .returningToWalletAfterSuccessfulTransaction);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  foregroundColor: Theme.of(context).colorScheme.onSurface,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                child: Text(
-                  AppLocalizations.of(context)!.backToWallet,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
+            child: LongButtonWidget(
+              title: AppLocalizations.of(context)!.backToWallet,
+              buttonType: ButtonType.transparent,
+              customWidth: double.infinity,
+              customHeight: 56,
+              onTap: () {
+                // Navigate back to the dashboard/wallet
+                Navigator.of(context).popUntil((route) => route.isFirst);
+                logger.i(AppLocalizations.of(context)!
+                    .returningToWalletAfterSuccessfulTransaction);
+              },
             ),
           ),
         ],

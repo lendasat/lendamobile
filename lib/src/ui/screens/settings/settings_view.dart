@@ -303,40 +303,40 @@ class SettingsViewState extends State<SettingsView> {
                       ),
                     ),
 
-                    // Mempool Explorer
-                    ArkListTile(
-                      leading: RoundedButtonWidget(
-                        iconData: Icons.memory_rounded,
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const MempoolHome(),
-                            ),
-                          );
-                        },
-                        size: AppTheme.iconSize * 1.5,
-                        buttonType: ButtonType.transparent,
-                      ),
-                      text: 'Mempool Explorer',
-                      trailing: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: AppTheme.iconSize * 0.75,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppTheme.white60
-                            : AppTheme.black60,
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MempoolHome(),
-                          ),
-                        );
-                      },
-                    ),
+                    // Mempool Explorer - temporarily disabled
+                    // ArkListTile(
+                    //   leading: RoundedButtonWidget(
+                    //     iconData: Icons.memory_rounded,
+                    //     onTap: () {
+                    //       Navigator.pop(context);
+                    //       Navigator.push(
+                    //         context,
+                    //         MaterialPageRoute(
+                    //           builder: (context) => const MempoolHome(),
+                    //         ),
+                    //       );
+                    //     },
+                    //     size: AppTheme.iconSize * 1.5,
+                    //     buttonType: ButtonType.transparent,
+                    //   ),
+                    //   text: 'Mempool Explorer',
+                    //   trailing: Icon(
+                    //     Icons.arrow_forward_ios_rounded,
+                    //     size: AppTheme.iconSize * 0.75,
+                    //     color: Theme.of(context).brightness == Brightness.dark
+                    //         ? AppTheme.white60
+                    //         : AppTheme.black60,
+                    //   ),
+                    //   onTap: () {
+                    //     Navigator.pop(context);
+                    //     Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (context) => const MempoolHome(),
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
 
                     // Recovery Options (with status indicator dot)
                     _buildRecoveryOptionsTile(context, controller),
@@ -360,43 +360,43 @@ class SettingsViewState extends State<SettingsView> {
                       onTap: () => controller.switchTab('recovery'),
                     ),
 
-                    // Feedback / Report Bug
-                    ArkListTile(
-                      leading: RoundedButtonWidget(
-                        iconData: Icons.feedback_rounded,
-                        onTap: () => controller.switchTab('feedback'),
-                        size: AppTheme.iconSize * 1.5,
-                        buttonType: ButtonType.transparent,
-                      ),
-                      text: AppLocalizations.of(context)!.reportBugFeedback,
-                      trailing: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: AppTheme.iconSize * 0.75,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppTheme.white60
-                            : AppTheme.black60,
-                      ),
-                      onTap: () => controller.switchTab('feedback'),
-                    ),
+                    // Feedback / Report Bug - temporarily disabled
+                    // ArkListTile(
+                    //   leading: RoundedButtonWidget(
+                    //     iconData: Icons.feedback_rounded,
+                    //     onTap: () => controller.switchTab('feedback'),
+                    //     size: AppTheme.iconSize * 1.5,
+                    //     buttonType: ButtonType.transparent,
+                    //   ),
+                    //   text: AppLocalizations.of(context)!.reportBugFeedback,
+                    //   trailing: Icon(
+                    //     Icons.arrow_forward_ios_rounded,
+                    //     size: AppTheme.iconSize * 0.75,
+                    //     color: Theme.of(context).brightness == Brightness.dark
+                    //         ? AppTheme.white60
+                    //         : AppTheme.black60,
+                    //   ),
+                    //   onTap: () => controller.switchTab('feedback'),
+                    // ),
 
-                    // Claim Gifts
-                    ArkListTile(
-                      leading: RoundedButtonWidget(
-                        iconData: Icons.card_giftcard_rounded,
-                        onTap: () => controller.switchTab('claim_sats'),
-                        size: AppTheme.iconSize * 1.5,
-                        buttonType: ButtonType.transparent,
-                      ),
-                      text: 'Claim Gifts',
-                      trailing: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: AppTheme.iconSize * 0.75,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppTheme.white60
-                            : AppTheme.black60,
-                      ),
-                      onTap: () => controller.switchTab('claim_sats'),
-                    ),
+                    // Claim Gifts - temporarily disabled
+                    // ArkListTile(
+                    //   leading: RoundedButtonWidget(
+                    //     iconData: Icons.card_giftcard_rounded,
+                    //     onTap: () => controller.switchTab('claim_sats'),
+                    //     size: AppTheme.iconSize * 1.5,
+                    //     buttonType: ButtonType.transparent,
+                    //   ),
+                    //   text: 'Claim Gifts',
+                    //   trailing: Icon(
+                    //     Icons.arrow_forward_ios_rounded,
+                    //     size: AppTheme.iconSize * 0.75,
+                    //     color: Theme.of(context).brightness == Brightness.dark
+                    //         ? AppTheme.white60
+                    //         : AppTheme.black60,
+                    //   ),
+                    //   onTap: () => controller.switchTab('claim_sats'),
+                    // ),
 
                     // Reset Wallet
                     ArkListTile(

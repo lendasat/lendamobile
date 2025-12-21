@@ -1,6 +1,7 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/ui/screens/receivescreen.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:flutter/material.dart';
 
 class AmountInputScreen extends StatefulWidget {
@@ -139,33 +140,13 @@ class AmountInputScreenState extends State<AmountInputScreen> {
           // Bottom buttons
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _onContinue,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.colorBitcoin,
-                      foregroundColor: Theme.of(context).scaffoldBackgroundColor,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      _amount.isEmpty
-                          ? AppLocalizations.of(context)!.skipAnyAmount
-                          : AppLocalizations.of(context)!.contin,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            child: LongButtonWidget(
+              title: _amount.isEmpty
+                  ? AppLocalizations.of(context)!.skipAnyAmount
+                  : AppLocalizations.of(context)!.contin,
+              customWidth: double.infinity,
+              customHeight: 56,
+              onTap: _onContinue,
             ),
           ),
         ],
