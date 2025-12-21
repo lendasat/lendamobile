@@ -5,7 +5,6 @@ import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
-import 'package:ark_flutter/src/ui/screens/mempool/mempoolhome.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
@@ -191,24 +190,8 @@ class SettingsViewState extends State<SettingsView> {
                 child: ListView(
                   key: const Key('SettingsListViewContent'),
                   children: [
-                    // Theme
-                    ArkListTile(
-                      leading: RoundedButtonWidget(
-                        iconData: Icons.color_lens,
-                        onTap: () => controller.switchTab('style'),
-                        size: AppTheme.iconSize * 1.5,
-                        buttonType: ButtonType.transparent,
-                      ),
-                      text: AppLocalizations.of(context)!.theme,
-                      trailing: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: AppTheme.iconSize * 0.75,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppTheme.white60
-                            : AppTheme.black60,
-                      ),
-                      onTap: () => controller.switchTab('style'),
-                    ),
+                    // Recovery Options (with status indicator dot) - most important
+                    _buildRecoveryOptionsTile(context, controller),
 
                     // Language
                     ArkListTile(
@@ -302,44 +285,6 @@ class SettingsViewState extends State<SettingsView> {
                         onTap: () => controller.switchTab('chart_time_range'),
                       ),
                     ),
-
-                    // Mempool Explorer - temporarily disabled
-                    // ArkListTile(
-                    //   leading: RoundedButtonWidget(
-                    //     iconData: Icons.memory_rounded,
-                    //     onTap: () {
-                    //       Navigator.pop(context);
-                    //       Navigator.push(
-                    //         context,
-                    //         MaterialPageRoute(
-                    //           builder: (context) => const MempoolHome(),
-                    //         ),
-                    //       );
-                    //     },
-                    //     size: AppTheme.iconSize * 1.5,
-                    //     buttonType: ButtonType.transparent,
-                    //   ),
-                    //   text: 'Mempool Explorer',
-                    //   trailing: Icon(
-                    //     Icons.arrow_forward_ios_rounded,
-                    //     size: AppTheme.iconSize * 0.75,
-                    //     color: Theme.of(context).brightness == Brightness.dark
-                    //         ? AppTheme.white60
-                    //         : AppTheme.black60,
-                    //   ),
-                    //   onTap: () {
-                    //     Navigator.pop(context);
-                    //     Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (context) => const MempoolHome(),
-                    //       ),
-                    //     );
-                    //   },
-                    // ),
-
-                    // Recovery Options (with status indicator dot)
-                    _buildRecoveryOptionsTile(context, controller),
 
                     // Recovery Key - temporarily disabled (already included in Recovery Options)
                     // ArkListTile(
