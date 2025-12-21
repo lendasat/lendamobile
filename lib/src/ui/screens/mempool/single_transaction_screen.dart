@@ -23,6 +23,7 @@ class SingleTransactionScreen extends StatefulWidget {
   final int? createdAt;
   final String? transactionType;
   final String? networkType;
+  final bool? isConfirmed;
 
   const SingleTransactionScreen({
     super.key,
@@ -31,6 +32,7 @@ class SingleTransactionScreen extends StatefulWidget {
     this.createdAt,
     this.transactionType,
     this.networkType,
+    this.isConfirmed,
   });
 
   @override
@@ -910,7 +912,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                     ),
                                   ),
 
-                                // Status - show as pending/unknown for ARK transactions
+                                // Status - show confirmed/pending based on isConfirmed
                                 ArkListTile(
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: AppTheme.elementSpacing * 0.75,
@@ -919,17 +921,23 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                   text: l10n.status,
                                   trailing: Row(
                                     children: [
-                                      const BlinkingDot(
-                                        color: AppTheme.colorBitcoin,
+                                      BlinkingDot(
+                                        color: widget.isConfirmed == true
+                                            ? AppTheme.successColor
+                                            : AppTheme.colorBitcoin,
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        l10n.pending,
+                                        widget.isConfirmed == true
+                                            ? l10n.confirmed
+                                            : l10n.pending,
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleMedium!
                                             .copyWith(
-                                              color: AppTheme.colorBitcoin,
+                                              color: widget.isConfirmed == true
+                                                  ? AppTheme.successColor
+                                                  : AppTheme.colorBitcoin,
                                             ),
                                       ),
                                     ],

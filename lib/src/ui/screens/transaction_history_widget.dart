@@ -473,6 +473,7 @@ class _TransactionItemWidget extends StatelessWidget {
     int? createdAt,
     String? transactionType,
     String? networkType,
+    bool? isConfirmed,
   }) {
     Navigator.push(
       context,
@@ -483,6 +484,7 @@ class _TransactionItemWidget extends StatelessWidget {
           createdAt: createdAt,
           transactionType: transactionType,
           networkType: networkType,
+          isConfirmed: isConfirmed,
         ),
       ),
     );
@@ -500,6 +502,7 @@ class _TransactionItemWidget extends StatelessWidget {
         showBtcAsMain,
         hideAmounts,
         'Onchain',
+        isConfirmed: tx.confirmedAt != null,
       ),
       round: (tx) => _buildTransactionTile(
         context,
@@ -510,6 +513,7 @@ class _TransactionItemWidget extends StatelessWidget {
         showBtcAsMain,
         hideAmounts,
         'Arkade',
+        isConfirmed: true, // Round transactions are instantly confirmed in Arkade
       ),
       redeem: (tx) => _buildTransactionTile(
         context,
@@ -521,6 +525,7 @@ class _TransactionItemWidget extends StatelessWidget {
         hideAmounts,
         // Ark virtual transactions stay within Arkade network
         'Arkade',
+        isConfirmed: tx.isSettled,
       ),
     );
   }
@@ -533,8 +538,9 @@ class _TransactionItemWidget extends StatelessWidget {
     int amountSats,
     bool showBtcAsMain,
     bool hideAmounts,
-    String network,
-  ) {
+    String network, {
+    bool isConfirmed = true,
+  }) {
     final currencyService = context.watch<CurrencyPreferenceService>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -559,6 +565,7 @@ class _TransactionItemWidget extends StatelessWidget {
             createdAt: createdAt,
             transactionType: transactionType,
             networkType: network,
+            isConfirmed: isConfirmed,
           ),
           child: Container(
             padding: const EdgeInsets.symmetric(

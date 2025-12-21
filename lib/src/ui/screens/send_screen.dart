@@ -10,7 +10,6 @@ import 'package:ark_flutter/src/ui/screens/qr_scanner_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_success_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
@@ -59,7 +58,7 @@ class SendScreenState extends State<SendScreen>
   MobileScannerController? _scannerController;
 
   // State
-  final bool _isLoading = false;
+  bool _isLoading = false;
   bool _isAddressExpanded = false;
   bool _hasValidAddress = false;
   String? _description;
@@ -534,7 +533,7 @@ class SendScreenState extends State<SendScreen>
     });
   }
 
-  void _handleContinue() {
+  Future<void> _handleSend() async {
     final l10n = AppLocalizations.of(context)!;
 
     if (_addressController.text.isEmpty || _satController.text.isEmpty) {
@@ -566,18 +565,84 @@ class SendScreenState extends State<SendScreen>
       }
     }
 
-    // Navigate to sign transaction screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SignTransactionScreen(
-          aspId: widget.aspId,
-          address: _addressController.text,
-          amount: amount,
-          lnurlCallback: _lnurlParams?.callback,
-        ),
-      ),
-    );
+    // Start loading and sign/send the transaction
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Suppress payment notifications during send to avoid showing "payment received"
+    // when change from the outgoing transaction is detected
+    PaymentOverlayService().startSuppression();
+
+    try {
+      String? invoiceToPaymentRequest;
+      final address = _addressController.text;
+
+      // If we have an LNURL callback, fetch the invoice first
+      if (_lnurlParams?.callback != null) {
+        logger.i("Fetching invoice from LNURL callback...");
+        final invoiceResult = await LnurlService.requestInvoice(
+          _lnurlParams!.callback,
+          amount.round(),
+        );
+
+        if (invoiceResult == null) {
+          throw Exception("Failed to get invoice from LNURL service");
+        }
+
+        invoiceToPaymentRequest = invoiceResult.pr;
+        logger.i("Got invoice from LNURL: ${invoiceToPaymentRequest.substring(0, 30)}...");
+      }
+
+      final isLightning = _isLightningInvoice(address);
+
+      if (invoiceToPaymentRequest != null) {
+        // Pay the LNURL-generated invoice via submarine swap
+        logger.i("Paying LNURL invoice via submarine swap...");
+        final result = await payLnInvoice(invoice: invoiceToPaymentRequest);
+        logger.i("LNURL payment successful! TXID: ${result.txid}");
+      } else if (isLightning) {
+        // Pay Lightning invoice via submarine swap
+        logger.i("Paying Lightning invoice: ${address.substring(0, 20)}...");
+        final result = await payLnInvoice(invoice: address);
+        logger.i("Lightning payment successful! TXID: ${result.txid}");
+      } else {
+        // Regular Ark/Bitcoin send
+        logger.i("Signing transaction to $address for $amount SATS");
+        await send(address: address, amountSats: BigInt.from(amount));
+      }
+
+      // Navigate to success screen after signing
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TransactionSuccessScreen(
+              aspId: widget.aspId,
+              amount: amount,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${l10n.transactionFailed} ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } finally {
+      // Stop suppression after a delay to allow change transaction to settle
+      // without showing a "payment received" notification
+      Future.delayed(const Duration(seconds: 5), () {
+        PaymentOverlayService().stopSuppression();
+      });
+    }
   }
 
   void _showSnackBar(String message) {
@@ -1058,7 +1123,7 @@ class SendScreenState extends State<SendScreen>
     bool canSend,
   ) {
     return GestureDetector(
-      onTap: canSend ? _handleContinue : null,
+      onTap: canSend ? _handleSend : null,
       child: Container(
         height: 56,
         decoration: BoxDecoration(

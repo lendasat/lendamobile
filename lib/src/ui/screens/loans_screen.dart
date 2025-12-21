@@ -509,29 +509,30 @@ class _LoansScreenState extends State<LoansScreen> {
     if (contracts.isEmpty) {
       return SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
-          child: GlassContainer(
-            padding: const EdgeInsets.all(AppTheme.cardPadding),
-            child: Row(
-              children: [
-                Icon(
-                  _searchQuery.isNotEmpty ? Icons.search_off : Icons.receipt_long_outlined,
-                  size: 32,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+          padding: const EdgeInsets.only(
+            left: AppTheme.cardPadding * 2,
+            right: AppTheme.cardPadding * 2,
+            top: AppTheme.cardPadding,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _searchQuery.isNotEmpty ? Icons.search_off : Icons.receipt_long_outlined,
+                size: 32,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+              ),
+              const SizedBox(width: AppTheme.elementSpacing),
+              Expanded(
+                child: Text(
+                  _searchQuery.isNotEmpty
+                      ? 'No contracts match your search'
+                      : 'No contracts yet. Take an offer to get started!',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
                 ),
-                const SizedBox(width: AppTheme.elementSpacing),
-                Expanded(
-                  child: Text(
-                    _searchQuery.isNotEmpty
-                        ? 'No contracts match your search'
-                        : 'No contracts yet. Take an offer to get started!',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       );
