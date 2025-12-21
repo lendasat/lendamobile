@@ -470,6 +470,7 @@ class _TransactionItemWidget extends StatelessWidget {
     int? amountSats,
     int? createdAt,
     String? transactionType,
+    String? networkType,
   }) {
     Navigator.push(
       context,
@@ -479,6 +480,7 @@ class _TransactionItemWidget extends StatelessWidget {
           amountSats: amountSats,
           createdAt: createdAt,
           transactionType: transactionType,
+          networkType: networkType,
         ),
       ),
     );
@@ -572,6 +574,7 @@ class _TransactionItemWidget extends StatelessWidget {
             amountSats: amountSats,
             createdAt: createdAt,
             transactionType: transactionType,
+            networkType: network,
           ),
           child: Container(
             padding: const EdgeInsets.symmetric(

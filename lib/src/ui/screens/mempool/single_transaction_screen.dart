@@ -22,6 +22,7 @@ class SingleTransactionScreen extends StatefulWidget {
   final int? amountSats;
   final int? createdAt;
   final String? transactionType;
+  final String? networkType;
 
   const SingleTransactionScreen({
     super.key,
@@ -29,6 +30,7 @@ class SingleTransactionScreen extends StatefulWidget {
     this.amountSats,
     this.createdAt,
     this.transactionType,
+    this.networkType,
   });
 
   @override
@@ -825,7 +827,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                         width: AppTheme.elementSpacing / 2,
                                       ),
                                       Text(
-                                        widget.transactionType ?? 'ARK',
+                                        widget.networkType ?? 'Arkade',
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleMedium,

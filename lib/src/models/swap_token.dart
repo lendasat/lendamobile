@@ -2,33 +2,85 @@ import 'package:flutter/material.dart';
 
 /// Supported tokens for LendaSwap
 ///
-/// NOTE: Ethereum tokens (usdcEthereum, usdtEthereum, xautEthereum) are kept
-/// in the enum for backwards compatibility with existing swaps, but are
-/// disabled for new swaps because Gelato gasless claiming is not supported
-/// on Ethereum mainnet.
-///
-/// TODO: Re-enable Ethereum tokens once WalletConnect integration is added.
-/// Users will need to connect their Ethereum wallet and pay gas fees to claim.
-/// See: https://docs.walletconnect.com/
+/// Polygon tokens support Gelato gasless claiming.
+/// Ethereum tokens require WalletConnect for users to pay gas fees when claiming.
 enum SwapToken {
   // Bitcoin (uses Arkade under the hood)
   bitcoin,
   // Polygon (supports Gelato gasless swaps)
   usdcPolygon,
   usdtPolygon,
-  // Ethereum (disabled - requires WalletConnect for gas fees)
-  // TODO: Re-enable with WalletConnect integration
+  // Ethereum (requires WalletConnect for gas fees when claiming)
   usdcEthereum,
   usdtEthereum,
-  xautEthereum,
-}
+  xautEthereum;
 
-extension SwapTokenExtension on SwapToken {
+  // --- Static Methods & Getters ---
+
+  /// Parse from token ID string
+  static SwapToken? fromTokenId(String tokenId) {
+    switch (tokenId.toLowerCase()) {
+      case 'btc_arkade':
+      case 'btc_lightning':
+        return SwapToken.bitcoin;
+      case 'usdc_pol':
+        return SwapToken.usdcPolygon;
+      case 'usdt0_pol':
+      case 'usdt_pol':
+        return SwapToken.usdtPolygon;
+      case 'usdc_eth':
+        return SwapToken.usdcEthereum;
+      case 'usdt_eth':
+        return SwapToken.usdtEthereum;
+      case 'xaut_eth':
+        return SwapToken.xautEthereum;
+      default:
+        return null;
+    }
+  }
+
+  /// Get all BTC tokens (just Bitcoin now)
+  static List<SwapToken> get btcTokens => [SwapToken.bitcoin];
+
+  /// Get all Polygon stablecoins (gasless claiming supported)
+  static List<SwapToken> get polygonTokens => [
+        SwapToken.usdcPolygon,
+        SwapToken.usdtPolygon,
+      ];
+
+  /// Get all EVM tokens
+  static List<SwapToken> get evmTokens => [
+        SwapToken.usdcPolygon,
+        SwapToken.usdtPolygon,
+        SwapToken.usdcEthereum,
+        SwapToken.usdtEthereum,
+        SwapToken.xautEthereum,
+      ];
+
+  /// Get all tokens available for swapping
+  static List<SwapToken> get allTokens => [
+        SwapToken.bitcoin,
+        ...evmTokens,
+      ];
+
+  /// Get valid target tokens for a given source token
+  static List<SwapToken> getValidTargets(SwapToken source) {
+    if (source.isBtc) {
+      // For first release, only support Polygon stablecoins (gasless claiming)
+      return polygonTokens;
+    } else {
+      // EVM -> BTC disabled for first release
+      return [];
+    }
+  }
+
+  // --- Instance Methods & Getters ---
+
   /// Get the API token ID string
   String get tokenId {
     switch (this) {
       case SwapToken.bitcoin:
-        return 'btc_arkade'; // Always use Arkade for BTC swaps
+        return 'btc_arkade';
       case SwapToken.usdcPolygon:
         return 'usdc_pol';
       case SwapToken.usdtPolygon:
@@ -54,7 +106,7 @@ extension SwapTokenExtension on SwapToken {
       case SwapToken.usdtEthereum:
         return 'USDT';
       case SwapToken.xautEthereum:
-        return 'XAUt'; // Official Tether Gold symbol
+        return 'XAUt';
     }
   }
 
@@ -130,7 +182,7 @@ extension SwapTokenExtension on SwapToken {
   int get decimals {
     switch (this) {
       case SwapToken.bitcoin:
-        return 8; // satoshis
+        return 8;
       case SwapToken.usdcPolygon:
       case SwapToken.usdcEthereum:
         return 6;
@@ -146,15 +198,15 @@ extension SwapTokenExtension on SwapToken {
   Color get color {
     switch (this) {
       case SwapToken.bitcoin:
-        return const Color(0xFFF7931A); // Bitcoin orange
+        return const Color(0xFFF7931A);
       case SwapToken.usdcPolygon:
       case SwapToken.usdcEthereum:
-        return const Color(0xFF2775CA); // USDC blue
+        return const Color(0xFF2775CA);
       case SwapToken.usdtPolygon:
       case SwapToken.usdtEthereum:
-        return const Color(0xFF26A17B); // USDT green
+        return const Color(0xFF26A17B);
       case SwapToken.xautEthereum:
-        return const Color(0xFFD4AF37); // Gold
+        return const Color(0xFFD4AF37);
     }
   }
 
@@ -162,14 +214,14 @@ extension SwapTokenExtension on SwapToken {
   Color get networkColor {
     switch (this) {
       case SwapToken.bitcoin:
-        return const Color(0xFFF7931A); // Bitcoin orange
+        return const Color(0xFFF7931A);
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
-        return const Color(0xFF8247E5); // Polygon purple
+        return const Color(0xFF8247E5);
       case SwapToken.usdcEthereum:
       case SwapToken.usdtEthereum:
       case SwapToken.xautEthereum:
-        return const Color(0xFF627EEA); // Ethereum blue
+        return const Color(0xFF627EEA);
     }
   }
 
@@ -201,61 +253,6 @@ extension SwapTokenExtension on SwapToken {
       case SwapToken.usdtEthereum:
       case SwapToken.xautEthereum:
         return Icons.diamond_outlined;
-    }
-  }
-
-  /// Parse from token ID string
-  static SwapToken? fromTokenId(String tokenId) {
-    switch (tokenId.toLowerCase()) {
-      case 'btc_arkade':
-      case 'btc_lightning':
-        return SwapToken.bitcoin;
-      case 'usdc_pol':
-        return SwapToken.usdcPolygon;
-      case 'usdt0_pol':
-      case 'usdt_pol':
-        return SwapToken.usdtPolygon;
-      case 'usdc_eth':
-        return SwapToken.usdcEthereum;
-      case 'usdt_eth':
-        return SwapToken.usdtEthereum;
-      case 'xaut_eth':
-        return SwapToken.xautEthereum;
-      default:
-        return null;
-    }
-  }
-
-  /// Get all BTC tokens (just Bitcoin now)
-  static List<SwapToken> get btcTokens => [SwapToken.bitcoin];
-
-  /// Get all EVM tokens available for swapping.
-  /// Currently only Polygon tokens - Ethereum tokens are disabled because
-  /// Gelato gasless claiming is not supported on Ethereum mainnet.
-  /// TODO: Re-enable Ethereum tokens with WalletConnect integration
-  static List<SwapToken> get evmTokens => [
-        SwapToken.usdcPolygon,
-        SwapToken.usdtPolygon,
-        // Ethereum tokens disabled until WalletConnect is integrated:
-        // SwapToken.usdcEthereum,
-        // SwapToken.usdtEthereum,
-        // SwapToken.xautEthereum,
-      ];
-
-  /// Get all tokens available for swapping (excludes disabled Ethereum tokens)
-  static List<SwapToken> get allTokens => [
-        SwapToken.bitcoin,
-        ...evmTokens,
-      ];
-
-  /// Get valid target tokens for a given source token
-  static List<SwapToken> getValidTargets(SwapToken source) {
-    if (source.isBtc) {
-      // BTC can only swap to EVM tokens
-      return evmTokens;
-    } else {
-      // EVM tokens can only swap to BTC
-      return btcTokens;
     }
   }
 }

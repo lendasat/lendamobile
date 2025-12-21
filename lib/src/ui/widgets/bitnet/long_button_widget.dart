@@ -71,16 +71,28 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
       effectiveState = ButtonState.disabled;
     }
 
-    // Use a more rounded border radius - half the height for pill-shaped buttons
-    final borderRadius = BorderRadius.circular(widget.customHeight / 2);
-    final borderRadiusNum = widget.customHeight / 2;
+    // Higher border radius for a more modern, premium feel (28px)
+    final borderRadius = BorderRadius.circular(AppTheme.borderRadiusBig);
+    const borderRadiusNum = AppTheme.borderRadiusBig;
 
     return Stack(
       children: [
         // Background content
         Container(
           decoration: BoxDecoration(
-            boxShadow: widget.customShadow ?? [AppTheme.boxShadowProfile],
+            boxShadow: widget.customShadow ??
+                [
+                  if (widget.buttonType == ButtonType.solid ||
+                      widget.buttonType == ButtonType.primary)
+                    BoxShadow(
+                      color: AppTheme.colorBitcoin.withValues(alpha: 0.3),
+                      offset: const Offset(0, 4),
+                      blurRadius: 15,
+                      spreadRadius: -2,
+                    )
+                  else
+                    AppTheme.boxShadowProfile,
+                ],
             borderRadius: borderRadius,
           ),
           child: widget.buttonType == ButtonType.solid ||
@@ -96,14 +108,15 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
                           : theme.colorScheme.primary == AppTheme.colorBitcoin
                               ? [
                                   AppTheme.colorBitcoin,
+                                  const Color(0xfff37335), // Sophisticated midpoint orange
                                   AppTheme.colorPrimaryGradient
                                 ]
                               : [
                                   theme.colorScheme.primary,
                                   theme.colorScheme.secondary,
                                 ],
-                  gradientBegin: Alignment.topCenter,
-                  gradientEnd: Alignment.bottomCenter,
+                  gradientBegin: Alignment.topLeft,
+                  gradientEnd: Alignment.bottomRight,
                   borderRadius: borderRadiusNum,
                   width: widget.customWidth,
                   height: widget.customHeight,
@@ -191,9 +204,11 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
                                                     ? AppTheme.black70
                                                     : AppTheme.white90),
                                         shadows: [
-                                          theme.brightness == Brightness.light
-                                              ? AppTheme.boxShadow
-                                              : AppTheme.boxShadowButton,
+                                          Shadow(
+                                            color: Colors.black.withValues(alpha: 0.15),
+                                            blurRadius: 2,
+                                            offset: const Offset(0, 1),
+                                          ),
                                         ],
                                       ),
                                 ),

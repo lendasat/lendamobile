@@ -6,42 +6,56 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-/// Historical price data point
-class HistoricalPriceData {
-  final String timestamp;
-  final String price;
 
-  const HistoricalPriceData({
-    required this.timestamp,
-    required this.price,
-  });
+            
 
-  @override
-  int get hashCode => timestamp.hashCode ^ price.hashCode;
+            
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is HistoricalPriceData &&
-          runtimeType == other.runtimeType &&
-          timestamp == other.timestamp &&
-          price == other.price;
-}
+            /// Historical price data point
+class HistoricalPriceData  {
+                final String timestamp;
+final String price;
 
-class HistoricalPriceResponse {
-  final List<HistoricalPriceData> prices;
+                const HistoricalPriceData({required this.timestamp ,required this.price ,});
 
-  const HistoricalPriceResponse({
-    required this.prices,
-  });
+                
+                
 
-  @override
-  int get hashCode => prices.hashCode;
+                
+        @override
+        int get hashCode => timestamp.hashCode^price.hashCode;
+        
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is HistoricalPriceResponse &&
-          runtimeType == other.runtimeType &&
-          prices == other.prices;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is HistoricalPriceData &&
+                runtimeType == other.runtimeType
+                && timestamp == other.timestamp&& price == other.price;
+        
+            }
+
+class HistoricalPriceResponse  {
+                final List<HistoricalPriceData> prices;
+
+                const HistoricalPriceResponse({required this.prices ,});
+
+                
+                
+
+                
+        @override
+        int get hashCode => prices.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is HistoricalPriceResponse &&
+                runtimeType == other.runtimeType
+                && prices == other.prices;
+        
+            }
+            

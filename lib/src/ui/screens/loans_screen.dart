@@ -588,94 +588,119 @@ class _OfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.elementSpacing),
-      child: InkWell(
-        onTap: onTap,
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.colorBitcoin.withValues(alpha: 0.1),
+            offset: const Offset(0, 4),
+            blurRadius: 12,
+            spreadRadius: -2,
+          ),
+        ],
         borderRadius: AppTheme.cardRadiusSmall,
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.cardPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          offer.name,
-                          style: Theme.of(context).textTheme.titleMedium,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'by ${offer.lender.name}',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.6),
-                                  ),
-                        ),
-                      ],
+      ),
+      child: GlassContainer(
+        borderRadius: AppTheme.cardRadiusSmall,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppTheme.cardRadiusSmall,
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            offer.name,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -0.2,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline,
+                                size: 12,
+                                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'by ${offer.lender.name}',
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  _buildStatusBadge(context),
-                ],
-              ),
-              const SizedBox(height: AppTheme.cardPadding),
-
-              // Details row
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildInfoItem(
-                      context,
-                      'Interest',
-                      offer.interestRatePercent,
+                    _buildStatusBadge(context),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.cardPadding),
+  
+                // Details row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildInfoItem(
+                        context,
+                        'Interest',
+                        offer.interestRatePercent,
+                        highlight: true,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: _buildInfoItem(
-                      context,
-                      'Amount',
-                      offer.loanAmountRange,
+                    Expanded(
+                      child: _buildInfoItem(
+                        context,
+                        'Amount',
+                        offer.loanAmountRange,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: _buildInfoItem(
-                      context,
-                      'Duration',
-                      offer.durationRange,
+                    Expanded(
+                      child: _buildInfoItem(
+                        context,
+                        'Duration',
+                        offer.durationRange,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppTheme.elementSpacing),
-
-              // Asset info
-              Row(
-                children: [
-                  _buildAssetChip(context, offer.loanAssetDisplayName),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.arrow_forward,
-                    size: 16,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildAssetChip(context, offer.collateralAssetDisplayName),
-                ],
-              ),
-            ],
+                  ],
+                ),
+                const SizedBox(height: AppTheme.cardPadding),
+  
+                // Asset info - more clean
+                Row(
+                  children: [
+                    _buildAssetChip(context, offer.loanAssetDisplayName, isLoan: true),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildAssetChip(context, offer.collateralAssetDisplayName),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -688,64 +713,85 @@ class _OfferCard extends StatelessWidget {
 
     if (offer.isAvailable) {
       badgeColor = AppTheme.successColor;
-      text = 'Available';
+      text = 'AVAILABLE';
     } else {
-      badgeColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3);
-      text = 'Unavailable';
+      badgeColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
+      text = 'UNAVAILABLE';
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: badgeColor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
+        color: badgeColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: badgeColor.withValues(alpha: 0.2), width: 1),
       ),
       child: Text(
         text,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: badgeColor,
               fontWeight: FontWeight.bold,
+              fontSize: 10,
+              letterSpacing: 0.5,
             ),
       ),
     );
   }
 
-  Widget _buildInfoItem(BuildContext context, String label, String value) {
+  Widget _buildInfoItem(BuildContext context, String label, String value, {bool highlight = false}) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.6),
+                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.8,
               ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         Text(
           value,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.bold,
+                color: highlight ? AppTheme.colorBitcoin : null,
               ),
         ),
       ],
     );
   }
 
-  Widget _buildAssetChip(BuildContext context, String label) {
+  Widget _buildAssetChip(BuildContext context, String label, {bool isLoan = false}) {
+    final color = isLoan ? Theme.of(context).colorScheme.primary : AppTheme.colorBitcoin;
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-            ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isLoan ? Icons.monetization_on : Icons.lock,
+            size: 10,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
+          ),
+        ],
       ),
     );
   }
@@ -766,183 +812,181 @@ class _ContractCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final statusColor = _getStatusColor(contract.status);
+
+    return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.elementSpacing),
-      child: InkWell(
-        onTap: onTap,
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            offset: const Offset(0, 4),
+            blurRadius: 10,
+          ),
+        ],
         borderRadius: AppTheme.cardRadiusSmall,
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.cardPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
+      ),
+      child: GlassContainer(
+        borderRadius: AppTheme.cardRadiusSmall,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppTheme.cardRadiusSmall,
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           '\$${contract.loanAmount.toStringAsFixed(2)}',
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                              ),
                         ),
-                        const SizedBox(height: 4),
                         Text(
                           'from ${contract.lender.name}',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.6),
-                                  ),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                       ],
                     ),
-                  ),
-                  _buildStatusBadge(context),
+                    _buildStatusBadge(context, statusColor),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.cardPadding),
+                
+                // Progress indicator or key metric
+                if (!contract.isClosed) ...[
+                   _buildProgressSection(context),
+                   const SizedBox(height: AppTheme.elementSpacing),
                 ],
-              ),
-              const SizedBox(height: AppTheme.cardPadding),
 
-              // Progress bar (for active loans)
-              if (contract.isActiveLoan) ...[
+                // Mini stats
                 Row(
                   children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: contract.repaymentProgress,
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.1),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppTheme.successColor,
-                          ),
-                          minHeight: 8,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${(contract.repaymentProgress * 100).toStringAsFixed(0)}%',
-                      style: Theme.of(context).textTheme.labelSmall,
+                    _buildMiniInfo(context, 'Interest', '${(contract.interestRate * 100).toStringAsFixed(1)}%'),
+                    const SizedBox(width: 16),
+                    _buildMiniInfo(context, 'Due', _formatDate(DateTime.parse(contract.expiry))),
+                    const Spacer(),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                     ),
                   ],
                 ),
-                const SizedBox(height: AppTheme.elementSpacing),
               ],
-
-              // Details row
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildInfoItem(
-                      context,
-                      'Collateral',
-                      '${contract.collateralBtc.toStringAsFixed(6)} BTC',
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildInfoItem(
-                      context,
-                      'Interest',
-                      '${(contract.interestRate * 100).toStringAsFixed(2)}%',
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildInfoItem(
-                      context,
-                      'Expires',
-                      _formatExpiry(contract.expiry),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStatusBadge(BuildContext context) {
-    Color badgeColor;
-
-    if (contract.isClosed) {
-      badgeColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
-    } else if (contract.hasIssue) {
-      badgeColor = AppTheme.errorColor;
-    } else if (contract.canClaim || contract.canRecover) {
-      badgeColor = AppTheme.successColor;
-    } else if (contract.isAwaitingDeposit) {
-      badgeColor = Colors.orange;
-    } else {
-      badgeColor = Theme.of(context).colorScheme.primary;
-    }
-
+  Widget _buildStatusBadge(BuildContext context, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: badgeColor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
       child: Text(
-        contract.statusText,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: badgeColor,
-              fontWeight: FontWeight.bold,
-            ),
+        contract.statusText.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 10,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
 
-  Widget _buildInfoItem(BuildContext context, String label, String value) {
+  Widget _buildMiniInfo(BuildContext context, String label, String value) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.6),
-              ),
+          label.toUpperCase(),
+          style: TextStyle(
+            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+            fontSize: 8,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
         ),
-        const SizedBox(height: 2),
         Text(
           value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
         ),
       ],
     );
   }
 
-  String _formatExpiry(String expiry) {
-    try {
-      final date = DateTime.parse(expiry);
-      final now = DateTime.now();
-      final diff = date.difference(now);
+  Widget _buildProgressSection(BuildContext context) {
+    // Show a small progress bar for the loan duration
+    final expiryDate = DateTime.parse(contract.expiry);
+    final createdDate = DateTime.parse(contract.createdAt);
+    final total = expiryDate.difference(createdDate).inDays;
+    final elapsed = DateTime.now().difference(createdDate).inDays;
+    final progress = (elapsed / (total > 0 ? total : 1)).clamp(0.0, 1.0);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+            minHeight: 4,
+          ),
+        ),
+      ],
+    );
+  }
 
-      if (diff.isNegative) {
-        return 'Expired';
-      } else if (diff.inDays > 30) {
-        return DateFormat('MMM d').format(date);
-      } else if (diff.inDays > 0) {
-        return '${diff.inDays}d left';
-      } else if (diff.inHours > 0) {
-        return '${diff.inHours}h left';
-      } else {
-        return '<1h left';
-      }
-    } catch (_) {
-      return expiry;
+  Color _getStatusColor(ContractStatus status) {
+    switch (status) {
+      case ContractStatus.principalGiven:
+      case ContractStatus.repaymentProvided:
+      case ContractStatus.repaymentConfirmed:
+        return AppTheme.successColor;
+      case ContractStatus.requested:
+      case ContractStatus.approved:
+        return Colors.orange;
+      case ContractStatus.collateralSeen:
+      case ContractStatus.collateralConfirmed:
+        return Colors.blue;
+      case ContractStatus.closed:
+      case ContractStatus.closedByLiquidation:
+      case ContractStatus.closedByDefaulting:
+      case ContractStatus.closedByRecovery:
+        return Colors.grey;
+      case ContractStatus.defaulted:
+      case ContractStatus.rejected:
+        return AppTheme.errorColor;
+      default:
+        return Colors.grey;
     }
+  }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('MMM d, yyyy').format(date);
   }
 }

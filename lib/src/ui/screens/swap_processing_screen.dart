@@ -2,12 +2,14 @@ import 'dart:async';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
+import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/qr_border_painter.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
+import 'package:ark_flutter/src/ui/widgets/swap/wallet_connect_button.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/screens/swap_success_screen.dart';
@@ -39,12 +41,17 @@ class SwapProcessingScreen extends StatefulWidget {
 
 class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   final LendaSwapService _swapService = LendaSwapService();
+  final WalletConnectService _walletService = WalletConnectService();
   SwapInfo? _swapInfo;
   Timer? _pollTimer;
   bool _isLoading = true;
   String? _errorMessage;
   bool _isClaimingGelato = false;
   bool _hasAttemptedClaim = false;
+  bool _showWalletConnectClaim = false;
+
+  /// Check if this is an Ethereum swap (requires gas payment for claiming)
+  bool get _isEthereumTarget => widget.targetToken.chainId.toLowerCase() == 'ethereum';
 
   @override
   void initState() {
@@ -103,8 +110,17 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     // Don't attempt if already claiming
     if (_isClaimingGelato) return;
 
-    // BTC → EVM swaps: claim via Gelato when server has funded
+    // BTC → EVM swaps: claim when server has funded
     if (swap.canClaimGelato && !_hasAttemptedClaim) {
+      // For Ethereum targets, show WalletConnect claim UI instead of auto-claiming
+      // because Gelato gasless claiming is not supported on Ethereum mainnet
+      if (_isEthereumTarget) {
+        logger.i('Ethereum target - showing WalletConnect claim UI');
+        setState(() => _showWalletConnectClaim = true);
+        return;
+      }
+
+      // For Polygon targets, use Gelato gasless claiming
       logger.i('Auto-claiming BTC→EVM swap ${swap.id} via Gelato');
       setState(() {
         _isClaimingGelato = true;
@@ -254,6 +270,11 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
           // Status indicator
           _buildStatusIndicator(context, status, isDarkMode),
           const SizedBox(height: AppTheme.cardPadding * 2),
+          // WalletConnect claim UI for Ethereum swaps
+          if (_showWalletConnectClaim) ...[
+            _buildWalletConnectClaimSection(context, isDarkMode),
+            const SizedBox(height: AppTheme.cardPadding),
+          ],
           // Swap summary
           _buildSwapSummary(context, isDarkMode),
           const SizedBox(height: AppTheme.cardPadding),
@@ -542,6 +563,98 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
         ),
       ),
     );
+  }
+
+  /// Build WalletConnect claim section for Ethereum swaps
+  Widget _buildWalletConnectClaimSection(BuildContext context, bool isDarkMode) {
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: AppTheme.colorBitcoin,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Claim Your ${widget.targetToken.symbol}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your swap is ready! Connect your Ethereum wallet to claim your tokens. '
+              'You will need to pay gas fees for the claim transaction.',
+              style: TextStyle(
+                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+            // WalletConnect button
+            WalletConnectButton(
+              chain: EvmChain.ethereum,
+              onConnected: () {},
+            ),
+            if (_walletService.isConnected) ...[
+              const SizedBox(height: AppTheme.cardPadding),
+              LongButtonWidget(
+                title: _isClaimingGelato ? 'Claiming...' : 'Claim Tokens',
+                customWidth: double.infinity,
+                state: _isClaimingGelato ? ButtonState.loading : ButtonState.idle,
+                onTap: _isClaimingGelato ? null : _claimViaWalletConnect,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Claim using WalletConnect (for Ethereum targets)
+  Future<void> _claimViaWalletConnect() async {
+    if (!_walletService.isConnected) {
+      return;
+    }
+
+    setState(() => _isClaimingGelato = true);
+
+    try {
+      // Use Gelato claim but with WalletConnect signature
+      // The service will detect Ethereum and use the appropriate method
+      await _swapService.claimGelato(widget.swapId);
+      logger.i('Ethereum claim submitted for swap ${widget.swapId}');
+      setState(() {
+        _hasAttemptedClaim = true;
+        _showWalletConnectClaim = false;
+      });
+    } catch (e) {
+      logger.e('Failed to claim via WalletConnect: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to claim: ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isClaimingGelato = false);
+      }
+    }
   }
 
   Widget _buildStatusDetails(BuildContext context, bool isDarkMode) {

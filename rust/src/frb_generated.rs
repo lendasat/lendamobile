@@ -3894,6 +3894,8 @@ impl SseDecode for crate::api::lendaswap_api::EvmToBtcSwapResult {
         let mut var_satsToReceive = <i64>::sse_decode(deserializer);
         let mut var_feeSats = <i64>::sse_decode(deserializer);
         let mut var_sourceTokenAddress = <String>::sse_decode(deserializer);
+        let mut var_createSwapTx = <Option<String>>::sse_decode(deserializer);
+        let mut var_approveTx = <Option<String>>::sse_decode(deserializer);
         let mut var_gelatoForwarderAddress = <Option<String>>::sse_decode(deserializer);
         let mut var_gelatoUserNonce = <Option<String>>::sse_decode(deserializer);
         let mut var_gelatoUserDeadline = <Option<String>>::sse_decode(deserializer);
@@ -3904,6 +3906,8 @@ impl SseDecode for crate::api::lendaswap_api::EvmToBtcSwapResult {
             sats_to_receive: var_satsToReceive,
             fee_sats: var_feeSats,
             source_token_address: var_sourceTokenAddress,
+            create_swap_tx: var_createSwapTx,
+            approve_tx: var_approveTx,
             gelato_forwarder_address: var_gelatoForwarderAddress,
             gelato_user_nonce: var_gelatoUserNonce,
             gelato_user_deadline: var_gelatoUserDeadline,
@@ -6258,6 +6262,8 @@ impl flutter_rust_bridge::IntoDart for crate::api::lendaswap_api::EvmToBtcSwapRe
             self.sats_to_receive.into_into_dart().into_dart(),
             self.fee_sats.into_into_dart().into_dart(),
             self.source_token_address.into_into_dart().into_dart(),
+            self.create_swap_tx.into_into_dart().into_dart(),
+            self.approve_tx.into_into_dart().into_dart(),
             self.gelato_forwarder_address.into_into_dart().into_dart(),
             self.gelato_user_nonce.into_into_dart().into_dart(),
             self.gelato_user_deadline.into_into_dart().into_dart(),
@@ -7742,6 +7748,8 @@ impl SseEncode for crate::api::lendaswap_api::EvmToBtcSwapResult {
         <i64>::sse_encode(self.sats_to_receive, serializer);
         <i64>::sse_encode(self.fee_sats, serializer);
         <String>::sse_encode(self.source_token_address, serializer);
+        <Option<String>>::sse_encode(self.create_swap_tx, serializer);
+        <Option<String>>::sse_encode(self.approve_tx, serializer);
         <Option<String>>::sse_encode(self.gelato_forwarder_address, serializer);
         <Option<String>>::sse_encode(self.gelato_user_nonce, serializer);
         <Option<String>>::sse_encode(self.gelato_user_deadline, serializer);

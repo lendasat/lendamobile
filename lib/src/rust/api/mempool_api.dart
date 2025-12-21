@@ -7,43 +7,37 @@ import '../frb_generated.dart';
 import '../models/mempool.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-/// Get the latest 15 Bitcoin blocks
-Future<List<Block>> getBlocks() =>
-    RustLib.instance.api.crateApiMempoolApiGetBlocks();
+
+            
+
+            /// Get the latest 15 Bitcoin blocks
+Future<List<Block>>  getBlocks() => RustLib.instance.api.crateApiMempoolApiGetBlocks();
 
 /// Get blocks starting from a specific height
-Future<List<Block>> getBlocksAtHeight({required BigInt height}) =>
-    RustLib.instance.api.crateApiMempoolApiGetBlocksAtHeight(height: height);
+Future<List<Block>>  getBlocksAtHeight({required BigInt height }) => RustLib.instance.api.crateApiMempoolApiGetBlocksAtHeight(height: height);
 
 /// Get detailed block information by hash
 /// Uses the v1 API endpoint which includes extras (pool, reward, fees, etc.)
-Future<Block> getBlockByHash({required String hash}) =>
-    RustLib.instance.api.crateApiMempoolApiGetBlockByHash(hash: hash);
+Future<Block>  getBlockByHash({required String hash }) => RustLib.instance.api.crateApiMempoolApiGetBlockByHash(hash: hash);
 
 /// Get paginated block transactions
 /// start_index should be multiples of 25 (0, 25, 50, etc.)
-Future<List<BitcoinTransaction>> getBlockTransactions(
-        {required String hash, required int startIndex}) =>
-    RustLib.instance.api.crateApiMempoolApiGetBlockTransactions(
-        hash: hash, startIndex: startIndex);
+Future<List<BitcoinTransaction>>  getBlockTransactions({required String hash , required int startIndex }) => RustLib.instance.api.crateApiMempoolApiGetBlockTransactions(hash: hash, startIndex: startIndex);
 
 /// Get recommended fee rates for different confirmation targets
-Future<RecommendedFees> getRecommendedFees() =>
-    RustLib.instance.api.crateApiMempoolApiGetRecommendedFees();
+Future<RecommendedFees>  getRecommendedFees() => RustLib.instance.api.crateApiMempoolApiGetRecommendedFees();
 
 /// Get mining hashrate data for a specific time period
 /// period: "1D", "1W", "1M", "1Y", "3Y"
-Future<HashrateData> getHashrateData({required String period}) =>
-    RustLib.instance.api.crateApiMempoolApiGetHashrateData(period: period);
+Future<HashrateData>  getHashrateData({required String period }) => RustLib.instance.api.crateApiMempoolApiGetHashrateData(period: period);
 
 /// Get detailed transaction information by txid
 /// base_url: The esplora/mempool API base URL (e.g., "https://mutinynet.com/api" or "https://mempool.space")
-Future<BitcoinTransaction> getTransaction(
-        {required String txid, required String baseUrl}) =>
-    RustLib.instance.api
-        .crateApiMempoolApiGetTransaction(txid: txid, baseUrl: baseUrl);
+Future<BitcoinTransaction>  getTransaction({required String txid , required String baseUrl }) => RustLib.instance.api.crateApiMempoolApiGetTransaction(txid: txid, baseUrl: baseUrl);
 
 /// Get Fear & Greed Index from RapidAPI
 /// Returns the current fear and greed index along with historical comparisons
-Future<FearGreedIndex> getFearGreedIndex({required String apiKey}) =>
-    RustLib.instance.api.crateApiMempoolApiGetFearGreedIndex(apiKey: apiKey);
+Future<FearGreedIndex>  getFearGreedIndex({required String apiKey }) => RustLib.instance.api.crateApiMempoolApiGetFearGreedIndex(apiKey: apiKey);
+
+            
+            

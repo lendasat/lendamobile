@@ -61,5 +61,31 @@
 
 <key>NSPhotoLibraryUsageDescription</key>
 <string>This app needs photos access to get QR code from photo library</string>
+
+	<!-- Allow querying wallet apps -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>phantom</string>
+		<string>metamask</string>
+		<string>trust</string>
+		<string>rainbow</string>
+		<string>cbwallet</string>
+		<string>zerion</string>
+	</array>
+
+	<!-- Deep link URL scheme for WalletConnect redirect -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.lendasat.lendamobile</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>lendamobile</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

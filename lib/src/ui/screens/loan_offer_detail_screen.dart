@@ -364,34 +364,43 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   }
 
   Widget _buildOfferHeader() {
-    return GlassContainer(
-      padding: const EdgeInsets.all(AppTheme.cardPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.offer.name,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                widget.offer.name,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.8,
+                    ),
               ),
-              _buildStatusBadge(),
-            ],
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-          Row(
-            children: [
-              _buildAssetChip(widget.offer.loanAssetDisplayName),
-              const SizedBox(width: 8),
-              const Icon(Icons.swap_horiz, size: 20),
-              const SizedBox(width: 8),
-              _buildAssetChip(widget.offer.collateralAssetDisplayName),
-            ],
-          ),
-        ],
-      ),
+            ),
+            const SizedBox(width: 12),
+            _buildStatusBadge(),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            _buildAssetChip(widget.offer.loanAssetDisplayName, isLoan: true),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                size: 16,
+                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+              ),
+            ),
+            _buildAssetChip(widget.offer.collateralAssetDisplayName),
+          ],
+        ),
+      ],
     );
   }
 
@@ -400,52 +409,90 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: widget.offer.isAvailable
-            ? AppTheme.successColor.withValues(alpha: 0.2)
-            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+            ? AppTheme.successColor.withValues(alpha: 0.1)
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: widget.offer.isAvailable
+              ? AppTheme.successColor.withValues(alpha: 0.2)
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+        ),
       ),
       child: Text(
-        widget.offer.isAvailable ? 'Available' : 'Unavailable',
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+        widget.offer.isAvailable ? 'AVAILABLE' : 'UNAVAILABLE',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: widget.offer.isAvailable
                   ? AppTheme.successColor
-                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
             ),
       ),
     );
   }
 
-  Widget _buildAssetChip(String label) {
+  Widget _buildAssetChip(String label, {bool isLoan = false}) {
+    final color = isLoan ? Theme.of(context).colorScheme.primary : AppTheme.colorBitcoin;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-            ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(isLoan ? Icons.monetization_on : Icons.lock, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildLenderCard() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor:
-                Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-            child: Text(
-              widget.offer.lender.name[0].toUpperCase(),
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                  Theme.of(context).colorScheme.primary,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                widget.offer.lender.name[0].toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: AppTheme.cardPadding),
@@ -457,30 +504,34 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                   children: [
                     Text(
                       widget.offer.lender.name,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     if (widget.offer.lender.vetted) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       const Icon(
-                        Icons.verified,
-                        size: 18,
+                        Icons.verified_rounded,
+                        size: 16,
                         color: AppTheme.successColor,
                       ),
                     ],
                   ],
                 ),
-                const SizedBox(height: 4),
                 Text(
                   '${widget.offer.lender.successfulContracts} successful loans',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.6),
+                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        fontWeight: FontWeight.w500,
                       ),
                 ),
               ],
             ),
+          ),
+          Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
           ),
         ],
       ),
@@ -545,80 +596,75 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   }
 
   Widget _buildLoanConfiguration() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Configure Your Loan',
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            children: [
+              Icon(
+                Icons.settings_input_component_rounded,
+                size: 18,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Configure Your Loan',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ],
           ),
           const SizedBox(height: AppTheme.cardPadding),
 
           // Amount input
-          TextFormField(
+          _buildSpecialField(
+            label: 'LOAN AMOUNT',
             controller: _amountController,
-            decoration: InputDecoration(
-              labelText: 'Loan Amount',
-              hintText: 'Enter amount in USD',
-              prefixText: '\$ ',
-              helperText:
-                  'Min: \$${widget.offer.loanAmountMin.toStringAsFixed(0)} - Max: \$${widget.offer.loanAmountMax.toStringAsFixed(0)}',
-            ),
+            prefix: r'$',
+            hint: '0.00',
+            helper: 'Min \$${widget.offer.loanAmountMin.toStringAsFixed(0)} - Max \$${widget.offer.loanAmountMax.toStringAsFixed(0)}',
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (_) => _calculateLoanTerms(),
             validator: (value) {
               final amount = double.tryParse(value ?? '');
               if (amount == null) return 'Invalid amount';
-              if (amount < widget.offer.loanAmountMin) {
-                return 'Minimum: \$${widget.offer.loanAmountMin.toStringAsFixed(0)}';
-              }
-              if (amount > widget.offer.loanAmountMax) {
-                return 'Maximum: \$${widget.offer.loanAmountMax.toStringAsFixed(0)}';
-              }
+              if (amount < widget.offer.loanAmountMin) return 'Minimum \$${widget.offer.loanAmountMin.toStringAsFixed(0)}';
+              if (amount > widget.offer.loanAmountMax) return 'Maximum \$${widget.offer.loanAmountMax.toStringAsFixed(0)}';
               return null;
             },
           ),
-          const SizedBox(height: AppTheme.cardPadding),
+          const SizedBox(height: 20),
 
           // Duration input
-          TextFormField(
+          _buildSpecialField(
+            label: 'DURATION (DAYS)',
             controller: _durationController,
-            decoration: InputDecoration(
-              labelText: 'Duration (days)',
-              hintText: 'Enter duration in days',
-              helperText:
-                  'Min: ${widget.offer.durationDaysMin} - Max: ${widget.offer.durationDaysMax} days',
-            ),
+            suffix: 'days',
+            hint: '30',
+            helper: 'Min ${widget.offer.durationDaysMin} - Max ${widget.offer.durationDaysMax} days',
             keyboardType: TextInputType.number,
-            onChanged: (_) => _calculateLoanTerms(),
             validator: (value) {
               final duration = int.tryParse(value ?? '');
               if (duration == null) return 'Invalid duration';
-              if (duration < widget.offer.durationDaysMin) {
-                return 'Minimum: ${widget.offer.durationDaysMin} days';
-              }
-              if (duration > widget.offer.durationDaysMax) {
-                return 'Maximum: ${widget.offer.durationDaysMax} days';
-              }
+              if (duration < widget.offer.durationDaysMin) return 'Min ${widget.offer.durationDaysMin} days';
+              if (duration > widget.offer.durationDaysMax) return 'Max ${widget.offer.durationDaysMax} days';
               return null;
             },
           ),
-          const SizedBox(height: AppTheme.cardPadding),
+          const SizedBox(height: 20),
 
-          // Address input (required)
-          TextFormField(
+          // Address input
+          _buildSpecialField(
+            label: 'PAYOUT ADDRESS',
             controller: _addressController,
-            decoration: const InputDecoration(
-              labelText: 'Payout Address',
-              hintText: 'Enter address to receive funds',
-              helperText: 'Enter your wallet address to receive the loan payout.',
-            ),
+            hint: 'Recipient address',
+            helper: 'Where you will receive the loan funds.',
             validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Payout address is required';
-              }
+              if (value == null || value.trim().isEmpty) return 'Required';
               return null;
             },
           ),
@@ -627,7 +673,71 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     );
   }
 
+  Widget _buildSpecialField({
+    required String label,
+    required TextEditingController controller,
+    String? prefix,
+    String? suffix,
+    String? hint,
+    String? helper,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.8,
+                fontSize: 9,
+              ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          cursorColor: Theme.of(context).colorScheme.primary,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixText: prefix != null ? '$prefix ' : null,
+            suffixText: suffix,
+            helperText: helper,
+            helperStyle: TextStyle(
+              fontSize: 10,
+              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            filled: true,
+            fillColor: Colors.black.withValues(alpha: 0.05),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05), width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3), width: 1),
+            ),
+            errorStyle: const TextStyle(fontSize: 10),
+          ),
+          keyboardType: keyboardType,
+          onChanged: (_) => _calculateLoanTerms(),
+          validator: validator,
+        ),
+      ],
+    );
+  }
+
   Widget _buildCalculatedTerms() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final amount = double.tryParse(_amountController.text) ?? 0;
     final totalRepayment = amount + _calculatedInterest + _originationFeeAmount;
 
@@ -639,104 +749,146 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Loan Summary',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: AppTheme.cardPadding),
-              _buildSummaryRow('Principal', '\$${amount.toStringAsFixed(2)}'),
-              _buildSummaryRow(
-                  'Interest', '\$${_calculatedInterest.toStringAsFixed(2)}'),
-              if (_originationFee > 0)
-                _buildSummaryRow(
-                  'Origination Fee (${(_originationFee * 100).toStringAsFixed(1)}%)',
-                  '\$${_originationFeeAmount.toStringAsFixed(2)}',
-                ),
-              const Divider(height: AppTheme.cardPadding),
-              _buildSummaryRow(
-                'Total Repayment',
-                '\$${totalRepayment.toStringAsFixed(2)}',
-                isBold: true,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppTheme.cardPadding),
-        // Collateral Card - amount provided by LendaSat API after contract approval
-        GlassContainer(
-          padding: const EdgeInsets.all(AppTheme.cardPadding),
-          customColor: AppTheme.colorBitcoin.withValues(alpha: 0.1),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
               Row(
                 children: [
-                  const Icon(
-                    Icons.lock_outline,
-                    color: AppTheme.colorBitcoin,
-                    size: 20,
+                  Icon(
+                    Icons.summarize_rounded,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Required Collateral',
+                    'Loan Summary',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppTheme.colorBitcoin,
+                          fontWeight: FontWeight.bold,
                         ),
                   ),
                 ],
               ),
               const SizedBox(height: AppTheme.cardPadding),
-              Center(
-                child: Text(
-                  'Calculated on submit',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.colorBitcoin,
-                      ),
+              _buildSummaryRow('PRINCIPAL', '\$${amount.toStringAsFixed(2)}'),
+              _buildSummaryRow(
+                  'INTEREST', '\$${_calculatedInterest.toStringAsFixed(2)}'),
+              if (_originationFee > 0)
+                _buildSummaryRow(
+                  'FEE (${(_originationFee * 100).toStringAsFixed(1)}%)',
+                  '\$${_originationFeeAmount.toStringAsFixed(2)}',
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Divider(
+                  height: 1,
+                  color: Colors.white.withValues(alpha: 0.05),
                 ),
               ),
-              const SizedBox(height: AppTheme.elementSpacing),
-              Center(
-                child: Text(
-                  'Based on ${(widget.offer.minLtv * 100).toStringAsFixed(0)}% LTV at current BTC price',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.6),
-                      ),
-                ),
+              _buildSummaryRow(
+                'TOTAL REPAYMENT',
+                '\$${totalRepayment.toStringAsFixed(2)}',
+                isBold: true,
+                isLarge: true,
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: AppTheme.cardPadding),
+        // Collateral Card
+        Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.colorBitcoin.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+          ),
+          child: GlassContainer(
+            padding: const EdgeInsets.all(AppTheme.cardPadding),
+            customColor: AppTheme.colorBitcoin.withValues(alpha: 0.03),
+            borderRadius: AppTheme.borderRadiusMid,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.lock_rounded,
+                      color: AppTheme.colorBitcoin,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'REQUIRED COLLATERAL',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppTheme.colorBitcoin,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'CALCULATED ON SUBMIT',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.colorBitcoin,
+                              letterSpacing: -0.5,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Based on ${(widget.offer.minLtv * 100).toStringAsFixed(0)}% LTV at current market price',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSummaryRow(String label, String value,
-      {bool isBold = false, bool highlight = false}) {
+  Widget _buildSummaryRow(
+    String label, 
+    String value, {
+    bool isBold = false, 
+    bool highlight = false,
+    bool isLarge = false,
+  }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.elementSpacing),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.7),
-                  fontWeight: isBold ? FontWeight.bold : null,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                  fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+                  fontSize: isLarge ? 11 : 9,
+                  letterSpacing: 0.5,
                 ),
           ),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-                  color: highlight ? AppTheme.colorBitcoin : null,
-                ),
+            style: TextStyle(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+              fontSize: isLarge ? 18 : 14,
+              color: highlight ? AppTheme.colorBitcoin : (isLarge ? Theme.of(context).colorScheme.primary : null),
+            ),
           ),
         ],
       ),
@@ -753,7 +905,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
           const Row(
             children: [
               Icon(Icons.warning_amber, color: Colors.orange),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 'KYC Required',
                 style: TextStyle(

@@ -195,6 +195,11 @@ pub struct EvmToBtcSwapResult {
     pub fee_sats: i64,
     /// Token address for approval (ERC20)
     pub source_token_address: String,
+    /// Pre-built calldata for createSwap() contract call
+    /// This MUST be called via WalletConnect to properly fund the HTLC
+    pub create_swap_tx: Option<String>,
+    /// Pre-built calldata for approve() on the ERC20 token
+    pub approve_tx: Option<String>,
     /// Gelato forwarder address (for gasless transactions)
     pub gelato_forwarder_address: Option<String>,
     /// Gelato user nonce
@@ -242,6 +247,8 @@ pub async fn lendaswap_create_evm_to_btc_swap(
         sats_to_receive: response.sats_receive,
         fee_sats: response.common.fee_sats,
         source_token_address: response.source_token_address,
+        create_swap_tx: response.create_swap_tx,
+        approve_tx: response.approve_tx,
         gelato_forwarder_address: response.gelato_forwarder_address,
         gelato_user_nonce: response.gelato_user_nonce,
         gelato_user_deadline: response.gelato_user_deadline,
@@ -282,6 +289,8 @@ pub async fn lendaswap_create_evm_to_lightning_swap(
         sats_to_receive: response.sats_receive,
         fee_sats: response.common.fee_sats,
         source_token_address: response.source_token_address,
+        create_swap_tx: response.create_swap_tx,
+        approve_tx: response.approve_tx,
         gelato_forwarder_address: response.gelato_forwarder_address,
         gelato_user_nonce: response.gelato_user_nonce,
         gelato_user_deadline: response.gelato_user_deadline,

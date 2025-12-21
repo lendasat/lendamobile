@@ -300,11 +300,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 height: 100,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
                   itemCount: _attachedImages.length,
                   itemBuilder: (context, index) {
                     return Padding(
                       padding: const EdgeInsets.only(right: 12),
                       child: Stack(
+                        clipBehavior: Clip.none,
                         children: [
                           ClipRRect(
                             borderRadius:
@@ -317,19 +319,23 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                             ),
                           ),
                           Positioned(
-                            top: 4,
-                            right: 4,
+                            top: -8,
+                            right: -8,
                             child: GestureDetector(
                               onTap: () => _removeImage(index),
                               child: Container(
                                 padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   color: Colors.red,
                                   shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Theme.of(context).scaffoldBackgroundColor,
+                                    width: 2,
+                                  ),
                                 ),
                                 child: const Icon(
                                   Icons.close,
-                                  size: 16,
+                                  size: 14,
                                   color: Colors.white,
                                 ),
                               ),

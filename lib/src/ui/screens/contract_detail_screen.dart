@@ -906,6 +906,9 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   }
 
   Widget _buildStatusHeader() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final statusColor = _getStatusBadgeColor();
+
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
@@ -914,96 +917,109 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           // Contract ID row
           Row(
             children: [
-              Text(
-                'Contract',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'ID: ${_contract!.id.substring(0, 8).toUpperCase()}',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                      ),
+                ),
               ),
               const Spacer(),
-              _buildStatusBadge(),
+              _buildStatusBadge(statusColor),
             ],
           ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _contract!.id,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
-              InkWell(
-                onTap: () => _copyToClipboard(_contract!.id, 'Contract ID'),
-                child: Icon(
-                  Icons.copy,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.cardPadding),
+          const SizedBox(height: 20),
           // Loan amount and lender
           Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '\$${_contract!.loanAmount.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      'LOAN AMOUNT',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                          ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'from ${_contract!.lender.name}',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.7),
+                      '\$${_contract!.loanAmount.toStringAsFixed(2)}',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -1.0,
                           ),
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'LENDER',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _contract!.lender.name,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
               ),
             ],
           ),
 
           // Progress bar for active loans
           if (_contract!.isActiveLoan) ...[
-            const SizedBox(height: AppTheme.cardPadding),
+            const SizedBox(height: 24),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: _contract!.repaymentProgress,
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.1),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppTheme.successColor,
-                      ),
-                      minHeight: 8,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
                 Text(
-                  '${(_contract!.repaymentProgress * 100).toStringAsFixed(0)}% repaid',
-                  style: Theme.of(context).textTheme.labelMedium,
+                  'REPAYMENT PROGRESS',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 9,
+                      ),
+                ),
+                Text(
+                  '${(_contract!.repaymentProgress * 100).toStringAsFixed(0)}%',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.successColor,
+                      ),
                 ),
               ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: _contract!.repaymentProgress,
+                backgroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
+                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.successColor),
+                minHeight: 6,
+              ),
             ),
           ],
         ],
@@ -1011,71 +1027,87 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     );
   }
 
-  Widget _buildStatusBadge() {
-    Color badgeColor;
-
-    if (_contract!.isClosed) {
-      badgeColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
-    } else if (_contract!.hasIssue) {
-      badgeColor = AppTheme.errorColor;
-    } else if (_contract!.canClaim || _contract!.canRecover) {
-      badgeColor = AppTheme.successColor;
-    } else if (_contract!.isAwaitingDeposit) {
-      badgeColor = Colors.orange;
-    } else {
-      badgeColor = Theme.of(context).colorScheme.primary;
-    }
-
+  Widget _buildStatusBadge(Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: badgeColor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
       child: Text(
-        _contract!.statusText,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: badgeColor,
-              fontWeight: FontWeight.bold,
-            ),
+        _contract!.statusText.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 10,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
 
+  Color _getStatusBadgeColor() {
+    if (_contract!.isClosed) {
+      return Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
+    } else if (_contract!.hasIssue) {
+      return AppTheme.errorColor;
+    } else if (_contract!.canClaim || _contract!.canRecover) {
+      return AppTheme.successColor;
+    } else if (_contract!.isAwaitingDeposit) {
+      return Colors.orange;
+    } else {
+      return Theme.of(context).colorScheme.primary;
+    }
+  }
+
   Widget _buildLoanDetails() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Loan Details',
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            children: [
+              Icon(Icons.description_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Loan Details',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
-          const SizedBox(height: AppTheme.cardPadding),
-          _buildDetailRow('Principal', '\$${_contract!.loanAmount.toStringAsFixed(2)}'),
-          _buildDetailRow('Interest', '\$${_contract!.interest.toStringAsFixed(2)}'),
+          const SizedBox(height: 20),
+          _buildDetailRow('PRINCIPAL', '\$${_contract!.loanAmount.toStringAsFixed(2)}'),
+          _buildDetailRow('INTEREST', '\$${_contract!.interest.toStringAsFixed(2)}'),
           _buildDetailRow(
-            'Interest Rate',
+            'INTEREST RATE',
             '${(_contract!.interestRate * 100).toStringAsFixed(2)}%',
+            highlight: true,
           ),
-          _buildDetailRow('Duration', '${_contract!.durationDays} days'),
+          _buildDetailRow('DURATION', '${_contract!.durationDays} days'),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
+          ),
           _buildDetailRow(
-            'Total Repayment',
+            'TOTAL REPAYMENT',
             '\$${_contract!.totalRepayment.toStringAsFixed(2)}',
+            isBold: true,
           ),
           _buildDetailRow(
-            'Outstanding',
-            '\$${_contract!.remainingBalance.toStringAsFixed(2)}',
+            'EXPIRES',
+            _formatDate(_contract!.expiry),
           ),
-          _buildDetailRow('Expires', _formatDate(_contract!.expiry)),
         ],
       ),
     );
   }
 
   Widget _buildCollateralDetails() {
-    // Use deposited amount if available, otherwise fall back to effective collateral
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final collateralBtc = _contract!.depositedBtc > 0
         ? _contract!.depositedBtc
         : _contract!.effectiveCollateralBtc;
@@ -1086,66 +1118,74 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Collateral',
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            children: [
+              const Icon(Icons.lock_rounded, size: 18, color: AppTheme.colorBitcoin),
+              const SizedBox(width: 8),
+              Text(
+                'Collateral Info',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
-          const SizedBox(height: AppTheme.cardPadding),
+          const SizedBox(height: 20),
           _buildDetailRow(
-            'Amount',
+            'AMOUNT',
             '${collateralSats.toStringAsFixed(0)} sats',
+            subtext: '${collateralBtc.toStringAsFixed(8)} BTC',
+            highlight: true,
           ),
           _buildDetailRow(
-            '',
-            '${collateralBtc.toStringAsFixed(8)} BTC',
-          ),
-          _buildDetailRow(
-            'LTV',
+            'INITIAL LTV',
             '${(_contract!.initialLtv * 100).toStringAsFixed(1)}%',
           ),
           _buildDetailRow(
-            'Liquidation Price',
+            'LIQUIDATION PRICE',
             '\$${_contract!.liquidationPrice.toStringAsFixed(2)}',
           ),
           _buildDetailRow(
-            'Type',
+            'NETWORK TYPE',
             _contract!.isArkCollateral ? 'Arkade (Instant)' : 'On-chain',
           ),
           if (_contract!.contractAddress != null) ...[
-            const SizedBox(height: AppTheme.elementSpacing),
-            Text(
-              'Contract Address',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _contract!.contractAddress!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                          fontSize: 10,
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'CONTRACT ADDRESS',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 8,
                         ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const SizedBox(width: 8),
-                InkWell(
-                  onTap: () => _copyToClipboard(
-                    _contract!.contractAddress!,
-                    'Contract Address',
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _contract!.contractAddress!,
+                          style: const TextStyle(fontFamily: 'monospace', fontSize: 10),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () => _copyToClipboard(_contract!.contractAddress!, 'Address'),
+                        child: Icon(Icons.copy_rounded, size: 14, color: Theme.of(context).colorScheme.primary),
+                      ),
+                    ],
                   ),
-                  child: Icon(
-                    Icons.copy,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ],
@@ -1154,101 +1194,81 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   }
 
   Widget _buildRepaymentSchedule() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Repayment Schedule',
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            children: [
+              Icon(Icons.event_note_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Repayment Schedule',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
-          const SizedBox(height: AppTheme.cardPadding),
+          const SizedBox(height: 20),
 
-          // Repayment summary for active loans
           if (_contract!.isActiveLoan) ...[
+            _buildDetailRow('TOTAL REPAYMENT', '\$${_contract!.totalRepayment.toStringAsFixed(2)}'),
             _buildDetailRow(
-              'Total Repayment',
-              '\$${_contract!.totalRepayment.toStringAsFixed(2)}',
-            ),
-            _buildDetailRow(
-              'Amount Paid',
-              '\$${(_contract!.totalRepayment - _contract!.balanceOutstanding).toStringAsFixed(2)}',
-            ),
-            _buildDetailRow(
-              'Outstanding',
+              'REMAINING BALANCE',
               '\$${_contract!.balanceOutstanding.toStringAsFixed(2)}',
+              isBold: true,
             ),
-            // Show BTC repayment address for manual payments
+            
             if (_contract!.btcLoanRepaymentAddress != null &&
                 _contract!.btcLoanRepaymentAddress!.isNotEmpty) ...[
-              const SizedBox(height: AppTheme.elementSpacing),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () => _copyToClipboard(_contract!.btcLoanRepaymentAddress!, 'BTC Address'),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.colorBitcoin.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppTheme.colorBitcoin.withValues(alpha: 0.1)),
                   ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'BTC Repayment Address',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _contract!.btcLoanRepaymentAddress!,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontFamily: 'monospace',
-                                  fontSize: 11,
-                                ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        InkWell(
-                          onTap: () => _copyToClipboard(
-                            _contract!.btcLoanRepaymentAddress!,
-                            'BTC Repayment Address',
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.copy,
-                              size: 16,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  child: Row(
+                    children: [
+                      const Icon(Icons.currency_bitcoin_rounded, size: 16, color: AppTheme.colorBitcoin),
+                      const SizedBox(width: 8),
+                      Expanded(
+                         child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                             Text(
+                               'BTC REPAYMENT ADDRESS',
+                               style: TextStyle(
+                                 fontSize: 8, 
+                                 fontWeight: FontWeight.bold, 
+                                 color: AppTheme.colorBitcoin.withValues(alpha: 0.7),
+                               ),
+                             ),
+                             Text(
+                               _contract!.btcLoanRepaymentAddress!,
+                               style: const TextStyle(fontSize: 10, fontFamily: 'monospace'),
+                               maxLines: 1,
+                               overflow: TextOverflow.ellipsis,
+                             ),
+                           ],
+                         ),
+                      ),
+                      Icon(Icons.copy_rounded, size: 14, color: AppTheme.colorBitcoin.withValues(alpha: 0.5)),
+                    ],
+                  ),
                 ),
               ),
             ],
-            const SizedBox(height: AppTheme.cardPadding),
-            Divider(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
-            ),
-            const SizedBox(height: AppTheme.elementSpacing),
+            const SizedBox(height: 16),
+            Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
+            const SizedBox(height: 16),
           ],
 
-          // Installments list
           ..._contract!.installments.map((installment) => _buildInstallmentRow(installment)),
         ],
       ),
@@ -1259,23 +1279,23 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     final isPaid = installment.status == InstallmentStatus.paid ||
         installment.status == InstallmentStatus.confirmed;
     final isOverdue = installment.isOverdue;
+    final color = isPaid ? AppTheme.successColor : (isOverdue ? AppTheme.errorColor : Theme.of(context).colorScheme.primary);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.elementSpacing),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
-          Icon(
-            isPaid
-                ? Icons.check_circle
-                : isOverdue
-                    ? Icons.warning
-                    : Icons.schedule,
-            size: 20,
-            color: isPaid
-                ? AppTheme.successColor
-                : isOverdue
-                    ? AppTheme.errorColor
-                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isPaid ? Icons.check_rounded : (isOverdue ? Icons.priority_high_rounded : Icons.pending_rounded),
+              size: 14,
+              color: color,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1285,33 +1305,29 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                 Text(
                   '\$${installment.totalPayment.toStringAsFixed(2)}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold,
                         decoration: isPaid ? TextDecoration.lineThrough : null,
                       ),
                 ),
                 Text(
-                  'Due: ${_formatDate(installment.dueDate)}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: isOverdue
-                            ? AppTheme.errorColor
-                            : Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
+                  isPaid ? 'Paid on ${_formatDate(installment.dueDate)}' : 'Due ${_formatDate(installment.dueDate)}',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
                 ),
               ],
             ),
           ),
-          Text(
-            installment.statusText,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: isPaid
-                      ? AppTheme.successColor
-                      : isOverdue
-                          ? AppTheme.errorColor
-                          : null,
-                ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              installment.statusText.toUpperCase(),
+              style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+            ),
           ),
         ],
       ),
@@ -1320,85 +1336,75 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
   Widget _buildActions() {
     final canCancel = _contract!.status == ContractStatus.requested;
-    // Can pay collateral if approved and has collateral info (use effectiveCollateralSats for fallback)
     final canPayCollateral = _contract!.status == ContractStatus.approved &&
         _contract!.contractAddress != null &&
         _contract!.effectiveCollateralSats > 0;
-    // Full width for buttons
     final buttonWidth = MediaQuery.of(context).size.width - AppTheme.cardPadding * 2;
 
     return Column(
       children: [
-        // Pay Collateral button for approved contracts awaiting deposit
         if (canPayCollateral)
           LongButtonWidget(
-            title: _isActionLoading
-                ? 'Sending...'
-                : 'Pay Collateral (${_contract!.effectiveCollateralBtc.toStringAsFixed(6)} BTC)',
+            title: _isActionLoading ? 'SENDING...' : 'PAY COLLATERAL',
             buttonType: ButtonType.primary,
-            customWidth: buttonWidth,
             onTap: _isActionLoading ? null : _payCollateral,
           ),
-        // Repay with Lendaswap button for active loans
         if (_contract!.canRepayWithLendaswap) ...[
-          if (canPayCollateral) const SizedBox(height: AppTheme.elementSpacing),
+          if (canPayCollateral) const SizedBox(height: 12),
           LongButtonWidget(
-            title: _isRepaying
-                ? 'Processing...'
-                : 'Repay \$${_contract!.balanceOutstanding.toStringAsFixed(2)} with Lendaswap',
+            title: _isRepaying ? 'SWAPPING...' : 'REPAY WITH LENDASWAP',
             buttonType: ButtonType.primary,
             customWidth: buttonWidth,
             buttonGradient: const LinearGradient(
-              colors: [Color(0xFF8247E5), Color(0xFF6C3DC1)], // Lendaswap purple gradient
+              colors: [Color(0xFF8247E5), Color(0xFF6C3DC1)],
             ),
             onTap: _isRepaying || _isActionLoading ? null : _repayWithLendaswap,
           ),
-          const SizedBox(height: 4),
-          Center(
-            child: Text(
-              'Powered by Lendaswap',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-            ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.flash_on_rounded, size: 12, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
+              const SizedBox(width: 4),
+              Text(
+                'Powered by Lendaswap',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                      fontSize: 9,
+                    ),
+              ),
+            ],
           ),
         ],
-        // "I Already Paid" button for active loans with outstanding balance
         if (_contract!.isActiveLoan && _contract!.balanceOutstanding > 0) ...[
-          const SizedBox(height: AppTheme.elementSpacing),
+          const SizedBox(height: 12),
           LongButtonWidget(
-            title: _isMarkingPaid ? 'Confirming...' : 'I Already Paid',
+            title: _isMarkingPaid ? 'CONFIRMING...' : 'I ALREADY PAID',
             buttonType: ButtonType.secondary,
-            customWidth: buttonWidth,
-            onTap: _isMarkingPaid || _isActionLoading || _isRepaying
-                ? null
-                : _showMarkAsPaidDialog,
+            onTap: _isMarkingPaid || _isActionLoading || _isRepaying ? null : _showMarkAsPaidDialog,
           ),
         ],
         if (_contract!.canClaim) ...[
-          if (canPayCollateral || _contract!.canRepayWithLendaswap) const SizedBox(height: AppTheme.elementSpacing),
+          const SizedBox(height: 12),
           LongButtonWidget(
-            title: _isActionLoading ? 'Loading...' : 'Claim Collateral',
+            title: 'CLAIM COLLATERAL',
             buttonType: ButtonType.primary,
-            customWidth: buttonWidth,
             onTap: _isActionLoading ? null : _showClaimSheet,
           ),
         ],
         if (_contract!.canRecover) ...[
-          const SizedBox(height: AppTheme.elementSpacing),
+          const SizedBox(height: 12),
           LongButtonWidget(
-            title: _isActionLoading ? 'Loading...' : 'Recover Collateral',
+            title: 'RECOVER COLLATERAL',
             buttonType: ButtonType.primary,
-            customWidth: buttonWidth,
             onTap: _isActionLoading ? null : _showRecoverSheet,
           ),
         ],
         if (canCancel) ...[
-          const SizedBox(height: AppTheme.elementSpacing),
+          const SizedBox(height: 12),
           LongButtonWidget(
-            title: _isActionLoading ? 'Loading...' : 'Cancel Request',
+            title: 'CANCEL REQUEST',
             buttonType: ButtonType.secondary,
-            customWidth: buttonWidth,
             onTap: _isActionLoading ? null : _cancelContract,
           ),
         ],
@@ -1406,57 +1412,42 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, {String? copyValue}) {
+  Widget _buildDetailRow(String label, String value, {String? subtext, bool isBold = false, bool highlight = false}) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.elementSpacing),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Flexible(
-            flex: 2,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.7),
-                  ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            flex: 3,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Flexible(
-                  child: Text(
-                    value,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                    textAlign: TextAlign.end,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                  fontSize: 9,
                 ),
-                if (copyValue != null) ...[
-                  const SizedBox(width: 4),
-                  InkWell(
-                    onTap: () => _copyToClipboard(copyValue, label),
-                    child: Icon(
-                      Icons.copy,
-                      size: 16,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.5),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                value,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                      color: highlight ? AppTheme.colorBitcoin : null,
                     ),
-                  ),
-                ],
-              ],
-            ),
+              ),
+              if (subtext != null)
+                Text(
+                  subtext,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        fontSize: 10,
+                      ),
+                ),
+            ],
           ),
         ],
       ),

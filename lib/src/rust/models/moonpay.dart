@@ -6,104 +6,108 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-class CurrencyInfo {
-  final String code;
-  final double minBuyAmount;
-  final double maxBuyAmount;
 
-  const CurrencyInfo({
-    required this.code,
-    required this.minBuyAmount,
-    required this.maxBuyAmount,
-  });
+            
 
-  @override
-  int get hashCode =>
-      code.hashCode ^ minBuyAmount.hashCode ^ maxBuyAmount.hashCode;
+            
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CurrencyInfo &&
-          runtimeType == other.runtimeType &&
-          code == other.code &&
-          minBuyAmount == other.minBuyAmount &&
-          maxBuyAmount == other.maxBuyAmount;
-}
+            class CurrencyInfo  {
+                final String code;
+final double minBuyAmount;
+final double maxBuyAmount;
 
-class MoonPayCurrencyLimits {
-  final CurrencyInfo quoteCurrency;
-  final CurrencyInfo baseCurrency;
+                const CurrencyInfo({required this.code ,required this.minBuyAmount ,required this.maxBuyAmount ,});
 
-  const MoonPayCurrencyLimits({
-    required this.quoteCurrency,
-    required this.baseCurrency,
-  });
+                
+                
 
-  @override
-  int get hashCode => quoteCurrency.hashCode ^ baseCurrency.hashCode;
+                
+        @override
+        int get hashCode => code.hashCode^minBuyAmount.hashCode^maxBuyAmount.hashCode;
+        
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is MoonPayCurrencyLimits &&
-          runtimeType == other.runtimeType &&
-          quoteCurrency == other.quoteCurrency &&
-          baseCurrency == other.baseCurrency;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is CurrencyInfo &&
+                runtimeType == other.runtimeType
+                && code == other.code&& minBuyAmount == other.minBuyAmount&& maxBuyAmount == other.maxBuyAmount;
+        
+            }
 
-class MoonPayEncryptedData {
-  final String ciphertext;
-  final String iv;
+class MoonPayCurrencyLimits  {
+                final CurrencyInfo quoteCurrency;
+final CurrencyInfo baseCurrency;
 
-  const MoonPayEncryptedData({
-    required this.ciphertext,
-    required this.iv,
-  });
+                const MoonPayCurrencyLimits({required this.quoteCurrency ,required this.baseCurrency ,});
 
-  @override
-  int get hashCode => ciphertext.hashCode ^ iv.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is MoonPayEncryptedData &&
-          runtimeType == other.runtimeType &&
-          ciphertext == other.ciphertext &&
-          iv == other.iv;
-}
+                
+        @override
+        int get hashCode => quoteCurrency.hashCode^baseCurrency.hashCode;
+        
 
-class MoonPayQuote {
-  final double baseCurrencyAmount;
-  final double quoteCurrencyAmount;
-  final String baseCurrencyCode;
-  final double exchangeRate;
-  final String timestamp;
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is MoonPayCurrencyLimits &&
+                runtimeType == other.runtimeType
+                && quoteCurrency == other.quoteCurrency&& baseCurrency == other.baseCurrency;
+        
+            }
 
-  const MoonPayQuote({
-    required this.baseCurrencyAmount,
-    required this.quoteCurrencyAmount,
-    required this.baseCurrencyCode,
-    required this.exchangeRate,
-    required this.timestamp,
-  });
+class MoonPayEncryptedData  {
+                final String ciphertext;
+final String iv;
 
-  @override
-  int get hashCode =>
-      baseCurrencyAmount.hashCode ^
-      quoteCurrencyAmount.hashCode ^
-      baseCurrencyCode.hashCode ^
-      exchangeRate.hashCode ^
-      timestamp.hashCode;
+                const MoonPayEncryptedData({required this.ciphertext ,required this.iv ,});
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is MoonPayQuote &&
-          runtimeType == other.runtimeType &&
-          baseCurrencyAmount == other.baseCurrencyAmount &&
-          quoteCurrencyAmount == other.quoteCurrencyAmount &&
-          baseCurrencyCode == other.baseCurrencyCode &&
-          exchangeRate == other.exchangeRate &&
-          timestamp == other.timestamp;
-}
+                
+                
+
+                
+        @override
+        int get hashCode => ciphertext.hashCode^iv.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is MoonPayEncryptedData &&
+                runtimeType == other.runtimeType
+                && ciphertext == other.ciphertext&& iv == other.iv;
+        
+            }
+
+class MoonPayQuote  {
+                final double baseCurrencyAmount;
+final double quoteCurrencyAmount;
+final String baseCurrencyCode;
+final double exchangeRate;
+final String timestamp;
+
+                const MoonPayQuote({required this.baseCurrencyAmount ,required this.quoteCurrencyAmount ,required this.baseCurrencyCode ,required this.exchangeRate ,required this.timestamp ,});
+
+                
+                
+
+                
+        @override
+        int get hashCode => baseCurrencyAmount.hashCode^quoteCurrencyAmount.hashCode^baseCurrencyCode.hashCode^exchangeRate.hashCode^timestamp.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is MoonPayQuote &&
+                runtimeType == other.runtimeType
+                && baseCurrencyAmount == other.baseCurrencyAmount&& quoteCurrencyAmount == other.quoteCurrencyAmount&& baseCurrencyCode == other.baseCurrencyCode&& exchangeRate == other.exchangeRate&& timestamp == other.timestamp;
+        
+            }
+            

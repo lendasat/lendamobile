@@ -7,10 +7,12 @@ import '../frb_generated.dart';
 import '../models/mempool.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `handle_projected_transactions`
 
-/// Track a specific mempool block and stream its transactions
-Stream<ProjectedBlockTransactions> trackMempoolBlock(
-        {required int blockIndex}) =>
-    RustLib.instance.api
-        .crateApiMempoolBlockTrackerTrackMempoolBlock(blockIndex: blockIndex);
+            // These functions are ignored because they are not marked as `pub`: `handle_projected_transactions`
+
+
+            /// Track a specific mempool block and stream its transactions
+Stream<ProjectedBlockTransactions>  trackMempoolBlock({required int blockIndex }) => RustLib.instance.api.crateApiMempoolBlockTrackerTrackMempoolBlock(blockIndex: blockIndex);
+
+            
+            

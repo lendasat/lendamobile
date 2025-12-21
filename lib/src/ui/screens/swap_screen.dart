@@ -11,6 +11,7 @@ import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/evm_address_input_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/swap_confirmation_sheet.dart';
 import 'package:ark_flutter/src/ui/screens/swap_processing_screen.dart';
+import 'package:ark_flutter/src/ui/screens/evm_swap_funding_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
@@ -314,11 +315,12 @@ class _SwapScreenState extends State<SwapScreen> {
   }
 
   List<SwapToken> _getAvailableSourceTokens() {
-    return SwapToken.values;
+    // For first release, only Bitcoin is supported as source
+    return SwapToken.btcTokens;
   }
 
   List<SwapToken> _getAvailableTargetTokens() {
-    return SwapTokenExtension.getValidTargets(sourceToken);
+    return SwapToken.getValidTargets(sourceToken);
   }
 
   /// Get the conversion display text for source
@@ -542,10 +544,9 @@ class _SwapScreenState extends State<SwapScreen> {
           }
         }
       } else {
-        // EVM -> BTC swap: Use wallet's Arkade address for receiving
-        final addresses = await ark_api.address();
-        final arkadeAddress = addresses.offchain;
-        logger.i('Using wallet Arkade address: $arkadeAddress');
+        // EVM -> BTC swap: Navigate to funding screen with WalletConnect
+        // The funding screen handles wallet connection, swap creation, and HTLC funding
+        logger.i('EVM to BTC swap: navigating to funding screen');
 
         // For stablecoins, token amount = usd amount (1:1)
         // For non-stablecoins (e.g., XAUT), use the calculated token amount
@@ -553,13 +554,36 @@ class _SwapScreenState extends State<SwapScreen> {
             ? usd
             : (double.tryParse(tokenAmount) ?? 0);
 
-        final result = await _swapService.createBuyBtcSwap(
-          targetArkAddress: arkadeAddress,
-          sourceAmount: sourceAmountValue,
-          sourceToken: sourceToken.tokenId,
-          sourceChain: sourceToken.chainId,
-        );
-        swapId = result.swapId;
+        // For display, use the correct amount based on token type
+        String displaySourceAmount;
+        String displayTargetAmount;
+
+        if (sourceToken.isStablecoin) {
+          displaySourceAmount = usdAmount;
+        } else {
+          displaySourceAmount = tokenAmount;
+        }
+        displayTargetAmount = btcAmount;
+
+        // Stop suppression before navigating
+        PaymentOverlayService().stopSuppression();
+        setState(() => isLoading = false);
+
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EvmSwapFundingScreen(
+                sourceToken: sourceToken,
+                targetToken: targetToken,
+                sourceAmount: displaySourceAmount,
+                targetAmount: displayTargetAmount,
+                usdAmount: sourceAmountValue,
+              ),
+            ),
+          );
+        }
+        return; // Exit early - funding screen handles the rest
       }
 
       // Navigate to processing screen
@@ -635,79 +659,82 @@ class _SwapScreenState extends State<SwapScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: AppTheme.cardPadding * 2),
-                SizedBox(
-                  height: AppTheme.cardPadding * (7.0 * 2 + 0.5),
+                // Uniswap-style card stack with connected border
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.cardPadding,
+                  ),
                   child: Stack(
                     children: [
                       Column(
                         children: [
                           // SOURCE CARD (You Sell)
-                          Container(
-                            height: AppTheme.cardPadding * 7.0,
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: AppTheme.cardPadding,
-                            ),
-                            child: _SwapAmountCard(
-                              token: sourceToken,
-                              cardTitle: "Sell",
-                              controller: _sourceController,
-                              showUsdMode: sourceShowUsd,
-                              conversionText: _getSourceConversionText(),
-                              onAmountChanged: _onSourceAmountChanged,
-                              onToggleMode: sourceToken.isBtc ? _toggleSourceMode : null,
-                              availableTokens: _getAvailableSourceTokens(),
-                              onTokenChanged: _onSourceTokenChanged,
-                              showBalance: true,
-                              label: 'sell',
-                            ),
+                          _SwapAmountCard(
+                            token: sourceToken,
+                            cardTitle: "Sell",
+                            controller: _sourceController,
+                            showUsdMode: sourceShowUsd,
+                            conversionText: _getSourceConversionText(),
+                            onAmountChanged: _onSourceAmountChanged,
+                            onToggleMode: sourceToken.isBtc ? _toggleSourceMode : null,
+                            availableTokens: _getAvailableSourceTokens(),
+                            onTokenChanged: _onSourceTokenChanged,
+                            showBalance: true,
+                            label: 'sell',
+                            isTopCard: true,
                           ),
-                          Container(height: AppTheme.cardPadding * 0.5),
+                          const SizedBox(height: 4),
                           // TARGET CARD (You Buy)
-                          Container(
-                            height: AppTheme.cardPadding * 7.0,
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: AppTheme.cardPadding,
-                            ),
-                            child: _SwapAmountCard(
-                              token: targetToken,
-                              cardTitle: "Buy",
-                              controller: _targetController,
-                              showUsdMode: targetShowUsd,
-                              conversionText: _getTargetConversionText(),
-                              onAmountChanged: _onTargetAmountChanged,
-                              onToggleMode: targetToken.isBtc ? _toggleTargetMode : null,
-                              availableTokens: _getAvailableTargetTokens(),
-                              onTokenChanged: _onTargetTokenChanged,
-                              showBalance: false,
-                              label: 'buy',
-                            ),
+                          _SwapAmountCard(
+                            token: targetToken,
+                            cardTitle: "Buy",
+                            controller: _targetController,
+                            showUsdMode: targetShowUsd,
+                            conversionText: _getTargetConversionText(),
+                            onAmountChanged: _onTargetAmountChanged,
+                            onToggleMode: targetToken.isBtc ? _toggleTargetMode : null,
+                            availableTokens: _getAvailableTargetTokens(),
+                            onTokenChanged: _onTargetTokenChanged,
+                            showBalance: false,
+                            label: 'buy',
+                            isTopCard: false,
                           ),
                         ],
                       ),
-                      // SWAP BUTTON IN THE MIDDLE
-                      Align(
-                        alignment: Alignment.center,
-                        child: Material(
-                          color: AppTheme.colorBitcoin,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.borderRadiusSmall,
-                          ),
-                          child: InkWell(
+                      // SWAP BUTTON - Hidden for first release as only one direction is supported
+                      /*
+                      Positioned.fill(
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: GestureDetector(
                             onTap: _swapTokens,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.borderRadiusSmall,
-                            ),
                             child: Container(
-                              padding: const EdgeInsets.all(10),
-                              child: const Icon(
-                                Icons.swap_vert,
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? const Color(0xFF1B1B1B)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white.withValues(alpha: 0.1)
+                                      : Colors.black.withValues(alpha: 0.08),
+                                  width: 4,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.arrow_downward_rounded,
                                 size: 20,
-                                color: Colors.white,
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                               ),
                             ),
                           ),
                         ),
                       ),
+                      */
                     ],
                   ),
                 ),
@@ -836,7 +863,7 @@ class _SwapScreenState extends State<SwapScreen> {
   }
 }
 
-/// Swap amount input card
+/// Swap amount input card - Uniswap style
 class _SwapAmountCard extends StatelessWidget {
   final SwapToken token;
   final String cardTitle;
@@ -849,6 +876,7 @@ class _SwapAmountCard extends StatelessWidget {
   final ValueChanged<SwapToken> onTokenChanged;
   final bool showBalance;
   final String? label;
+  final bool isTopCard;
 
   const _SwapAmountCard({
     required this.token,
@@ -862,6 +890,7 @@ class _SwapAmountCard extends StatelessWidget {
     required this.onTokenChanged,
     required this.showBalance,
     this.label,
+    this.isTopCard = true,
   });
 
   void _showTokenSelector(BuildContext context) {
@@ -892,16 +921,7 @@ class _SwapAmountCard extends StatelessWidget {
     final showDollarPrefix = showUsdMode || !token.isBtc;
 
     return GlassContainer(
-      borderRadius: BorderRadius.circular(24),
-      boxShadow: isDarkMode
-          ? []
-          : [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+      borderRadius: AppTheme.borderRadiusMid,
       child: Stack(
         children: [
           Padding(
@@ -915,6 +935,7 @@ class _SwapAmountCard extends StatelessWidget {
                   cardTitle,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        fontWeight: FontWeight.w600,
                       ),
                 ),
                 const SizedBox(height: AppTheme.elementSpacing * 0.5),
@@ -924,12 +945,15 @@ class _SwapAmountCard extends StatelessWidget {
                   children: [
                     // Dollar sign prefix (if showing USD)
                     if (showDollarPrefix)
-                      Text(
-                        "\$",
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w500,
-                          color: isDarkMode ? Colors.white : Colors.black,
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4.0),
+                        child: Text(
+                          "\$",
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
                         ),
                       ),
                     // Amount input
@@ -946,7 +970,7 @@ class _SwapAmountCard extends StatelessWidget {
                         ],
                         style: TextStyle(
                           fontSize: 32,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.bold,
                           color: isDarkMode ? Colors.white : Colors.black,
                         ),
                         decoration: InputDecoration(
@@ -956,10 +980,10 @@ class _SwapAmountCard extends StatelessWidget {
                           hintText: _getPlaceholder(),
                           hintStyle: TextStyle(
                             fontSize: 32,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.bold,
                             color: isDarkMode
-                                ? AppTheme.white60.withValues(alpha: 0.5)
-                                : AppTheme.black60.withValues(alpha: 0.5),
+                                ? AppTheme.white60.withValues(alpha: 0.3)
+                                : AppTheme.black60.withValues(alpha: 0.3),
                           ),
                         ),
                         onChanged: onAmountChanged,
@@ -977,7 +1001,7 @@ class _SwapAmountCard extends StatelessWidget {
                       horizontal: 8,
                     ),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
                       color: isDarkMode
                           ? Colors.white.withValues(alpha: 0.05)
                           : Colors.black.withValues(alpha: 0.03),
@@ -988,7 +1012,8 @@ class _SwapAmountCard extends StatelessWidget {
                         Text(
                           conversionText,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                             color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                           ),
                         ),
@@ -1019,35 +1044,49 @@ class _SwapAmountCard extends StatelessWidget {
                 GestureDetector(
                   onTap: () => _showTokenSelector(context),
                   child: GlassContainer(
-                    borderRadius: BorderRadius.circular(500),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppTheme.elementSpacing * 0.5),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(width: AppTheme.elementSpacing * 0.5),
-                          Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 16,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    opacity: 0.2,
+                    borderRadius: AppTheme.borderRadiusMid,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TokenIconWithNetwork(
+                          token: token,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          token.symbol,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                             color: isDarkMode ? Colors.white : Colors.black,
                           ),
-                          const SizedBox(width: AppTheme.elementSpacing * 0.5),
-                          TokenIconWithNetwork(
-                            token: token,
-                            size: AppTheme.cardPadding * 1.25,
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 20,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                      ],
                     ),
                   ),
                 ),
                 if (showBalance) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    token.isBtc ? '1,000,000 sats' : '~\$500.00',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Text(
+                      token.isBtc ? '1,000,000 sats' : '~\$500.00',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                      ),
                     ),
                   ),
                 ],

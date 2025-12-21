@@ -168,9 +168,15 @@ class LendaSwapService extends ChangeNotifier {
 
   /// Create an EVM to BTC swap (buy BTC with EVM tokens).
   /// [sourceAmount] is the amount in source token units (e.g., 50 for USDC, 0.02 for XAUt)
-  /// User sends tokens from their external wallet (MetaMask, etc.) to the returned HTLC address.
+  /// [userEvmAddress] is the user's WalletConnect-connected address (required for createSwap calldata)
+  ///
+  /// After calling this, the user MUST:
+  /// 1. Call approve() on the ERC20 token (using result.approveTx or WalletConnectService.approveToken)
+  /// 2. Call createSwap() on the HTLC contract (using result.createSwapTx)
+  /// Both transactions are signed via WalletConnect.
   Future<lendaswap_api.EvmToBtcSwapResult> createBuyBtcSwap({
     required String targetArkAddress,
+    required String userEvmAddress,
     required double sourceAmount,
     required String sourceToken,
     required String sourceChain,
@@ -179,8 +185,7 @@ class LendaSwapService extends ChangeNotifier {
     try {
       final result = await lendaswap_api.lendaswapCreateEvmToBtcSwap(
         targetArkAddress: targetArkAddress,
-        // Placeholder - user sends from external wallet, we don't need their address
-        userEvmAddress: '0x0000000000000000000000000000000000000000',
+        userEvmAddress: userEvmAddress,
         sourceAmountUsd: sourceAmount, // API still uses this name but it's actually token amount
         sourceToken: sourceToken,
         sourceChain: sourceChain,

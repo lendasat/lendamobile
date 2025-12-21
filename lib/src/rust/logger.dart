@@ -6,46 +6,38 @@
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-/// Struct to expose logs from Rust to Flutter
-class LogEntry {
-  final String msg;
-  final String target;
-  final String level;
-  final String file;
-  final String line;
-  final String modulePath;
-  final String data;
 
-  const LogEntry({
-    required this.msg,
-    required this.target,
-    required this.level,
-    required this.file,
-    required this.line,
-    required this.modulePath,
-    required this.data,
-  });
+            
 
-  @override
-  int get hashCode =>
-      msg.hashCode ^
-      target.hashCode ^
-      level.hashCode ^
-      file.hashCode ^
-      line.hashCode ^
-      modulePath.hashCode ^
-      data.hashCode;
+            
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LogEntry &&
-          runtimeType == other.runtimeType &&
-          msg == other.msg &&
-          target == other.target &&
-          level == other.level &&
-          file == other.file &&
-          line == other.line &&
-          modulePath == other.modulePath &&
-          data == other.data;
-}
+            /// Struct to expose logs from Rust to Flutter
+class LogEntry  {
+                final String msg;
+final String target;
+final String level;
+final String file;
+final String line;
+final String modulePath;
+final String data;
+
+                const LogEntry({required this.msg ,required this.target ,required this.level ,required this.file ,required this.line ,required this.modulePath ,required this.data ,});
+
+                
+                
+
+                
+        @override
+        int get hashCode => msg.hashCode^target.hashCode^level.hashCode^file.hashCode^line.hashCode^modulePath.hashCode^data.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is LogEntry &&
+                runtimeType == other.runtimeType
+                && msg == other.msg&& target == other.target&& level == other.level&& file == other.file&& line == other.line&& modulePath == other.modulePath&& data == other.data;
+        
+            }
+            

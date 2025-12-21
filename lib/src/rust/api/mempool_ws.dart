@@ -7,8 +7,12 @@ import '../frb_generated.dart';
 import '../models/mempool.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `connect_and_listen`, `handle_message`
 
-/// Subscribe to real-time mempool updates via WebSocket
-Stream<MempoolWsMessage> subscribeMempoolUpdates() =>
-    RustLib.instance.api.crateApiMempoolWsSubscribeMempoolUpdates();
+            // These functions are ignored because they are not marked as `pub`: `connect_and_listen`, `handle_message`
+
+
+            /// Subscribe to real-time mempool updates via WebSocket
+Stream<MempoolWsMessage>  subscribeMempoolUpdates() => RustLib.instance.api.crateApiMempoolWsSubscribeMempoolUpdates();
+
+            
+            

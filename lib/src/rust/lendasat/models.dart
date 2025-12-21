@@ -6,715 +6,491 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-/// Response from Ark claim PSBT request
-class ArkClaimPsbtResponse {
-  final String arkPsbt;
-  final List<String> checkpointPsbts;
 
-  const ArkClaimPsbtResponse({
-    required this.arkPsbt,
-    required this.checkpointPsbts,
-  });
+            
 
-  @override
-  int get hashCode => arkPsbt.hashCode ^ checkpointPsbts.hashCode;
+            
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ArkClaimPsbtResponse &&
-          runtimeType == other.runtimeType &&
-          arkPsbt == other.arkPsbt &&
-          checkpointPsbts == other.checkpointPsbts;
-}
+            /// Response from Ark claim PSBT request
+class ArkClaimPsbtResponse  {
+                final String arkPsbt;
+final List<String> checkpointPsbts;
+
+                const ArkClaimPsbtResponse({required this.arkPsbt ,required this.checkpointPsbts ,});
+
+                
+                
+
+                
+        @override
+        int get hashCode => arkPsbt.hashCode^checkpointPsbts.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ArkClaimPsbtResponse &&
+                runtimeType == other.runtimeType
+                && arkPsbt == other.arkPsbt&& checkpointPsbts == other.checkpointPsbts;
+        
+            }
 
 /// Response from claim PSBT request
-class ClaimPsbtResponse {
-  final String psbt;
-  final String collateralDescriptor;
-  final String borrowerPk;
+class ClaimPsbtResponse  {
+                final String psbt;
+final String collateralDescriptor;
+final String borrowerPk;
 
-  const ClaimPsbtResponse({
-    required this.psbt,
-    required this.collateralDescriptor,
-    required this.borrowerPk,
-  });
+                const ClaimPsbtResponse({required this.psbt ,required this.collateralDescriptor ,required this.borrowerPk ,});
 
-  @override
-  int get hashCode =>
-      psbt.hashCode ^ collateralDescriptor.hashCode ^ borrowerPk.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ClaimPsbtResponse &&
-          runtimeType == other.runtimeType &&
-          psbt == other.psbt &&
-          collateralDescriptor == other.collateralDescriptor &&
-          borrowerPk == other.borrowerPk;
-}
+                
+        @override
+        int get hashCode => psbt.hashCode^collateralDescriptor.hashCode^borrowerPk.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ClaimPsbtResponse &&
+                runtimeType == other.runtimeType
+                && psbt == other.psbt&& collateralDescriptor == other.collateralDescriptor&& borrowerPk == other.borrowerPk;
+        
+            }
 
 /// Collateral asset types
 enum CollateralAsset {
-  bitcoinBtc,
-  arkadeBtc,
-  ;
-}
+                    bitcoinBtc,
+arkadeBtc,
+                    ;
+                    
+                }
 
 /// Loan contract
-class Contract {
-  final String id;
-  final ContractStatus status;
-  final LenderStats lender;
-  final String lenderPk;
-  final String borrowerPk;
-  final String borrowerBtcAddress;
-  final String? borrowerDerivationPath;
-  final String? borrowerLoanAddress;
-  final LoanAsset loanAsset;
-  final CollateralAsset collateralAsset;
-  final double loanAmount;
-  final double interest;
-  final double interestRate;
-  final int durationDays;
-  final String expiry;
-  final PlatformInt64 collateralSats;
-  final PlatformInt64 initialCollateralSats;
-  final PlatformInt64 depositedSats;
-  final double initialLtv;
-  final double liquidationPrice;
-  final double ltvThresholdMarginCall1;
-  final double ltvThresholdMarginCall2;
-  final double ltvThresholdLiquidation;
-  final double balanceOutstanding;
-  final String? contractAddress;
-  final String? collateralScript;
-  final String? loanRepaymentAddress;
-  final String? btcLoanRepaymentAddress;
-  final PlatformInt64 originationFeeSats;
-  final List<Installment> installments;
-  final List<LoanTransaction> transactions;
-  final bool canExtend;
-  final double? extensionInterestRate;
-  final int extensionMaxDurationDays;
-  final String? extendsContract;
-  final String? extendedByContract;
-  final String? clientContractId;
-  final bool? requiresArkSettlement;
-  final String createdAt;
-  final String updatedAt;
+class Contract  {
+                final String id;
+final ContractStatus status;
+final LenderStats lender;
+final String lenderPk;
+final String borrowerPk;
+final String borrowerBtcAddress;
+final String? borrowerDerivationPath;
+final String? borrowerLoanAddress;
+final LoanAsset loanAsset;
+final CollateralAsset collateralAsset;
+final double loanAmount;
+final double interest;
+final double interestRate;
+final int durationDays;
+final String expiry;
+final PlatformInt64 collateralSats;
+final PlatformInt64 initialCollateralSats;
+final PlatformInt64 depositedSats;
+final double initialLtv;
+final double liquidationPrice;
+final double ltvThresholdMarginCall1;
+final double ltvThresholdMarginCall2;
+final double ltvThresholdLiquidation;
+final double balanceOutstanding;
+final String? contractAddress;
+final String? collateralScript;
+final String? loanRepaymentAddress;
+final String? btcLoanRepaymentAddress;
+final PlatformInt64 originationFeeSats;
+final List<Installment> installments;
+final List<LoanTransaction> transactions;
+final bool canExtend;
+final double? extensionInterestRate;
+final int extensionMaxDurationDays;
+final String? extendsContract;
+final String? extendedByContract;
+final String? clientContractId;
+final bool? requiresArkSettlement;
+final String createdAt;
+final String updatedAt;
 
-  const Contract({
-    required this.id,
-    required this.status,
-    required this.lender,
-    required this.lenderPk,
-    required this.borrowerPk,
-    required this.borrowerBtcAddress,
-    this.borrowerDerivationPath,
-    this.borrowerLoanAddress,
-    required this.loanAsset,
-    required this.collateralAsset,
-    required this.loanAmount,
-    required this.interest,
-    required this.interestRate,
-    required this.durationDays,
-    required this.expiry,
-    required this.collateralSats,
-    required this.initialCollateralSats,
-    required this.depositedSats,
-    required this.initialLtv,
-    required this.liquidationPrice,
-    required this.ltvThresholdMarginCall1,
-    required this.ltvThresholdMarginCall2,
-    required this.ltvThresholdLiquidation,
-    required this.balanceOutstanding,
-    this.contractAddress,
-    this.collateralScript,
-    this.loanRepaymentAddress,
-    this.btcLoanRepaymentAddress,
-    required this.originationFeeSats,
-    required this.installments,
-    required this.transactions,
-    required this.canExtend,
-    this.extensionInterestRate,
-    required this.extensionMaxDurationDays,
-    this.extendsContract,
-    this.extendedByContract,
-    this.clientContractId,
-    this.requiresArkSettlement,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+                const Contract({required this.id ,required this.status ,required this.lender ,required this.lenderPk ,required this.borrowerPk ,required this.borrowerBtcAddress ,this.borrowerDerivationPath ,this.borrowerLoanAddress ,required this.loanAsset ,required this.collateralAsset ,required this.loanAmount ,required this.interest ,required this.interestRate ,required this.durationDays ,required this.expiry ,required this.collateralSats ,required this.initialCollateralSats ,required this.depositedSats ,required this.initialLtv ,required this.liquidationPrice ,required this.ltvThresholdMarginCall1 ,required this.ltvThresholdMarginCall2 ,required this.ltvThresholdLiquidation ,required this.balanceOutstanding ,this.contractAddress ,this.collateralScript ,this.loanRepaymentAddress ,this.btcLoanRepaymentAddress ,required this.originationFeeSats ,required this.installments ,required this.transactions ,required this.canExtend ,this.extensionInterestRate ,required this.extensionMaxDurationDays ,this.extendsContract ,this.extendedByContract ,this.clientContractId ,this.requiresArkSettlement ,required this.createdAt ,required this.updatedAt ,});
 
-  @override
-  int get hashCode =>
-      id.hashCode ^
-      status.hashCode ^
-      lender.hashCode ^
-      lenderPk.hashCode ^
-      borrowerPk.hashCode ^
-      borrowerBtcAddress.hashCode ^
-      borrowerDerivationPath.hashCode ^
-      borrowerLoanAddress.hashCode ^
-      loanAsset.hashCode ^
-      collateralAsset.hashCode ^
-      loanAmount.hashCode ^
-      interest.hashCode ^
-      interestRate.hashCode ^
-      durationDays.hashCode ^
-      expiry.hashCode ^
-      collateralSats.hashCode ^
-      initialCollateralSats.hashCode ^
-      depositedSats.hashCode ^
-      initialLtv.hashCode ^
-      liquidationPrice.hashCode ^
-      ltvThresholdMarginCall1.hashCode ^
-      ltvThresholdMarginCall2.hashCode ^
-      ltvThresholdLiquidation.hashCode ^
-      balanceOutstanding.hashCode ^
-      contractAddress.hashCode ^
-      collateralScript.hashCode ^
-      loanRepaymentAddress.hashCode ^
-      btcLoanRepaymentAddress.hashCode ^
-      originationFeeSats.hashCode ^
-      installments.hashCode ^
-      transactions.hashCode ^
-      canExtend.hashCode ^
-      extensionInterestRate.hashCode ^
-      extensionMaxDurationDays.hashCode ^
-      extendsContract.hashCode ^
-      extendedByContract.hashCode ^
-      clientContractId.hashCode ^
-      requiresArkSettlement.hashCode ^
-      createdAt.hashCode ^
-      updatedAt.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Contract &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          status == other.status &&
-          lender == other.lender &&
-          lenderPk == other.lenderPk &&
-          borrowerPk == other.borrowerPk &&
-          borrowerBtcAddress == other.borrowerBtcAddress &&
-          borrowerDerivationPath == other.borrowerDerivationPath &&
-          borrowerLoanAddress == other.borrowerLoanAddress &&
-          loanAsset == other.loanAsset &&
-          collateralAsset == other.collateralAsset &&
-          loanAmount == other.loanAmount &&
-          interest == other.interest &&
-          interestRate == other.interestRate &&
-          durationDays == other.durationDays &&
-          expiry == other.expiry &&
-          collateralSats == other.collateralSats &&
-          initialCollateralSats == other.initialCollateralSats &&
-          depositedSats == other.depositedSats &&
-          initialLtv == other.initialLtv &&
-          liquidationPrice == other.liquidationPrice &&
-          ltvThresholdMarginCall1 == other.ltvThresholdMarginCall1 &&
-          ltvThresholdMarginCall2 == other.ltvThresholdMarginCall2 &&
-          ltvThresholdLiquidation == other.ltvThresholdLiquidation &&
-          balanceOutstanding == other.balanceOutstanding &&
-          contractAddress == other.contractAddress &&
-          collateralScript == other.collateralScript &&
-          loanRepaymentAddress == other.loanRepaymentAddress &&
-          btcLoanRepaymentAddress == other.btcLoanRepaymentAddress &&
-          originationFeeSats == other.originationFeeSats &&
-          installments == other.installments &&
-          transactions == other.transactions &&
-          canExtend == other.canExtend &&
-          extensionInterestRate == other.extensionInterestRate &&
-          extensionMaxDurationDays == other.extensionMaxDurationDays &&
-          extendsContract == other.extendsContract &&
-          extendedByContract == other.extendedByContract &&
-          clientContractId == other.clientContractId &&
-          requiresArkSettlement == other.requiresArkSettlement &&
-          createdAt == other.createdAt &&
-          updatedAt == other.updatedAt;
-}
+                
+        @override
+        int get hashCode => id.hashCode^status.hashCode^lender.hashCode^lenderPk.hashCode^borrowerPk.hashCode^borrowerBtcAddress.hashCode^borrowerDerivationPath.hashCode^borrowerLoanAddress.hashCode^loanAsset.hashCode^collateralAsset.hashCode^loanAmount.hashCode^interest.hashCode^interestRate.hashCode^durationDays.hashCode^expiry.hashCode^collateralSats.hashCode^initialCollateralSats.hashCode^depositedSats.hashCode^initialLtv.hashCode^liquidationPrice.hashCode^ltvThresholdMarginCall1.hashCode^ltvThresholdMarginCall2.hashCode^ltvThresholdLiquidation.hashCode^balanceOutstanding.hashCode^contractAddress.hashCode^collateralScript.hashCode^loanRepaymentAddress.hashCode^btcLoanRepaymentAddress.hashCode^originationFeeSats.hashCode^installments.hashCode^transactions.hashCode^canExtend.hashCode^extensionInterestRate.hashCode^extensionMaxDurationDays.hashCode^extendsContract.hashCode^extendedByContract.hashCode^clientContractId.hashCode^requiresArkSettlement.hashCode^createdAt.hashCode^updatedAt.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is Contract &&
+                runtimeType == other.runtimeType
+                && id == other.id&& status == other.status&& lender == other.lender&& lenderPk == other.lenderPk&& borrowerPk == other.borrowerPk&& borrowerBtcAddress == other.borrowerBtcAddress&& borrowerDerivationPath == other.borrowerDerivationPath&& borrowerLoanAddress == other.borrowerLoanAddress&& loanAsset == other.loanAsset&& collateralAsset == other.collateralAsset&& loanAmount == other.loanAmount&& interest == other.interest&& interestRate == other.interestRate&& durationDays == other.durationDays&& expiry == other.expiry&& collateralSats == other.collateralSats&& initialCollateralSats == other.initialCollateralSats&& depositedSats == other.depositedSats&& initialLtv == other.initialLtv&& liquidationPrice == other.liquidationPrice&& ltvThresholdMarginCall1 == other.ltvThresholdMarginCall1&& ltvThresholdMarginCall2 == other.ltvThresholdMarginCall2&& ltvThresholdLiquidation == other.ltvThresholdLiquidation&& balanceOutstanding == other.balanceOutstanding&& contractAddress == other.contractAddress&& collateralScript == other.collateralScript&& loanRepaymentAddress == other.loanRepaymentAddress&& btcLoanRepaymentAddress == other.btcLoanRepaymentAddress&& originationFeeSats == other.originationFeeSats&& installments == other.installments&& transactions == other.transactions&& canExtend == other.canExtend&& extensionInterestRate == other.extensionInterestRate&& extensionMaxDurationDays == other.extensionMaxDurationDays&& extendsContract == other.extendsContract&& extendedByContract == other.extendedByContract&& clientContractId == other.clientContractId&& requiresArkSettlement == other.requiresArkSettlement&& createdAt == other.createdAt&& updatedAt == other.updatedAt;
+        
+            }
 
 /// Contract filters for API query
-class ContractFilters {
-  final int? page;
-  final int? limit;
-  final List<ContractStatus>? status;
-  final String? sortBy;
-  final String? sortOrder;
+class ContractFilters  {
+                final int? page;
+final int? limit;
+final List<ContractStatus>? status;
+final String? sortBy;
+final String? sortOrder;
 
-  const ContractFilters({
-    this.page,
-    this.limit,
-    this.status,
-    this.sortBy,
-    this.sortOrder,
-  });
+                const ContractFilters({this.page ,this.limit ,this.status ,this.sortBy ,this.sortOrder ,});
 
-  @override
-  int get hashCode =>
-      page.hashCode ^
-      limit.hashCode ^
-      status.hashCode ^
-      sortBy.hashCode ^
-      sortOrder.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ContractFilters &&
-          runtimeType == other.runtimeType &&
-          page == other.page &&
-          limit == other.limit &&
-          status == other.status &&
-          sortBy == other.sortBy &&
-          sortOrder == other.sortOrder;
-}
+                
+        @override
+        int get hashCode => page.hashCode^limit.hashCode^status.hashCode^sortBy.hashCode^sortOrder.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ContractFilters &&
+                runtimeType == other.runtimeType
+                && page == other.page&& limit == other.limit&& status == other.status&& sortBy == other.sortBy&& sortOrder == other.sortOrder;
+        
+            }
 
 /// Contract status in the loan lifecycle
 enum ContractStatus {
-  requested,
-  approved,
-  collateralSeen,
-  collateralConfirmed,
-  principalGiven,
-  repaymentProvided,
-  repaymentConfirmed,
-  undercollateralized,
-  defaulted,
-  closingByClaim,
-  closed,
-  closing,
-  closingByLiquidation,
-  closedByLiquidation,
-  closingByDefaulting,
-  closedByDefaulting,
-  extended,
-  rejected,
-  disputeBorrowerStarted,
-  disputeLenderStarted,
-  cancelled,
-  requestExpired,
-  approvalExpired,
-  collateralRecoverable,
-  closingByRecovery,
-  closedByRecovery,
-  ;
-}
+                    requested,
+approved,
+collateralSeen,
+collateralConfirmed,
+principalGiven,
+repaymentProvided,
+repaymentConfirmed,
+undercollateralized,
+defaulted,
+closingByClaim,
+closed,
+closing,
+closingByLiquidation,
+closedByLiquidation,
+closingByDefaulting,
+closedByDefaulting,
+extended,
+rejected,
+disputeBorrowerStarted,
+disputeLenderStarted,
+cancelled,
+requestExpired,
+approvalExpired,
+collateralRecoverable,
+closingByRecovery,
+closedByRecovery,
+                    ;
+                    
+                }
 
 /// Loan installment (for repayment schedule)
-class Installment {
-  final String id;
-  final String dueDate;
-  final double principal;
-  final double interest;
-  final InstallmentStatus status;
-  final String? paidDate;
-  final String? paymentId;
+class Installment  {
+                final String id;
+final String dueDate;
+final double principal;
+final double interest;
+final InstallmentStatus status;
+final String? paidDate;
+final String? paymentId;
 
-  const Installment({
-    required this.id,
-    required this.dueDate,
-    required this.principal,
-    required this.interest,
-    required this.status,
-    this.paidDate,
-    this.paymentId,
-  });
+                const Installment({required this.id ,required this.dueDate ,required this.principal ,required this.interest ,required this.status ,this.paidDate ,this.paymentId ,});
 
-  @override
-  int get hashCode =>
-      id.hashCode ^
-      dueDate.hashCode ^
-      principal.hashCode ^
-      interest.hashCode ^
-      status.hashCode ^
-      paidDate.hashCode ^
-      paymentId.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Installment &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          dueDate == other.dueDate &&
-          principal == other.principal &&
-          interest == other.interest &&
-          status == other.status &&
-          paidDate == other.paidDate &&
-          paymentId == other.paymentId;
-}
+                
+        @override
+        int get hashCode => id.hashCode^dueDate.hashCode^principal.hashCode^interest.hashCode^status.hashCode^paidDate.hashCode^paymentId.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is Installment &&
+                runtimeType == other.runtimeType
+                && id == other.id&& dueDate == other.dueDate&& principal == other.principal&& interest == other.interest&& status == other.status&& paidDate == other.paidDate&& paymentId == other.paymentId;
+        
+            }
 
 /// Installment status
 enum InstallmentStatus {
-  pending,
-  paid,
-  confirmed,
-  late_,
-  cancelled,
-  ;
-}
+                    pending,
+paid,
+confirmed,
+late_,
+cancelled,
+                    ;
+                    
+                }
 
 /// Lender statistics
-class LenderStats {
-  final String id;
-  final String name;
-  final String joinedAt;
-  final int successfulContracts;
-  final bool vetted;
-  final String? timezone;
+class LenderStats  {
+                final String id;
+final String name;
+final String joinedAt;
+final int successfulContracts;
+final bool vetted;
+final String? timezone;
 
-  const LenderStats({
-    required this.id,
-    required this.name,
-    required this.joinedAt,
-    required this.successfulContracts,
-    required this.vetted,
-    this.timezone,
-  });
+                const LenderStats({required this.id ,required this.name ,required this.joinedAt ,required this.successfulContracts ,required this.vetted ,this.timezone ,});
 
-  @override
-  int get hashCode =>
-      id.hashCode ^
-      name.hashCode ^
-      joinedAt.hashCode ^
-      successfulContracts.hashCode ^
-      vetted.hashCode ^
-      timezone.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LenderStats &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          name == other.name &&
-          joinedAt == other.joinedAt &&
-          successfulContracts == other.successfulContracts &&
-          vetted == other.vetted &&
-          timezone == other.timezone;
-}
+                
+        @override
+        int get hashCode => id.hashCode^name.hashCode^joinedAt.hashCode^successfulContracts.hashCode^vetted.hashCode^timezone.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is LenderStats &&
+                runtimeType == other.runtimeType
+                && id == other.id&& name == other.name&& joinedAt == other.joinedAt&& successfulContracts == other.successfulContracts&& vetted == other.vetted&& timezone == other.timezone;
+        
+            }
 
 /// Supported loan assets (stablecoins and fiat)
 enum LoanAsset {
-  usdcPol,
-  usdtPol,
-  usdcEth,
-  usdtEth,
-  usdcStrk,
-  usdtStrk,
-  usdcSol,
-  usdtSol,
-  usdtLiquid,
-  usd,
-  eur,
-  chf,
-  mxn,
-  ;
-}
+                    usdcPol,
+usdtPol,
+usdcEth,
+usdtEth,
+usdcStrk,
+usdtStrk,
+usdcSol,
+usdtSol,
+usdtLiquid,
+usd,
+eur,
+chf,
+mxn,
+                    ;
+                    
+                }
 
 /// Loan offer from a lender
-class LoanOffer {
-  final String id;
-  final String name;
-  final LenderStats lender;
-  final String lenderPk;
-  final LoanAsset loanAsset;
-  final CollateralAsset collateralAsset;
-  final double loanAmountMin;
-  final double loanAmountMax;
-  final int durationDaysMin;
-  final int durationDaysMax;
-  final double interestRate;
-  final double minLtv;
-  final LoanPayout loanPayout;
-  final String loanRepaymentAddress;
-  final List<OriginationFee> originationFee;
-  final RepaymentPlan repaymentPlan;
-  final LoanOfferStatus status;
-  final String? kycLink;
+class LoanOffer  {
+                final String id;
+final String name;
+final LenderStats lender;
+final String lenderPk;
+final LoanAsset loanAsset;
+final CollateralAsset collateralAsset;
+final double loanAmountMin;
+final double loanAmountMax;
+final int durationDaysMin;
+final int durationDaysMax;
+final double interestRate;
+final double minLtv;
+final LoanPayout loanPayout;
+final String loanRepaymentAddress;
+final List<OriginationFee> originationFee;
+final RepaymentPlan repaymentPlan;
+final LoanOfferStatus status;
+final String? kycLink;
 
-  const LoanOffer({
-    required this.id,
-    required this.name,
-    required this.lender,
-    required this.lenderPk,
-    required this.loanAsset,
-    required this.collateralAsset,
-    required this.loanAmountMin,
-    required this.loanAmountMax,
-    required this.durationDaysMin,
-    required this.durationDaysMax,
-    required this.interestRate,
-    required this.minLtv,
-    required this.loanPayout,
-    required this.loanRepaymentAddress,
-    required this.originationFee,
-    required this.repaymentPlan,
-    required this.status,
-    this.kycLink,
-  });
+                const LoanOffer({required this.id ,required this.name ,required this.lender ,required this.lenderPk ,required this.loanAsset ,required this.collateralAsset ,required this.loanAmountMin ,required this.loanAmountMax ,required this.durationDaysMin ,required this.durationDaysMax ,required this.interestRate ,required this.minLtv ,required this.loanPayout ,required this.loanRepaymentAddress ,required this.originationFee ,required this.repaymentPlan ,required this.status ,this.kycLink ,});
 
-  @override
-  int get hashCode =>
-      id.hashCode ^
-      name.hashCode ^
-      lender.hashCode ^
-      lenderPk.hashCode ^
-      loanAsset.hashCode ^
-      collateralAsset.hashCode ^
-      loanAmountMin.hashCode ^
-      loanAmountMax.hashCode ^
-      durationDaysMin.hashCode ^
-      durationDaysMax.hashCode ^
-      interestRate.hashCode ^
-      minLtv.hashCode ^
-      loanPayout.hashCode ^
-      loanRepaymentAddress.hashCode ^
-      originationFee.hashCode ^
-      repaymentPlan.hashCode ^
-      status.hashCode ^
-      kycLink.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LoanOffer &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          name == other.name &&
-          lender == other.lender &&
-          lenderPk == other.lenderPk &&
-          loanAsset == other.loanAsset &&
-          collateralAsset == other.collateralAsset &&
-          loanAmountMin == other.loanAmountMin &&
-          loanAmountMax == other.loanAmountMax &&
-          durationDaysMin == other.durationDaysMin &&
-          durationDaysMax == other.durationDaysMax &&
-          interestRate == other.interestRate &&
-          minLtv == other.minLtv &&
-          loanPayout == other.loanPayout &&
-          loanRepaymentAddress == other.loanRepaymentAddress &&
-          originationFee == other.originationFee &&
-          repaymentPlan == other.repaymentPlan &&
-          status == other.status &&
-          kycLink == other.kycLink;
-}
+                
+        @override
+        int get hashCode => id.hashCode^name.hashCode^lender.hashCode^lenderPk.hashCode^loanAsset.hashCode^collateralAsset.hashCode^loanAmountMin.hashCode^loanAmountMax.hashCode^durationDaysMin.hashCode^durationDaysMax.hashCode^interestRate.hashCode^minLtv.hashCode^loanPayout.hashCode^loanRepaymentAddress.hashCode^originationFee.hashCode^repaymentPlan.hashCode^status.hashCode^kycLink.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is LoanOffer &&
+                runtimeType == other.runtimeType
+                && id == other.id&& name == other.name&& lender == other.lender&& lenderPk == other.lenderPk&& loanAsset == other.loanAsset&& collateralAsset == other.collateralAsset&& loanAmountMin == other.loanAmountMin&& loanAmountMax == other.loanAmountMax&& durationDaysMin == other.durationDaysMin&& durationDaysMax == other.durationDaysMax&& interestRate == other.interestRate&& minLtv == other.minLtv&& loanPayout == other.loanPayout&& loanRepaymentAddress == other.loanRepaymentAddress&& originationFee == other.originationFee&& repaymentPlan == other.repaymentPlan&& status == other.status&& kycLink == other.kycLink;
+        
+            }
 
 /// Loan offer status
 enum LoanOfferStatus {
-  available,
-  unavailable,
-  deleted,
-  ;
-}
+                    available,
+unavailable,
+deleted,
+                    ;
+                    
+                }
 
 /// Loan payout method
 enum LoanPayout {
-  direct,
-  indirect,
-  moonCardInstant,
-  ;
-}
+                    direct,
+indirect,
+moonCardInstant,
+                    ;
+                    
+                }
 
 /// Loan transaction record
-class LoanTransaction {
-  final PlatformInt64 id;
-  final String contractId;
-  final String transactionType;
-  final String txid;
-  final String timestamp;
+class LoanTransaction  {
+                final PlatformInt64 id;
+final String contractId;
+final String transactionType;
+final String txid;
+final String timestamp;
 
-  const LoanTransaction({
-    required this.id,
-    required this.contractId,
-    required this.transactionType,
-    required this.txid,
-    required this.timestamp,
-  });
+                const LoanTransaction({required this.id ,required this.contractId ,required this.transactionType ,required this.txid ,required this.timestamp ,});
 
-  @override
-  int get hashCode =>
-      id.hashCode ^
-      contractId.hashCode ^
-      transactionType.hashCode ^
-      txid.hashCode ^
-      timestamp.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LoanTransaction &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          contractId == other.contractId &&
-          transactionType == other.transactionType &&
-          txid == other.txid &&
-          timestamp == other.timestamp;
-}
+                
+        @override
+        int get hashCode => id.hashCode^contractId.hashCode^transactionType.hashCode^txid.hashCode^timestamp.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is LoanTransaction &&
+                runtimeType == other.runtimeType
+                && id == other.id&& contractId == other.contractId&& transactionType == other.transactionType&& txid == other.txid&& timestamp == other.timestamp;
+        
+            }
 
 /// Offer filters for API query
-class OfferFilters {
-  final String? loanType;
-  final String? assetType;
-  final String? loanAssets;
-  final String? kyc;
-  final double? minLoanAmount;
-  final double? maxLoanAmount;
-  final double? maxInterestRate;
-  final int? durationMin;
-  final int? durationMax;
-  final String? collateralAssetType;
+class OfferFilters  {
+                final String? loanType;
+final String? assetType;
+final String? loanAssets;
+final String? kyc;
+final double? minLoanAmount;
+final double? maxLoanAmount;
+final double? maxInterestRate;
+final int? durationMin;
+final int? durationMax;
+final String? collateralAssetType;
 
-  const OfferFilters({
-    this.loanType,
-    this.assetType,
-    this.loanAssets,
-    this.kyc,
-    this.minLoanAmount,
-    this.maxLoanAmount,
-    this.maxInterestRate,
-    this.durationMin,
-    this.durationMax,
-    this.collateralAssetType,
-  });
+                const OfferFilters({this.loanType ,this.assetType ,this.loanAssets ,this.kyc ,this.minLoanAmount ,this.maxLoanAmount ,this.maxInterestRate ,this.durationMin ,this.durationMax ,this.collateralAssetType ,});
 
-  @override
-  int get hashCode =>
-      loanType.hashCode ^
-      assetType.hashCode ^
-      loanAssets.hashCode ^
-      kyc.hashCode ^
-      minLoanAmount.hashCode ^
-      maxLoanAmount.hashCode ^
-      maxInterestRate.hashCode ^
-      durationMin.hashCode ^
-      durationMax.hashCode ^
-      collateralAssetType.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OfferFilters &&
-          runtimeType == other.runtimeType &&
-          loanType == other.loanType &&
-          assetType == other.assetType &&
-          loanAssets == other.loanAssets &&
-          kyc == other.kyc &&
-          minLoanAmount == other.minLoanAmount &&
-          maxLoanAmount == other.maxLoanAmount &&
-          maxInterestRate == other.maxInterestRate &&
-          durationMin == other.durationMin &&
-          durationMax == other.durationMax &&
-          collateralAssetType == other.collateralAssetType;
-}
+                
+        @override
+        int get hashCode => loanType.hashCode^assetType.hashCode^loanAssets.hashCode^kyc.hashCode^minLoanAmount.hashCode^maxLoanAmount.hashCode^maxInterestRate.hashCode^durationMin.hashCode^durationMax.hashCode^collateralAssetType.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is OfferFilters &&
+                runtimeType == other.runtimeType
+                && loanType == other.loanType&& assetType == other.assetType&& loanAssets == other.loanAssets&& kyc == other.kyc&& minLoanAmount == other.minLoanAmount&& maxLoanAmount == other.maxLoanAmount&& maxInterestRate == other.maxInterestRate&& durationMin == other.durationMin&& durationMax == other.durationMax&& collateralAssetType == other.collateralAssetType;
+        
+            }
 
 /// Origination fee tier
-class OriginationFee {
-  final double fee;
-  final int fromDay;
+class OriginationFee  {
+                final double fee;
+final int fromDay;
 
-  const OriginationFee({
-    required this.fee,
-    required this.fromDay,
-  });
+                const OriginationFee({required this.fee ,required this.fromDay ,});
 
-  @override
-  int get hashCode => fee.hashCode ^ fromDay.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OriginationFee &&
-          runtimeType == other.runtimeType &&
-          fee == other.fee &&
-          fromDay == other.fromDay;
-}
+                
+        @override
+        int get hashCode => fee.hashCode^fromDay.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is OriginationFee &&
+                runtimeType == other.runtimeType
+                && fee == other.fee&& fromDay == other.fromDay;
+        
+            }
 
 /// Paginated contracts response
-class PaginatedContractsResponse {
-  final List<Contract> data;
-  final int page;
-  final int limit;
-  final int total;
-  final int totalPages;
+class PaginatedContractsResponse  {
+                final List<Contract> data;
+final int page;
+final int limit;
+final int total;
+final int totalPages;
 
-  const PaginatedContractsResponse({
-    required this.data,
-    required this.page,
-    required this.limit,
-    required this.total,
-    required this.totalPages,
-  });
+                const PaginatedContractsResponse({required this.data ,required this.page ,required this.limit ,required this.total ,required this.totalPages ,});
 
-  @override
-  int get hashCode =>
-      data.hashCode ^
-      page.hashCode ^
-      limit.hashCode ^
-      total.hashCode ^
-      totalPages.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PaginatedContractsResponse &&
-          runtimeType == other.runtimeType &&
-          data == other.data &&
-          page == other.page &&
-          limit == other.limit &&
-          total == other.total &&
-          totalPages == other.totalPages;
-}
+                
+        @override
+        int get hashCode => data.hashCode^page.hashCode^limit.hashCode^total.hashCode^totalPages.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is PaginatedContractsResponse &&
+                runtimeType == other.runtimeType
+                && data == other.data&& page == other.page&& limit == other.limit&& total == other.total&& totalPages == other.totalPages;
+        
+            }
 
 /// Repayment plan type
 enum RepaymentPlan {
-  bullet,
-  interestOnlyWeekly,
-  interestOnlyMonthly,
-  ;
-}
+                    bullet,
+interestOnlyWeekly,
+interestOnlyMonthly,
+                    ;
+                    
+                }
 
 /// Response from GET /settle-ark endpoint
 /// Used when contract.requires_ark_settlement is true (VTXOs are recoverable)
-class SettleArkPsbtResponse {
-  final String intentMessage;
-  final String intentProof;
-  final List<String> forfeitPsbts;
-  final String delegateCosignerPk;
-  final String userPk;
-  final String? derivationPath;
+class SettleArkPsbtResponse  {
+                final String intentMessage;
+final String intentProof;
+final List<String> forfeitPsbts;
+final String delegateCosignerPk;
+final String userPk;
+final String? derivationPath;
 
-  const SettleArkPsbtResponse({
-    required this.intentMessage,
-    required this.intentProof,
-    required this.forfeitPsbts,
-    required this.delegateCosignerPk,
-    required this.userPk,
-    this.derivationPath,
-  });
+                const SettleArkPsbtResponse({required this.intentMessage ,required this.intentProof ,required this.forfeitPsbts ,required this.delegateCosignerPk ,required this.userPk ,this.derivationPath ,});
 
-  @override
-  int get hashCode =>
-      intentMessage.hashCode ^
-      intentProof.hashCode ^
-      forfeitPsbts.hashCode ^
-      delegateCosignerPk.hashCode ^
-      userPk.hashCode ^
-      derivationPath.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SettleArkPsbtResponse &&
-          runtimeType == other.runtimeType &&
-          intentMessage == other.intentMessage &&
-          intentProof == other.intentProof &&
-          forfeitPsbts == other.forfeitPsbts &&
-          delegateCosignerPk == other.delegateCosignerPk &&
-          userPk == other.userPk &&
-          derivationPath == other.derivationPath;
-}
+                
+        @override
+        int get hashCode => intentMessage.hashCode^intentProof.hashCode^forfeitPsbts.hashCode^delegateCosignerPk.hashCode^userPk.hashCode^derivationPath.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is SettleArkPsbtResponse &&
+                runtimeType == other.runtimeType
+                && intentMessage == other.intentMessage&& intentProof == other.intentProof&& forfeitPsbts == other.forfeitPsbts&& delegateCosignerPk == other.delegateCosignerPk&& userPk == other.userPk&& derivationPath == other.derivationPath;
+        
+            }
+            

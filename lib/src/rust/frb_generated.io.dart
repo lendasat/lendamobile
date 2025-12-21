@@ -25,1464 +25,902 @@ import 'models/mempool.dart';
 import 'models/moonpay.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
-abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
-  RustLibApiImplPlatform({
-    required super.handler,
-    required super.wire,
-    required super.generalizedFrbRustBinding,
-    required super.portManager,
-  });
 
-  @protected
-  AnyhowException dco_decode_AnyhowException(dynamic raw);
 
-  @protected
-  Map<String, double> dco_decode_Map_String_f_64_None(dynamic raw);
 
-  @protected
-  RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Sse(dynamic raw);
+                abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
+                  RustLibApiImplPlatform({
+                    required super.handler,
+                    required super.wire,
+                    required super.generalizedFrbRustBinding,
+                    required super.portManager,
+                  });
 
-  @protected
-  RustStreamSink<MempoolWsMessage> dco_decode_StreamSink_mempool_ws_message_Sse(
-      dynamic raw);
+                  
 
-  @protected
-  RustStreamSink<ProjectedBlockTransactions>
-      dco_decode_StreamSink_projected_block_transactions_Sse(dynamic raw);
+                  @protected AnyhowException dco_decode_AnyhowException(dynamic raw);
 
-  @protected
-  String dco_decode_String(dynamic raw);
+@protected Map<String, double> dco_decode_Map_String_f_64_None(dynamic raw);
 
-  @protected
-  Addresses dco_decode_addresses(dynamic raw);
+@protected RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Sse(dynamic raw);
 
-  @protected
-  ArkClaimPsbtResponse dco_decode_ark_claim_psbt_response(dynamic raw);
+@protected RustStreamSink<MempoolWsMessage> dco_decode_StreamSink_mempool_ws_message_Sse(dynamic raw);
 
-  @protected
-  AssetInfo dco_decode_asset_info(dynamic raw);
+@protected RustStreamSink<ProjectedBlockTransactions> dco_decode_StreamSink_projected_block_transactions_Sse(dynamic raw);
 
-  @protected
-  AuthResult dco_decode_auth_result(dynamic raw);
+@protected String dco_decode_String(dynamic raw);
 
-  @protected
-  Balance dco_decode_balance(dynamic raw);
+@protected Addresses dco_decode_addresses(dynamic raw);
 
-  @protected
-  BitcoinTransaction dco_decode_bitcoin_transaction(dynamic raw);
+@protected ArkClaimPsbtResponse dco_decode_ark_claim_psbt_response(dynamic raw);
 
-  @protected
-  Block dco_decode_block(dynamic raw);
+@protected AssetInfo dco_decode_asset_info(dynamic raw);
 
-  @protected
-  BlockExtras dco_decode_block_extras(dynamic raw);
+@protected AuthResult dco_decode_auth_result(dynamic raw);
 
-  @protected
-  BoltzSwap dco_decode_boltz_swap(dynamic raw);
+@protected Balance dco_decode_balance(dynamic raw);
 
-  @protected
-  bool dco_decode_bool(dynamic raw);
+@protected BitcoinTransaction dco_decode_bitcoin_transaction(dynamic raw);
 
-  @protected
-  BlockExtras dco_decode_box_autoadd_block_extras(dynamic raw);
+@protected Block dco_decode_block(dynamic raw);
 
-  @protected
-  BoltzSwap dco_decode_box_autoadd_boltz_swap(dynamic raw);
+@protected BlockExtras dco_decode_block_extras(dynamic raw);
 
-  @protected
-  bool dco_decode_box_autoadd_bool(dynamic raw);
+@protected BoltzSwap dco_decode_boltz_swap(dynamic raw);
 
-  @protected
-  ContractFilters dco_decode_box_autoadd_contract_filters(dynamic raw);
+@protected bool dco_decode_bool(dynamic raw);
 
-  @protected
-  Conversions dco_decode_box_autoadd_conversions(dynamic raw);
+@protected BlockExtras dco_decode_box_autoadd_block_extras(dynamic raw);
 
-  @protected
-  DifficultyAdjustment dco_decode_box_autoadd_difficulty_adjustment(
-      dynamic raw);
+@protected BoltzSwap dco_decode_box_autoadd_boltz_swap(dynamic raw);
 
-  @protected
-  double dco_decode_box_autoadd_f_64(dynamic raw);
+@protected bool dco_decode_box_autoadd_bool(dynamic raw);
 
-  @protected
-  FearGreedData dco_decode_box_autoadd_fear_greed_data(dynamic raw);
+@protected ContractFilters dco_decode_box_autoadd_contract_filters(dynamic raw);
 
-  @protected
-  FearGreedLastUpdated dco_decode_box_autoadd_fear_greed_last_updated(
-      dynamic raw);
+@protected Conversions dco_decode_box_autoadd_conversions(dynamic raw);
 
-  @protected
-  FearGreedValue dco_decode_box_autoadd_fear_greed_value(dynamic raw);
+@protected DifficultyAdjustment dco_decode_box_autoadd_difficulty_adjustment(dynamic raw);
 
-  @protected
-  int dco_decode_box_autoadd_i_32(dynamic raw);
+@protected double dco_decode_box_autoadd_f_64(dynamic raw);
 
-  @protected
-  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
+@protected FearGreedData dco_decode_box_autoadd_fear_greed_data(dynamic raw);
 
-  @protected
-  MiningPool dco_decode_box_autoadd_mining_pool(dynamic raw);
+@protected FearGreedLastUpdated dco_decode_box_autoadd_fear_greed_last_updated(dynamic raw);
 
-  @protected
-  OfferFilters dco_decode_box_autoadd_offer_filters(dynamic raw);
+@protected FearGreedValue dco_decode_box_autoadd_fear_greed_value(dynamic raw);
 
-  @protected
-  RecommendedFees dco_decode_box_autoadd_recommended_fees(dynamic raw);
+@protected int dco_decode_box_autoadd_i_32(dynamic raw);
 
-  @protected
-  TxOutput dco_decode_box_autoadd_tx_output(dynamic raw);
+@protected PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
-  @protected
-  int dco_decode_box_autoadd_u_32(dynamic raw);
+@protected MiningPool dco_decode_box_autoadd_mining_pool(dynamic raw);
 
-  @protected
-  BigInt dco_decode_box_autoadd_u_64(dynamic raw);
+@protected OfferFilters dco_decode_box_autoadd_offer_filters(dynamic raw);
 
-  @protected
-  BtcToEvmSwapResult dco_decode_btc_to_evm_swap_result(dynamic raw);
+@protected RecommendedFees dco_decode_box_autoadd_recommended_fees(dynamic raw);
 
-  @protected
-  ClaimPsbtResponse dco_decode_claim_psbt_response(dynamic raw);
+@protected TxOutput dco_decode_box_autoadd_tx_output(dynamic raw);
 
-  @protected
-  CollateralAsset dco_decode_collateral_asset(dynamic raw);
+@protected int dco_decode_box_autoadd_u_32(dynamic raw);
 
-  @protected
-  Contract dco_decode_contract(dynamic raw);
+@protected BigInt dco_decode_box_autoadd_u_64(dynamic raw);
 
-  @protected
-  ContractFilters dco_decode_contract_filters(dynamic raw);
+@protected BtcToEvmSwapResult dco_decode_btc_to_evm_swap_result(dynamic raw);
 
-  @protected
-  ContractStatus dco_decode_contract_status(dynamic raw);
+@protected ClaimPsbtResponse dco_decode_claim_psbt_response(dynamic raw);
 
-  @protected
-  Conversions dco_decode_conversions(dynamic raw);
+@protected CollateralAsset dco_decode_collateral_asset(dynamic raw);
 
-  @protected
-  CurrencyInfo dco_decode_currency_info(dynamic raw);
+@protected Contract dco_decode_contract(dynamic raw);
 
-  @protected
-  DifficultyAdjustment dco_decode_difficulty_adjustment(dynamic raw);
+@protected ContractFilters dco_decode_contract_filters(dynamic raw);
 
-  @protected
-  DifficultyPoint dco_decode_difficulty_point(dynamic raw);
+@protected ContractStatus dco_decode_contract_status(dynamic raw);
 
-  @protected
-  EvmToBtcSwapResult dco_decode_evm_to_btc_swap_result(dynamic raw);
+@protected Conversions dco_decode_conversions(dynamic raw);
 
-  @protected
-  ExchangeRates dco_decode_exchange_rates(dynamic raw);
+@protected CurrencyInfo dco_decode_currency_info(dynamic raw);
 
-  @protected
-  double dco_decode_f_64(dynamic raw);
+@protected DifficultyAdjustment dco_decode_difficulty_adjustment(dynamic raw);
 
-  @protected
-  FearGreedData dco_decode_fear_greed_data(dynamic raw);
+@protected DifficultyPoint dco_decode_difficulty_point(dynamic raw);
 
-  @protected
-  FearGreedIndex dco_decode_fear_greed_index(dynamic raw);
+@protected EvmToBtcSwapResult dco_decode_evm_to_btc_swap_result(dynamic raw);
 
-  @protected
-  FearGreedLastUpdated dco_decode_fear_greed_last_updated(dynamic raw);
+@protected ExchangeRates dco_decode_exchange_rates(dynamic raw);
 
-  @protected
-  FearGreedValue dco_decode_fear_greed_value(dynamic raw);
+@protected double dco_decode_f_64(dynamic raw);
 
-  @protected
-  FiatCurrency dco_decode_fiat_currency(dynamic raw);
+@protected FearGreedData dco_decode_fear_greed_data(dynamic raw);
 
-  @protected
-  HashrateData dco_decode_hashrate_data(dynamic raw);
+@protected FearGreedIndex dco_decode_fear_greed_index(dynamic raw);
 
-  @protected
-  HashratePoint dco_decode_hashrate_point(dynamic raw);
+@protected FearGreedLastUpdated dco_decode_fear_greed_last_updated(dynamic raw);
 
-  @protected
-  HistoricalPriceData dco_decode_historical_price_data(dynamic raw);
+@protected FearGreedValue dco_decode_fear_greed_value(dynamic raw);
 
-  @protected
-  HistoricalPriceResponse dco_decode_historical_price_response(dynamic raw);
+@protected FiatCurrency dco_decode_fiat_currency(dynamic raw);
 
-  @protected
-  int dco_decode_i_32(dynamic raw);
+@protected HashrateData dco_decode_hashrate_data(dynamic raw);
 
-  @protected
-  PlatformInt64 dco_decode_i_64(dynamic raw);
+@protected HashratePoint dco_decode_hashrate_point(dynamic raw);
 
-  @protected
-  Info dco_decode_info(dynamic raw);
+@protected HistoricalPriceData dco_decode_historical_price_data(dynamic raw);
 
-  @protected
-  Installment dco_decode_installment(dynamic raw);
+@protected HistoricalPriceResponse dco_decode_historical_price_response(dynamic raw);
 
-  @protected
-  InstallmentStatus dco_decode_installment_status(dynamic raw);
+@protected int dco_decode_i_32(dynamic raw);
 
-  @protected
-  LenderStats dco_decode_lender_stats(dynamic raw);
+@protected PlatformInt64 dco_decode_i_64(dynamic raw);
 
-  @protected
-  List<String> dco_decode_list_String(dynamic raw);
+@protected Info dco_decode_info(dynamic raw);
 
-  @protected
-  List<BitcoinTransaction> dco_decode_list_bitcoin_transaction(dynamic raw);
+@protected Installment dco_decode_installment(dynamic raw);
 
-  @protected
-  List<Block> dco_decode_list_block(dynamic raw);
+@protected InstallmentStatus dco_decode_installment_status(dynamic raw);
 
-  @protected
-  List<Contract> dco_decode_list_contract(dynamic raw);
+@protected LenderStats dco_decode_lender_stats(dynamic raw);
 
-  @protected
-  List<ContractStatus> dco_decode_list_contract_status(dynamic raw);
+@protected List<String> dco_decode_list_String(dynamic raw);
 
-  @protected
-  List<DifficultyPoint> dco_decode_list_difficulty_point(dynamic raw);
+@protected List<BitcoinTransaction> dco_decode_list_bitcoin_transaction(dynamic raw);
 
-  @protected
-  List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw);
+@protected List<Block> dco_decode_list_block(dynamic raw);
 
-  @protected
-  List<HashratePoint> dco_decode_list_hashrate_point(dynamic raw);
+@protected List<Contract> dco_decode_list_contract(dynamic raw);
 
-  @protected
-  List<HistoricalPriceData> dco_decode_list_historical_price_data(dynamic raw);
+@protected List<ContractStatus> dco_decode_list_contract_status(dynamic raw);
 
-  @protected
-  List<Installment> dco_decode_list_installment(dynamic raw);
+@protected List<DifficultyPoint> dco_decode_list_difficulty_point(dynamic raw);
 
-  @protected
-  List<LoanOffer> dco_decode_list_loan_offer(dynamic raw);
+@protected List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw);
 
-  @protected
-  List<LoanTransaction> dco_decode_list_loan_transaction(dynamic raw);
+@protected List<HashratePoint> dco_decode_list_hashrate_point(dynamic raw);
 
-  @protected
-  List<MempoolBlock> dco_decode_list_mempool_block(dynamic raw);
+@protected List<HistoricalPriceData> dco_decode_list_historical_price_data(dynamic raw);
 
-  @protected
-  List<OriginationFee> dco_decode_list_origination_fee(dynamic raw);
+@protected List<Installment> dco_decode_list_installment(dynamic raw);
 
-  @protected
-  Float64List dco_decode_list_prim_f_64_strict(dynamic raw);
+@protected List<LoanOffer> dco_decode_list_loan_offer(dynamic raw);
 
-  @protected
-  Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+@protected List<LoanTransaction> dco_decode_list_loan_transaction(dynamic raw);
 
-  @protected
-  List<ProjectedTransaction> dco_decode_list_projected_transaction(dynamic raw);
+@protected List<MempoolBlock> dco_decode_list_mempool_block(dynamic raw);
 
-  @protected
-  List<(String, double)> dco_decode_list_record_string_f_64(dynamic raw);
+@protected List<OriginationFee> dco_decode_list_origination_fee(dynamic raw);
 
-  @protected
-  List<SwapInfo> dco_decode_list_swap_info(dynamic raw);
+@protected Float64List dco_decode_list_prim_f_64_strict(dynamic raw);
 
-  @protected
-  List<TradingPair> dco_decode_list_trading_pair(dynamic raw);
+@protected Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
-  @protected
-  List<Transaction> dco_decode_list_transaction(dynamic raw);
+@protected List<ProjectedTransaction> dco_decode_list_projected_transaction(dynamic raw);
 
-  @protected
-  List<TxInput> dco_decode_list_tx_input(dynamic raw);
+@protected List<(String,double)> dco_decode_list_record_string_f_64(dynamic raw);
 
-  @protected
-  List<TxOutput> dco_decode_list_tx_output(dynamic raw);
+@protected List<SwapInfo> dco_decode_list_swap_info(dynamic raw);
 
-  @protected
-  LnPaymentResult dco_decode_ln_payment_result(dynamic raw);
+@protected List<TradingPair> dco_decode_list_trading_pair(dynamic raw);
 
-  @protected
-  LoanAsset dco_decode_loan_asset(dynamic raw);
+@protected List<Transaction> dco_decode_list_transaction(dynamic raw);
 
-  @protected
-  LoanOffer dco_decode_loan_offer(dynamic raw);
+@protected List<TxInput> dco_decode_list_tx_input(dynamic raw);
 
-  @protected
-  LoanOfferStatus dco_decode_loan_offer_status(dynamic raw);
+@protected List<TxOutput> dco_decode_list_tx_output(dynamic raw);
 
-  @protected
-  LoanPayout dco_decode_loan_payout(dynamic raw);
+@protected LnPaymentResult dco_decode_ln_payment_result(dynamic raw);
 
-  @protected
-  LoanTransaction dco_decode_loan_transaction(dynamic raw);
+@protected LoanAsset dco_decode_loan_asset(dynamic raw);
 
-  @protected
-  LogEntry dco_decode_log_entry(dynamic raw);
+@protected LoanOffer dco_decode_loan_offer(dynamic raw);
 
-  @protected
-  MempoolBlock dco_decode_mempool_block(dynamic raw);
+@protected LoanOfferStatus dco_decode_loan_offer_status(dynamic raw);
 
-  @protected
-  MempoolWsMessage dco_decode_mempool_ws_message(dynamic raw);
+@protected LoanPayout dco_decode_loan_payout(dynamic raw);
 
-  @protected
-  MiningPool dco_decode_mining_pool(dynamic raw);
+@protected LoanTransaction dco_decode_loan_transaction(dynamic raw);
 
-  @protected
-  MoonPayCurrencyLimits dco_decode_moon_pay_currency_limits(dynamic raw);
+@protected LogEntry dco_decode_log_entry(dynamic raw);
 
-  @protected
-  MoonPayEncryptedData dco_decode_moon_pay_encrypted_data(dynamic raw);
+@protected MempoolBlock dco_decode_mempool_block(dynamic raw);
 
-  @protected
-  MoonPayQuote dco_decode_moon_pay_quote(dynamic raw);
+@protected MempoolWsMessage dco_decode_mempool_ws_message(dynamic raw);
 
-  @protected
-  OffchainBalance dco_decode_offchain_balance(dynamic raw);
+@protected MiningPool dco_decode_mining_pool(dynamic raw);
 
-  @protected
-  OfferFilters dco_decode_offer_filters(dynamic raw);
+@protected MoonPayCurrencyLimits dco_decode_moon_pay_currency_limits(dynamic raw);
 
-  @protected
-  String? dco_decode_opt_String(dynamic raw);
+@protected MoonPayEncryptedData dco_decode_moon_pay_encrypted_data(dynamic raw);
 
-  @protected
-  BlockExtras? dco_decode_opt_box_autoadd_block_extras(dynamic raw);
+@protected MoonPayQuote dco_decode_moon_pay_quote(dynamic raw);
 
-  @protected
-  BoltzSwap? dco_decode_opt_box_autoadd_boltz_swap(dynamic raw);
+@protected OffchainBalance dco_decode_offchain_balance(dynamic raw);
 
-  @protected
-  bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+@protected OfferFilters dco_decode_offer_filters(dynamic raw);
 
-  @protected
-  ContractFilters? dco_decode_opt_box_autoadd_contract_filters(dynamic raw);
+@protected String? dco_decode_opt_String(dynamic raw);
 
-  @protected
-  Conversions? dco_decode_opt_box_autoadd_conversions(dynamic raw);
+@protected BlockExtras? dco_decode_opt_box_autoadd_block_extras(dynamic raw);
 
-  @protected
-  DifficultyAdjustment? dco_decode_opt_box_autoadd_difficulty_adjustment(
-      dynamic raw);
+@protected BoltzSwap? dco_decode_opt_box_autoadd_boltz_swap(dynamic raw);
 
-  @protected
-  double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
+@protected bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
 
-  @protected
-  FearGreedData? dco_decode_opt_box_autoadd_fear_greed_data(dynamic raw);
+@protected ContractFilters? dco_decode_opt_box_autoadd_contract_filters(dynamic raw);
 
-  @protected
-  FearGreedLastUpdated? dco_decode_opt_box_autoadd_fear_greed_last_updated(
-      dynamic raw);
+@protected Conversions? dco_decode_opt_box_autoadd_conversions(dynamic raw);
 
-  @protected
-  FearGreedValue? dco_decode_opt_box_autoadd_fear_greed_value(dynamic raw);
+@protected DifficultyAdjustment? dco_decode_opt_box_autoadd_difficulty_adjustment(dynamic raw);
 
-  @protected
-  int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
+@protected double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
 
-  @protected
-  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
+@protected FearGreedData? dco_decode_opt_box_autoadd_fear_greed_data(dynamic raw);
 
-  @protected
-  MiningPool? dco_decode_opt_box_autoadd_mining_pool(dynamic raw);
+@protected FearGreedLastUpdated? dco_decode_opt_box_autoadd_fear_greed_last_updated(dynamic raw);
 
-  @protected
-  OfferFilters? dco_decode_opt_box_autoadd_offer_filters(dynamic raw);
+@protected FearGreedValue? dco_decode_opt_box_autoadd_fear_greed_value(dynamic raw);
 
-  @protected
-  RecommendedFees? dco_decode_opt_box_autoadd_recommended_fees(dynamic raw);
+@protected int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
 
-  @protected
-  TxOutput? dco_decode_opt_box_autoadd_tx_output(dynamic raw);
+@protected PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
 
-  @protected
-  int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
+@protected MiningPool? dco_decode_opt_box_autoadd_mining_pool(dynamic raw);
 
-  @protected
-  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
+@protected OfferFilters? dco_decode_opt_box_autoadd_offer_filters(dynamic raw);
 
-  @protected
-  List<String>? dco_decode_opt_list_String(dynamic raw);
+@protected RecommendedFees? dco_decode_opt_box_autoadd_recommended_fees(dynamic raw);
 
-  @protected
-  List<Block>? dco_decode_opt_list_block(dynamic raw);
+@protected TxOutput? dco_decode_opt_box_autoadd_tx_output(dynamic raw);
 
-  @protected
-  List<ContractStatus>? dco_decode_opt_list_contract_status(dynamic raw);
+@protected int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
-  @protected
-  List<MempoolBlock>? dco_decode_opt_list_mempool_block(dynamic raw);
+@protected BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
 
-  @protected
-  OriginationFee dco_decode_origination_fee(dynamic raw);
+@protected List<String>? dco_decode_opt_list_String(dynamic raw);
 
-  @protected
-  PaginatedContractsResponse dco_decode_paginated_contracts_response(
-      dynamic raw);
+@protected List<Block>? dco_decode_opt_list_block(dynamic raw);
 
-  @protected
-  PaymentReceived dco_decode_payment_received(dynamic raw);
+@protected List<ContractStatus>? dco_decode_opt_list_contract_status(dynamic raw);
 
-  @protected
-  ProjectedBlockTransactions dco_decode_projected_block_transactions(
-      dynamic raw);
+@protected List<MempoolBlock>? dco_decode_opt_list_mempool_block(dynamic raw);
 
-  @protected
-  ProjectedTransaction dco_decode_projected_transaction(dynamic raw);
+@protected OriginationFee dco_decode_origination_fee(dynamic raw);
 
-  @protected
-  RecommendedFees dco_decode_recommended_fees(dynamic raw);
+@protected PaginatedContractsResponse dco_decode_paginated_contracts_response(dynamic raw);
 
-  @protected
-  (String, double) dco_decode_record_string_f_64(dynamic raw);
+@protected PaymentReceived dco_decode_payment_received(dynamic raw);
 
-  @protected
-  RepaymentPlan dco_decode_repayment_plan(dynamic raw);
+@protected ProjectedBlockTransactions dco_decode_projected_block_transactions(dynamic raw);
 
-  @protected
-  SettleArkPsbtResponse dco_decode_settle_ark_psbt_response(dynamic raw);
+@protected ProjectedTransaction dco_decode_projected_transaction(dynamic raw);
 
-  @protected
-  SwapInfo dco_decode_swap_info(dynamic raw);
+@protected RecommendedFees dco_decode_recommended_fees(dynamic raw);
 
-  @protected
-  SwapQuote dco_decode_swap_quote(dynamic raw);
+@protected (String,double) dco_decode_record_string_f_64(dynamic raw);
 
-  @protected
-  SwapStatusSimple dco_decode_swap_status_simple(dynamic raw);
+@protected RepaymentPlan dco_decode_repayment_plan(dynamic raw);
 
-  @protected
-  TradingPair dco_decode_trading_pair(dynamic raw);
+@protected SettleArkPsbtResponse dco_decode_settle_ark_psbt_response(dynamic raw);
 
-  @protected
-  Transaction dco_decode_transaction(dynamic raw);
+@protected SwapInfo dco_decode_swap_info(dynamic raw);
 
-  @protected
-  TxInput dco_decode_tx_input(dynamic raw);
+@protected SwapQuote dco_decode_swap_quote(dynamic raw);
 
-  @protected
-  TxOutput dco_decode_tx_output(dynamic raw);
+@protected SwapStatusSimple dco_decode_swap_status_simple(dynamic raw);
 
-  @protected
-  TxStatus dco_decode_tx_status(dynamic raw);
+@protected TradingPair dco_decode_trading_pair(dynamic raw);
 
-  @protected
-  int dco_decode_u_32(dynamic raw);
+@protected Transaction dco_decode_transaction(dynamic raw);
 
-  @protected
-  BigInt dco_decode_u_64(dynamic raw);
+@protected TxInput dco_decode_tx_input(dynamic raw);
 
-  @protected
-  int dco_decode_u_8(dynamic raw);
+@protected TxOutput dco_decode_tx_output(dynamic raw);
 
-  @protected
-  void dco_decode_unit(dynamic raw);
+@protected TxStatus dco_decode_tx_status(dynamic raw);
 
-  @protected
-  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+@protected int dco_decode_u_32(dynamic raw);
 
-  @protected
-  Map<String, double> sse_decode_Map_String_f_64_None(
-      SseDeserializer deserializer);
+@protected BigInt dco_decode_u_64(dynamic raw);
 
-  @protected
-  RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Sse(
-      SseDeserializer deserializer);
+@protected int dco_decode_u_8(dynamic raw);
 
-  @protected
-  RustStreamSink<MempoolWsMessage> sse_decode_StreamSink_mempool_ws_message_Sse(
-      SseDeserializer deserializer);
+@protected void dco_decode_unit(dynamic raw);
 
-  @protected
-  RustStreamSink<ProjectedBlockTransactions>
-      sse_decode_StreamSink_projected_block_transactions_Sse(
-          SseDeserializer deserializer);
+@protected AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
-  @protected
-  String sse_decode_String(SseDeserializer deserializer);
+@protected Map<String, double> sse_decode_Map_String_f_64_None(SseDeserializer deserializer);
 
-  @protected
-  Addresses sse_decode_addresses(SseDeserializer deserializer);
+@protected RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Sse(SseDeserializer deserializer);
 
-  @protected
-  ArkClaimPsbtResponse sse_decode_ark_claim_psbt_response(
-      SseDeserializer deserializer);
+@protected RustStreamSink<MempoolWsMessage> sse_decode_StreamSink_mempool_ws_message_Sse(SseDeserializer deserializer);
 
-  @protected
-  AssetInfo sse_decode_asset_info(SseDeserializer deserializer);
+@protected RustStreamSink<ProjectedBlockTransactions> sse_decode_StreamSink_projected_block_transactions_Sse(SseDeserializer deserializer);
 
-  @protected
-  AuthResult sse_decode_auth_result(SseDeserializer deserializer);
+@protected String sse_decode_String(SseDeserializer deserializer);
 
-  @protected
-  Balance sse_decode_balance(SseDeserializer deserializer);
+@protected Addresses sse_decode_addresses(SseDeserializer deserializer);
 
-  @protected
-  BitcoinTransaction sse_decode_bitcoin_transaction(
-      SseDeserializer deserializer);
+@protected ArkClaimPsbtResponse sse_decode_ark_claim_psbt_response(SseDeserializer deserializer);
 
-  @protected
-  Block sse_decode_block(SseDeserializer deserializer);
+@protected AssetInfo sse_decode_asset_info(SseDeserializer deserializer);
 
-  @protected
-  BlockExtras sse_decode_block_extras(SseDeserializer deserializer);
+@protected AuthResult sse_decode_auth_result(SseDeserializer deserializer);
 
-  @protected
-  BoltzSwap sse_decode_boltz_swap(SseDeserializer deserializer);
+@protected Balance sse_decode_balance(SseDeserializer deserializer);
 
-  @protected
-  bool sse_decode_bool(SseDeserializer deserializer);
+@protected BitcoinTransaction sse_decode_bitcoin_transaction(SseDeserializer deserializer);
 
-  @protected
-  BlockExtras sse_decode_box_autoadd_block_extras(SseDeserializer deserializer);
+@protected Block sse_decode_block(SseDeserializer deserializer);
 
-  @protected
-  BoltzSwap sse_decode_box_autoadd_boltz_swap(SseDeserializer deserializer);
+@protected BlockExtras sse_decode_block_extras(SseDeserializer deserializer);
 
-  @protected
-  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+@protected BoltzSwap sse_decode_boltz_swap(SseDeserializer deserializer);
 
-  @protected
-  ContractFilters sse_decode_box_autoadd_contract_filters(
-      SseDeserializer deserializer);
+@protected bool sse_decode_bool(SseDeserializer deserializer);
 
-  @protected
-  Conversions sse_decode_box_autoadd_conversions(SseDeserializer deserializer);
+@protected BlockExtras sse_decode_box_autoadd_block_extras(SseDeserializer deserializer);
 
-  @protected
-  DifficultyAdjustment sse_decode_box_autoadd_difficulty_adjustment(
-      SseDeserializer deserializer);
+@protected BoltzSwap sse_decode_box_autoadd_boltz_swap(SseDeserializer deserializer);
 
-  @protected
-  double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
+@protected bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
 
-  @protected
-  FearGreedData sse_decode_box_autoadd_fear_greed_data(
-      SseDeserializer deserializer);
+@protected ContractFilters sse_decode_box_autoadd_contract_filters(SseDeserializer deserializer);
 
-  @protected
-  FearGreedLastUpdated sse_decode_box_autoadd_fear_greed_last_updated(
-      SseDeserializer deserializer);
+@protected Conversions sse_decode_box_autoadd_conversions(SseDeserializer deserializer);
 
-  @protected
-  FearGreedValue sse_decode_box_autoadd_fear_greed_value(
-      SseDeserializer deserializer);
+@protected DifficultyAdjustment sse_decode_box_autoadd_difficulty_adjustment(SseDeserializer deserializer);
 
-  @protected
-  int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
+@protected double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
-  @protected
-  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
+@protected FearGreedData sse_decode_box_autoadd_fear_greed_data(SseDeserializer deserializer);
 
-  @protected
-  MiningPool sse_decode_box_autoadd_mining_pool(SseDeserializer deserializer);
+@protected FearGreedLastUpdated sse_decode_box_autoadd_fear_greed_last_updated(SseDeserializer deserializer);
 
-  @protected
-  OfferFilters sse_decode_box_autoadd_offer_filters(
-      SseDeserializer deserializer);
+@protected FearGreedValue sse_decode_box_autoadd_fear_greed_value(SseDeserializer deserializer);
 
-  @protected
-  RecommendedFees sse_decode_box_autoadd_recommended_fees(
-      SseDeserializer deserializer);
+@protected int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
 
-  @protected
-  TxOutput sse_decode_box_autoadd_tx_output(SseDeserializer deserializer);
+@protected PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
-  @protected
-  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
+@protected MiningPool sse_decode_box_autoadd_mining_pool(SseDeserializer deserializer);
 
-  @protected
-  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
+@protected OfferFilters sse_decode_box_autoadd_offer_filters(SseDeserializer deserializer);
 
-  @protected
-  BtcToEvmSwapResult sse_decode_btc_to_evm_swap_result(
-      SseDeserializer deserializer);
+@protected RecommendedFees sse_decode_box_autoadd_recommended_fees(SseDeserializer deserializer);
 
-  @protected
-  ClaimPsbtResponse sse_decode_claim_psbt_response(
-      SseDeserializer deserializer);
+@protected TxOutput sse_decode_box_autoadd_tx_output(SseDeserializer deserializer);
 
-  @protected
-  CollateralAsset sse_decode_collateral_asset(SseDeserializer deserializer);
+@protected int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
 
-  @protected
-  Contract sse_decode_contract(SseDeserializer deserializer);
+@protected BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
-  @protected
-  ContractFilters sse_decode_contract_filters(SseDeserializer deserializer);
+@protected BtcToEvmSwapResult sse_decode_btc_to_evm_swap_result(SseDeserializer deserializer);
 
-  @protected
-  ContractStatus sse_decode_contract_status(SseDeserializer deserializer);
+@protected ClaimPsbtResponse sse_decode_claim_psbt_response(SseDeserializer deserializer);
 
-  @protected
-  Conversions sse_decode_conversions(SseDeserializer deserializer);
+@protected CollateralAsset sse_decode_collateral_asset(SseDeserializer deserializer);
 
-  @protected
-  CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer);
+@protected Contract sse_decode_contract(SseDeserializer deserializer);
 
-  @protected
-  DifficultyAdjustment sse_decode_difficulty_adjustment(
-      SseDeserializer deserializer);
+@protected ContractFilters sse_decode_contract_filters(SseDeserializer deserializer);
 
-  @protected
-  DifficultyPoint sse_decode_difficulty_point(SseDeserializer deserializer);
+@protected ContractStatus sse_decode_contract_status(SseDeserializer deserializer);
 
-  @protected
-  EvmToBtcSwapResult sse_decode_evm_to_btc_swap_result(
-      SseDeserializer deserializer);
+@protected Conversions sse_decode_conversions(SseDeserializer deserializer);
 
-  @protected
-  ExchangeRates sse_decode_exchange_rates(SseDeserializer deserializer);
+@protected CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer);
 
-  @protected
-  double sse_decode_f_64(SseDeserializer deserializer);
+@protected DifficultyAdjustment sse_decode_difficulty_adjustment(SseDeserializer deserializer);
 
-  @protected
-  FearGreedData sse_decode_fear_greed_data(SseDeserializer deserializer);
+@protected DifficultyPoint sse_decode_difficulty_point(SseDeserializer deserializer);
 
-  @protected
-  FearGreedIndex sse_decode_fear_greed_index(SseDeserializer deserializer);
+@protected EvmToBtcSwapResult sse_decode_evm_to_btc_swap_result(SseDeserializer deserializer);
 
-  @protected
-  FearGreedLastUpdated sse_decode_fear_greed_last_updated(
-      SseDeserializer deserializer);
+@protected ExchangeRates sse_decode_exchange_rates(SseDeserializer deserializer);
 
-  @protected
-  FearGreedValue sse_decode_fear_greed_value(SseDeserializer deserializer);
+@protected double sse_decode_f_64(SseDeserializer deserializer);
 
-  @protected
-  FiatCurrency sse_decode_fiat_currency(SseDeserializer deserializer);
+@protected FearGreedData sse_decode_fear_greed_data(SseDeserializer deserializer);
 
-  @protected
-  HashrateData sse_decode_hashrate_data(SseDeserializer deserializer);
+@protected FearGreedIndex sse_decode_fear_greed_index(SseDeserializer deserializer);
 
-  @protected
-  HashratePoint sse_decode_hashrate_point(SseDeserializer deserializer);
+@protected FearGreedLastUpdated sse_decode_fear_greed_last_updated(SseDeserializer deserializer);
 
-  @protected
-  HistoricalPriceData sse_decode_historical_price_data(
-      SseDeserializer deserializer);
+@protected FearGreedValue sse_decode_fear_greed_value(SseDeserializer deserializer);
 
-  @protected
-  HistoricalPriceResponse sse_decode_historical_price_response(
-      SseDeserializer deserializer);
+@protected FiatCurrency sse_decode_fiat_currency(SseDeserializer deserializer);
 
-  @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
+@protected HashrateData sse_decode_hashrate_data(SseDeserializer deserializer);
 
-  @protected
-  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+@protected HashratePoint sse_decode_hashrate_point(SseDeserializer deserializer);
 
-  @protected
-  Info sse_decode_info(SseDeserializer deserializer);
+@protected HistoricalPriceData sse_decode_historical_price_data(SseDeserializer deserializer);
 
-  @protected
-  Installment sse_decode_installment(SseDeserializer deserializer);
+@protected HistoricalPriceResponse sse_decode_historical_price_response(SseDeserializer deserializer);
 
-  @protected
-  InstallmentStatus sse_decode_installment_status(SseDeserializer deserializer);
+@protected int sse_decode_i_32(SseDeserializer deserializer);
 
-  @protected
-  LenderStats sse_decode_lender_stats(SseDeserializer deserializer);
+@protected PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
-  @protected
-  List<String> sse_decode_list_String(SseDeserializer deserializer);
+@protected Info sse_decode_info(SseDeserializer deserializer);
 
-  @protected
-  List<BitcoinTransaction> sse_decode_list_bitcoin_transaction(
-      SseDeserializer deserializer);
+@protected Installment sse_decode_installment(SseDeserializer deserializer);
 
-  @protected
-  List<Block> sse_decode_list_block(SseDeserializer deserializer);
+@protected InstallmentStatus sse_decode_installment_status(SseDeserializer deserializer);
 
-  @protected
-  List<Contract> sse_decode_list_contract(SseDeserializer deserializer);
+@protected LenderStats sse_decode_lender_stats(SseDeserializer deserializer);
 
-  @protected
-  List<ContractStatus> sse_decode_list_contract_status(
-      SseDeserializer deserializer);
+@protected List<String> sse_decode_list_String(SseDeserializer deserializer);
 
-  @protected
-  List<DifficultyPoint> sse_decode_list_difficulty_point(
-      SseDeserializer deserializer);
+@protected List<BitcoinTransaction> sse_decode_list_bitcoin_transaction(SseDeserializer deserializer);
 
-  @protected
-  List<FiatCurrency> sse_decode_list_fiat_currency(
-      SseDeserializer deserializer);
+@protected List<Block> sse_decode_list_block(SseDeserializer deserializer);
 
-  @protected
-  List<HashratePoint> sse_decode_list_hashrate_point(
-      SseDeserializer deserializer);
+@protected List<Contract> sse_decode_list_contract(SseDeserializer deserializer);
 
-  @protected
-  List<HistoricalPriceData> sse_decode_list_historical_price_data(
-      SseDeserializer deserializer);
+@protected List<ContractStatus> sse_decode_list_contract_status(SseDeserializer deserializer);
 
-  @protected
-  List<Installment> sse_decode_list_installment(SseDeserializer deserializer);
+@protected List<DifficultyPoint> sse_decode_list_difficulty_point(SseDeserializer deserializer);
 
-  @protected
-  List<LoanOffer> sse_decode_list_loan_offer(SseDeserializer deserializer);
+@protected List<FiatCurrency> sse_decode_list_fiat_currency(SseDeserializer deserializer);
 
-  @protected
-  List<LoanTransaction> sse_decode_list_loan_transaction(
-      SseDeserializer deserializer);
+@protected List<HashratePoint> sse_decode_list_hashrate_point(SseDeserializer deserializer);
 
-  @protected
-  List<MempoolBlock> sse_decode_list_mempool_block(
-      SseDeserializer deserializer);
+@protected List<HistoricalPriceData> sse_decode_list_historical_price_data(SseDeserializer deserializer);
 
-  @protected
-  List<OriginationFee> sse_decode_list_origination_fee(
-      SseDeserializer deserializer);
+@protected List<Installment> sse_decode_list_installment(SseDeserializer deserializer);
 
-  @protected
-  Float64List sse_decode_list_prim_f_64_strict(SseDeserializer deserializer);
+@protected List<LoanOffer> sse_decode_list_loan_offer(SseDeserializer deserializer);
 
-  @protected
-  Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+@protected List<LoanTransaction> sse_decode_list_loan_transaction(SseDeserializer deserializer);
 
-  @protected
-  List<ProjectedTransaction> sse_decode_list_projected_transaction(
-      SseDeserializer deserializer);
+@protected List<MempoolBlock> sse_decode_list_mempool_block(SseDeserializer deserializer);
 
-  @protected
-  List<(String, double)> sse_decode_list_record_string_f_64(
-      SseDeserializer deserializer);
+@protected List<OriginationFee> sse_decode_list_origination_fee(SseDeserializer deserializer);
 
-  @protected
-  List<SwapInfo> sse_decode_list_swap_info(SseDeserializer deserializer);
+@protected Float64List sse_decode_list_prim_f_64_strict(SseDeserializer deserializer);
 
-  @protected
-  List<TradingPair> sse_decode_list_trading_pair(SseDeserializer deserializer);
+@protected Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
-  @protected
-  List<Transaction> sse_decode_list_transaction(SseDeserializer deserializer);
+@protected List<ProjectedTransaction> sse_decode_list_projected_transaction(SseDeserializer deserializer);
 
-  @protected
-  List<TxInput> sse_decode_list_tx_input(SseDeserializer deserializer);
+@protected List<(String,double)> sse_decode_list_record_string_f_64(SseDeserializer deserializer);
 
-  @protected
-  List<TxOutput> sse_decode_list_tx_output(SseDeserializer deserializer);
+@protected List<SwapInfo> sse_decode_list_swap_info(SseDeserializer deserializer);
 
-  @protected
-  LnPaymentResult sse_decode_ln_payment_result(SseDeserializer deserializer);
+@protected List<TradingPair> sse_decode_list_trading_pair(SseDeserializer deserializer);
 
-  @protected
-  LoanAsset sse_decode_loan_asset(SseDeserializer deserializer);
+@protected List<Transaction> sse_decode_list_transaction(SseDeserializer deserializer);
 
-  @protected
-  LoanOffer sse_decode_loan_offer(SseDeserializer deserializer);
+@protected List<TxInput> sse_decode_list_tx_input(SseDeserializer deserializer);
 
-  @protected
-  LoanOfferStatus sse_decode_loan_offer_status(SseDeserializer deserializer);
+@protected List<TxOutput> sse_decode_list_tx_output(SseDeserializer deserializer);
 
-  @protected
-  LoanPayout sse_decode_loan_payout(SseDeserializer deserializer);
+@protected LnPaymentResult sse_decode_ln_payment_result(SseDeserializer deserializer);
 
-  @protected
-  LoanTransaction sse_decode_loan_transaction(SseDeserializer deserializer);
+@protected LoanAsset sse_decode_loan_asset(SseDeserializer deserializer);
 
-  @protected
-  LogEntry sse_decode_log_entry(SseDeserializer deserializer);
+@protected LoanOffer sse_decode_loan_offer(SseDeserializer deserializer);
 
-  @protected
-  MempoolBlock sse_decode_mempool_block(SseDeserializer deserializer);
+@protected LoanOfferStatus sse_decode_loan_offer_status(SseDeserializer deserializer);
 
-  @protected
-  MempoolWsMessage sse_decode_mempool_ws_message(SseDeserializer deserializer);
+@protected LoanPayout sse_decode_loan_payout(SseDeserializer deserializer);
 
-  @protected
-  MiningPool sse_decode_mining_pool(SseDeserializer deserializer);
+@protected LoanTransaction sse_decode_loan_transaction(SseDeserializer deserializer);
 
-  @protected
-  MoonPayCurrencyLimits sse_decode_moon_pay_currency_limits(
-      SseDeserializer deserializer);
+@protected LogEntry sse_decode_log_entry(SseDeserializer deserializer);
 
-  @protected
-  MoonPayEncryptedData sse_decode_moon_pay_encrypted_data(
-      SseDeserializer deserializer);
+@protected MempoolBlock sse_decode_mempool_block(SseDeserializer deserializer);
 
-  @protected
-  MoonPayQuote sse_decode_moon_pay_quote(SseDeserializer deserializer);
+@protected MempoolWsMessage sse_decode_mempool_ws_message(SseDeserializer deserializer);
 
-  @protected
-  OffchainBalance sse_decode_offchain_balance(SseDeserializer deserializer);
+@protected MiningPool sse_decode_mining_pool(SseDeserializer deserializer);
 
-  @protected
-  OfferFilters sse_decode_offer_filters(SseDeserializer deserializer);
+@protected MoonPayCurrencyLimits sse_decode_moon_pay_currency_limits(SseDeserializer deserializer);
 
-  @protected
-  String? sse_decode_opt_String(SseDeserializer deserializer);
+@protected MoonPayEncryptedData sse_decode_moon_pay_encrypted_data(SseDeserializer deserializer);
 
-  @protected
-  BlockExtras? sse_decode_opt_box_autoadd_block_extras(
-      SseDeserializer deserializer);
+@protected MoonPayQuote sse_decode_moon_pay_quote(SseDeserializer deserializer);
 
-  @protected
-  BoltzSwap? sse_decode_opt_box_autoadd_boltz_swap(
-      SseDeserializer deserializer);
+@protected OffchainBalance sse_decode_offchain_balance(SseDeserializer deserializer);
 
-  @protected
-  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+@protected OfferFilters sse_decode_offer_filters(SseDeserializer deserializer);
 
-  @protected
-  ContractFilters? sse_decode_opt_box_autoadd_contract_filters(
-      SseDeserializer deserializer);
+@protected String? sse_decode_opt_String(SseDeserializer deserializer);
 
-  @protected
-  Conversions? sse_decode_opt_box_autoadd_conversions(
-      SseDeserializer deserializer);
+@protected BlockExtras? sse_decode_opt_box_autoadd_block_extras(SseDeserializer deserializer);
 
-  @protected
-  DifficultyAdjustment? sse_decode_opt_box_autoadd_difficulty_adjustment(
-      SseDeserializer deserializer);
+@protected BoltzSwap? sse_decode_opt_box_autoadd_boltz_swap(SseDeserializer deserializer);
 
-  @protected
-  double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
+@protected bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
 
-  @protected
-  FearGreedData? sse_decode_opt_box_autoadd_fear_greed_data(
-      SseDeserializer deserializer);
+@protected ContractFilters? sse_decode_opt_box_autoadd_contract_filters(SseDeserializer deserializer);
 
-  @protected
-  FearGreedLastUpdated? sse_decode_opt_box_autoadd_fear_greed_last_updated(
-      SseDeserializer deserializer);
+@protected Conversions? sse_decode_opt_box_autoadd_conversions(SseDeserializer deserializer);
 
-  @protected
-  FearGreedValue? sse_decode_opt_box_autoadd_fear_greed_value(
-      SseDeserializer deserializer);
+@protected DifficultyAdjustment? sse_decode_opt_box_autoadd_difficulty_adjustment(SseDeserializer deserializer);
 
-  @protected
-  int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
+@protected double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
-  @protected
-  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
+@protected FearGreedData? sse_decode_opt_box_autoadd_fear_greed_data(SseDeserializer deserializer);
 
-  @protected
-  MiningPool? sse_decode_opt_box_autoadd_mining_pool(
-      SseDeserializer deserializer);
+@protected FearGreedLastUpdated? sse_decode_opt_box_autoadd_fear_greed_last_updated(SseDeserializer deserializer);
 
-  @protected
-  OfferFilters? sse_decode_opt_box_autoadd_offer_filters(
-      SseDeserializer deserializer);
+@protected FearGreedValue? sse_decode_opt_box_autoadd_fear_greed_value(SseDeserializer deserializer);
 
-  @protected
-  RecommendedFees? sse_decode_opt_box_autoadd_recommended_fees(
-      SseDeserializer deserializer);
+@protected int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
 
-  @protected
-  TxOutput? sse_decode_opt_box_autoadd_tx_output(SseDeserializer deserializer);
+@protected PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
 
-  @protected
-  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
+@protected MiningPool? sse_decode_opt_box_autoadd_mining_pool(SseDeserializer deserializer);
 
-  @protected
-  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
+@protected OfferFilters? sse_decode_opt_box_autoadd_offer_filters(SseDeserializer deserializer);
 
-  @protected
-  List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
+@protected RecommendedFees? sse_decode_opt_box_autoadd_recommended_fees(SseDeserializer deserializer);
 
-  @protected
-  List<Block>? sse_decode_opt_list_block(SseDeserializer deserializer);
+@protected TxOutput? sse_decode_opt_box_autoadd_tx_output(SseDeserializer deserializer);
 
-  @protected
-  List<ContractStatus>? sse_decode_opt_list_contract_status(
-      SseDeserializer deserializer);
+@protected int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
-  @protected
-  List<MempoolBlock>? sse_decode_opt_list_mempool_block(
-      SseDeserializer deserializer);
+@protected BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
 
-  @protected
-  OriginationFee sse_decode_origination_fee(SseDeserializer deserializer);
+@protected List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
 
-  @protected
-  PaginatedContractsResponse sse_decode_paginated_contracts_response(
-      SseDeserializer deserializer);
+@protected List<Block>? sse_decode_opt_list_block(SseDeserializer deserializer);
 
-  @protected
-  PaymentReceived sse_decode_payment_received(SseDeserializer deserializer);
+@protected List<ContractStatus>? sse_decode_opt_list_contract_status(SseDeserializer deserializer);
 
-  @protected
-  ProjectedBlockTransactions sse_decode_projected_block_transactions(
-      SseDeserializer deserializer);
+@protected List<MempoolBlock>? sse_decode_opt_list_mempool_block(SseDeserializer deserializer);
 
-  @protected
-  ProjectedTransaction sse_decode_projected_transaction(
-      SseDeserializer deserializer);
+@protected OriginationFee sse_decode_origination_fee(SseDeserializer deserializer);
 
-  @protected
-  RecommendedFees sse_decode_recommended_fees(SseDeserializer deserializer);
+@protected PaginatedContractsResponse sse_decode_paginated_contracts_response(SseDeserializer deserializer);
 
-  @protected
-  (String, double) sse_decode_record_string_f_64(SseDeserializer deserializer);
+@protected PaymentReceived sse_decode_payment_received(SseDeserializer deserializer);
 
-  @protected
-  RepaymentPlan sse_decode_repayment_plan(SseDeserializer deserializer);
+@protected ProjectedBlockTransactions sse_decode_projected_block_transactions(SseDeserializer deserializer);
 
-  @protected
-  SettleArkPsbtResponse sse_decode_settle_ark_psbt_response(
-      SseDeserializer deserializer);
+@protected ProjectedTransaction sse_decode_projected_transaction(SseDeserializer deserializer);
 
-  @protected
-  SwapInfo sse_decode_swap_info(SseDeserializer deserializer);
+@protected RecommendedFees sse_decode_recommended_fees(SseDeserializer deserializer);
 
-  @protected
-  SwapQuote sse_decode_swap_quote(SseDeserializer deserializer);
+@protected (String,double) sse_decode_record_string_f_64(SseDeserializer deserializer);
 
-  @protected
-  SwapStatusSimple sse_decode_swap_status_simple(SseDeserializer deserializer);
+@protected RepaymentPlan sse_decode_repayment_plan(SseDeserializer deserializer);
 
-  @protected
-  TradingPair sse_decode_trading_pair(SseDeserializer deserializer);
+@protected SettleArkPsbtResponse sse_decode_settle_ark_psbt_response(SseDeserializer deserializer);
 
-  @protected
-  Transaction sse_decode_transaction(SseDeserializer deserializer);
+@protected SwapInfo sse_decode_swap_info(SseDeserializer deserializer);
 
-  @protected
-  TxInput sse_decode_tx_input(SseDeserializer deserializer);
+@protected SwapQuote sse_decode_swap_quote(SseDeserializer deserializer);
 
-  @protected
-  TxOutput sse_decode_tx_output(SseDeserializer deserializer);
+@protected SwapStatusSimple sse_decode_swap_status_simple(SseDeserializer deserializer);
 
-  @protected
-  TxStatus sse_decode_tx_status(SseDeserializer deserializer);
+@protected TradingPair sse_decode_trading_pair(SseDeserializer deserializer);
 
-  @protected
-  int sse_decode_u_32(SseDeserializer deserializer);
+@protected Transaction sse_decode_transaction(SseDeserializer deserializer);
 
-  @protected
-  BigInt sse_decode_u_64(SseDeserializer deserializer);
+@protected TxInput sse_decode_tx_input(SseDeserializer deserializer);
 
-  @protected
-  int sse_decode_u_8(SseDeserializer deserializer);
+@protected TxOutput sse_decode_tx_output(SseDeserializer deserializer);
 
-  @protected
-  void sse_decode_unit(SseDeserializer deserializer);
+@protected TxStatus sse_decode_tx_status(SseDeserializer deserializer);
 
-  @protected
-  void sse_encode_AnyhowException(
-      AnyhowException self, SseSerializer serializer);
+@protected int sse_decode_u_32(SseDeserializer deserializer);
 
-  @protected
-  void sse_encode_Map_String_f_64_None(
-      Map<String, double> self, SseSerializer serializer);
+@protected BigInt sse_decode_u_64(SseDeserializer deserializer);
 
-  @protected
-  void sse_encode_StreamSink_log_entry_Sse(
-      RustStreamSink<LogEntry> self, SseSerializer serializer);
+@protected int sse_decode_u_8(SseDeserializer deserializer);
 
-  @protected
-  void sse_encode_StreamSink_mempool_ws_message_Sse(
-      RustStreamSink<MempoolWsMessage> self, SseSerializer serializer);
+@protected void sse_decode_unit(SseDeserializer deserializer);
 
-  @protected
-  void sse_encode_StreamSink_projected_block_transactions_Sse(
-      RustStreamSink<ProjectedBlockTransactions> self,
-      SseSerializer serializer);
+@protected void sse_encode_AnyhowException(AnyhowException self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_String(String self, SseSerializer serializer);
+@protected void sse_encode_Map_String_f_64_None(Map<String, double> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_addresses(Addresses self, SseSerializer serializer);
+@protected void sse_encode_StreamSink_log_entry_Sse(RustStreamSink<LogEntry> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_ark_claim_psbt_response(
-      ArkClaimPsbtResponse self, SseSerializer serializer);
+@protected void sse_encode_StreamSink_mempool_ws_message_Sse(RustStreamSink<MempoolWsMessage> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_asset_info(AssetInfo self, SseSerializer serializer);
+@protected void sse_encode_StreamSink_projected_block_transactions_Sse(RustStreamSink<ProjectedBlockTransactions> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_auth_result(AuthResult self, SseSerializer serializer);
+@protected void sse_encode_String(String self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_balance(Balance self, SseSerializer serializer);
+@protected void sse_encode_addresses(Addresses self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_bitcoin_transaction(
-      BitcoinTransaction self, SseSerializer serializer);
+@protected void sse_encode_ark_claim_psbt_response(ArkClaimPsbtResponse self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_block(Block self, SseSerializer serializer);
+@protected void sse_encode_asset_info(AssetInfo self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_block_extras(BlockExtras self, SseSerializer serializer);
+@protected void sse_encode_auth_result(AuthResult self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_boltz_swap(BoltzSwap self, SseSerializer serializer);
+@protected void sse_encode_balance(Balance self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer);
+@protected void sse_encode_bitcoin_transaction(BitcoinTransaction self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_block_extras(
-      BlockExtras self, SseSerializer serializer);
+@protected void sse_encode_block(Block self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_boltz_swap(
-      BoltzSwap self, SseSerializer serializer);
+@protected void sse_encode_block_extras(BlockExtras self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
+@protected void sse_encode_boltz_swap(BoltzSwap self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_contract_filters(
-      ContractFilters self, SseSerializer serializer);
+@protected void sse_encode_bool(bool self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_conversions(
-      Conversions self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_block_extras(BlockExtras self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_difficulty_adjustment(
-      DifficultyAdjustment self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_boltz_swap(BoltzSwap self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_fear_greed_data(
-      FearGreedData self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_contract_filters(ContractFilters self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_fear_greed_last_updated(
-      FearGreedLastUpdated self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_conversions(Conversions self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_fear_greed_value(
-      FearGreedValue self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_difficulty_adjustment(DifficultyAdjustment self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_i_64(
-      PlatformInt64 self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_fear_greed_data(FearGreedData self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_mining_pool(
-      MiningPool self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_fear_greed_last_updated(FearGreedLastUpdated self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_offer_filters(
-      OfferFilters self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_fear_greed_value(FearGreedValue self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_recommended_fees(
-      RecommendedFees self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_tx_output(
-      TxOutput self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_i_64(PlatformInt64 self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_mining_pool(MiningPool self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_offer_filters(OfferFilters self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_btc_to_evm_swap_result(
-      BtcToEvmSwapResult self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_recommended_fees(RecommendedFees self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_claim_psbt_response(
-      ClaimPsbtResponse self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_tx_output(TxOutput self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_collateral_asset(
-      CollateralAsset self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_contract(Contract self, SseSerializer serializer);
+@protected void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_contract_filters(
-      ContractFilters self, SseSerializer serializer);
+@protected void sse_encode_btc_to_evm_swap_result(BtcToEvmSwapResult self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_contract_status(
-      ContractStatus self, SseSerializer serializer);
+@protected void sse_encode_claim_psbt_response(ClaimPsbtResponse self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_conversions(Conversions self, SseSerializer serializer);
+@protected void sse_encode_collateral_asset(CollateralAsset self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer);
+@protected void sse_encode_contract(Contract self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_difficulty_adjustment(
-      DifficultyAdjustment self, SseSerializer serializer);
+@protected void sse_encode_contract_filters(ContractFilters self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_difficulty_point(
-      DifficultyPoint self, SseSerializer serializer);
+@protected void sse_encode_contract_status(ContractStatus self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_evm_to_btc_swap_result(
-      EvmToBtcSwapResult self, SseSerializer serializer);
+@protected void sse_encode_conversions(Conversions self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_exchange_rates(ExchangeRates self, SseSerializer serializer);
+@protected void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_f_64(double self, SseSerializer serializer);
+@protected void sse_encode_difficulty_adjustment(DifficultyAdjustment self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_fear_greed_data(FearGreedData self, SseSerializer serializer);
+@protected void sse_encode_difficulty_point(DifficultyPoint self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_fear_greed_index(
-      FearGreedIndex self, SseSerializer serializer);
+@protected void sse_encode_evm_to_btc_swap_result(EvmToBtcSwapResult self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_fear_greed_last_updated(
-      FearGreedLastUpdated self, SseSerializer serializer);
+@protected void sse_encode_exchange_rates(ExchangeRates self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_fear_greed_value(
-      FearGreedValue self, SseSerializer serializer);
+@protected void sse_encode_f_64(double self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_fiat_currency(FiatCurrency self, SseSerializer serializer);
+@protected void sse_encode_fear_greed_data(FearGreedData self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_hashrate_data(HashrateData self, SseSerializer serializer);
+@protected void sse_encode_fear_greed_index(FearGreedIndex self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_hashrate_point(HashratePoint self, SseSerializer serializer);
+@protected void sse_encode_fear_greed_last_updated(FearGreedLastUpdated self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_historical_price_data(
-      HistoricalPriceData self, SseSerializer serializer);
+@protected void sse_encode_fear_greed_value(FearGreedValue self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_historical_price_response(
-      HistoricalPriceResponse self, SseSerializer serializer);
+@protected void sse_encode_fiat_currency(FiatCurrency self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
+@protected void sse_encode_hashrate_data(HashrateData self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+@protected void sse_encode_hashrate_point(HashratePoint self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_info(Info self, SseSerializer serializer);
+@protected void sse_encode_historical_price_data(HistoricalPriceData self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_installment(Installment self, SseSerializer serializer);
+@protected void sse_encode_historical_price_response(HistoricalPriceResponse self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_installment_status(
-      InstallmentStatus self, SseSerializer serializer);
+@protected void sse_encode_i_32(int self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_lender_stats(LenderStats self, SseSerializer serializer);
+@protected void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+@protected void sse_encode_info(Info self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_bitcoin_transaction(
-      List<BitcoinTransaction> self, SseSerializer serializer);
+@protected void sse_encode_installment(Installment self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_block(List<Block> self, SseSerializer serializer);
+@protected void sse_encode_installment_status(InstallmentStatus self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_contract(List<Contract> self, SseSerializer serializer);
+@protected void sse_encode_lender_stats(LenderStats self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_contract_status(
-      List<ContractStatus> self, SseSerializer serializer);
+@protected void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_difficulty_point(
-      List<DifficultyPoint> self, SseSerializer serializer);
+@protected void sse_encode_list_bitcoin_transaction(List<BitcoinTransaction> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_fiat_currency(
-      List<FiatCurrency> self, SseSerializer serializer);
+@protected void sse_encode_list_block(List<Block> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_hashrate_point(
-      List<HashratePoint> self, SseSerializer serializer);
+@protected void sse_encode_list_contract(List<Contract> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_historical_price_data(
-      List<HistoricalPriceData> self, SseSerializer serializer);
+@protected void sse_encode_list_contract_status(List<ContractStatus> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_installment(
-      List<Installment> self, SseSerializer serializer);
+@protected void sse_encode_list_difficulty_point(List<DifficultyPoint> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_loan_offer(
-      List<LoanOffer> self, SseSerializer serializer);
+@protected void sse_encode_list_fiat_currency(List<FiatCurrency> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_loan_transaction(
-      List<LoanTransaction> self, SseSerializer serializer);
+@protected void sse_encode_list_hashrate_point(List<HashratePoint> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_mempool_block(
-      List<MempoolBlock> self, SseSerializer serializer);
+@protected void sse_encode_list_historical_price_data(List<HistoricalPriceData> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_origination_fee(
-      List<OriginationFee> self, SseSerializer serializer);
+@protected void sse_encode_list_installment(List<Installment> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_prim_f_64_strict(
-      Float64List self, SseSerializer serializer);
+@protected void sse_encode_list_loan_offer(List<LoanOffer> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_prim_u_8_strict(
-      Uint8List self, SseSerializer serializer);
+@protected void sse_encode_list_loan_transaction(List<LoanTransaction> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_projected_transaction(
-      List<ProjectedTransaction> self, SseSerializer serializer);
+@protected void sse_encode_list_mempool_block(List<MempoolBlock> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_record_string_f_64(
-      List<(String, double)> self, SseSerializer serializer);
+@protected void sse_encode_list_origination_fee(List<OriginationFee> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_swap_info(List<SwapInfo> self, SseSerializer serializer);
+@protected void sse_encode_list_prim_f_64_strict(Float64List self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_trading_pair(
-      List<TradingPair> self, SseSerializer serializer);
+@protected void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_transaction(
-      List<Transaction> self, SseSerializer serializer);
+@protected void sse_encode_list_projected_transaction(List<ProjectedTransaction> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_tx_input(List<TxInput> self, SseSerializer serializer);
+@protected void sse_encode_list_record_string_f_64(List<(String,double)> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_list_tx_output(List<TxOutput> self, SseSerializer serializer);
+@protected void sse_encode_list_swap_info(List<SwapInfo> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_ln_payment_result(
-      LnPaymentResult self, SseSerializer serializer);
+@protected void sse_encode_list_trading_pair(List<TradingPair> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_loan_asset(LoanAsset self, SseSerializer serializer);
+@protected void sse_encode_list_transaction(List<Transaction> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_loan_offer(LoanOffer self, SseSerializer serializer);
+@protected void sse_encode_list_tx_input(List<TxInput> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_loan_offer_status(
-      LoanOfferStatus self, SseSerializer serializer);
+@protected void sse_encode_list_tx_output(List<TxOutput> self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_loan_payout(LoanPayout self, SseSerializer serializer);
+@protected void sse_encode_ln_payment_result(LnPaymentResult self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_loan_transaction(
-      LoanTransaction self, SseSerializer serializer);
+@protected void sse_encode_loan_asset(LoanAsset self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
+@protected void sse_encode_loan_offer(LoanOffer self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_mempool_block(MempoolBlock self, SseSerializer serializer);
+@protected void sse_encode_loan_offer_status(LoanOfferStatus self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_mempool_ws_message(
-      MempoolWsMessage self, SseSerializer serializer);
+@protected void sse_encode_loan_payout(LoanPayout self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_mining_pool(MiningPool self, SseSerializer serializer);
+@protected void sse_encode_loan_transaction(LoanTransaction self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_moon_pay_currency_limits(
-      MoonPayCurrencyLimits self, SseSerializer serializer);
+@protected void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_moon_pay_encrypted_data(
-      MoonPayEncryptedData self, SseSerializer serializer);
+@protected void sse_encode_mempool_block(MempoolBlock self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_moon_pay_quote(MoonPayQuote self, SseSerializer serializer);
+@protected void sse_encode_mempool_ws_message(MempoolWsMessage self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_offchain_balance(
-      OffchainBalance self, SseSerializer serializer);
+@protected void sse_encode_mining_pool(MiningPool self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_offer_filters(OfferFilters self, SseSerializer serializer);
+@protected void sse_encode_moon_pay_currency_limits(MoonPayCurrencyLimits self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_String(String? self, SseSerializer serializer);
+@protected void sse_encode_moon_pay_encrypted_data(MoonPayEncryptedData self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_block_extras(
-      BlockExtras? self, SseSerializer serializer);
+@protected void sse_encode_moon_pay_quote(MoonPayQuote self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_boltz_swap(
-      BoltzSwap? self, SseSerializer serializer);
+@protected void sse_encode_offchain_balance(OffchainBalance self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+@protected void sse_encode_offer_filters(OfferFilters self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_contract_filters(
-      ContractFilters? self, SseSerializer serializer);
+@protected void sse_encode_opt_String(String? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_conversions(
-      Conversions? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_block_extras(BlockExtras? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_difficulty_adjustment(
-      DifficultyAdjustment? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_boltz_swap(BoltzSwap? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_fear_greed_data(
-      FearGreedData? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_contract_filters(ContractFilters? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_fear_greed_last_updated(
-      FearGreedLastUpdated? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_conversions(Conversions? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_fear_greed_value(
-      FearGreedValue? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_difficulty_adjustment(DifficultyAdjustment? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_i_64(
-      PlatformInt64? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_fear_greed_data(FearGreedData? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_mining_pool(
-      MiningPool? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_fear_greed_last_updated(FearGreedLastUpdated? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_offer_filters(
-      OfferFilters? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_fear_greed_value(FearGreedValue? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_recommended_fees(
-      RecommendedFees? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_tx_output(
-      TxOutput? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_i_64(PlatformInt64? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_mining_pool(MiningPool? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_offer_filters(OfferFilters? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_recommended_fees(RecommendedFees? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_list_block(List<Block>? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_tx_output(TxOutput? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_list_contract_status(
-      List<ContractStatus>? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_opt_list_mempool_block(
-      List<MempoolBlock>? self, SseSerializer serializer);
+@protected void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_origination_fee(
-      OriginationFee self, SseSerializer serializer);
+@protected void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_paginated_contracts_response(
-      PaginatedContractsResponse self, SseSerializer serializer);
+@protected void sse_encode_opt_list_block(List<Block>? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_payment_received(
-      PaymentReceived self, SseSerializer serializer);
+@protected void sse_encode_opt_list_contract_status(List<ContractStatus>? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_projected_block_transactions(
-      ProjectedBlockTransactions self, SseSerializer serializer);
+@protected void sse_encode_opt_list_mempool_block(List<MempoolBlock>? self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_projected_transaction(
-      ProjectedTransaction self, SseSerializer serializer);
+@protected void sse_encode_origination_fee(OriginationFee self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_recommended_fees(
-      RecommendedFees self, SseSerializer serializer);
+@protected void sse_encode_paginated_contracts_response(PaginatedContractsResponse self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_record_string_f_64(
-      (String, double) self, SseSerializer serializer);
+@protected void sse_encode_payment_received(PaymentReceived self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_repayment_plan(RepaymentPlan self, SseSerializer serializer);
+@protected void sse_encode_projected_block_transactions(ProjectedBlockTransactions self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_settle_ark_psbt_response(
-      SettleArkPsbtResponse self, SseSerializer serializer);
+@protected void sse_encode_projected_transaction(ProjectedTransaction self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_swap_info(SwapInfo self, SseSerializer serializer);
+@protected void sse_encode_recommended_fees(RecommendedFees self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_swap_quote(SwapQuote self, SseSerializer serializer);
+@protected void sse_encode_record_string_f_64((String,double) self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_swap_status_simple(
-      SwapStatusSimple self, SseSerializer serializer);
+@protected void sse_encode_repayment_plan(RepaymentPlan self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_trading_pair(TradingPair self, SseSerializer serializer);
+@protected void sse_encode_settle_ark_psbt_response(SettleArkPsbtResponse self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_transaction(Transaction self, SseSerializer serializer);
+@protected void sse_encode_swap_info(SwapInfo self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_tx_input(TxInput self, SseSerializer serializer);
+@protected void sse_encode_swap_quote(SwapQuote self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_tx_output(TxOutput self, SseSerializer serializer);
+@protected void sse_encode_swap_status_simple(SwapStatusSimple self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_tx_status(TxStatus self, SseSerializer serializer);
+@protected void sse_encode_trading_pair(TradingPair self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_u_32(int self, SseSerializer serializer);
+@protected void sse_encode_transaction(Transaction self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_u_64(BigInt self, SseSerializer serializer);
+@protected void sse_encode_tx_input(TxInput self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_u_8(int self, SseSerializer serializer);
+@protected void sse_encode_tx_output(TxOutput self, SseSerializer serializer);
 
-  @protected
-  void sse_encode_unit(void self, SseSerializer serializer);
-}
+@protected void sse_encode_tx_status(TxStatus self, SseSerializer serializer);
+
+@protected void sse_encode_u_32(int self, SseSerializer serializer);
+
+@protected void sse_encode_u_64(BigInt self, SseSerializer serializer);
+
+@protected void sse_encode_u_8(int self, SseSerializer serializer);
+
+@protected void sse_encode_unit(void self, SseSerializer serializer);
+                }
+                
+
 
 // Section: wire_class
 
-class RustLibWire implements BaseWire {
-  factory RustLibWire.fromExternalLibrary(ExternalLibrary lib) =>
-      RustLibWire(lib.ffiDynamicLibrary);
 
-  /// Holds the symbol lookup function.
-  final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
-      _lookup;
+        class RustLibWire implements BaseWire {
 
-  /// The symbols are looked up in [dynamicLibrary].
-  RustLibWire(ffi.DynamicLibrary dynamicLibrary)
-      : _lookup = dynamicLibrary.lookup;
-}
+            factory RustLibWire.fromExternalLibrary(ExternalLibrary lib) =>
+              RustLibWire(lib.ffiDynamicLibrary);
+        
+            /// Holds the symbol lookup function.
+            final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
+                _lookup;
+  
+            /// The symbols are looked up in [dynamicLibrary].
+            RustLibWire(ffi.DynamicLibrary dynamicLibrary)
+                : _lookup = dynamicLibrary.lookup;
+
+            
+        }
+        

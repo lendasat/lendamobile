@@ -8,77 +8,36 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'ark_api.freezed.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`
+            // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`
 
-Future<bool> walletExists({required String dataDir}) =>
-    RustLib.instance.api.crateApiArkApiWalletExists(dataDir: dataDir);
+
+            Future<bool>  walletExists({required String dataDir }) => RustLib.instance.api.crateApiArkApiWalletExists(dataDir: dataDir);
 
 /// Setup a new wallet with a freshly generated 12-word mnemonic.
 /// Returns the mnemonic words that the user MUST back up securely.
-Future<String> setupNewWallet(
-        {required String dataDir,
-        required String network,
-        required String esplora,
-        required String server,
-        required String boltzUrl}) =>
-    RustLib.instance.api.crateApiArkApiSetupNewWallet(
-        dataDir: dataDir,
-        network: network,
-        esplora: esplora,
-        server: server,
-        boltzUrl: boltzUrl);
+Future<String>  setupNewWallet({required String dataDir , required String network , required String esplora , required String server , required String boltzUrl }) => RustLib.instance.api.crateApiArkApiSetupNewWallet(dataDir: dataDir, network: network, esplora: esplora, server: server, boltzUrl: boltzUrl);
 
-Future<String> loadExistingWallet(
-        {required String dataDir,
-        required String network,
-        required String esplora,
-        required String server,
-        required String boltzUrl}) =>
-    RustLib.instance.api.crateApiArkApiLoadExistingWallet(
-        dataDir: dataDir,
-        network: network,
-        esplora: esplora,
-        server: server,
-        boltzUrl: boltzUrl);
+Future<String>  loadExistingWallet({required String dataDir , required String network , required String esplora , required String server , required String boltzUrl }) => RustLib.instance.api.crateApiArkApiLoadExistingWallet(dataDir: dataDir, network: network, esplora: esplora, server: server, boltzUrl: boltzUrl);
 
 /// Restore a wallet from a mnemonic phrase (12 or 24 words)
-Future<String> restoreWallet(
-        {required String mnemonicWords,
-        required String dataDir,
-        required String network,
-        required String esplora,
-        required String server,
-        required String boltzUrl}) =>
-    RustLib.instance.api.crateApiArkApiRestoreWallet(
-        mnemonicWords: mnemonicWords,
-        dataDir: dataDir,
-        network: network,
-        esplora: esplora,
-        server: server,
-        boltzUrl: boltzUrl);
+Future<String>  restoreWallet({required String mnemonicWords , required String dataDir , required String network , required String esplora , required String server , required String boltzUrl }) => RustLib.instance.api.crateApiArkApiRestoreWallet(mnemonicWords: mnemonicWords, dataDir: dataDir, network: network, esplora: esplora, server: server, boltzUrl: boltzUrl);
 
-Future<Balance> balance() => RustLib.instance.api.crateApiArkApiBalance();
+Future<Balance>  balance() => RustLib.instance.api.crateApiArkApiBalance();
 
-Future<Addresses> address({BigInt? amount}) =>
-    RustLib.instance.api.crateApiArkApiAddress(amount: amount);
+Future<Addresses>  address({BigInt? amount }) => RustLib.instance.api.crateApiArkApiAddress(amount: amount);
 
-Future<List<Transaction>> txHistory() =>
-    RustLib.instance.api.crateApiArkApiTxHistory();
+Future<List<Transaction>>  txHistory() => RustLib.instance.api.crateApiArkApiTxHistory();
 
-Future<String> send({required String address, required BigInt amountSats}) =>
-    RustLib.instance.api
-        .crateApiArkApiSend(address: address, amountSats: amountSats);
+Future<String>  send({required String address , required BigInt amountSats }) => RustLib.instance.api.crateApiArkApiSend(address: address, amountSats: amountSats);
 
 /// Pay a BOLT11 Lightning invoice using Ark funds via Boltz submarine swap
-Future<LnPaymentResult> payLnInvoice({required String invoice}) =>
-    RustLib.instance.api.crateApiArkApiPayLnInvoice(invoice: invoice);
+Future<LnPaymentResult>  payLnInvoice({required String invoice }) => RustLib.instance.api.crateApiArkApiPayLnInvoice(invoice: invoice);
 
-Future<void> settle() => RustLib.instance.api.crateApiArkApiSettle();
+Future<void>  settle() => RustLib.instance.api.crateApiArkApiSettle();
 
 /// Get the Nostr secret key (nsec) derived from the wallet mnemonic
 /// Note: Nostr keys are network-independent, so we use Bitcoin mainnet for derivation
-Future<String> nsec({required String dataDir}) =>
-    RustLib.instance.api.crateApiArkApiNsec(dataDir: dataDir);
+Future<String>  nsec({required String dataDir }) => RustLib.instance.api.crateApiArkApiNsec(dataDir: dataDir);
 
 /// Get the Nostr public key (npub) derived from the wallet mnemonic
 /// Note: Nostr keys are network-independent, so we use Bitcoin mainnet for derivation
@@ -89,212 +48,200 @@ Future<String> nsec({required String dataDir}) =>
 /// - Any feature requiring a consistent user ID
 ///
 /// Returns the public key in bech32 format (npub1...)
-Future<String> npub({required String dataDir}) =>
-    RustLib.instance.api.crateApiArkApiNpub(dataDir: dataDir);
+Future<String>  npub({required String dataDir }) => RustLib.instance.api.crateApiArkApiNpub(dataDir: dataDir);
 
 /// Get the mnemonic words for backup (only available for HD wallets)
-Future<String> getMnemonic({required String dataDir}) =>
-    RustLib.instance.api.crateApiArkApiGetMnemonic(dataDir: dataDir);
+Future<String>  getMnemonic({required String dataDir }) => RustLib.instance.api.crateApiArkApiGetMnemonic(dataDir: dataDir);
 
-Future<void> resetWallet({required String dataDir}) =>
-    RustLib.instance.api.crateApiArkApiResetWallet(dataDir: dataDir);
+Future<void>  resetWallet({required String dataDir }) => RustLib.instance.api.crateApiArkApiResetWallet(dataDir: dataDir);
 
-Future<Info> information() => RustLib.instance.api.crateApiArkApiInformation();
+Future<Info>  information() => RustLib.instance.api.crateApiArkApiInformation();
 
-Future<PaymentReceived> waitForPayment(
-        {String? arkAddress,
-        String? boardingAddress,
-        String? boltzSwapId,
-        required BigInt timeoutSeconds}) =>
-    RustLib.instance.api.crateApiArkApiWaitForPayment(
-        arkAddress: arkAddress,
-        boardingAddress: boardingAddress,
-        boltzSwapId: boltzSwapId,
-        timeoutSeconds: timeoutSeconds);
+Future<PaymentReceived>  waitForPayment({String? arkAddress , String? boardingAddress , String? boltzSwapId , required BigInt timeoutSeconds }) => RustLib.instance.api.crateApiArkApiWaitForPayment(arkAddress: arkAddress, boardingAddress: boardingAddress, boltzSwapId: boltzSwapId, timeoutSeconds: timeoutSeconds);
 
-class Addresses {
-  final String boarding;
-  final String offchain;
-  final String bip21;
-  final BoltzSwap? lightning;
+            class Addresses  {
+                final String boarding;
+final String offchain;
+final String bip21;
+final BoltzSwap? lightning;
 
-  const Addresses({
-    required this.boarding,
-    required this.offchain,
-    required this.bip21,
-    this.lightning,
-  });
+                const Addresses({required this.boarding ,required this.offchain ,required this.bip21 ,this.lightning ,});
 
-  @override
-  int get hashCode =>
-      boarding.hashCode ^
-      offchain.hashCode ^
-      bip21.hashCode ^
-      lightning.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Addresses &&
-          runtimeType == other.runtimeType &&
-          boarding == other.boarding &&
-          offchain == other.offchain &&
-          bip21 == other.bip21 &&
-          lightning == other.lightning;
-}
+                
+        @override
+        int get hashCode => boarding.hashCode^offchain.hashCode^bip21.hashCode^lightning.hashCode;
+        
 
-class Balance {
-  final OffchainBalance offchain;
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is Addresses &&
+                runtimeType == other.runtimeType
+                && boarding == other.boarding&& offchain == other.offchain&& bip21 == other.bip21&& lightning == other.lightning;
+        
+            }
 
-  const Balance({
-    required this.offchain,
-  });
+class Balance  {
+                final OffchainBalance offchain;
 
-  @override
-  int get hashCode => offchain.hashCode;
+                const Balance({required this.offchain ,});
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Balance &&
-          runtimeType == other.runtimeType &&
-          offchain == other.offchain;
-}
+                
+                
 
-class BoltzSwap {
-  final String swapId;
-  final BigInt amountSats;
-  final String invoice;
+                
+        @override
+        int get hashCode => offchain.hashCode;
+        
 
-  const BoltzSwap({
-    required this.swapId,
-    required this.amountSats,
-    required this.invoice,
-  });
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is Balance &&
+                runtimeType == other.runtimeType
+                && offchain == other.offchain;
+        
+            }
 
-  @override
-  int get hashCode => swapId.hashCode ^ amountSats.hashCode ^ invoice.hashCode;
+class BoltzSwap  {
+                final String swapId;
+final BigInt amountSats;
+final String invoice;
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BoltzSwap &&
-          runtimeType == other.runtimeType &&
-          swapId == other.swapId &&
-          amountSats == other.amountSats &&
-          invoice == other.invoice;
-}
+                const BoltzSwap({required this.swapId ,required this.amountSats ,required this.invoice ,});
 
-class Info {
-  final String serverPk;
-  final String network;
+                
+                
 
-  const Info({
-    required this.serverPk,
-    required this.network,
-  });
+                
+        @override
+        int get hashCode => swapId.hashCode^amountSats.hashCode^invoice.hashCode;
+        
 
-  @override
-  int get hashCode => serverPk.hashCode ^ network.hashCode;
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is BoltzSwap &&
+                runtimeType == other.runtimeType
+                && swapId == other.swapId&& amountSats == other.amountSats&& invoice == other.invoice;
+        
+            }
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Info &&
-          runtimeType == other.runtimeType &&
-          serverPk == other.serverPk &&
-          network == other.network;
-}
+class Info  {
+                final String serverPk;
+final String network;
+
+                const Info({required this.serverPk ,required this.network ,});
+
+                
+                
+
+                
+        @override
+        int get hashCode => serverPk.hashCode^network.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is Info &&
+                runtimeType == other.runtimeType
+                && serverPk == other.serverPk&& network == other.network;
+        
+            }
 
 /// Result of paying a Lightning invoice
-class LnPaymentResult {
-  final String swapId;
-  final String txid;
-  final BigInt amountSats;
+class LnPaymentResult  {
+                final String swapId;
+final String txid;
+final BigInt amountSats;
 
-  const LnPaymentResult({
-    required this.swapId,
-    required this.txid,
-    required this.amountSats,
-  });
+                const LnPaymentResult({required this.swapId ,required this.txid ,required this.amountSats ,});
 
-  @override
-  int get hashCode => swapId.hashCode ^ txid.hashCode ^ amountSats.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LnPaymentResult &&
-          runtimeType == other.runtimeType &&
-          swapId == other.swapId &&
-          txid == other.txid &&
-          amountSats == other.amountSats;
-}
+                
+        @override
+        int get hashCode => swapId.hashCode^txid.hashCode^amountSats.hashCode;
+        
 
-class OffchainBalance {
-  final BigInt pendingSats;
-  final BigInt confirmedSats;
-  final BigInt totalSats;
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is LnPaymentResult &&
+                runtimeType == other.runtimeType
+                && swapId == other.swapId&& txid == other.txid&& amountSats == other.amountSats;
+        
+            }
 
-  const OffchainBalance({
-    required this.pendingSats,
-    required this.confirmedSats,
-    required this.totalSats,
-  });
+class OffchainBalance  {
+                final BigInt pendingSats;
+final BigInt confirmedSats;
+final BigInt totalSats;
 
-  @override
-  int get hashCode =>
-      pendingSats.hashCode ^ confirmedSats.hashCode ^ totalSats.hashCode;
+                const OffchainBalance({required this.pendingSats ,required this.confirmedSats ,required this.totalSats ,});
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OffchainBalance &&
-          runtimeType == other.runtimeType &&
-          pendingSats == other.pendingSats &&
-          confirmedSats == other.confirmedSats &&
-          totalSats == other.totalSats;
-}
+                
+                
 
-class PaymentReceived {
-  final String txid;
-  final BigInt amountSats;
+                
+        @override
+        int get hashCode => pendingSats.hashCode^confirmedSats.hashCode^totalSats.hashCode;
+        
 
-  const PaymentReceived({
-    required this.txid,
-    required this.amountSats,
-  });
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is OffchainBalance &&
+                runtimeType == other.runtimeType
+                && pendingSats == other.pendingSats&& confirmedSats == other.confirmedSats&& totalSats == other.totalSats;
+        
+            }
 
-  @override
-  int get hashCode => txid.hashCode ^ amountSats.hashCode;
+class PaymentReceived  {
+                final String txid;
+final BigInt amountSats;
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PaymentReceived &&
-          runtimeType == other.runtimeType &&
-          txid == other.txid &&
-          amountSats == other.amountSats;
-}
+                const PaymentReceived({required this.txid ,required this.amountSats ,});
+
+                
+                
+
+                
+        @override
+        int get hashCode => txid.hashCode^amountSats.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is PaymentReceived &&
+                runtimeType == other.runtimeType
+                && txid == other.txid&& amountSats == other.amountSats;
+        
+            }
 
 @freezed
-sealed class Transaction with _$Transaction {
-  const Transaction._();
+                sealed class Transaction with _$Transaction  {
+                    const Transaction._();
 
-  const factory Transaction.boarding({
-    required String txid,
-    required BigInt amountSats,
-    PlatformInt64? confirmedAt,
-  }) = Transaction_Boarding;
-  const factory Transaction.round({
-    required String txid,
-    required PlatformInt64 amountSats,
-    required PlatformInt64 createdAt,
-  }) = Transaction_Round;
-  const factory Transaction.redeem({
-    required String txid,
-    required PlatformInt64 amountSats,
-    required bool isSettled,
-    required PlatformInt64 createdAt,
-  }) = Transaction_Redeem;
-}
+                     const factory Transaction.boarding({   required String txid ,  required BigInt amountSats ,  PlatformInt64? confirmedAt , }) = Transaction_Boarding;
+ const factory Transaction.round({   required String txid ,  required PlatformInt64 amountSats ,  required PlatformInt64 createdAt , }) = Transaction_Round;
+ const factory Transaction.redeem({   required String txid ,  required PlatformInt64 amountSats ,  required bool isSettled ,  required PlatformInt64 createdAt , }) = Transaction_Redeem;
+
+                    
+
+                    
+                }
+            
