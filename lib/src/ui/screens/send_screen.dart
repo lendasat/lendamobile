@@ -575,18 +575,6 @@ class SendScreenState extends State<SendScreen>
         hasBackButton: true,
         onTap: () => Navigator.pop(context),
         buttonType: ButtonType.transparent,
-        actions: [
-          // Network type indicator
-          Padding(
-            padding: const EdgeInsets.only(right: AppTheme.elementSpacing),
-            child: RoundedButtonWidget(
-              size: AppTheme.cardPadding * 1.5,
-              buttonType: ButtonType.transparent,
-              iconData: Icons.currency_bitcoin,
-              onTap: () {},
-            ),
-          ),
-        ],
       ),
       body: PopScope(
         canPop: true,
@@ -771,37 +759,21 @@ class SendScreenState extends State<SendScreen>
                       color: Theme.of(context).colorScheme.surface,
                       borderRadius: AppTheme.cardRadiusSmall,
                     ),
-                    child: Row(
-                      children: [
-                        // Address input masked for PostHog session replay
-                        Expanded(
-                          child: PostHogMaskWidget(
-                            child: TextField(
-                              controller: _addressController,
-                              focusNode: _addressFocusNode,
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: AppTheme.cardPadding,
-                                  vertical: AppTheme.elementSpacing,
-                                ),
-                                hintText: l10n.bitcoinOrArkAddress,
-                                hintStyle: TextStyle(color: Theme.of(context).hintColor),
-                              ),
-                            ),
+                    child: PostHogMaskWidget(
+                      child: TextField(
+                        controller: _addressController,
+                        focusNode: _addressFocusNode,
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.cardPadding,
+                            vertical: AppTheme.elementSpacing,
                           ),
+                          hintText: l10n.bitcoinOrArkAddress,
+                          hintStyle: TextStyle(color: Theme.of(context).hintColor),
                         ),
-                        // QR Code button
-                        IconButton(
-                          icon: Icon(
-                            Icons.qr_code_scanner_rounded,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          onPressed: _handleQRScan,
-                        ),
-                        const SizedBox(width: AppTheme.elementSpacing / 2),
-                      ],
+                      ),
                     ),
                   ),
                 ],
