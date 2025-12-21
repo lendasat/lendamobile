@@ -78,19 +78,6 @@ class _BitNetAppBarState extends State<BitNetAppBar> {
       centerTitle: true,
       titleTextStyle: Theme.of(context).textTheme.titleLarge,
       backgroundColor: Colors.transparent,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppTheme.colorBackground.withOpacity(0.9),
-              AppTheme.colorBackground.withOpacity(0.0),
-            ],
-            stops: const [0.0, 1.0],
-          ),
-        ),
-      ),
       title: widget.customTitle ??
           (widget.text != null && widget.text!.isNotEmpty
               ? _animateText

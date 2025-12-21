@@ -108,8 +108,8 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
                           : theme.colorScheme.primary == AppTheme.colorBitcoin
                               ? [
                                   AppTheme.colorBitcoin,
-                                  const Color(0xfff37335), // Sophisticated midpoint orange
-                                  AppTheme.colorPrimaryGradient
+                                  AppTheme.colorBitcoin, // Sophisticated midpoint orange
+                                  //AppTheme.colorPrimaryGradient
                                 ]
                               : [
                                   theme.colorScheme.primary,

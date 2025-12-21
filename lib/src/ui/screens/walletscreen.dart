@@ -780,34 +780,31 @@ class WalletScreenState extends State<WalletScreen> {
     double balanceChange = 0.0;
 
     if (_bitcoinPriceData.isNotEmpty) {
-      // Calculate portfolio value change (balance at time × price) to match the chart and gradient
+      // Calculate portfolio value change (balance at time x price) to match the chart and gradient
       final firstData = _bitcoinPriceData.first;
-      final lastData = _bitcoinPriceData.last;
-
+      
+      // Use the ACTUAL current state (not the last price point which might be stale)
       final firstBalance = _getBalanceAtTimestamp(firstData.time);
-      final lastBalance = _getBalanceAtTimestamp(lastData.time);
+      final currentBalance = _getSelectedBalance();
+      final currentPrice = _getCurrentBtcPrice();
 
       final firstValue = firstData.price * firstBalance;
-      final lastValue = lastData.price * lastBalance;
+      final currentValue = currentPrice * currentBalance;
 
-      final valueDiff = lastValue - firstValue;
+      final valueDiff = currentValue - firstValue;
 
       // Use the same balance-aware logic for consistency with gradient/chart
-      isPositive = _isBalanceChangePositive(firstBalance, lastBalance, firstValue, lastValue);
+      isPositive = _isBalanceChangePositive(firstBalance, currentBalance, firstValue, currentValue);
 
       // Calculate percent change with proper edge case handling
       const satoshiThreshold = 0.00000001;
-      if (firstBalance < satoshiThreshold && lastBalance < satoshiThreshold) {
-        // Both zero: no change
+      if (firstBalance < satoshiThreshold && currentBalance < satoshiThreshold) {
         percentChange = 0.0;
-      } else if (firstBalance >= satoshiThreshold && lastBalance < satoshiThreshold) {
-        // Had balance, now zero: -100% loss
+      } else if (firstBalance >= satoshiThreshold && currentBalance < satoshiThreshold) {
         percentChange = -100.0;
-      } else if (firstBalance < satoshiThreshold && lastBalance >= satoshiThreshold) {
-        // Had zero, now have balance: can't calculate meaningful %, show 0
-        percentChange = 0.0;
+      } else if (firstBalance < satoshiThreshold && currentBalance >= satoshiThreshold) {
+        percentChange = 0.0; // Significant gain from zero, but % is infinite/undefined
       } else if (firstValue != 0) {
-        // Normal calculation
         percentChange = (valueDiff / firstValue) * 100;
       } else {
         percentChange = 0.0;
@@ -816,7 +813,7 @@ class WalletScreenState extends State<WalletScreen> {
       // Balance change in fiat is the portfolio value difference
       balanceChangeInFiat = valueDiff;
       // Balance change in BTC
-      balanceChange = _getCurrentBtcPrice() > 0 ? valueDiff / _getCurrentBtcPrice() : 0.0;
+      balanceChange = currentPrice > 0 ? valueDiff / currentPrice : 0.0;
     }
 
     // Convert balance change to sats

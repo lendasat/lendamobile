@@ -1,11 +1,13 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/lnurl_service.dart';
+import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/ui/screens/qr_scanner_screen.dart';
-import 'package:ark_flutter/src/ui/screens/sign_transaction_screen.dart';
+import 'package:ark_flutter/src/ui/screens/transaction_success_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
