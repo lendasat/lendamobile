@@ -139,8 +139,13 @@ class SendScreenState extends State<SendScreen>
     final isValid = text.isNotEmpty && _isValidAddress(text);
 
     // If it looks like a complete invoice/URI with an amount, parse it
-    // Only parse if the amount field is empty to avoid overwriting user input
-    if (isValid && _satController.text.isEmpty) {
+    // Only parse if the amount field is empty/zero to avoid overwriting user input
+    // Also check for URI patterns to avoid re-parsing already extracted addresses
+    final isUri = text.toLowerCase().startsWith('bitcoin:') ||
+        text.toLowerCase().startsWith('lightning:');
+    final amountIsDefault =
+        _satController.text.isEmpty || _satController.text == '0';
+    if (isValid && isUri && amountIsDefault) {
       _tryParseAmountFromAddress(text);
     }
 
@@ -208,22 +213,41 @@ class SendScreenState extends State<SendScreen>
     }
   }
 
-  /// Try to extract amount from pasted Lightning invoice or BIP21 URI
+  /// Try to extract address and amount from pasted Lightning invoice or BIP21 URI
+  /// Also updates the address controller with the preferred address (ark > lightning > bitcoin)
   void _tryParseAmountFromAddress(String text) {
     int? amount;
     String address = text;
+    bool addressExtracted = false;
 
     // Handle Lightning URI (lightning:lnbc...)
     if (text.toLowerCase().startsWith('lightning:')) {
       address = text.substring(10);
+      addressExtracted = true;
     }
     // Parse BIP21 URI for amount
     else if (text.toLowerCase().startsWith('bitcoin:')) {
       final uri = Uri.tryParse(text);
       if (uri != null) {
-        // Check for Lightning invoice in query params
-        if (uri.queryParameters.containsKey('lightning')) {
+        // Priority order for address selection (lower fees first):
+        // 1. Ark address (lowest fees)
+        // 2. Lightning invoice
+        // 3. Bitcoin address (highest fees)
+        if (uri.queryParameters.containsKey('ark')) {
+          address = uri.queryParameters['ark']!;
+          addressExtracted = true;
+          logger.i("Using ark address from BIP21 for lower fees");
+        } else if (uri.queryParameters.containsKey('arkade')) {
+          address = uri.queryParameters['arkade']!;
+          addressExtracted = true;
+          logger.i("Using arkade address from BIP21 for lower fees");
+        } else if (uri.queryParameters.containsKey('lightning')) {
           address = uri.queryParameters['lightning']!;
+          addressExtracted = true;
+        } else {
+          // Use bitcoin address from path
+          address = uri.path;
+          addressExtracted = true;
         }
         // Parse amount from query parameters
         if (uri.queryParameters.containsKey('amount')) {
@@ -250,6 +274,11 @@ class SendScreenState extends State<SendScreen>
       }
     }
 
+    // Update address controller if we extracted a better address
+    if (addressExtracted && address != text) {
+      _addressController.text = address;
+    }
+
     // Update amount fields if we extracted an amount
     if (amount != null && amount > 0) {
       _satController.text = amount.toString();
@@ -262,6 +291,17 @@ class SendScreenState extends State<SendScreen>
     if (address.isEmpty) return false;
 
     final lower = address.toLowerCase().trim();
+
+    // BIP21 URI (bitcoin:address?params)
+    if (lower.startsWith('bitcoin:')) {
+      // Valid if it has at least some content after the scheme
+      return address.length > 10;
+    }
+
+    // Lightning URI (lightning:invoice)
+    if (lower.startsWith('lightning:')) {
+      return address.length > 15;
+    }
 
     // Lightning invoices (BOLT11) - lnbc (mainnet), lntb (testnet), lnbcrt (regtest)
     if (lower.startsWith('lnbc') ||
@@ -278,6 +318,11 @@ class SendScreenState extends State<SendScreen>
     // Lightning Address (user@domain.com format)
     if (LnurlService.isLightningAddress(address)) {
       return true;
+    }
+
+    // Ark addresses (mainnet: ark1, testnet: tark1)
+    if (lower.startsWith('ark1') || lower.startsWith('tark1')) {
+      return address.length >= 20;
     }
 
     // Bitcoin mainnet
@@ -415,10 +460,23 @@ class SendScreenState extends State<SendScreen>
       if (uri != null) {
         address = uri.path;
 
-        // Check for Lightning invoice in query params
-        if (uri.queryParameters.containsKey('lightning')) {
+        // Priority order for address selection (lower fees first):
+        // 1. Ark address (lowest fees)
+        // 2. Lightning invoice
+        // 3. Bitcoin address (highest fees)
+        if (uri.queryParameters.containsKey('ark')) {
+          // Prefer ark address for lower fees
+          address = uri.queryParameters['ark']!;
+          logger.i("Using ark address from BIP21 for lower fees");
+        } else if (uri.queryParameters.containsKey('arkade')) {
+          // Legacy arkade parameter support
+          address = uri.queryParameters['arkade']!;
+          logger.i("Using arkade address from BIP21 for lower fees");
+        } else if (uri.queryParameters.containsKey('lightning')) {
+          // Fall back to lightning invoice
           address = uri.queryParameters['lightning']!;
         }
+        // Otherwise use the bitcoin address from uri.path
 
         // Parse query parameters
         if (uri.queryParameters.containsKey('amount')) {

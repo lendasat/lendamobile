@@ -209,6 +209,7 @@
   "redeemTransaction": "兑换交易",
   "sent": "已发送",
   "received": "已接收",
+  "direction": "方向",
   "settled": "已结算",
   "sentSuccessfully": "发送成功",
   "returningToWalletAfterSuccessfulTransaction": "交易成功后返回钱包",

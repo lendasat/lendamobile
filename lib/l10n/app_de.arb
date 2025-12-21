@@ -209,6 +209,7 @@
   "redeemTransaction": "Einlöse-Transaktion",
   "sent": "Gesendet",
   "received": "Empfangen",
+  "direction": "Richtung",
   "settled": "Abgeschlossen",
   "sentSuccessfully": "Erfolgreich gesendet",
   "returningToWalletAfterSuccessfulTransaction": "Rückkehr zur Wallet nach erfolgreicher Transaktion",

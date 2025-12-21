@@ -209,6 +209,7 @@
   "redeemTransaction": "Transacción de canje",
   "sent": "Enviado",
   "received": "Recibido",
+  "direction": "Dirección",
   "settled": "Liquidado",
   "sentSuccessfully": "enviado con éxito",
   "returningToWalletAfterSuccessfulTransaction": "Volviendo a la billetera después de una transacción exitosa",

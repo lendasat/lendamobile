@@ -13,7 +13,8 @@
       "Bash(cargo check:*)",
       "Bash(cargo clean:*)",
       "Bash(flutter pub get:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(flutter gen-l10n:*)"
     ],
     "deny": [],
     "ask": []

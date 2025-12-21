@@ -209,6 +209,7 @@
   "redeemTransaction": "引換トランザクション",
   "sent": "送信済み",
   "received": "受信済み",
+  "direction": "方向",
   "settled": "完了",
   "sentSuccessfully": "送信に成功しました",
   "returningToWalletAfterSuccessfulTransaction": "トランザクション成功後にウォレットへ戻ります",

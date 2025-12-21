@@ -209,6 +209,7 @@
   "redeemTransaction": "ری ڈیم ٹرانزیکشن",
   "sent": "بھیجی گئی",
   "received": "وصول شدہ",
+  "direction": "سمت",
   "settled": "مکمل شدہ",
   "sentSuccessfully": "کامیابی سے بھیجا گیا",
   "returningToWalletAfterSuccessfulTransaction": "کامیاب ٹرانزیکشن کے بعد والیٹ پر واپس جا رہے ہیں",

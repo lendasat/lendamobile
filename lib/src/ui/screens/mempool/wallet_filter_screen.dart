@@ -168,26 +168,31 @@ class _WalletFilterScreenState extends State<WalletFilterScreen> {
             bottom: AppTheme.cardPadding,
             left: AppTheme.cardPadding,
             right: AppTheme.cardPadding,
-            child: LongButtonWidget(
-              title: l10n.apply,
-              buttonType: ButtonType.solid,
-              onTap: () {
-                if (controller.startDate.value != null) {
-                  controller.start =
-                      controller.startDate.value!.millisecondsSinceEpoch ~/
-                          1000;
-                } else {
-                  controller.start = 0;
-                }
-                if (controller.endDate.value != null) {
-                  controller.end =
-                      controller.endDate.value!.millisecondsSinceEpoch ~/ 1000;
-                } else {
-                  controller.end = 0;
-                }
-                widget.onApply?.call(controller);
-                Navigator.pop(context);
-              },
+            child: SizedBox(
+              width: double.infinity,
+              child: LongButtonWidget(
+                title: l10n.apply,
+                customWidth: double.infinity,
+                buttonType: ButtonType.solid,
+                onTap: () {
+                  if (controller.startDate.value != null) {
+                    controller.start =
+                        controller.startDate.value!.millisecondsSinceEpoch ~/
+                            1000;
+                  } else {
+                    controller.start = 0;
+                  }
+                  if (controller.endDate.value != null) {
+                    controller.end =
+                        controller.endDate.value!.millisecondsSinceEpoch ~/
+                            1000;
+                  } else {
+                    controller.end = 0;
+                  }
+                  widget.onApply?.call(controller);
+                  Navigator.pop(context);
+                },
+              ),
             ),
           ),
         ],

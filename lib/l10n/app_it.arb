@@ -209,6 +209,7 @@
   "redeemTransaction": "Transazione di Riscatto",
   "sent": "Inviato",
   "received": "Ricevuto",
+  "direction": "Direzione",
   "settled": "Completato",
   "sentSuccessfully": "inviato con successo",
   "returningToWalletAfterSuccessfulTransaction": "Ritorno al portafoglio dopo una transazione riuscita",

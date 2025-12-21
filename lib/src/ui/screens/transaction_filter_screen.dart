@@ -211,12 +211,16 @@ class TransactionFilterScreen extends StatelessWidget {
             bottom: AppTheme.paddingL,
             left: AppTheme.paddingM,
             right: AppTheme.paddingM,
-            child: LongButtonWidget(
-              title: AppLocalizations.of(context)!.apply,
-              customHeight: 56,
-              onTap: () {
-                Navigator.pop(context);
-              },
+            child: SizedBox(
+              width: double.infinity,
+              child: LongButtonWidget(
+                title: AppLocalizations.of(context)!.apply,
+                customWidth: double.infinity,
+                customHeight: 56,
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
             ),
           ),
         ],

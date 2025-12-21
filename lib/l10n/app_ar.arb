@@ -209,6 +209,7 @@
   "redeemTransaction": "معاملة الاسترداد",
   "sent": "تم الإرسال",
   "received": "تم الاستلام",
+  "direction": "الاتجاه",
   "settled": "تمت التسوية",
   "sentSuccessfully": "تم الإرسال بنجاح",
   "returningToWalletAfterSuccessfulTransaction": "العودة إلى المحفظة بعد المعاملة الناجحة",

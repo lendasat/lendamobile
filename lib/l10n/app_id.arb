@@ -209,6 +209,7 @@
   "redeemTransaction": "Transaksi Penebusan",
   "sent": "Dikirim",
   "received": "Diterima",
+  "direction": "Arah",
   "settled": "Selesai",
   "sentSuccessfully": "berhasil dikirim",
   "returningToWalletAfterSuccessfulTransaction": "Kembali ke dompet setelah transaksi berhasil",

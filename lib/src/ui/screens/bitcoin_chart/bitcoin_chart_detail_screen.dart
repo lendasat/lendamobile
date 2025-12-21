@@ -1,4 +1,5 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/ui/screens/swap_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_image_text_button.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
@@ -84,7 +85,12 @@ class _BitcoinChartDetailScreenState extends State<BitcoinChartDetailScreen> {
                   BitNetImageWithTextButton(
                     'Swap',
                     () {
-                      // Swap functionality
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SwapScreen(),
+                        ),
+                      );
                     },
                     fallbackIcon: Icons.sync_rounded,
                   ),
@@ -112,14 +118,13 @@ class _BitcoinChartDetailScreenState extends State<BitcoinChartDetailScreen> {
   }
 
   Widget _buildInfoCard(BuildContext context) {
-    // Plain text section without box - matches BitnetGithub style
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)!.aboutBitcoinPriceData,
+            AppLocalizations.of(context)!.aboutBitcoin,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurface,
               fontSize: 18,
@@ -128,53 +133,15 @@ class _BitcoinChartDetailScreenState extends State<BitcoinChartDetailScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            AppLocalizations.of(context)!.thePriceDataShown,
+            AppLocalizations.of(context)!.bitcoinDescription,
             style: TextStyle(
               color: Theme.of(context).hintColor,
               fontSize: 14,
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 16),
-          _buildInfoRow(
-            context,
-            AppLocalizations.of(context)!.dataSource,
-            AppLocalizations.of(context)!.liveBitcoinMarketData,
-          ),
-          const SizedBox(height: 8),
-          _buildInfoRow(
-            context,
-            AppLocalizations.of(context)!.currency,
-            'USD',
-          ),
-          const SizedBox(height: 8),
-          _buildInfoRow(
-            context,
-            AppLocalizations.of(context)!.updateFrequency,
-            AppLocalizations.of(context)!.realTime,
-          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildInfoRow(BuildContext context, String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(color: Theme.of(context).hintColor, fontSize: 14),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 }

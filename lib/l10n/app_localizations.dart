@@ -992,6 +992,12 @@ abstract class AppLocalizations {
   /// **'Received'**
   String get received;
 
+  /// No description provided for @direction.
+  ///
+  /// In en, this message translates to:
+  /// **'Direction'**
+  String get direction;
+
   /// No description provided for @settled.
   ///
   /// In en, this message translates to:
@@ -1579,6 +1585,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bitcoin Price Chart'**
   String get bitcoinPriceChart;
+
+  /// No description provided for @aboutBitcoin.
+  ///
+  /// In en, this message translates to:
+  /// **'About Bitcoin'**
+  String get aboutBitcoin;
+
+  /// No description provided for @bitcoinDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Bitcoin is the world\'s first decentralized digital currency. It was created in 2009 by an unknown person or group of people using the name Satoshi Nakamoto. Bitcoin is a distributed, peer-to-peer network that keeps a record of all transactions in a public ledger called the blockchain.'**
+  String get bitcoinDescription;
 
   /// No description provided for @aboutBitcoinPriceData.
   ///

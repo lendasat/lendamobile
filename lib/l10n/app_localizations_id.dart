@@ -471,6 +471,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get received => 'Diterima';
 
   @override
+  String get direction => 'Arah';
+
+  @override
   String get settled => 'Selesai';
 
   @override
@@ -764,6 +767,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bitcoinPriceChart => 'Bitcoin Price Chart';
+
+  @override
+  String get aboutBitcoin => 'About Bitcoin';
+
+  @override
+  String get bitcoinDescription =>
+      'Bitcoin is the world\'s first decentralized digital currency. It was created in 2009 by an unknown person or group of people using the name Satoshi Nakamoto. Bitcoin is a distributed, peer-to-peer network that keeps a record of all transactions in a public ledger called the blockchain.';
 
   @override
   String get aboutBitcoinPriceData => 'About Bitcoin Price Data';

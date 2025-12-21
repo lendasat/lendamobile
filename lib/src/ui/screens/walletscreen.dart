@@ -938,7 +938,7 @@ class WalletScreenState extends State<WalletScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.paddingM,
+        horizontal: AppTheme.cardPadding,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -209,6 +209,7 @@
   "redeemTransaction": "रिडीम लेनदेन",
   "sent": "भेजा गया",
   "received": "प्राप्त हुआ",
+  "direction": "दिशा",
   "settled": "निपटाया गया",
   "sentSuccessfully": "सफलतापूर्वक भेजा गया",
   "returningToWalletAfterSuccessfulTransaction": "सफल लेनदेन के बाद वॉलेट पर लौट रहे हैं",

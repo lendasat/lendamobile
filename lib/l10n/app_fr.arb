@@ -209,6 +209,7 @@
   "redeemTransaction": "Transaction de rachat",
   "sent": "Envoyé",
   "received": "Reçu",
+  "direction": "Direction",
   "settled": "Finalisé",
   "sentSuccessfully": "envoyé avec succès",
   "returningToWalletAfterSuccessfulTransaction": "Retour au portefeuille après une transaction réussie",

@@ -103,6 +103,26 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
     return formatter.format(value);
   }
 
+  /// Format amount with auto sats/BTC switching based on threshold
+  /// Returns (formattedAmount, unit, isSats)
+  (String, String, bool) _formatAmountWithUnit(int amountSats) {
+    final absAmount = amountSats.abs();
+    // Threshold: >= 100,000,000 sats (1 BTC) show as BTC
+    if (absAmount >= 100000000) {
+      final btc = absAmount / 100000000;
+      return (btc.toStringAsFixed(8), 'BTC', false);
+    } else {
+      final formatter = NumberFormat('#,###');
+      return (formatter.format(absAmount), 'sats', true);
+    }
+  }
+
+  /// Determine if transaction is sent or received based on amount
+  bool _isSent(int? amountSats) {
+    if (amountSats == null) return false;
+    return amountSats < 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -116,6 +136,11 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
         outputTotal += vout.value;
       }
     }
+
+    // For main view, determine sent/received and format amount
+    final isSent = _isSent(widget.amountSats);
+    final displayAmountSats = widget.amountSats ?? outputTotal.toInt();
+    final (formattedAmount, unit, isSatsUnit) = _formatAmountWithUnit(displayAmountSats);
 
     return ArkScaffold(
       context: context,
@@ -251,7 +276,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               MainAxisAlignment.start,
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            // Transaction Volume
+                                            // Transaction Volume with auto sats/BTC
                                             ArkListTile(
                                               contentPadding:
                                                   const EdgeInsets.symmetric(
@@ -264,20 +289,70 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               ),
                                               text: 'Transaction Volume',
                                               trailing: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
+                                                mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Text(
-                                                    '${(outputTotal.toDouble() / 100000000).toStringAsFixed(8)} BTC',
+                                                    formattedAmount,
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                     style: Theme.of(context)
                                                         .textTheme
                                                         .titleMedium,
                                                   ),
+                                                  if (isSatsUnit)
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(left: 2),
+                                                      child: Icon(
+                                                        AppTheme.satoshiIcon,
+                                                        size: 16,
+                                                        color: Theme.of(context).colorScheme.onSurface,
+                                                      ),
+                                                    )
+                                                  else
+                                                    Text(
+                                                      ' $unit',
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall,
+                                                    ),
                                                 ],
                                               ),
                                             ),
+
+                                            // Direction (Sent/Received)
+                                            if (widget.amountSats != null)
+                                              ArkListTile(
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal:
+                                                      AppTheme.elementSpacing *
+                                                          0.75,
+                                                  vertical:
+                                                      AppTheme.elementSpacing *
+                                                          0.5,
+                                                ),
+                                                text: l10n.direction,
+                                                trailing: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      isSent ? Icons.north_east : Icons.south_west,
+                                                      color: isSent ? AppTheme.colorBitcoin : AppTheme.successColor,
+                                                      size: 18,
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    Text(
+                                                      isSent ? l10n.sent : l10n.received,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .titleMedium!
+                                                          .copyWith(
+                                                            color: isSent ? AppTheme.colorBitcoin : AppTheme.successColor,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
 
                                             // Transaction ID
                                             ArkListTile(
@@ -412,6 +487,27 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               ),
                                             ),
 
+                                            // Transaction Type (if available)
+                                            if (widget.transactionType != null)
+                                              ArkListTile(
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal:
+                                                      AppTheme.elementSpacing *
+                                                          0.75,
+                                                  vertical:
+                                                      AppTheme.elementSpacing *
+                                                          0.5,
+                                                ),
+                                                text: l10n.type,
+                                                trailing: Text(
+                                                  widget.transactionType!,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleMedium,
+                                                ),
+                                              ),
+
                                             // Payment Network
                                             ArkListTile(
                                               contentPadding:
@@ -449,7 +545,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                         2,
                                                   ),
                                                   Text(
-                                                    'Onchain',
+                                                    widget.networkType ?? 'Onchain',
                                                     style: Theme.of(context)
                                                         .textTheme
                                                         .titleMedium,
@@ -580,9 +676,9 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
     AppLocalizations l10n,
     TimezoneService timezoneService,
   ) {
-    final amountBtc = widget.amountSats != null
-        ? (widget.amountSats! / 100000000).toStringAsFixed(8)
-        : '--';
+    final isSent = _isSent(widget.amountSats);
+    final amountSats = widget.amountSats ?? 0;
+    final (formattedAmount, unit, isSatsUnit) = _formatAmountWithUnit(amountSats);
 
     String formattedDate = '--';
     if (widget.createdAt != null) {
@@ -686,7 +782,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Transaction Volume
+                                // Transaction Volume with auto sats/BTC
                                 ArkListTile(
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: AppTheme.elementSpacing * 0.75,
@@ -694,18 +790,64 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                   ),
                                   text: 'Transaction Volume',
                                   trailing: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        '$amountBtc BTC',
+                                        formattedAmount,
                                         overflow: TextOverflow.ellipsis,
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleMedium,
                                       ),
+                                      if (isSatsUnit)
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 2),
+                                          child: Icon(
+                                            AppTheme.satoshiIcon,
+                                            size: 16,
+                                            color: Theme.of(context).colorScheme.onSurface,
+                                          ),
+                                        )
+                                      else
+                                        Text(
+                                          ' $unit',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall,
+                                        ),
                                     ],
                                   ),
                                 ),
+
+                                // Direction (Sent/Received)
+                                if (widget.amountSats != null)
+                                  ArkListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: AppTheme.elementSpacing * 0.75,
+                                      vertical: AppTheme.elementSpacing * 0.5,
+                                    ),
+                                    text: l10n.direction,
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          isSent ? Icons.north_east : Icons.south_west,
+                                          color: isSent ? AppTheme.colorBitcoin : AppTheme.successColor,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          isSent ? l10n.sent : l10n.received,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium!
+                                              .copyWith(
+                                                color: isSent ? AppTheme.colorBitcoin : AppTheme.successColor,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
 
                                 // Transaction ID
                                 ArkListTile(

@@ -497,8 +497,6 @@ class _TransactionItemWidget extends StatelessWidget {
         tx.txid,
         DateTime.now().millisecondsSinceEpoch ~/ 1000,
         tx.amountSats.toInt(),
-        false,
-        tx.confirmedAt is BigInt ? (tx.confirmedAt as BigInt).toInt() : tx.confirmedAt as int?,
         showBtcAsMain,
         hideAmounts,
         'Onchain',
@@ -509,8 +507,6 @@ class _TransactionItemWidget extends StatelessWidget {
         tx.txid,
         tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
         tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
-        true,
-        null,
         showBtcAsMain,
         hideAmounts,
         'Arkade',
@@ -521,13 +517,10 @@ class _TransactionItemWidget extends StatelessWidget {
         tx.txid,
         tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
         tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
-        tx.isSettled,
-        null,
         showBtcAsMain,
         hideAmounts,
-        // If not settled, it's still a virtual Ark transaction (Arkade)
-        // Only show as Onchain if it's been settled/redeemed
-        tx.isSettled ? 'Onchain' : 'Arkade',
+        // Collaborative redeem settles to on-chain, otherwise stays in Arkade
+        tx.isSettled ? 'Arkade → Onchain' : 'Arkade',
       ),
     );
   }
@@ -538,8 +531,6 @@ class _TransactionItemWidget extends StatelessWidget {
     String txid,
     int createdAt,
     int amountSats,
-    bool isSettled,
-    int? confirmedAt,
     bool showBtcAsMain,
     bool hideAmounts,
     String network,
@@ -554,15 +545,6 @@ class _TransactionItemWidget extends StatelessWidget {
     final exchangeRates = currencyService.exchangeRates;
     final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1;
     final amountFiat = amountBtc * btcPriceUsd * fiatRate;
-
-    Color statusColor;
-    if (isSettled) {
-      statusColor = AppTheme.successColor;
-    } else if (confirmedAt != null) {
-      statusColor = AppTheme.colorBitcoin;
-    } else {
-      statusColor = AppTheme.errorColor;
-    }
 
     String transactionType = dialogTitle.replaceAll(' Transaction', '');
 
@@ -651,14 +633,6 @@ class _TransactionItemWidget extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),
-                              const SizedBox(
-                                width: AppTheme.elementSpacing / 2,
-                              ),
-                              Icon(
-                                Icons.circle,
-                                color: statusColor,
-                                size: AppTheme.cardPadding * 0.4,
-                              ),
                             ],
                           ),
                         ],
@@ -728,23 +702,6 @@ class _SwapItemWidget extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor() {
-    switch (swapItem.displayStatus) {
-      case SwapDisplayStatus.completed:
-        return AppTheme.successColor;
-      case SwapDisplayStatus.processing:
-      case SwapDisplayStatus.pending:
-        return AppTheme.colorBitcoin;
-      case SwapDisplayStatus.refundable:
-        return Colors.orange;
-      case SwapDisplayStatus.expired:
-      case SwapDisplayStatus.failed:
-        return AppTheme.errorColor;
-      case SwapDisplayStatus.refunded:
-        return AppTheme.white60;
-    }
-  }
-
   String _getSwapTypeLabel() {
     if (swapItem.isBtcToEvm) {
       return 'BTC → ${swapItem.tokenSymbol}';
@@ -756,7 +713,6 @@ class _SwapItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final statusColor = _getStatusColor();
     final amountSats = swapItem.amountSats;
     final usdAmount = swapItem.usdAmount;
 
@@ -825,12 +781,6 @@ class _SwapItemWidget extends StatelessWidget {
                                 _getSwapTypeLabel(),
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                              const SizedBox(width: AppTheme.elementSpacing / 2),
-                              Icon(
-                                Icons.circle,
-                                color: statusColor,
-                                size: AppTheme.cardPadding * 0.4,
                               ),
                             ],
                           ),
