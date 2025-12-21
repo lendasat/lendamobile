@@ -14,7 +14,8 @@
       "Bash(cargo clean:*)",
       "Bash(flutter pub get:*)",
       "Bash(cat:*)",
-      "Bash(flutter gen-l10n:*)"
+      "Bash(flutter gen-l10n:*)",
+      "Bash(flutter_rust_bridge_codegen generate:*)"
     ],
     "deny": [],
     "ask": []

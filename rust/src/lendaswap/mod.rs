@@ -357,7 +357,9 @@ impl From<ApiSwapStatus> for SwapStatusSimple {
             ApiSwapStatus::ClientFunded => SwapStatusSimple::Processing,
             ApiSwapStatus::ServerFunded => SwapStatusSimple::Processing,
             ApiSwapStatus::ClientRedeeming => SwapStatusSimple::Processing,
-            ApiSwapStatus::ClientRedeemed => SwapStatusSimple::Processing,
+            // ClientRedeemed means the user has successfully claimed their funds
+            // This should be treated as completed (matches web frontend behavior)
+            ApiSwapStatus::ClientRedeemed => SwapStatusSimple::Completed,
             ApiSwapStatus::ServerRedeemed => SwapStatusSimple::Completed,
             ApiSwapStatus::Expired => SwapStatusSimple::Expired,
             ApiSwapStatus::ClientRefunded => SwapStatusSimple::Refunded,

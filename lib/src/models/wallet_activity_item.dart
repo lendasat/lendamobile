@@ -18,13 +18,14 @@ class TransactionActivityItem implements WalletActivityItem {
   @override
   int get timestamp => transaction.map(
         boarding: (tx) {
-          // Boarding transactions use confirmedAt if available, otherwise 0 (will sort to bottom)
+          // Boarding transactions use confirmedAt if available
           if (tx.confirmedAt != null) {
             return tx.confirmedAt is BigInt
                 ? (tx.confirmedAt as BigInt).toInt()
                 : tx.confirmedAt as int;
           }
-          return 0; // Unconfirmed boarding txs sort to bottom
+          // Unconfirmed boarding txs should be at the TOP of the history
+          return (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 1;
         },
         round: (tx) => tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
         redeem: (tx) => tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
@@ -62,10 +63,31 @@ class SwapActivityItem implements WalletActivityItem {
   @override
   int get timestamp {
     try {
-      final date = DateTime.parse(swap.createdAt);
+      // Handle format like "2025-12-21 19:04:15.0 +00:00:00"
+      String dateStr = swap.createdAt;
+
+      // Remove the unusual timezone format (+00:00:00 or -00:00:00)
+      if (dateStr.contains(' +') || dateStr.contains(' -')) {
+        final parts = dateStr.split(RegExp(r' [+-]'));
+        if (parts.isNotEmpty) {
+          dateStr = parts[0].trim();
+        }
+      }
+
+      // Replace space between date and time with 'T' for ISO format
+      dateStr = dateStr.replaceFirst(' ', 'T');
+
+      // Add Z suffix if no timezone indicator
+      if (!dateStr.contains('Z') && !dateStr.contains('+')) {
+        dateStr += 'Z';
+      }
+
+      final date = DateTime.parse(dateStr);
       return date.millisecondsSinceEpoch ~/ 1000;
     } catch (e) {
-      return DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      // If parsing fails for an OLD swap, don't pin it to the top.
+      // 0 will put it at the bottom where it's less confusing than the very tip.
+      return 0;
     }
   }
 

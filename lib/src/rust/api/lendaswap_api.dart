@@ -7,11 +7,9 @@ import '../frb_generated.dart';
 import '../lendaswap.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
-            // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
-
-
-            /// Initialize the LendaSwap client.
+/// Initialize the LendaSwap client.
 ///
 /// Call this after the Ark wallet is initialized and the mnemonic exists.
 ///
@@ -20,13 +18,24 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// * `network` - Bitcoin network: "bitcoin", "testnet", "signet", or "regtest"
 /// * `api_url` - LendaSwap API URL (e.g., "https://api.lendaswap.com")
 /// * `arkade_url` - Arkade server URL (e.g., "https://arkade.computer")
-Future<void>  lendaswapInit({required String dataDir , required String network , required String apiUrl , required String arkadeUrl }) => RustLib.instance.api.crateApiLendaswapApiLendaswapInit(dataDir: dataDir, network: network, apiUrl: apiUrl, arkadeUrl: arkadeUrl);
+Future<void> lendaswapInit(
+        {required String dataDir,
+        required String network,
+        required String apiUrl,
+        required String arkadeUrl}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapInit(
+        dataDir: dataDir,
+        network: network,
+        apiUrl: apiUrl,
+        arkadeUrl: arkadeUrl);
 
 /// Check if LendaSwap is initialized.
-bool  lendaswapIsInitialized() => RustLib.instance.api.crateApiLendaswapApiLendaswapIsInitialized();
+bool lendaswapIsInitialized() =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapIsInitialized();
 
 /// Get all available trading pairs.
-Future<List<TradingPair>>  lendaswapGetAssetPairs() => RustLib.instance.api.crateApiLendaswapApiLendaswapGetAssetPairs();
+Future<List<TradingPair>> lendaswapGetAssetPairs() =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapGetAssetPairs();
 
 /// Get a quote for a swap.
 ///
@@ -34,7 +43,12 @@ Future<List<TradingPair>>  lendaswapGetAssetPairs() => RustLib.instance.api.crat
 /// * `from_token` - Source token ID (e.g., "btc_arkade", "usdc_pol")
 /// * `to_token` - Target token ID
 /// * `amount_sats` - Amount in satoshis (for BTC) or smallest unit (for tokens)
-Future<SwapQuote>  lendaswapGetQuote({required String fromToken , required String toToken , required BigInt amountSats }) => RustLib.instance.api.crateApiLendaswapApiLendaswapGetQuote(fromToken: fromToken, toToken: toToken, amountSats: amountSats);
+Future<SwapQuote> lendaswapGetQuote(
+        {required String fromToken,
+        required String toToken,
+        required BigInt amountSats}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapGetQuote(
+        fromToken: fromToken, toToken: toToken, amountSats: amountSats);
 
 /// Create a BTC to EVM swap (sell BTC for stablecoins).
 ///
@@ -44,7 +58,18 @@ Future<SwapQuote>  lendaswapGetQuote({required String fromToken , required Strin
 /// * `target_token` - Target token ID (e.g., "usdc_pol", "usdt_eth")
 /// * `target_chain` - EVM chain: "polygon" or "ethereum"
 /// * `referral_code` - Optional referral code
-Future<BtcToEvmSwapResult>  lendaswapCreateBtcToEvmSwap({required String targetEvmAddress , required double targetAmountUsd , required String targetToken , required String targetChain , String? referralCode }) => RustLib.instance.api.crateApiLendaswapApiLendaswapCreateBtcToEvmSwap(targetEvmAddress: targetEvmAddress, targetAmountUsd: targetAmountUsd, targetToken: targetToken, targetChain: targetChain, referralCode: referralCode);
+Future<BtcToEvmSwapResult> lendaswapCreateBtcToEvmSwap(
+        {required String targetEvmAddress,
+        required double targetAmountUsd,
+        required String targetToken,
+        required String targetChain,
+        String? referralCode}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapCreateBtcToEvmSwap(
+        targetEvmAddress: targetEvmAddress,
+        targetAmountUsd: targetAmountUsd,
+        targetToken: targetToken,
+        targetChain: targetChain,
+        referralCode: referralCode);
 
 /// Create an EVM to BTC swap (buy BTC with stablecoins).
 ///
@@ -55,7 +80,20 @@ Future<BtcToEvmSwapResult>  lendaswapCreateBtcToEvmSwap({required String targetE
 /// * `source_token` - Source token ID (e.g., "usdc_pol")
 /// * `source_chain` - EVM chain: "polygon" or "ethereum"
 /// * `referral_code` - Optional referral code
-Future<EvmToBtcSwapResult>  lendaswapCreateEvmToBtcSwap({required String targetArkAddress , required String userEvmAddress , required double sourceAmountUsd , required String sourceToken , required String sourceChain , String? referralCode }) => RustLib.instance.api.crateApiLendaswapApiLendaswapCreateEvmToBtcSwap(targetArkAddress: targetArkAddress, userEvmAddress: userEvmAddress, sourceAmountUsd: sourceAmountUsd, sourceToken: sourceToken, sourceChain: sourceChain, referralCode: referralCode);
+Future<EvmToBtcSwapResult> lendaswapCreateEvmToBtcSwap(
+        {required String targetArkAddress,
+        required String userEvmAddress,
+        required double sourceAmountUsd,
+        required String sourceToken,
+        required String sourceChain,
+        String? referralCode}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapCreateEvmToBtcSwap(
+        targetArkAddress: targetArkAddress,
+        userEvmAddress: userEvmAddress,
+        sourceAmountUsd: sourceAmountUsd,
+        sourceToken: sourceToken,
+        sourceChain: sourceChain,
+        referralCode: referralCode);
 
 /// Create an EVM to Lightning swap.
 ///
@@ -65,197 +103,292 @@ Future<EvmToBtcSwapResult>  lendaswapCreateEvmToBtcSwap({required String targetA
 /// * `source_token` - Source token ID (e.g., "usdc_pol")
 /// * `source_chain` - EVM chain: "polygon" or "ethereum"
 /// * `referral_code` - Optional referral code
-Future<EvmToBtcSwapResult>  lendaswapCreateEvmToLightningSwap({required String bolt11Invoice , required String userEvmAddress , required String sourceToken , required String sourceChain , String? referralCode }) => RustLib.instance.api.crateApiLendaswapApiLendaswapCreateEvmToLightningSwap(bolt11Invoice: bolt11Invoice, userEvmAddress: userEvmAddress, sourceToken: sourceToken, sourceChain: sourceChain, referralCode: referralCode);
+Future<EvmToBtcSwapResult> lendaswapCreateEvmToLightningSwap(
+        {required String bolt11Invoice,
+        required String userEvmAddress,
+        required String sourceToken,
+        required String sourceChain,
+        String? referralCode}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapCreateEvmToLightningSwap(
+        bolt11Invoice: bolt11Invoice,
+        userEvmAddress: userEvmAddress,
+        sourceToken: sourceToken,
+        sourceChain: sourceChain,
+        referralCode: referralCode);
 
 /// Get swap details by ID.
-Future<SwapInfo>  lendaswapGetSwap({required String swapId }) => RustLib.instance.api.crateApiLendaswapApiLendaswapGetSwap(swapId: swapId);
+Future<SwapInfo> lendaswapGetSwap({required String swapId}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapGetSwap(swapId: swapId);
 
 /// List all swaps.
-Future<List<SwapInfo>>  lendaswapListSwaps() => RustLib.instance.api.crateApiLendaswapApiLendaswapListSwaps();
+Future<List<SwapInfo>> lendaswapListSwaps() =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapListSwaps();
 
 /// Claim a swap via Gelato (gasless).
-Future<void>  lendaswapClaimGelato({required String swapId }) => RustLib.instance.api.crateApiLendaswapApiLendaswapClaimGelato(swapId: swapId);
+Future<void> lendaswapClaimGelato({required String swapId}) =>
+    RustLib.instance.api
+        .crateApiLendaswapApiLendaswapClaimGelato(swapId: swapId);
 
 /// Claim VHTLC for an EVM to BTC swap.
 ///
 /// Returns the transaction ID.
-Future<String>  lendaswapClaimVhtlc({required String swapId }) => RustLib.instance.api.crateApiLendaswapApiLendaswapClaimVhtlc(swapId: swapId);
+Future<String> lendaswapClaimVhtlc({required String swapId}) =>
+    RustLib.instance.api
+        .crateApiLendaswapApiLendaswapClaimVhtlc(swapId: swapId);
 
 /// Refund VHTLC for a failed BTC to EVM swap.
 ///
 /// Returns the transaction ID.
-Future<String>  lendaswapRefundVhtlc({required String swapId , required String refundAddress }) => RustLib.instance.api.crateApiLendaswapApiLendaswapRefundVhtlc(swapId: swapId, refundAddress: refundAddress);
+Future<String> lendaswapRefundVhtlc(
+        {required String swapId, required String refundAddress}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapRefundVhtlc(
+        swapId: swapId, refundAddress: refundAddress);
 
 /// Recover swaps from server (after mnemonic restore).
-Future<List<SwapInfo>>  lendaswapRecoverSwaps() => RustLib.instance.api.crateApiLendaswapApiLendaswapRecoverSwaps();
+Future<List<SwapInfo>> lendaswapRecoverSwaps() =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapRecoverSwaps();
 
 /// Delete a swap from local storage.
-Future<void>  lendaswapDeleteSwap({required String swapId }) => RustLib.instance.api.crateApiLendaswapApiLendaswapDeleteSwap(swapId: swapId);
+Future<void> lendaswapDeleteSwap({required String swapId}) =>
+    RustLib.instance.api
+        .crateApiLendaswapApiLendaswapDeleteSwap(swapId: swapId);
 
-            /// Information about a tradeable asset.
-class AssetInfo  {
-                final String tokenId;
-final String symbol;
-final String name;
-final String chain;
-final int decimals;
+/// Information about a tradeable asset.
+class AssetInfo {
+  final String tokenId;
+  final String symbol;
+  final String name;
+  final String chain;
+  final int decimals;
 
-                const AssetInfo({required this.tokenId ,required this.symbol ,required this.name ,required this.chain ,required this.decimals ,});
+  const AssetInfo({
+    required this.tokenId,
+    required this.symbol,
+    required this.name,
+    required this.chain,
+    required this.decimals,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      tokenId.hashCode ^
+      symbol.hashCode ^
+      name.hashCode ^
+      chain.hashCode ^
+      decimals.hashCode;
 
-                
-        @override
-        int get hashCode => tokenId.hashCode^symbol.hashCode^name.hashCode^chain.hashCode^decimals.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is AssetInfo &&
-                runtimeType == other.runtimeType
-                && tokenId == other.tokenId&& symbol == other.symbol&& name == other.name&& chain == other.chain&& decimals == other.decimals;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AssetInfo &&
+          runtimeType == other.runtimeType &&
+          tokenId == other.tokenId &&
+          symbol == other.symbol &&
+          name == other.name &&
+          chain == other.chain &&
+          decimals == other.decimals;
+}
 
 /// Response when creating a BTC to EVM swap.
-class BtcToEvmSwapResult  {
-                final String swapId;
-/// Lightning invoice to pay
-final String lnInvoice;
-/// Arkade HTLC address (alternative to Lightning)
-final String arkadeHtlcAddress;
-/// Amount in satoshis to send
-final PlatformInt64 satsToSend;
-/// Target token amount (e.g., USDC amount)
-final double targetAmountUsd;
-/// Fee in satoshis
-final PlatformInt64 feeSats;
+class BtcToEvmSwapResult {
+  final String swapId;
 
-                const BtcToEvmSwapResult({required this.swapId ,required this.lnInvoice ,required this.arkadeHtlcAddress ,required this.satsToSend ,required this.targetAmountUsd ,required this.feeSats ,});
+  /// Lightning invoice to pay
+  final String lnInvoice;
 
-                
-                
+  /// Arkade HTLC address (alternative to Lightning)
+  final String arkadeHtlcAddress;
 
-                
-        @override
-        int get hashCode => swapId.hashCode^lnInvoice.hashCode^arkadeHtlcAddress.hashCode^satsToSend.hashCode^targetAmountUsd.hashCode^feeSats.hashCode;
-        
+  /// Amount in satoshis to send
+  final PlatformInt64 satsToSend;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is BtcToEvmSwapResult &&
-                runtimeType == other.runtimeType
-                && swapId == other.swapId&& lnInvoice == other.lnInvoice&& arkadeHtlcAddress == other.arkadeHtlcAddress&& satsToSend == other.satsToSend&& targetAmountUsd == other.targetAmountUsd&& feeSats == other.feeSats;
-        
-            }
+  /// Target token amount (e.g., USDC amount)
+  final double targetAmountUsd;
+
+  /// Fee in satoshis
+  final PlatformInt64 feeSats;
+
+  const BtcToEvmSwapResult({
+    required this.swapId,
+    required this.lnInvoice,
+    required this.arkadeHtlcAddress,
+    required this.satsToSend,
+    required this.targetAmountUsd,
+    required this.feeSats,
+  });
+
+  @override
+  int get hashCode =>
+      swapId.hashCode ^
+      lnInvoice.hashCode ^
+      arkadeHtlcAddress.hashCode ^
+      satsToSend.hashCode ^
+      targetAmountUsd.hashCode ^
+      feeSats.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BtcToEvmSwapResult &&
+          runtimeType == other.runtimeType &&
+          swapId == other.swapId &&
+          lnInvoice == other.lnInvoice &&
+          arkadeHtlcAddress == other.arkadeHtlcAddress &&
+          satsToSend == other.satsToSend &&
+          targetAmountUsd == other.targetAmountUsd &&
+          feeSats == other.feeSats;
+}
 
 /// Response when creating an EVM to BTC swap.
-class EvmToBtcSwapResult  {
-                final String swapId;
-/// EVM HTLC contract address to deposit tokens
-final String evmHtlcAddress;
-/// Amount of tokens to deposit (in token's smallest unit)
-final double sourceAmountUsd;
-/// BTC amount user will receive in satoshis
-final PlatformInt64 satsToReceive;
-/// Fee in satoshis
-final PlatformInt64 feeSats;
-/// Token address for approval (ERC20)
-final String sourceTokenAddress;
-/// Pre-built calldata for createSwap() contract call
-/// This MUST be called via WalletConnect to properly fund the HTLC
-final String? createSwapTx;
-/// Pre-built calldata for approve() on the ERC20 token
-final String? approveTx;
-/// Gelato forwarder address (for gasless transactions)
-final String? gelatoForwarderAddress;
-/// Gelato user nonce
-final String? gelatoUserNonce;
-/// Gelato deadline
-final String? gelatoUserDeadline;
+class EvmToBtcSwapResult {
+  final String swapId;
 
-                const EvmToBtcSwapResult({required this.swapId ,required this.evmHtlcAddress ,required this.sourceAmountUsd ,required this.satsToReceive ,required this.feeSats ,required this.sourceTokenAddress ,this.createSwapTx ,this.approveTx ,this.gelatoForwarderAddress ,this.gelatoUserNonce ,this.gelatoUserDeadline ,});
+  /// EVM HTLC contract address to deposit tokens
+  final String evmHtlcAddress;
 
-                
-                
+  /// Amount of tokens to deposit (in token's smallest unit)
+  final double sourceAmountUsd;
 
-                
-        @override
-        int get hashCode => swapId.hashCode^evmHtlcAddress.hashCode^sourceAmountUsd.hashCode^satsToReceive.hashCode^feeSats.hashCode^sourceTokenAddress.hashCode^createSwapTx.hashCode^approveTx.hashCode^gelatoForwarderAddress.hashCode^gelatoUserNonce.hashCode^gelatoUserDeadline.hashCode;
-        
+  /// BTC amount user will receive in satoshis
+  final PlatformInt64 satsToReceive;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is EvmToBtcSwapResult &&
-                runtimeType == other.runtimeType
-                && swapId == other.swapId&& evmHtlcAddress == other.evmHtlcAddress&& sourceAmountUsd == other.sourceAmountUsd&& satsToReceive == other.satsToReceive&& feeSats == other.feeSats&& sourceTokenAddress == other.sourceTokenAddress&& createSwapTx == other.createSwapTx&& approveTx == other.approveTx&& gelatoForwarderAddress == other.gelatoForwarderAddress&& gelatoUserNonce == other.gelatoUserNonce&& gelatoUserDeadline == other.gelatoUserDeadline;
-        
-            }
+  /// Fee in satoshis
+  final PlatformInt64 feeSats;
+
+  /// Token address for approval (ERC20)
+  final String sourceTokenAddress;
+
+  /// Pre-built calldata for createSwap() contract call
+  /// This MUST be called via WalletConnect to properly fund the HTLC
+  final String? createSwapTx;
+
+  /// Pre-built calldata for approve() on the ERC20 token
+  final String? approveTx;
+
+  /// Gelato forwarder address (for gasless transactions)
+  final String? gelatoForwarderAddress;
+
+  /// Gelato user nonce
+  final String? gelatoUserNonce;
+
+  /// Gelato deadline
+  final String? gelatoUserDeadline;
+
+  const EvmToBtcSwapResult({
+    required this.swapId,
+    required this.evmHtlcAddress,
+    required this.sourceAmountUsd,
+    required this.satsToReceive,
+    required this.feeSats,
+    required this.sourceTokenAddress,
+    this.createSwapTx,
+    this.approveTx,
+    this.gelatoForwarderAddress,
+    this.gelatoUserNonce,
+    this.gelatoUserDeadline,
+  });
+
+  @override
+  int get hashCode =>
+      swapId.hashCode ^
+      evmHtlcAddress.hashCode ^
+      sourceAmountUsd.hashCode ^
+      satsToReceive.hashCode ^
+      feeSats.hashCode ^
+      sourceTokenAddress.hashCode ^
+      createSwapTx.hashCode ^
+      approveTx.hashCode ^
+      gelatoForwarderAddress.hashCode ^
+      gelatoUserNonce.hashCode ^
+      gelatoUserDeadline.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EvmToBtcSwapResult &&
+          runtimeType == other.runtimeType &&
+          swapId == other.swapId &&
+          evmHtlcAddress == other.evmHtlcAddress &&
+          sourceAmountUsd == other.sourceAmountUsd &&
+          satsToReceive == other.satsToReceive &&
+          feeSats == other.feeSats &&
+          sourceTokenAddress == other.sourceTokenAddress &&
+          createSwapTx == other.createSwapTx &&
+          approveTx == other.approveTx &&
+          gelatoForwarderAddress == other.gelatoForwarderAddress &&
+          gelatoUserNonce == other.gelatoUserNonce &&
+          gelatoUserDeadline == other.gelatoUserDeadline;
+}
 
 /// Quote response for a swap.
-class SwapQuote  {
-                /// Exchange rate as a string (e.g., "42000.50")
-final String exchangeRate;
-/// Network fee in satoshis
-final BigInt networkFeeSats;
-/// Protocol fee in satoshis
-final BigInt protocolFeeSats;
-/// Protocol fee rate as percentage (e.g., 0.25 for 0.25%)
-final double protocolFeePercent;
-/// Minimum swap amount in satoshis
-final BigInt minAmountSats;
-/// Maximum swap amount in satoshis
-final BigInt maxAmountSats;
+class SwapQuote {
+  /// Exchange rate as a string (e.g., "42000.50")
+  final String exchangeRate;
 
-                const SwapQuote({required this.exchangeRate ,required this.networkFeeSats ,required this.protocolFeeSats ,required this.protocolFeePercent ,required this.minAmountSats ,required this.maxAmountSats ,});
+  /// Network fee in satoshis
+  final BigInt networkFeeSats;
 
-                
-                
+  /// Protocol fee in satoshis
+  final BigInt protocolFeeSats;
 
-                
-        @override
-        int get hashCode => exchangeRate.hashCode^networkFeeSats.hashCode^protocolFeeSats.hashCode^protocolFeePercent.hashCode^minAmountSats.hashCode^maxAmountSats.hashCode;
-        
+  /// Protocol fee rate as percentage (e.g., 0.25 for 0.25%)
+  final double protocolFeePercent;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is SwapQuote &&
-                runtimeType == other.runtimeType
-                && exchangeRate == other.exchangeRate&& networkFeeSats == other.networkFeeSats&& protocolFeeSats == other.protocolFeeSats&& protocolFeePercent == other.protocolFeePercent&& minAmountSats == other.minAmountSats&& maxAmountSats == other.maxAmountSats;
-        
-            }
+  /// Minimum swap amount in satoshis
+  final BigInt minAmountSats;
+
+  /// Maximum swap amount in satoshis
+  final BigInt maxAmountSats;
+
+  const SwapQuote({
+    required this.exchangeRate,
+    required this.networkFeeSats,
+    required this.protocolFeeSats,
+    required this.protocolFeePercent,
+    required this.minAmountSats,
+    required this.maxAmountSats,
+  });
+
+  @override
+  int get hashCode =>
+      exchangeRate.hashCode ^
+      networkFeeSats.hashCode ^
+      protocolFeeSats.hashCode ^
+      protocolFeePercent.hashCode ^
+      minAmountSats.hashCode ^
+      maxAmountSats.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SwapQuote &&
+          runtimeType == other.runtimeType &&
+          exchangeRate == other.exchangeRate &&
+          networkFeeSats == other.networkFeeSats &&
+          protocolFeeSats == other.protocolFeeSats &&
+          protocolFeePercent == other.protocolFeePercent &&
+          minAmountSats == other.minAmountSats &&
+          maxAmountSats == other.maxAmountSats;
+}
 
 /// A trading pair of assets.
-class TradingPair  {
-                final AssetInfo source;
-final AssetInfo target;
+class TradingPair {
+  final AssetInfo source;
+  final AssetInfo target;
 
-                const TradingPair({required this.source ,required this.target ,});
+  const TradingPair({
+    required this.source,
+    required this.target,
+  });
 
-                
-                
+  @override
+  int get hashCode => source.hashCode ^ target.hashCode;
 
-                
-        @override
-        int get hashCode => source.hashCode^target.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is TradingPair &&
-                runtimeType == other.runtimeType
-                && source == other.source&& target == other.target;
-        
-            }
-            
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TradingPair &&
+          runtimeType == other.runtimeType &&
+          source == other.source &&
+          target == other.target;
+}

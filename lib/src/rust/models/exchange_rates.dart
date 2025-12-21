@@ -6,50 +6,42 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+class ExchangeRates {
+  final String base;
+  final Map<String, double> rates;
+  final PlatformInt64 timestamp;
 
-            
+  const ExchangeRates({
+    required this.base,
+    required this.rates,
+    required this.timestamp,
+  });
 
-            
+  @override
+  int get hashCode => base.hashCode ^ rates.hashCode ^ timestamp.hashCode;
 
-            class ExchangeRates  {
-                final String base;
-final Map<String, double> rates;
-final PlatformInt64 timestamp;
-
-                const ExchangeRates({required this.base ,required this.rates ,required this.timestamp ,});
-
-                
-                
-
-                
-        @override
-        int get hashCode => base.hashCode^rates.hashCode^timestamp.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is ExchangeRates &&
-                runtimeType == other.runtimeType
-                && base == other.base&& rates == other.rates&& timestamp == other.timestamp;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ExchangeRates &&
+          runtimeType == other.runtimeType &&
+          base == other.base &&
+          rates == other.rates &&
+          timestamp == other.timestamp;
+}
 
 enum FiatCurrency {
-                    usd,
-eur,
-gbp,
-jpy,
-cad,
-aud,
-chf,
-cny,
-inr,
-brl,
-mxn,
-krw,
-                    ;
-                    
-                }
-            
+  usd,
+  eur,
+  gbp,
+  jpy,
+  cad,
+  aud,
+  chf,
+  cny,
+  inr,
+  brl,
+  mxn,
+  krw,
+  ;
+}

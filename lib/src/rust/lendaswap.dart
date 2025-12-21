@@ -6,75 +6,123 @@
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+/// Simplified swap info for Flutter UI.
+class SwapInfo {
+  final String id;
+  final SwapStatusSimple status;
+  final String direction;
+  final String sourceToken;
+  final String targetToken;
+  final PlatformInt64 sourceAmountSats;
+  final double targetAmountUsd;
+  final String createdAt;
 
-            
+  /// For BTC→EVM: Lightning invoice to pay
+  final String? lnInvoice;
 
-            
+  /// For BTC→EVM: Arkade HTLC address
+  final String? arkadeHtlcAddress;
 
-            /// Simplified swap info for Flutter UI.
-class SwapInfo  {
-                final String id;
-final SwapStatusSimple status;
-final String direction;
-final String sourceToken;
-final String targetToken;
-final PlatformInt64 sourceAmountSats;
-final double targetAmountUsd;
-final String createdAt;
-/// For BTC→EVM: Lightning invoice to pay
-final String? lnInvoice;
-/// For BTC→EVM: Arkade HTLC address
-final String? arkadeHtlcAddress;
-/// For EVM→BTC: EVM HTLC address to deposit to
-final String? evmHtlcAddress;
-/// Fee in satoshis
-final PlatformInt64 feeSats;
-/// True when BTC→EVM swap can be claimed via Gelato (server has funded)
-final bool canClaimGelato;
-/// True when EVM→BTC swap can claim the VHTLC (server has funded)
-final bool canClaimVhtlc;
-/// True when swap can be refunded
-final bool canRefund;
-/// Detailed status string for debugging
-final String detailedStatus;
+  /// For EVM→BTC: EVM HTLC address to deposit to
+  final String? evmHtlcAddress;
 
-                const SwapInfo({required this.id ,required this.status ,required this.direction ,required this.sourceToken ,required this.targetToken ,required this.sourceAmountSats ,required this.targetAmountUsd ,required this.createdAt ,this.lnInvoice ,this.arkadeHtlcAddress ,this.evmHtlcAddress ,required this.feeSats ,required this.canClaimGelato ,required this.canClaimVhtlc ,required this.canRefund ,required this.detailedStatus ,});
+  /// Fee in satoshis
+  final PlatformInt64 feeSats;
 
-                
-                
+  /// True when BTC→EVM swap can be claimed via Gelato (server has funded)
+  final bool canClaimGelato;
 
-                
-        @override
-        int get hashCode => id.hashCode^status.hashCode^direction.hashCode^sourceToken.hashCode^targetToken.hashCode^sourceAmountSats.hashCode^targetAmountUsd.hashCode^createdAt.hashCode^lnInvoice.hashCode^arkadeHtlcAddress.hashCode^evmHtlcAddress.hashCode^feeSats.hashCode^canClaimGelato.hashCode^canClaimVhtlc.hashCode^canRefund.hashCode^detailedStatus.hashCode;
-        
+  /// True when EVM→BTC swap can claim the VHTLC (server has funded)
+  final bool canClaimVhtlc;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is SwapInfo &&
-                runtimeType == other.runtimeType
-                && id == other.id&& status == other.status&& direction == other.direction&& sourceToken == other.sourceToken&& targetToken == other.targetToken&& sourceAmountSats == other.sourceAmountSats&& targetAmountUsd == other.targetAmountUsd&& createdAt == other.createdAt&& lnInvoice == other.lnInvoice&& arkadeHtlcAddress == other.arkadeHtlcAddress&& evmHtlcAddress == other.evmHtlcAddress&& feeSats == other.feeSats&& canClaimGelato == other.canClaimGelato&& canClaimVhtlc == other.canClaimVhtlc&& canRefund == other.canRefund&& detailedStatus == other.detailedStatus;
-        
-            }
+  /// True when swap can be refunded
+  final bool canRefund;
+
+  /// Detailed status string for debugging
+  final String detailedStatus;
+
+  const SwapInfo({
+    required this.id,
+    required this.status,
+    required this.direction,
+    required this.sourceToken,
+    required this.targetToken,
+    required this.sourceAmountSats,
+    required this.targetAmountUsd,
+    required this.createdAt,
+    this.lnInvoice,
+    this.arkadeHtlcAddress,
+    this.evmHtlcAddress,
+    required this.feeSats,
+    required this.canClaimGelato,
+    required this.canClaimVhtlc,
+    required this.canRefund,
+    required this.detailedStatus,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      status.hashCode ^
+      direction.hashCode ^
+      sourceToken.hashCode ^
+      targetToken.hashCode ^
+      sourceAmountSats.hashCode ^
+      targetAmountUsd.hashCode ^
+      createdAt.hashCode ^
+      lnInvoice.hashCode ^
+      arkadeHtlcAddress.hashCode ^
+      evmHtlcAddress.hashCode ^
+      feeSats.hashCode ^
+      canClaimGelato.hashCode ^
+      canClaimVhtlc.hashCode ^
+      canRefund.hashCode ^
+      detailedStatus.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SwapInfo &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          status == other.status &&
+          direction == other.direction &&
+          sourceToken == other.sourceToken &&
+          targetToken == other.targetToken &&
+          sourceAmountSats == other.sourceAmountSats &&
+          targetAmountUsd == other.targetAmountUsd &&
+          createdAt == other.createdAt &&
+          lnInvoice == other.lnInvoice &&
+          arkadeHtlcAddress == other.arkadeHtlcAddress &&
+          evmHtlcAddress == other.evmHtlcAddress &&
+          feeSats == other.feeSats &&
+          canClaimGelato == other.canClaimGelato &&
+          canClaimVhtlc == other.canClaimVhtlc &&
+          canRefund == other.canRefund &&
+          detailedStatus == other.detailedStatus;
+}
 
 /// Simplified swap status for Flutter UI.
 enum SwapStatusSimple {
-                    /// Waiting for user to deposit funds
-waitingForDeposit,
-/// User deposited, swap is processing
-processing,
-/// Swap completed successfully
-completed,
-/// Swap expired (no deposit)
-expired,
-/// Swap can be refunded
-refundable,
-/// Swap has been refunded
-refunded,
-/// Error state
-failed,
-                    ;
-                    
-                }
-            
+  /// Waiting for user to deposit funds
+  waitingForDeposit,
+
+  /// User deposited, swap is processing
+  processing,
+
+  /// Swap completed successfully
+  completed,
+
+  /// Swap expired (no deposit)
+  expired,
+
+  /// Swap can be refunded
+  refundable,
+
+  /// Swap has been refunded
+  refunded,
+
+  /// Error state
+  failed,
+  ;
+}

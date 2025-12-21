@@ -6,603 +6,765 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+/// Transaction details from mempool.space
+class BitcoinTransaction {
+  final String txid;
+  final int version;
+  final int locktime;
+  final int size;
+  final int weight;
+  final BigInt fee;
+  final int? sigops;
+  final TxStatus status;
+  final List<TxInput> vin;
+  final List<TxOutput> vout;
 
-            
+  const BitcoinTransaction({
+    required this.txid,
+    required this.version,
+    required this.locktime,
+    required this.size,
+    required this.weight,
+    required this.fee,
+    this.sigops,
+    required this.status,
+    required this.vin,
+    required this.vout,
+  });
 
-            
+  @override
+  int get hashCode =>
+      txid.hashCode ^
+      version.hashCode ^
+      locktime.hashCode ^
+      size.hashCode ^
+      weight.hashCode ^
+      fee.hashCode ^
+      sigops.hashCode ^
+      status.hashCode ^
+      vin.hashCode ^
+      vout.hashCode;
 
-            /// Transaction details from mempool.space
-class BitcoinTransaction  {
-                final String txid;
-final int version;
-final int locktime;
-final int size;
-final int weight;
-final BigInt fee;
-final int? sigops;
-final TxStatus status;
-final List<TxInput> vin;
-final List<TxOutput> vout;
-
-                const BitcoinTransaction({required this.txid ,required this.version ,required this.locktime ,required this.size ,required this.weight ,required this.fee ,this.sigops ,required this.status ,required this.vin ,required this.vout ,});
-
-                
-                
-
-                
-        @override
-        int get hashCode => txid.hashCode^version.hashCode^locktime.hashCode^size.hashCode^weight.hashCode^fee.hashCode^sigops.hashCode^status.hashCode^vin.hashCode^vout.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is BitcoinTransaction &&
-                runtimeType == other.runtimeType
-                && txid == other.txid&& version == other.version&& locktime == other.locktime&& size == other.size&& weight == other.weight&& fee == other.fee&& sigops == other.sigops&& status == other.status&& vin == other.vin&& vout == other.vout;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BitcoinTransaction &&
+          runtimeType == other.runtimeType &&
+          txid == other.txid &&
+          version == other.version &&
+          locktime == other.locktime &&
+          size == other.size &&
+          weight == other.weight &&
+          fee == other.fee &&
+          sigops == other.sigops &&
+          status == other.status &&
+          vin == other.vin &&
+          vout == other.vout;
+}
 
 /// Block information from mempool.space
-class Block  {
-                final String id;
-final BigInt height;
-final int version;
-final BigInt timestamp;
-final int bits;
-final int nonce;
-final double difficulty;
-final String merkleRoot;
-final int txCount;
-final BigInt size;
-final BigInt weight;
-final String? previousblockhash;
-final BigInt? mediantime;
-final bool? stale;
-final BlockExtras? extras;
+class Block {
+  final String id;
+  final BigInt height;
+  final int version;
+  final BigInt timestamp;
+  final int bits;
+  final int nonce;
+  final double difficulty;
+  final String merkleRoot;
+  final int txCount;
+  final BigInt size;
+  final BigInt weight;
+  final String? previousblockhash;
+  final BigInt? mediantime;
+  final bool? stale;
+  final BlockExtras? extras;
 
-                const Block({required this.id ,required this.height ,required this.version ,required this.timestamp ,required this.bits ,required this.nonce ,required this.difficulty ,required this.merkleRoot ,required this.txCount ,required this.size ,required this.weight ,this.previousblockhash ,this.mediantime ,this.stale ,this.extras ,});
+  const Block({
+    required this.id,
+    required this.height,
+    required this.version,
+    required this.timestamp,
+    required this.bits,
+    required this.nonce,
+    required this.difficulty,
+    required this.merkleRoot,
+    required this.txCount,
+    required this.size,
+    required this.weight,
+    this.previousblockhash,
+    this.mediantime,
+    this.stale,
+    this.extras,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      height.hashCode ^
+      version.hashCode ^
+      timestamp.hashCode ^
+      bits.hashCode ^
+      nonce.hashCode ^
+      difficulty.hashCode ^
+      merkleRoot.hashCode ^
+      txCount.hashCode ^
+      size.hashCode ^
+      weight.hashCode ^
+      previousblockhash.hashCode ^
+      mediantime.hashCode ^
+      stale.hashCode ^
+      extras.hashCode;
 
-                
-        @override
-        int get hashCode => id.hashCode^height.hashCode^version.hashCode^timestamp.hashCode^bits.hashCode^nonce.hashCode^difficulty.hashCode^merkleRoot.hashCode^txCount.hashCode^size.hashCode^weight.hashCode^previousblockhash.hashCode^mediantime.hashCode^stale.hashCode^extras.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is Block &&
-                runtimeType == other.runtimeType
-                && id == other.id&& height == other.height&& version == other.version&& timestamp == other.timestamp&& bits == other.bits&& nonce == other.nonce&& difficulty == other.difficulty&& merkleRoot == other.merkleRoot&& txCount == other.txCount&& size == other.size&& weight == other.weight&& previousblockhash == other.previousblockhash&& mediantime == other.mediantime&& stale == other.stale&& extras == other.extras;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Block &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          height == other.height &&
+          version == other.version &&
+          timestamp == other.timestamp &&
+          bits == other.bits &&
+          nonce == other.nonce &&
+          difficulty == other.difficulty &&
+          merkleRoot == other.merkleRoot &&
+          txCount == other.txCount &&
+          size == other.size &&
+          weight == other.weight &&
+          previousblockhash == other.previousblockhash &&
+          mediantime == other.mediantime &&
+          stale == other.stale &&
+          extras == other.extras;
+}
 
 /// Extended block information
-class BlockExtras  {
-                final double? medianFee;
-final BigInt? totalFees;
-final double? avgFee;
-final double? avgFeeRate;
-final BigInt? reward;
-final MiningPool? pool;
-final double? matchRate;
-final double? similarity;
+class BlockExtras {
+  final double? medianFee;
+  final BigInt? totalFees;
+  final double? avgFee;
+  final double? avgFeeRate;
+  final BigInt? reward;
+  final MiningPool? pool;
+  final double? matchRate;
+  final double? similarity;
 
-                const BlockExtras({this.medianFee ,this.totalFees ,this.avgFee ,this.avgFeeRate ,this.reward ,this.pool ,this.matchRate ,this.similarity ,});
+  const BlockExtras({
+    this.medianFee,
+    this.totalFees,
+    this.avgFee,
+    this.avgFeeRate,
+    this.reward,
+    this.pool,
+    this.matchRate,
+    this.similarity,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      medianFee.hashCode ^
+      totalFees.hashCode ^
+      avgFee.hashCode ^
+      avgFeeRate.hashCode ^
+      reward.hashCode ^
+      pool.hashCode ^
+      matchRate.hashCode ^
+      similarity.hashCode;
 
-                
-        @override
-        int get hashCode => medianFee.hashCode^totalFees.hashCode^avgFee.hashCode^avgFeeRate.hashCode^reward.hashCode^pool.hashCode^matchRate.hashCode^similarity.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is BlockExtras &&
-                runtimeType == other.runtimeType
-                && medianFee == other.medianFee&& totalFees == other.totalFees&& avgFee == other.avgFee&& avgFeeRate == other.avgFeeRate&& reward == other.reward&& pool == other.pool&& matchRate == other.matchRate&& similarity == other.similarity;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BlockExtras &&
+          runtimeType == other.runtimeType &&
+          medianFee == other.medianFee &&
+          totalFees == other.totalFees &&
+          avgFee == other.avgFee &&
+          avgFeeRate == other.avgFeeRate &&
+          reward == other.reward &&
+          pool == other.pool &&
+          matchRate == other.matchRate &&
+          similarity == other.similarity;
+}
 
 /// BTC price conversions
-class Conversions  {
-                final BigInt time;
-final double usd;
-final double? eur;
+class Conversions {
+  final BigInt time;
+  final double usd;
+  final double? eur;
 
-                const Conversions({required this.time ,required this.usd ,this.eur ,});
+  const Conversions({
+    required this.time,
+    required this.usd,
+    this.eur,
+  });
 
-                
-                
+  @override
+  int get hashCode => time.hashCode ^ usd.hashCode ^ eur.hashCode;
 
-                
-        @override
-        int get hashCode => time.hashCode^usd.hashCode^eur.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is Conversions &&
-                runtimeType == other.runtimeType
-                && time == other.time&& usd == other.usd&& eur == other.eur;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Conversions &&
+          runtimeType == other.runtimeType &&
+          time == other.time &&
+          usd == other.usd &&
+          eur == other.eur;
+}
 
 /// Difficulty adjustment information
-class DifficultyAdjustment  {
-                final double progressPercent;
-final double difficultyChange;
-final BigInt estimatedRetargetDate;
-final int remainingBlocks;
-final BigInt remainingTime;
-final double? previousRetarget;
-final BigInt? previousTime;
-final BigInt nextRetargetHeight;
-final BigInt timeAvg;
-final BigInt? adjustedTimeAvg;
-final PlatformInt64 timeOffset;
-final double expectedBlocks;
+class DifficultyAdjustment {
+  final double progressPercent;
+  final double difficultyChange;
+  final BigInt estimatedRetargetDate;
+  final int remainingBlocks;
+  final BigInt remainingTime;
+  final double? previousRetarget;
+  final BigInt? previousTime;
+  final BigInt nextRetargetHeight;
+  final BigInt timeAvg;
+  final BigInt? adjustedTimeAvg;
+  final PlatformInt64 timeOffset;
+  final double expectedBlocks;
 
-                const DifficultyAdjustment({required this.progressPercent ,required this.difficultyChange ,required this.estimatedRetargetDate ,required this.remainingBlocks ,required this.remainingTime ,this.previousRetarget ,this.previousTime ,required this.nextRetargetHeight ,required this.timeAvg ,this.adjustedTimeAvg ,required this.timeOffset ,required this.expectedBlocks ,});
+  const DifficultyAdjustment({
+    required this.progressPercent,
+    required this.difficultyChange,
+    required this.estimatedRetargetDate,
+    required this.remainingBlocks,
+    required this.remainingTime,
+    this.previousRetarget,
+    this.previousTime,
+    required this.nextRetargetHeight,
+    required this.timeAvg,
+    this.adjustedTimeAvg,
+    required this.timeOffset,
+    required this.expectedBlocks,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      progressPercent.hashCode ^
+      difficultyChange.hashCode ^
+      estimatedRetargetDate.hashCode ^
+      remainingBlocks.hashCode ^
+      remainingTime.hashCode ^
+      previousRetarget.hashCode ^
+      previousTime.hashCode ^
+      nextRetargetHeight.hashCode ^
+      timeAvg.hashCode ^
+      adjustedTimeAvg.hashCode ^
+      timeOffset.hashCode ^
+      expectedBlocks.hashCode;
 
-                
-        @override
-        int get hashCode => progressPercent.hashCode^difficultyChange.hashCode^estimatedRetargetDate.hashCode^remainingBlocks.hashCode^remainingTime.hashCode^previousRetarget.hashCode^previousTime.hashCode^nextRetargetHeight.hashCode^timeAvg.hashCode^adjustedTimeAvg.hashCode^timeOffset.hashCode^expectedBlocks.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is DifficultyAdjustment &&
-                runtimeType == other.runtimeType
-                && progressPercent == other.progressPercent&& difficultyChange == other.difficultyChange&& estimatedRetargetDate == other.estimatedRetargetDate&& remainingBlocks == other.remainingBlocks&& remainingTime == other.remainingTime&& previousRetarget == other.previousRetarget&& previousTime == other.previousTime&& nextRetargetHeight == other.nextRetargetHeight&& timeAvg == other.timeAvg&& adjustedTimeAvg == other.adjustedTimeAvg&& timeOffset == other.timeOffset&& expectedBlocks == other.expectedBlocks;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DifficultyAdjustment &&
+          runtimeType == other.runtimeType &&
+          progressPercent == other.progressPercent &&
+          difficultyChange == other.difficultyChange &&
+          estimatedRetargetDate == other.estimatedRetargetDate &&
+          remainingBlocks == other.remainingBlocks &&
+          remainingTime == other.remainingTime &&
+          previousRetarget == other.previousRetarget &&
+          previousTime == other.previousTime &&
+          nextRetargetHeight == other.nextRetargetHeight &&
+          timeAvg == other.timeAvg &&
+          adjustedTimeAvg == other.adjustedTimeAvg &&
+          timeOffset == other.timeOffset &&
+          expectedBlocks == other.expectedBlocks;
+}
 
 /// Single difficulty data point
-class DifficultyPoint  {
-                final BigInt? timestamp;
-final double? difficulty;
-final BigInt? height;
+class DifficultyPoint {
+  final BigInt? timestamp;
+  final double? difficulty;
+  final BigInt? height;
 
-                const DifficultyPoint({this.timestamp ,this.difficulty ,this.height ,});
+  const DifficultyPoint({
+    this.timestamp,
+    this.difficulty,
+    this.height,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      timestamp.hashCode ^ difficulty.hashCode ^ height.hashCode;
 
-                
-        @override
-        int get hashCode => timestamp.hashCode^difficulty.hashCode^height.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is DifficultyPoint &&
-                runtimeType == other.runtimeType
-                && timestamp == other.timestamp&& difficulty == other.difficulty&& height == other.height;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DifficultyPoint &&
+          runtimeType == other.runtimeType &&
+          timestamp == other.timestamp &&
+          difficulty == other.difficulty &&
+          height == other.height;
+}
 
 /// Fear & Greed data with current and historical values
-class FearGreedData  {
-                final FearGreedValue? now;
-final FearGreedValue? previousClose;
-final FearGreedValue? oneWeekAgo;
-final FearGreedValue? oneMonthAgo;
-final FearGreedValue? oneYearAgo;
+class FearGreedData {
+  final FearGreedValue? now;
+  final FearGreedValue? previousClose;
+  final FearGreedValue? oneWeekAgo;
+  final FearGreedValue? oneMonthAgo;
+  final FearGreedValue? oneYearAgo;
 
-                const FearGreedData({this.now ,this.previousClose ,this.oneWeekAgo ,this.oneMonthAgo ,this.oneYearAgo ,});
+  const FearGreedData({
+    this.now,
+    this.previousClose,
+    this.oneWeekAgo,
+    this.oneMonthAgo,
+    this.oneYearAgo,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      now.hashCode ^
+      previousClose.hashCode ^
+      oneWeekAgo.hashCode ^
+      oneMonthAgo.hashCode ^
+      oneYearAgo.hashCode;
 
-                
-        @override
-        int get hashCode => now.hashCode^previousClose.hashCode^oneWeekAgo.hashCode^oneMonthAgo.hashCode^oneYearAgo.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FearGreedData &&
-                runtimeType == other.runtimeType
-                && now == other.now&& previousClose == other.previousClose&& oneWeekAgo == other.oneWeekAgo&& oneMonthAgo == other.oneMonthAgo&& oneYearAgo == other.oneYearAgo;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FearGreedData &&
+          runtimeType == other.runtimeType &&
+          now == other.now &&
+          previousClose == other.previousClose &&
+          oneWeekAgo == other.oneWeekAgo &&
+          oneMonthAgo == other.oneMonthAgo &&
+          oneYearAgo == other.oneYearAgo;
+}
 
 /// Fear & Greed Index response from RapidAPI
-class FearGreedIndex  {
-                final FearGreedLastUpdated? lastUpdated;
-final FearGreedData? fgi;
+class FearGreedIndex {
+  final FearGreedLastUpdated? lastUpdated;
+  final FearGreedData? fgi;
 
-                const FearGreedIndex({this.lastUpdated ,this.fgi ,});
+  const FearGreedIndex({
+    this.lastUpdated,
+    this.fgi,
+  });
 
-                
-                
+  @override
+  int get hashCode => lastUpdated.hashCode ^ fgi.hashCode;
 
-                
-        @override
-        int get hashCode => lastUpdated.hashCode^fgi.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FearGreedIndex &&
-                runtimeType == other.runtimeType
-                && lastUpdated == other.lastUpdated&& fgi == other.fgi;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FearGreedIndex &&
+          runtimeType == other.runtimeType &&
+          lastUpdated == other.lastUpdated &&
+          fgi == other.fgi;
+}
 
 /// Last updated timestamp for Fear & Greed data
-class FearGreedLastUpdated  {
-                final PlatformInt64? epochUnixSeconds;
-final String? humanDate;
+class FearGreedLastUpdated {
+  final PlatformInt64? epochUnixSeconds;
+  final String? humanDate;
 
-                const FearGreedLastUpdated({this.epochUnixSeconds ,this.humanDate ,});
+  const FearGreedLastUpdated({
+    this.epochUnixSeconds,
+    this.humanDate,
+  });
 
-                
-                
+  @override
+  int get hashCode => epochUnixSeconds.hashCode ^ humanDate.hashCode;
 
-                
-        @override
-        int get hashCode => epochUnixSeconds.hashCode^humanDate.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FearGreedLastUpdated &&
-                runtimeType == other.runtimeType
-                && epochUnixSeconds == other.epochUnixSeconds&& humanDate == other.humanDate;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FearGreedLastUpdated &&
+          runtimeType == other.runtimeType &&
+          epochUnixSeconds == other.epochUnixSeconds &&
+          humanDate == other.humanDate;
+}
 
 /// Single Fear & Greed value with numeric value and text description
-class FearGreedValue  {
-                final int? value;
-final String? valueText;
+class FearGreedValue {
+  final int? value;
+  final String? valueText;
 
-                const FearGreedValue({this.value ,this.valueText ,});
+  const FearGreedValue({
+    this.value,
+    this.valueText,
+  });
 
-                
-                
+  @override
+  int get hashCode => value.hashCode ^ valueText.hashCode;
 
-                
-        @override
-        int get hashCode => value.hashCode^valueText.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FearGreedValue &&
-                runtimeType == other.runtimeType
-                && value == other.value&& valueText == other.valueText;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FearGreedValue &&
+          runtimeType == other.runtimeType &&
+          value == other.value &&
+          valueText == other.valueText;
+}
 
 /// Mining hashrate data
-class HashrateData  {
-                final double? currentHashrate;
-final double? currentDifficulty;
-final List<HashratePoint> hashrates;
-final List<DifficultyPoint> difficulty;
+class HashrateData {
+  final double? currentHashrate;
+  final double? currentDifficulty;
+  final List<HashratePoint> hashrates;
+  final List<DifficultyPoint> difficulty;
 
-                const HashrateData({this.currentHashrate ,this.currentDifficulty ,required this.hashrates ,required this.difficulty ,});
+  const HashrateData({
+    this.currentHashrate,
+    this.currentDifficulty,
+    required this.hashrates,
+    required this.difficulty,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      currentHashrate.hashCode ^
+      currentDifficulty.hashCode ^
+      hashrates.hashCode ^
+      difficulty.hashCode;
 
-                
-        @override
-        int get hashCode => currentHashrate.hashCode^currentDifficulty.hashCode^hashrates.hashCode^difficulty.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is HashrateData &&
-                runtimeType == other.runtimeType
-                && currentHashrate == other.currentHashrate&& currentDifficulty == other.currentDifficulty&& hashrates == other.hashrates&& difficulty == other.difficulty;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HashrateData &&
+          runtimeType == other.runtimeType &&
+          currentHashrate == other.currentHashrate &&
+          currentDifficulty == other.currentDifficulty &&
+          hashrates == other.hashrates &&
+          difficulty == other.difficulty;
+}
 
 /// Single hashrate data point
-class HashratePoint  {
-                final BigInt timestamp;
-final double avgHashrate;
+class HashratePoint {
+  final BigInt timestamp;
+  final double avgHashrate;
 
-                const HashratePoint({required this.timestamp ,required this.avgHashrate ,});
+  const HashratePoint({
+    required this.timestamp,
+    required this.avgHashrate,
+  });
 
-                
-                
+  @override
+  int get hashCode => timestamp.hashCode ^ avgHashrate.hashCode;
 
-                
-        @override
-        int get hashCode => timestamp.hashCode^avgHashrate.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is HashratePoint &&
-                runtimeType == other.runtimeType
-                && timestamp == other.timestamp&& avgHashrate == other.avgHashrate;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HashratePoint &&
+          runtimeType == other.runtimeType &&
+          timestamp == other.timestamp &&
+          avgHashrate == other.avgHashrate;
+}
 
 /// Mempool block (unconfirmed/pending block)
-class MempoolBlock  {
-                final BigInt blockSize;
-final double blockVsize;
-final int nTx;
-final BigInt totalFees;
-final double medianFee;
-final Float64List feeRange;
+class MempoolBlock {
+  final BigInt blockSize;
+  final double blockVsize;
+  final int nTx;
+  final BigInt totalFees;
+  final double medianFee;
+  final Float64List feeRange;
 
-                const MempoolBlock({required this.blockSize ,required this.blockVsize ,required this.nTx ,required this.totalFees ,required this.medianFee ,required this.feeRange ,});
+  const MempoolBlock({
+    required this.blockSize,
+    required this.blockVsize,
+    required this.nTx,
+    required this.totalFees,
+    required this.medianFee,
+    required this.feeRange,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      blockSize.hashCode ^
+      blockVsize.hashCode ^
+      nTx.hashCode ^
+      totalFees.hashCode ^
+      medianFee.hashCode ^
+      feeRange.hashCode;
 
-                
-        @override
-        int get hashCode => blockSize.hashCode^blockVsize.hashCode^nTx.hashCode^totalFees.hashCode^medianFee.hashCode^feeRange.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is MempoolBlock &&
-                runtimeType == other.runtimeType
-                && blockSize == other.blockSize&& blockVsize == other.blockVsize&& nTx == other.nTx&& totalFees == other.totalFees&& medianFee == other.medianFee&& feeRange == other.feeRange;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MempoolBlock &&
+          runtimeType == other.runtimeType &&
+          blockSize == other.blockSize &&
+          blockVsize == other.blockVsize &&
+          nTx == other.nTx &&
+          totalFees == other.totalFees &&
+          medianFee == other.medianFee &&
+          feeRange == other.feeRange;
+}
 
 /// WebSocket message envelope from mempool.space
-class MempoolWsMessage  {
-                final List<MempoolBlock>? mempoolBlocks;
-final List<Block>? blocks;
-final Conversions? conversions;
-final RecommendedFees? fees;
-final DifficultyAdjustment? da;
+class MempoolWsMessage {
+  final List<MempoolBlock>? mempoolBlocks;
+  final List<Block>? blocks;
+  final Conversions? conversions;
+  final RecommendedFees? fees;
+  final DifficultyAdjustment? da;
 
-                const MempoolWsMessage({this.mempoolBlocks ,this.blocks ,this.conversions ,this.fees ,this.da ,});
+  const MempoolWsMessage({
+    this.mempoolBlocks,
+    this.blocks,
+    this.conversions,
+    this.fees,
+    this.da,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      mempoolBlocks.hashCode ^
+      blocks.hashCode ^
+      conversions.hashCode ^
+      fees.hashCode ^
+      da.hashCode;
 
-                
-        @override
-        int get hashCode => mempoolBlocks.hashCode^blocks.hashCode^conversions.hashCode^fees.hashCode^da.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is MempoolWsMessage &&
-                runtimeType == other.runtimeType
-                && mempoolBlocks == other.mempoolBlocks&& blocks == other.blocks&& conversions == other.conversions&& fees == other.fees&& da == other.da;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MempoolWsMessage &&
+          runtimeType == other.runtimeType &&
+          mempoolBlocks == other.mempoolBlocks &&
+          blocks == other.blocks &&
+          conversions == other.conversions &&
+          fees == other.fees &&
+          da == other.da;
+}
 
 /// Mining pool information
-class MiningPool  {
-                final int? id;
-final String name;
-final String? slug;
+class MiningPool {
+  final int? id;
+  final String name;
+  final String? slug;
 
-                const MiningPool({this.id ,required this.name ,this.slug ,});
+  const MiningPool({
+    this.id,
+    required this.name,
+    this.slug,
+  });
 
-                
-                
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode ^ slug.hashCode;
 
-                
-        @override
-        int get hashCode => id.hashCode^name.hashCode^slug.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is MiningPool &&
-                runtimeType == other.runtimeType
-                && id == other.id&& name == other.name&& slug == other.slug;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MiningPool &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          slug == other.slug;
+}
 
 /// Message containing transactions for a tracked mempool block
-class ProjectedBlockTransactions  {
-                final int index;
-final List<ProjectedTransaction> transactions;
+class ProjectedBlockTransactions {
+  final int index;
+  final List<ProjectedTransaction> transactions;
 
-                const ProjectedBlockTransactions({required this.index ,required this.transactions ,});
+  const ProjectedBlockTransactions({
+    required this.index,
+    required this.transactions,
+  });
 
-                
-                
+  @override
+  int get hashCode => index.hashCode ^ transactions.hashCode;
 
-                
-        @override
-        int get hashCode => index.hashCode^transactions.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is ProjectedBlockTransactions &&
-                runtimeType == other.runtimeType
-                && index == other.index&& transactions == other.transactions;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProjectedBlockTransactions &&
+          runtimeType == other.runtimeType &&
+          index == other.index &&
+          transactions == other.transactions;
+}
 
 /// Projected transaction in a mempool block
 /// Format: [txid, value, vsize, feerate, flags]
-class ProjectedTransaction  {
-                final String txid;
-final BigInt value;
-final int vsize;
-final double feeRate;
-final int flags;
+class ProjectedTransaction {
+  final String txid;
+  final BigInt value;
+  final int vsize;
+  final double feeRate;
+  final int flags;
 
-                const ProjectedTransaction({required this.txid ,required this.value ,required this.vsize ,required this.feeRate ,required this.flags ,});
+  const ProjectedTransaction({
+    required this.txid,
+    required this.value,
+    required this.vsize,
+    required this.feeRate,
+    required this.flags,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      txid.hashCode ^
+      value.hashCode ^
+      vsize.hashCode ^
+      feeRate.hashCode ^
+      flags.hashCode;
 
-                
-        @override
-        int get hashCode => txid.hashCode^value.hashCode^vsize.hashCode^feeRate.hashCode^flags.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is ProjectedTransaction &&
-                runtimeType == other.runtimeType
-                && txid == other.txid&& value == other.value&& vsize == other.vsize&& feeRate == other.feeRate&& flags == other.flags;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProjectedTransaction &&
+          runtimeType == other.runtimeType &&
+          txid == other.txid &&
+          value == other.value &&
+          vsize == other.vsize &&
+          feeRate == other.feeRate &&
+          flags == other.flags;
+}
 
 /// Recommended fee rates for different confirmation targets
-class RecommendedFees  {
-                final double fastestFee;
-final double halfHourFee;
-final double hourFee;
-final double economyFee;
-final double minimumFee;
+class RecommendedFees {
+  final double fastestFee;
+  final double halfHourFee;
+  final double hourFee;
+  final double economyFee;
+  final double minimumFee;
 
-                const RecommendedFees({required this.fastestFee ,required this.halfHourFee ,required this.hourFee ,required this.economyFee ,required this.minimumFee ,});
+  const RecommendedFees({
+    required this.fastestFee,
+    required this.halfHourFee,
+    required this.hourFee,
+    required this.economyFee,
+    required this.minimumFee,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      fastestFee.hashCode ^
+      halfHourFee.hashCode ^
+      hourFee.hashCode ^
+      economyFee.hashCode ^
+      minimumFee.hashCode;
 
-                
-        @override
-        int get hashCode => fastestFee.hashCode^halfHourFee.hashCode^hourFee.hashCode^economyFee.hashCode^minimumFee.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is RecommendedFees &&
-                runtimeType == other.runtimeType
-                && fastestFee == other.fastestFee&& halfHourFee == other.halfHourFee&& hourFee == other.hourFee&& economyFee == other.economyFee&& minimumFee == other.minimumFee;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RecommendedFees &&
+          runtimeType == other.runtimeType &&
+          fastestFee == other.fastestFee &&
+          halfHourFee == other.halfHourFee &&
+          hourFee == other.hourFee &&
+          economyFee == other.economyFee &&
+          minimumFee == other.minimumFee;
+}
 
 /// Transaction input
-class TxInput  {
-                final String txid;
-final int vout;
-final TxOutput? prevout;
-final String scriptsig;
-final String scriptsigAsm;
-final List<String>? witness;
-final bool isCoinbase;
-final int sequence;
+class TxInput {
+  final String txid;
+  final int vout;
+  final TxOutput? prevout;
+  final String scriptsig;
+  final String scriptsigAsm;
+  final List<String>? witness;
+  final bool isCoinbase;
+  final int sequence;
 
-                const TxInput({required this.txid ,required this.vout ,this.prevout ,required this.scriptsig ,required this.scriptsigAsm ,this.witness ,required this.isCoinbase ,required this.sequence ,});
+  const TxInput({
+    required this.txid,
+    required this.vout,
+    this.prevout,
+    required this.scriptsig,
+    required this.scriptsigAsm,
+    this.witness,
+    required this.isCoinbase,
+    required this.sequence,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      txid.hashCode ^
+      vout.hashCode ^
+      prevout.hashCode ^
+      scriptsig.hashCode ^
+      scriptsigAsm.hashCode ^
+      witness.hashCode ^
+      isCoinbase.hashCode ^
+      sequence.hashCode;
 
-                
-        @override
-        int get hashCode => txid.hashCode^vout.hashCode^prevout.hashCode^scriptsig.hashCode^scriptsigAsm.hashCode^witness.hashCode^isCoinbase.hashCode^sequence.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is TxInput &&
-                runtimeType == other.runtimeType
-                && txid == other.txid&& vout == other.vout&& prevout == other.prevout&& scriptsig == other.scriptsig&& scriptsigAsm == other.scriptsigAsm&& witness == other.witness&& isCoinbase == other.isCoinbase&& sequence == other.sequence;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TxInput &&
+          runtimeType == other.runtimeType &&
+          txid == other.txid &&
+          vout == other.vout &&
+          prevout == other.prevout &&
+          scriptsig == other.scriptsig &&
+          scriptsigAsm == other.scriptsigAsm &&
+          witness == other.witness &&
+          isCoinbase == other.isCoinbase &&
+          sequence == other.sequence;
+}
 
 /// Transaction output
-class TxOutput  {
-                final String scriptpubkey;
-final String scriptpubkeyAsm;
-final String scriptpubkeyType;
-final String? scriptpubkeyAddress;
-final BigInt value;
+class TxOutput {
+  final String scriptpubkey;
+  final String scriptpubkeyAsm;
+  final String scriptpubkeyType;
+  final String? scriptpubkeyAddress;
+  final BigInt value;
 
-                const TxOutput({required this.scriptpubkey ,required this.scriptpubkeyAsm ,required this.scriptpubkeyType ,this.scriptpubkeyAddress ,required this.value ,});
+  const TxOutput({
+    required this.scriptpubkey,
+    required this.scriptpubkeyAsm,
+    required this.scriptpubkeyType,
+    this.scriptpubkeyAddress,
+    required this.value,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      scriptpubkey.hashCode ^
+      scriptpubkeyAsm.hashCode ^
+      scriptpubkeyType.hashCode ^
+      scriptpubkeyAddress.hashCode ^
+      value.hashCode;
 
-                
-        @override
-        int get hashCode => scriptpubkey.hashCode^scriptpubkeyAsm.hashCode^scriptpubkeyType.hashCode^scriptpubkeyAddress.hashCode^value.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is TxOutput &&
-                runtimeType == other.runtimeType
-                && scriptpubkey == other.scriptpubkey&& scriptpubkeyAsm == other.scriptpubkeyAsm&& scriptpubkeyType == other.scriptpubkeyType&& scriptpubkeyAddress == other.scriptpubkeyAddress&& value == other.value;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TxOutput &&
+          runtimeType == other.runtimeType &&
+          scriptpubkey == other.scriptpubkey &&
+          scriptpubkeyAsm == other.scriptpubkeyAsm &&
+          scriptpubkeyType == other.scriptpubkeyType &&
+          scriptpubkeyAddress == other.scriptpubkeyAddress &&
+          value == other.value;
+}
 
 /// Transaction confirmation status
-class TxStatus  {
-                final bool confirmed;
-final BigInt? blockHeight;
-final String? blockHash;
-final BigInt? blockTime;
+class TxStatus {
+  final bool confirmed;
+  final BigInt? blockHeight;
+  final String? blockHash;
+  final BigInt? blockTime;
 
-                const TxStatus({required this.confirmed ,this.blockHeight ,this.blockHash ,this.blockTime ,});
+  const TxStatus({
+    required this.confirmed,
+    this.blockHeight,
+    this.blockHash,
+    this.blockTime,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      confirmed.hashCode ^
+      blockHeight.hashCode ^
+      blockHash.hashCode ^
+      blockTime.hashCode;
 
-                
-        @override
-        int get hashCode => confirmed.hashCode^blockHeight.hashCode^blockHash.hashCode^blockTime.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is TxStatus &&
-                runtimeType == other.runtimeType
-                && confirmed == other.confirmed&& blockHeight == other.blockHeight&& blockHash == other.blockHash&& blockTime == other.blockTime;
-        
-            }
-            
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TxStatus &&
+          runtimeType == other.runtimeType &&
+          confirmed == other.confirmed &&
+          blockHeight == other.blockHeight &&
+          blockHash == other.blockHash &&
+          blockTime == other.blockTime;
+}

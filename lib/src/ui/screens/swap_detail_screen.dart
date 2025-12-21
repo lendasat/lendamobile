@@ -329,7 +329,7 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
         children: [
-          const SizedBox(height: AppTheme.cardPadding),
+          const SizedBox(height: AppTheme.cardPadding * 2),
           // Status header
           _buildStatusHeader(context, status, isDarkMode),
           const SizedBox(height: AppTheme.cardPadding * 1.5),
@@ -811,9 +811,47 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
 
   String _formatTimestamp(String timestamp) {
     try {
-      final date = DateTime.parse(timestamp);
-      return DateFormat('MMM d, yyyy HH:mm').format(date);
+      // Handle format like "2025-12-21 19:04:15.0 +00:00:00"
+      // Remove the extra timezone format and normalize
+      String normalizedTimestamp = timestamp;
+
+      // Replace space before timezone with 'T' for ISO format
+      // and handle the unusual "+00:00:00" format
+      if (timestamp.contains(' +') || timestamp.contains(' -')) {
+        // Split at the timezone part
+        final parts = timestamp.split(RegExp(r' [+-]'));
+        if (parts.isNotEmpty) {
+          normalizedTimestamp = parts[0].trim();
+        }
+      }
+
+      // Replace space between date and time with 'T' for ISO format
+      normalizedTimestamp = normalizedTimestamp.replaceFirst(' ', 'T');
+
+      final date = DateTime.parse(normalizedTimestamp).toLocal();
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inSeconds < 60) {
+        return '${difference.inSeconds} seconds ago';
+      } else if (difference.inMinutes < 60) {
+        final minutes = difference.inMinutes;
+        return '$minutes ${minutes == 1 ? 'minute' : 'minutes'} ago';
+      } else if (difference.inHours < 24) {
+        final hours = difference.inHours;
+        return '$hours ${hours == 1 ? 'hour' : 'hours'} ago';
+      } else if (difference.inDays < 30) {
+        final days = difference.inDays;
+        return '$days ${days == 1 ? 'day' : 'days'} ago';
+      } else if (difference.inDays < 365) {
+        final months = (difference.inDays / 30).floor();
+        return '$months ${months == 1 ? 'month' : 'months'} ago';
+      } else {
+        final years = (difference.inDays / 365).floor();
+        return '$years ${years == 1 ? 'year' : 'years'} ago';
+      }
     } catch (e) {
+      logger.e('Error parsing timestamp: $timestamp - $e');
       return timestamp;
     }
   }

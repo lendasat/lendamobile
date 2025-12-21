@@ -7,17 +7,23 @@ import '../frb_generated.dart';
 import '../models/moonpay.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-
-            
-
-            /// Get currency limits for MoonPay transactions
-Future<MoonPayCurrencyLimits>  moonpayGetCurrencyLimits({required String serverUrl , required String baseCurrencyCode , required String paymentMethod }) => RustLib.instance.api.crateApiMoonpayApiMoonpayGetCurrencyLimits(serverUrl: serverUrl, baseCurrencyCode: baseCurrencyCode, paymentMethod: paymentMethod);
+/// Get currency limits for MoonPay transactions
+Future<MoonPayCurrencyLimits> moonpayGetCurrencyLimits(
+        {required String serverUrl,
+        required String baseCurrencyCode,
+        required String paymentMethod}) =>
+    RustLib.instance.api.crateApiMoonpayApiMoonpayGetCurrencyLimits(
+        serverUrl: serverUrl,
+        baseCurrencyCode: baseCurrencyCode,
+        paymentMethod: paymentMethod);
 
 /// Get a quote from MoonPay
-Future<MoonPayQuote>  moonpayGetQuote({required String serverUrl }) => RustLib.instance.api.crateApiMoonpayApiMoonpayGetQuote(serverUrl: serverUrl);
+Future<MoonPayQuote> moonpayGetQuote({required String serverUrl}) =>
+    RustLib.instance.api
+        .crateApiMoonpayApiMoonpayGetQuote(serverUrl: serverUrl);
 
 /// Encrypt data for MoonPay
-Future<MoonPayEncryptedData>  moonpayEncryptData({required String serverUrl , required String data }) => RustLib.instance.api.crateApiMoonpayApiMoonpayEncryptData(serverUrl: serverUrl, data: data);
-
-            
-            
+Future<MoonPayEncryptedData> moonpayEncryptData(
+        {required String serverUrl, required String data}) =>
+    RustLib.instance.api
+        .crateApiMoonpayApiMoonpayEncryptData(serverUrl: serverUrl, data: data);

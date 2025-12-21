@@ -9,15 +9,15 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lendasat_api.freezed.dart';
 
-            // These functions are ignored because they are not marked as `pub`: `get_ark_address`, `get_auth_headers`, `get_state_lock`
+// These functions are ignored because they are not marked as `pub`: `get_ark_address`, `get_auth_headers`, `get_state_lock`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ContractSummary`, `LendasatState`, `OfferSummary`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `from`, `from`
 
-
-            /// Reset the Lendasat client state.
+/// Reset the Lendasat client state.
 /// This MUST be called when the wallet is reset to ensure fresh state
 /// with the new mnemonic/user.
-Future<void>  resetLendasatState() => RustLib.instance.api.crateApiLendasatApiResetLendasatState();
+Future<void> resetLendasatState() =>
+    RustLib.instance.api.crateApiLendasatApiResetLendasatState();
 
 /// Initialize the Lendasat client.
 ///
@@ -25,19 +25,29 @@ Future<void>  resetLendasatState() => RustLib.instance.api.crateApiLendasatApiRe
 /// - `api_url`: Lendasat API base URL (e.g., "https://apiborrow.lendasat.com")
 /// - `network`: Bitcoin network ("bitcoin", "testnet", "signet", "regtest")
 /// - `api_key`: Optional API key for authentication (alternative to JWT)
-Future<void>  lendasatInit({required String dataDir , required String apiUrl , required String network , String? apiKey }) => RustLib.instance.api.crateApiLendasatApiLendasatInit(dataDir: dataDir, apiUrl: apiUrl, network: network, apiKey: apiKey);
+Future<void> lendasatInit(
+        {required String dataDir,
+        required String apiUrl,
+        required String network,
+        String? apiKey}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatInit(
+        dataDir: dataDir, apiUrl: apiUrl, network: network, apiKey: apiKey);
 
 /// Check if Lendasat client is initialized.
-Future<bool>  lendasatIsInitialized() => RustLib.instance.api.crateApiLendasatApiLendasatIsInitialized();
+Future<bool> lendasatIsInitialized() =>
+    RustLib.instance.api.crateApiLendasatApiLendasatIsInitialized();
 
 /// Check if user is authenticated.
-Future<bool>  lendasatIsAuthenticated() => RustLib.instance.api.crateApiLendasatApiLendasatIsAuthenticated();
+Future<bool> lendasatIsAuthenticated() =>
+    RustLib.instance.api.crateApiLendasatApiLendasatIsAuthenticated();
 
 /// Get the wallet's public key (for display/verification).
-Future<String>  lendasatGetPublicKey() => RustLib.instance.api.crateApiLendasatApiLendasatGetPublicKey();
+Future<String> lendasatGetPublicKey() =>
+    RustLib.instance.api.crateApiLendasatApiLendasatGetPublicKey();
 
 /// Get the wallet's derivation path.
-Future<String>  lendasatGetDerivationPath() => RustLib.instance.api.crateApiLendasatApiLendasatGetDerivationPath();
+Future<String> lendasatGetDerivationPath() =>
+    RustLib.instance.api.crateApiLendasatApiLendasatGetDerivationPath();
 
 /// Authenticate with the Lendasat API using wallet signature.
 ///
@@ -46,37 +56,70 @@ Future<String>  lendasatGetDerivationPath() => RustLib.instance.api.crateApiLend
 /// 2. Request challenge from server
 /// 3. Sign challenge with wallet
 /// 4. Verify signature and get JWT token
-Future<AuthResult>  lendasatAuthenticate() => RustLib.instance.api.crateApiLendasatApiLendasatAuthenticate();
+Future<AuthResult> lendasatAuthenticate() =>
+    RustLib.instance.api.crateApiLendasatApiLendasatAuthenticate();
 
 /// Register a new user with the Lendasat platform.
-Future<String>  lendasatRegister({required String email , required String name , String? inviteCode }) => RustLib.instance.api.crateApiLendasatApiLendasatRegister(email: email, name: name, inviteCode: inviteCode);
+Future<String> lendasatRegister(
+        {required String email, required String name, String? inviteCode}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatRegister(
+        email: email, name: name, inviteCode: inviteCode);
 
 /// Logout and clear stored credentials.
-Future<void>  lendasatLogout() => RustLib.instance.api.crateApiLendasatApiLendasatLogout();
+Future<void> lendasatLogout() =>
+    RustLib.instance.api.crateApiLendasatApiLendasatLogout();
 
 /// Get available loan offers.
-Future<List<LoanOffer>>  lendasatGetOffers({OfferFilters? filters }) => RustLib.instance.api.crateApiLendasatApiLendasatGetOffers(filters: filters);
+Future<List<LoanOffer>> lendasatGetOffers({OfferFilters? filters}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatGetOffers(filters: filters);
 
 /// Get a single offer by ID.
-Future<LoanOffer>  lendasatGetOffer({required String offerId }) => RustLib.instance.api.crateApiLendasatApiLendasatGetOffer(offerId: offerId);
+Future<LoanOffer> lendasatGetOffer({required String offerId}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatGetOffer(offerId: offerId);
 
 /// Get user's contracts.
-Future<PaginatedContractsResponse>  lendasatGetContracts({ContractFilters? filters }) => RustLib.instance.api.crateApiLendasatApiLendasatGetContracts(filters: filters);
+Future<PaginatedContractsResponse> lendasatGetContracts(
+        {ContractFilters? filters}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatGetContracts(filters: filters);
 
 /// Get a single contract by ID.
-Future<Contract>  lendasatGetContract({required String contractId }) => RustLib.instance.api.crateApiLendasatApiLendasatGetContract(contractId: contractId);
+Future<Contract> lendasatGetContract({required String contractId}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatGetContract(contractId: contractId);
 
 /// Create a new loan contract by taking an offer.
-Future<Contract>  lendasatCreateContract({required String offerId , required double loanAmount , required int durationDays , String? borrowerLoanAddress }) => RustLib.instance.api.crateApiLendasatApiLendasatCreateContract(offerId: offerId, loanAmount: loanAmount, durationDays: durationDays, borrowerLoanAddress: borrowerLoanAddress);
+Future<Contract> lendasatCreateContract(
+        {required String offerId,
+        required double loanAmount,
+        required int durationDays,
+        String? borrowerLoanAddress}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatCreateContract(
+        offerId: offerId,
+        loanAmount: loanAmount,
+        durationDays: durationDays,
+        borrowerLoanAddress: borrowerLoanAddress);
 
 /// Cancel a requested contract.
-Future<void>  lendasatCancelContract({required String contractId }) => RustLib.instance.api.crateApiLendasatApiLendasatCancelContract(contractId: contractId);
+Future<void> lendasatCancelContract({required String contractId}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatCancelContract(contractId: contractId);
 
 /// Mark an installment as paid.
-Future<void>  lendasatMarkInstallmentPaid({required String contractId , required String installmentId , required String paymentTxid }) => RustLib.instance.api.crateApiLendasatApiLendasatMarkInstallmentPaid(contractId: contractId, installmentId: installmentId, paymentTxid: paymentTxid);
+Future<void> lendasatMarkInstallmentPaid(
+        {required String contractId,
+        required String installmentId,
+        required String paymentTxid}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatMarkInstallmentPaid(
+        contractId: contractId,
+        installmentId: installmentId,
+        paymentTxid: paymentTxid);
 
 /// Get the PSBT for claiming collateral (standard Bitcoin).
-Future<ClaimPsbtResponse>  lendasatGetClaimPsbt({required String contractId , required int feeRate }) => RustLib.instance.api.crateApiLendasatApiLendasatGetClaimPsbt(contractId: contractId, feeRate: feeRate);
+Future<ClaimPsbtResponse> lendasatGetClaimPsbt(
+        {required String contractId, required int feeRate}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatGetClaimPsbt(
+        contractId: contractId, feeRate: feeRate);
 
 /// Sign a PSBT using the Lendasat wallet keypair.
 ///
@@ -85,39 +128,76 @@ Future<ClaimPsbtResponse>  lendasatGetClaimPsbt({required String contractId , re
 /// - Verifies borrower_pk matches our wallet's key (warns if mismatch)
 /// - Signs all inputs with our keypair
 /// - Returns the signed PSBT hex
-Future<String>  lendasatSignPsbt({required String psbtHex , required String collateralDescriptor , required String borrowerPk }) => RustLib.instance.api.crateApiLendasatApiLendasatSignPsbt(psbtHex: psbtHex, collateralDescriptor: collateralDescriptor, borrowerPk: borrowerPk);
+Future<String> lendasatSignPsbt(
+        {required String psbtHex,
+        required String collateralDescriptor,
+        required String borrowerPk}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatSignPsbt(
+        psbtHex: psbtHex,
+        collateralDescriptor: collateralDescriptor,
+        borrowerPk: borrowerPk);
 
 /// Broadcast a signed claim transaction.
-Future<String>  lendasatBroadcastClaimTx({required String contractId , required String signedTx }) => RustLib.instance.api.crateApiLendasatApiLendasatBroadcastClaimTx(contractId: contractId, signedTx: signedTx);
+Future<String> lendasatBroadcastClaimTx(
+        {required String contractId, required String signedTx}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatBroadcastClaimTx(
+        contractId: contractId, signedTx: signedTx);
 
 /// Get the PSBTs for claiming Ark collateral.
-Future<ArkClaimPsbtResponse>  lendasatGetClaimArkPsbt({required String contractId }) => RustLib.instance.api.crateApiLendasatApiLendasatGetClaimArkPsbt(contractId: contractId);
+Future<ArkClaimPsbtResponse> lendasatGetClaimArkPsbt(
+        {required String contractId}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatGetClaimArkPsbt(contractId: contractId);
 
 /// Broadcast signed Ark claim transactions.
-Future<String>  lendasatBroadcastClaimArkTx({required String contractId , required String signedArkPsbt , required List<String> signedCheckpointPsbts }) => RustLib.instance.api.crateApiLendasatApiLendasatBroadcastClaimArkTx(contractId: contractId, signedArkPsbt: signedArkPsbt, signedCheckpointPsbts: signedCheckpointPsbts);
+Future<String> lendasatBroadcastClaimArkTx(
+        {required String contractId,
+        required String signedArkPsbt,
+        required List<String> signedCheckpointPsbts}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatBroadcastClaimArkTx(
+        contractId: contractId,
+        signedArkPsbt: signedArkPsbt,
+        signedCheckpointPsbts: signedCheckpointPsbts);
 
 /// Get the PSBTs for settling Ark collateral when VTXOs are recoverable.
 /// Use this instead of claim-ark when contract.requires_ark_settlement is true.
-Future<SettleArkPsbtResponse>  lendasatGetSettleArkPsbt({required String contractId }) => RustLib.instance.api.crateApiLendasatApiLendasatGetSettleArkPsbt(contractId: contractId);
+Future<SettleArkPsbtResponse> lendasatGetSettleArkPsbt(
+        {required String contractId}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatGetSettleArkPsbt(contractId: contractId);
 
 /// Finish Ark collateral settlement by submitting signed PSBTs.
-Future<String>  lendasatFinishSettleArk({required String contractId , required String signedIntentPsbt , required List<String> signedForfeitPsbts }) => RustLib.instance.api.crateApiLendasatApiLendasatFinishSettleArk(contractId: contractId, signedIntentPsbt: signedIntentPsbt, signedForfeitPsbts: signedForfeitPsbts);
+Future<String> lendasatFinishSettleArk(
+        {required String contractId,
+        required String signedIntentPsbt,
+        required List<String> signedForfeitPsbts}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatFinishSettleArk(
+        contractId: contractId,
+        signedIntentPsbt: signedIntentPsbt,
+        signedForfeitPsbts: signedForfeitPsbts);
 
 /// Get the PSBT for recovering collateral from an expired contract.
-Future<ClaimPsbtResponse>  lendasatGetRecoverPsbt({required String contractId , required int feeRate }) => RustLib.instance.api.crateApiLendasatApiLendasatGetRecoverPsbt(contractId: contractId, feeRate: feeRate);
+Future<ClaimPsbtResponse> lendasatGetRecoverPsbt(
+        {required String contractId, required int feeRate}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatGetRecoverPsbt(
+        contractId: contractId, feeRate: feeRate);
 
 /// Broadcast a signed recovery transaction.
-Future<String>  lendasatBroadcastRecoverTx({required String contractId , required String signedTx }) => RustLib.instance.api.crateApiLendasatApiLendasatBroadcastRecoverTx(contractId: contractId, signedTx: signedTx);
+Future<String> lendasatBroadcastRecoverTx(
+        {required String contractId, required String signedTx}) =>
+    RustLib.instance.api.crateApiLendasatApiLendasatBroadcastRecoverTx(
+        contractId: contractId, signedTx: signedTx);
 
-            @freezed
-                sealed class AuthResult with _$AuthResult  {
-                    const AuthResult._();
+@freezed
+sealed class AuthResult with _$AuthResult {
+  const AuthResult._();
 
-                     const factory AuthResult.success({   required String userId ,  required String userName ,  String? userEmail , }) = AuthResult_Success;
- const factory AuthResult.needsRegistration({   required String pubkey , }) = AuthResult_NeedsRegistration;
-
-                    
-
-                    
-                }
-            
+  const factory AuthResult.success({
+    required String userId,
+    required String userName,
+    String? userEmail,
+  }) = AuthResult_Success;
+  const factory AuthResult.needsRegistration({
+    required String pubkey,
+  }) = AuthResult_NeedsRegistration;
+}

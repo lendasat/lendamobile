@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart' show CurrencyType;
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
+import 'package:ark_flutter/src/rust/api/lendaswap_api.dart' as lendaswap_api;
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -66,6 +68,11 @@ class _SwapScreenState extends State<SwapScreen> {
   // Loading state
   bool isLoading = false;
 
+  // Quote state
+  lendaswap_api.SwapQuote? _quote;
+  bool _isLoadingQuote = false;
+  Timer? _quoteDebounceTimer;
+
   // Swap service
   final LendaSwapService _swapService = LendaSwapService();
 
@@ -95,10 +102,58 @@ class _SwapScreenState extends State<SwapScreen> {
 
   @override
   void dispose() {
+    _quoteDebounceTimer?.cancel();
     _sourceController.dispose();
     _targetController.dispose();
     scrollController.dispose();
     super.dispose();
+  }
+
+  /// Fetch quote from LendaSwap API with debouncing
+  void _fetchQuoteDebounced() {
+    _quoteDebounceTimer?.cancel();
+    _quoteDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _fetchQuote();
+    });
+  }
+
+  /// Fetch quote from LendaSwap API
+  Future<void> _fetchQuote() async {
+    // Parse BTC amount
+    final btc = double.tryParse(btcAmount) ?? 0;
+    if (btc <= 0) {
+      setState(() {
+        _quote = null;
+        _isLoadingQuote = false;
+      });
+      return;
+    }
+
+    setState(() => _isLoadingQuote = true);
+
+    try {
+      final sats = (btc * 100000000).round();
+      final quote = await lendaswap_api.lendaswapGetQuote(
+        fromToken: sourceToken.tokenId,
+        toToken: targetToken.tokenId,
+        amountSats: BigInt.from(sats),
+      );
+
+      if (mounted) {
+        setState(() {
+          _quote = quote;
+          _isLoadingQuote = false;
+        });
+      }
+    } catch (e) {
+      logger.e('Failed to fetch quote: $e');
+      if (mounted) {
+        setState(() {
+          _quote = null;
+          _isLoadingQuote = false;
+        });
+      }
+    }
   }
 
   /// Convert BTC to USD
@@ -224,6 +279,9 @@ class _SwapScreenState extends State<SwapScreen> {
       // Update target amount
       _updateTargetAmount();
     });
+
+    // Fetch quote with debouncing
+    _fetchQuoteDebounced();
   }
 
   void _onTargetAmountChanged(String value) {
@@ -298,6 +356,9 @@ class _SwapScreenState extends State<SwapScreen> {
       // Update source amount
       _updateSourceAmount();
     });
+
+    // Fetch quote with debouncing
+    _fetchQuoteDebounced();
   }
 
   void _updateTargetAmount() {
@@ -394,6 +455,9 @@ class _SwapScreenState extends State<SwapScreen> {
       _updateSourceAmount();
       _updateTargetAmount();
     });
+
+    // Fetch new quote for swapped tokens
+    _fetchQuoteDebounced();
   }
 
   void _onSourceTokenChanged(SwapToken token) {
@@ -414,6 +478,9 @@ class _SwapScreenState extends State<SwapScreen> {
       _updateSourceAmount();
       _updateTargetAmount();
     });
+
+    // Fetch new quote for changed token
+    _fetchQuoteDebounced();
   }
 
   void _onTargetTokenChanged(SwapToken token) {
@@ -433,6 +500,9 @@ class _SwapScreenState extends State<SwapScreen> {
       _updateSourceAmount();
       _updateTargetAmount();
     });
+
+    // Fetch new quote for changed token
+    _fetchQuoteDebounced();
   }
 
   String _getButtonTitle() {
@@ -577,8 +647,8 @@ class _SwapScreenState extends State<SwapScreen> {
         sourceAmountUsd: usdAmount,
         targetAmountUsd: usdAmount,
         exchangeRate: btcUsdPrice,
-        networkFeeSats: 1500,
-        protocolFeePercent: 0.25,
+        networkFeeSats: _quote?.networkFeeSats.toInt() ?? 0,
+        protocolFeePercent: _quote?.protocolFeePercent ?? 0.0,
         targetAddress: displayAddress,
         isLoading: isLoading,
         onConfirm: () => _executeSwap(targetEvmAddress: targetEvmAddress),
@@ -765,8 +835,12 @@ class _SwapScreenState extends State<SwapScreen> {
     } catch (e) {
       logger.e('Swap failed: $e');
       if (mounted) {
+        final errorMessage = _parseSwapError(e.toString());
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Swap failed: ${e.toString()}')),
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: AppTheme.errorColor,
+          ),
         );
       }
     } finally {
@@ -779,6 +853,62 @@ class _SwapScreenState extends State<SwapScreen> {
         PaymentOverlayService().stopSuppression();
       });
     }
+  }
+
+  /// Parse swap error messages and return user-friendly text
+  String _parseSwapError(String error) {
+    final errorLower = error.toLowerCase();
+
+    // Check for minimum amount error
+    if (errorLower.contains('min amount')) {
+      // Try to extract the minimum amount from the error
+      final minAmountMatch = RegExp(r'min amount is [₿B]?\s*([\d.,\s]+)', caseSensitive: false).firstMatch(error);
+      if (minAmountMatch != null) {
+        final minAmount = minAmountMatch.group(1)?.replaceAll(' ', '') ?? '0.00001';
+        return 'Amount too small. Minimum is ₿$minAmount (1,000 sats)';
+      }
+      return 'Amount too small. Minimum swap amount is 1,000 sats.';
+    }
+
+    // Check for maximum amount error
+    if (errorLower.contains('max amount')) {
+      return 'Amount too large. Please try a smaller amount.';
+    }
+
+    // Check for insufficient balance
+    if (errorLower.contains('insufficient') || errorLower.contains('not enough')) {
+      return 'Insufficient balance for this swap.';
+    }
+
+    // Check for network errors
+    if (errorLower.contains('network error') || errorLower.contains('connection')) {
+      return 'Network error. Please check your connection and try again.';
+    }
+
+    // Check for timeout
+    if (errorLower.contains('timeout')) {
+      return 'Request timed out. Please try again.';
+    }
+
+    // Default: clean up the error message
+    // Remove "AnyhowException", stack traces, etc.
+    String cleanError = error;
+    if (cleanError.contains('AnyhowException(')) {
+      cleanError = cleanError.replaceAll('AnyhowException(', '').replaceAll(')', '');
+    }
+    if (cleanError.contains('Stack backtrace:')) {
+      cleanError = cleanError.split('Stack backtrace:')[0].trim();
+    }
+    if (cleanError.contains('API error:')) {
+      cleanError = cleanError.split('API error:').last.trim();
+    }
+
+    // Limit length
+    if (cleanError.length > 100) {
+      cleanError = '${cleanError.substring(0, 97)}...';
+    }
+
+    return cleanError.isEmpty ? 'Swap failed. Please try again.' : cleanError;
   }
 
   @override
@@ -955,12 +1085,15 @@ class _SwapScreenState extends State<SwapScreen> {
   /// Show fee breakdown sheet when user taps info icon
   void _showFeeInfoSheet(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final usd = double.tryParse(usdAmount) ?? 0;
 
-    const networkFeeSats = 1500;
-    const protocolFeePercent = 0.25;
+    // Use quote data if available, otherwise show placeholder
+    final networkFeeSats = _quote?.networkFeeSats.toInt() ?? 0;
+    final protocolFeeSats = _quote?.protocolFeeSats.toInt() ?? 0;
+    final protocolFeePercent = _quote?.protocolFeePercent ?? 0.0;
+    final totalFeeSats = networkFeeSats + protocolFeeSats;
+
     final networkFeeUsd = btcToUsd(networkFeeSats / 100000000);
-    final protocolFeeUsd = usd * protocolFeePercent / 100;
+    final protocolFeeUsd = btcToUsd(protocolFeeSats / 100000000);
     final totalFeeUsd = networkFeeUsd + protocolFeeUsd;
 
     arkBottomSheet(
@@ -978,26 +1111,43 @@ class _SwapScreenState extends State<SwapScreen> {
                   ),
             ),
             const SizedBox(height: AppTheme.cardPadding),
-            _FeeInfoRow(
-              label: 'Network Fee',
-              value: '~\$${networkFeeUsd.toStringAsFixed(2)}',
-              subtitle: '${formatSats(networkFeeSats)} sats',
-              isDarkMode: isDarkMode,
-            ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            _FeeInfoRow(
-              label: 'Protocol Fee',
-              value: '~\$${protocolFeeUsd.toStringAsFixed(2)}',
-              subtitle: '$protocolFeePercent%',
-              isDarkMode: isDarkMode,
-            ),
-            const Divider(height: AppTheme.cardPadding * 2),
-            _FeeInfoRow(
-              label: 'Total Fees',
-              value: '~\$${totalFeeUsd.toStringAsFixed(2)}',
-              isDarkMode: isDarkMode,
-              isBold: true,
-            ),
+            if (_quote == null && !_isLoadingQuote)
+              Text(
+                'Enter an amount to see fee breakdown',
+                style: TextStyle(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                ),
+              )
+            else if (_isLoadingQuote)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(AppTheme.cardPadding),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else ...[
+              _FeeInfoRow(
+                label: 'Network Fee',
+                value: '~\$${networkFeeUsd.toStringAsFixed(2)}',
+                subtitle: '${formatSats(networkFeeSats)} sats',
+                isDarkMode: isDarkMode,
+              ),
+              const SizedBox(height: AppTheme.elementSpacing),
+              _FeeInfoRow(
+                label: 'Protocol Fee',
+                value: '~\$${protocolFeeUsd.toStringAsFixed(2)}',
+                subtitle: '${protocolFeePercent.toStringAsFixed(2)}%',
+                isDarkMode: isDarkMode,
+              ),
+              const Divider(height: AppTheme.cardPadding * 2),
+              _FeeInfoRow(
+                label: 'Total Fees',
+                value: '~\$${totalFeeUsd.toStringAsFixed(2)}',
+                subtitle: '${formatSats(totalFeeSats)} sats',
+                isDarkMode: isDarkMode,
+                isBold: true,
+              ),
+            ],
             const SizedBox(height: AppTheme.cardPadding),
           ],
         ),
