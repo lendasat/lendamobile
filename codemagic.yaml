@@ -1,0 +1,19 @@
+workflows:
+  ios-workflow:
+    name: iOS Workflow
+    integrations:
+      app_store_connect: <App Store Connect API key name>
+    environment:
+      ios_signing:
+        distribution_type: app_store # or: ad_hoc | development | enterprise
+        bundle_identifier: com.lendasat.lendamobile
+      vars:
+        BUNDLE_ID: "com.lendasat.lendamobile"
+        XCODE_WORKSPACE: "Runner.xcworkspace" # <-- Name of your Xcode workspace
+        XCODE_SCHEME: "Runner" # <-- Name of your Xcode scheme
+        APP_STORE_APPLE_ID: 6756863835
+    scripts:
+      # ... your dependencies installation
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+      # ... your build commands
