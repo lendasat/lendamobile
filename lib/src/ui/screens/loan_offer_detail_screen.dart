@@ -422,7 +422,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                       const Icon(
                         Icons.verified_rounded,
                         size: 16,
-                        color: AppTheme.successColor,
+                        color: AppTheme.colorBitcoin,
                       ),
                     ],
                   ],

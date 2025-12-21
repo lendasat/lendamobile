@@ -519,8 +519,8 @@ class _TransactionItemWidget extends StatelessWidget {
         tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
         showBtcAsMain,
         hideAmounts,
-        // Collaborative redeem settles to on-chain, otherwise stays in Arkade
-        tx.isSettled ? 'Arkade → Onchain' : 'Arkade',
+        // Ark virtual transactions stay within Arkade network
+        'Arkade',
       ),
     );
   }

@@ -613,6 +613,42 @@ class _OfferCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Limited time offer badge
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.colorBitcoin.withValues(alpha: 0.15),
+                        Colors.red.withValues(alpha: 0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppTheme.colorBitcoin.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        '🔥',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Limited time offer — super cheap!',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.colorBitcoin,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+
                 // Header row with lender and interest
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -662,7 +698,7 @@ class _OfferCard extends StatelessWidget {
                                 const Icon(
                                   Icons.verified_rounded,
                                   size: 14,
-                                  color: AppTheme.successColor,
+                                  color: AppTheme.colorBitcoin,
                                 ),
                               ],
                             ],
