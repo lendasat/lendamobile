@@ -11,7 +11,7 @@ anyhow = "1"
 base64 = "0.22"
 
 # Lendasat SDK for wallet encryption (email recovery)
-lendasat-sdk = { git = "https://github.com/lendasat/lendasat.git", branch = "feat/arkrs-update", package = "client-sdk" }
+lendasat-sdk = { git = "https://github.com/lendasat/lendasat.git", rev = "98383cba920e9cae6c3cd40df3a98c9d11b2cfd2", package = "client-sdk" }
 # SRP authentication
 srp = "0.6.0"
 ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "09b073269c944a25eef5e1f92fd2ae2a5ef2ea28" }
@@ -25,9 +25,6 @@ time = { version = "0.3", features = ["serde", "formatting", "parsing", "macros"
 uuid = { version = "1.0", features = ["v4", "serde"] }
 sha2 = "0.10"
 bip39 = { version = "2.1.0", features = ["rand_core"] }
-# ark-bdk-wallet = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-bdk-wallet" }
-# ark-client = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-client", default-features = false, features = ["tls-webpki-roots"] }
-# ark-core = { path = "/Users/bonomat/src/github/arkade/rust-sdk/ark-core" }
 async-trait = "0.1"
 bitcoin = { version = "0.32.4", features = ["rand"] }
 esplora-client = { version = "0.11.0", features = ["async-https-native"] }
