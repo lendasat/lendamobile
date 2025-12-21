@@ -1426,13 +1426,23 @@ class _SwapAmountCard extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: () => _showTokenSelector(context),
-                  child: GlassContainer(
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 8,
                     ),
-                    opacity: 0.2,
-                    borderRadius: AppTheme.borderRadiusMid,
+                    decoration: BoxDecoration(
+                      color: isDarkMode
+                          ? const Color(0xFF3D3D3D) // Lighter grey for dark mode
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+                      border: Border.all(
+                        color: isDarkMode
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : Colors.black.withValues(alpha: 0.08),
+                        width: 1,
+                      ),
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

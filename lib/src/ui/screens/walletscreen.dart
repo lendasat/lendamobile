@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
@@ -60,6 +61,10 @@ class WalletScreenState extends State<WalletScreen> {
   // Swap history
   final LendaSwapService _swapService = LendaSwapService();
   List<SwapInfo> _swaps = [];
+
+  // Lendasat loans (for locked collateral display)
+  final LendasatService _lendasatService = LendasatService();
+  int _lockedCollateralSats = 0;
 
   // Balance values
   double _pendingBalance = 0.0;
@@ -205,13 +210,14 @@ class WalletScreenState extends State<WalletScreen> {
     return _isBalanceChangePositive(firstBalance, currentBalance, firstValue, currentValue);
   }
 
-  /// Fetches all wallet data (balance, transactions, and swaps)
+  /// Fetches all wallet data (balance, transactions, swaps, and locked collateral)
   /// This is public so it can be called from parent widgets (e.g., after payment received)
   Future<void> fetchWalletData() async {
     await Future.wait([
       _fetchBalance(),
       _fetchTransactions(),
       _fetchSwaps(),
+      _fetchLockedCollateral(),
     ]);
 
     // Update gradient colors AFTER all data is fetched to ensure
@@ -238,6 +244,36 @@ class WalletScreenState extends State<WalletScreen> {
     } catch (e) {
       // Silently handle swap fetch errors - swaps are optional
       logger.w("Could not fetch swaps: $e");
+    }
+  }
+
+  Future<void> _fetchLockedCollateral() async {
+    try {
+      // Initialize Lendasat service if needed
+      if (!_lendasatService.isInitialized) {
+        await _lendasatService.initialize();
+      }
+
+      // Only fetch contracts if authenticated
+      if (_lendasatService.isAuthenticated) {
+        await _lendasatService.refreshContracts();
+
+        // Calculate total locked collateral from active contracts
+        int totalLocked = 0;
+        for (final contract in _lendasatService.activeContracts) {
+          totalLocked += contract.effectiveCollateralSats;
+        }
+
+        if (mounted) {
+          setState(() {
+            _lockedCollateralSats = totalLocked;
+          });
+        }
+        logger.i("Locked collateral: $_lockedCollateralSats sats from ${_lendasatService.activeContracts.length} active contracts");
+      }
+    } catch (e) {
+      // Silently handle errors - locked collateral display is optional
+      logger.w("Could not fetch locked collateral: $e");
     }
   }
 
@@ -531,6 +567,10 @@ class WalletScreenState extends State<WalletScreen> {
                         _buildTopBar(),
                         const SizedBox(height: AppTheme.cardPadding * 1.5),
                         _buildBalanceDisplay(),
+                        if (_lockedCollateralSats > 0) ...[
+                          const SizedBox(height: AppTheme.elementSpacing * 0.5),
+                          _buildLockedCollateralDisplay(),
+                        ],
                         const SizedBox(height: AppTheme.elementSpacing),
                         _buildPriceChangeIndicators(),
                         const SizedBox(height: AppTheme.cardPadding * 1.5),
@@ -759,6 +799,54 @@ class WalletScreenState extends State<WalletScreen> {
           (Match m) => '${m[1]},',
         );
     return formatted;
+  }
+
+  Widget _buildLockedCollateralDisplay() {
+    final currencyService = context.watch<CurrencyPreferenceService>();
+    final userPrefs = context.watch<UserPreferencesService>();
+
+    final formattedSats = _formatSatsAmount(_lockedCollateralSats);
+    final lockedBtc = _lockedCollateralSats / 100000000.0;
+    final lockedFiat = lockedBtc * _getCurrentBtcPrice();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+      child: PostHogMaskWidget(
+        child: GestureDetector(
+          onTap: _toggleDisplayUnit,
+          behavior: HitTestBehavior.opaque,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                FontAwesomeIcons.lock,
+                size: 12,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                userPrefs.balancesVisible
+                    ? (currencyService.showCoinBalance
+                        ? '$formattedSats sats'
+                        : currencyService.formatAmount(lockedFiat))
+                    : '****',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'locked',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildPriceChangeIndicators() {

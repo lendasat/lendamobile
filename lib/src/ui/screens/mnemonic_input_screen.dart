@@ -1,11 +1,16 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
-import 'package:ark_flutter/src/ui/screens/email_signup_screen.dart';
+import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
+import 'package:ark_flutter/src/services/lendasat_service.dart';
+import 'package:ark_flutter/src/services/settings_service.dart';
+import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 
 class MnemonicInputScreen extends StatefulWidget {
@@ -18,8 +23,11 @@ class MnemonicInputScreen extends StatefulWidget {
 class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
   final PageController _pageController = PageController();
   final ScrollController _scrollController = ScrollController();
+  final SettingsService _settingsService = SettingsService();
+  final LendasatService _lendasatService = LendasatService();
 
   bool _onLastPage = false;
+  bool _isLoading = false;
 
   List<String> _bipWords = [];
 
@@ -146,7 +154,7 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
     return _bipWords.contains(word.toLowerCase());
   }
 
-  void _handleRestore() {
+  Future<void> _handleRestore() async {
     // Validate that all words are filled
     final emptyFields = _textControllers
         .asMap()
@@ -183,17 +191,80 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
         .map((controller) => controller.text.trim().toLowerCase())
         .join(' ');
 
-    logger.i('Navigating to email signup for wallet restore');
+    setState(() {
+      _isLoading = true;
+    });
 
-    // Navigate to email signup screen with mnemonic for restore
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => EmailSignupScreen(
-          isRestore: true,
-          mnemonicWords: mnemonic,
-        ),
-      ),
-    );
+    try {
+      logger.i('[RESTORE] Step 1: Getting application support directory...');
+      final dataDir = await getApplicationSupportDirectory();
+
+      logger.i('[RESTORE] Step 2: Loading settings...');
+      final esploraUrl = await _settingsService.getEsploraUrl();
+      final arkServerUrl = await _settingsService.getArkServerUrl();
+      final network = await _settingsService.getNetwork();
+      final boltzUrl = await _settingsService.getBoltzUrl();
+
+      logger.i('[RESTORE] Step 3: Clearing previous recovery status...');
+      await _settingsService.clearWordRecoveryStatus();
+
+      logger.i('[RESTORE] Step 4: Restoring wallet from mnemonic...');
+      final aspId = await restoreWallet(
+        mnemonicWords: mnemonic,
+        dataDir: dataDir.path,
+        network: network,
+        esplora: esploraUrl,
+        server: arkServerUrl,
+        boltzUrl: boltzUrl,
+      );
+      logger.i('[RESTORE] Step 4 DONE: Wallet restored, aspId: $aspId');
+
+      // Track wallet restore and identify user
+      logger.i('[RESTORE] Step 5: Identifying user for analytics...');
+      await AnalyticsService().identifyUser();
+      await AnalyticsService().trackWalletCreated(isRestore: true);
+
+      // Try to authenticate with Lendasat using the restored wallet's keypair
+      // If the user was previously registered, this will succeed and restore their loans
+      // If not registered, we just continue without Lendasat - they can register later
+      logger.i('[RESTORE] Step 6: Attempting Lendasat authentication...');
+      try {
+        await _lendasatService.initialize();
+        final authResult = await _lendasatService.authenticate();
+
+        if (authResult is AuthResult_Success) {
+          logger.i('[RESTORE] Lendasat: Successfully authenticated as ${authResult.userName}');
+          // User's loans are now accessible
+        } else if (authResult is AuthResult_NeedsRegistration) {
+          logger.i('[RESTORE] Lendasat: User not registered (pubkey: ${authResult.pubkey})');
+          // User wasn't registered before - that's fine, they can register later from loans screen
+        }
+      } catch (e) {
+        // Lendasat auth failed - non-fatal, user can still use the wallet
+        logger.w('[RESTORE] Lendasat authentication failed (non-fatal): $e');
+      }
+
+      logger.i('[RESTORE] Step 7: Navigating to dashboard...');
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => BottomNav(aspId: aspId)),
+          (route) => false,
+        );
+      }
+      logger.i('[RESTORE] COMPLETE!');
+    } catch (e, stackTrace) {
+      logger.e('[RESTORE] FAILED with error: $e');
+      logger.e('[RESTORE] Stack trace: $stackTrace');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorDialog(
+          AppLocalizations.of(context)!.failedToRestoreWallet,
+          e.toString(),
+        );
+      }
+    }
   }
 
   void _showErrorDialog(String title, String message) {
@@ -321,7 +392,8 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
                       : 'Next',
                   customWidth: double.infinity,
                   customHeight: 56,
-                  onTap: _onLastPage ? _handleRestore : _nextPage,
+                  isLoading: _isLoading,
+                  onTap: _isLoading ? null : (_onLastPage ? _handleRestore : _nextPage),
                 ),
               ],
             ),

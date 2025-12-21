@@ -1,6 +1,8 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
+import 'package:ark_flutter/src/rust/models/mempool.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
@@ -63,6 +65,14 @@ class SendScreenState extends State<SendScreen>
   bool _hasValidAddress = false;
   String? _description;
   double? _bitcoinPrice;
+
+  // On-chain fee state
+  bool _isOnChainAddress = false;
+  RecommendedFees? _recommendedFees;
+  bool _isFetchingFees = false;
+
+  // Estimated transaction size in vBytes (typical P2WPKH: 1 input, 2 outputs)
+  static const int _estimatedTxVbytes = 140;
 
   // LNURL state
   LnurlPayParams? _lnurlParams;
@@ -160,8 +170,20 @@ class SendScreenState extends State<SendScreen>
       });
     }
 
+    // Check if this is an on-chain Bitcoin address and fetch fees
+    final isOnChain = isValid && _isOnChainBitcoinAddress(text);
+    if (isOnChain && !_isOnChainAddress) {
+      // Address changed to on-chain - fetch fees
+      _fetchRecommendedFees();
+    }
+
     setState(() {
       _hasValidAddress = isValid;
+      _isOnChainAddress = isOnChain;
+      // Clear fees if not on-chain
+      if (!isOnChain) {
+        _recommendedFees = null;
+      }
     });
   }
 
@@ -358,6 +380,94 @@ class SendScreenState extends State<SendScreen>
   bool _isLnurlOrLightningAddress(String address) {
     return LnurlService.isLnurl(address) ||
         LnurlService.isLightningAddress(address);
+  }
+
+  /// Check if the address is an on-chain Bitcoin address (not Ark, not Lightning)
+  bool _isOnChainBitcoinAddress(String address) {
+    final lower = address.toLowerCase().trim();
+
+    // Exclude Ark addresses
+    if (lower.startsWith('ark1') || lower.startsWith('tark1')) {
+      return false;
+    }
+
+    // Exclude Lightning invoices
+    if (_isLightningInvoice(address)) {
+      return false;
+    }
+
+    // Exclude LNURL and Lightning addresses
+    if (_isLnurlOrLightningAddress(address)) {
+      return false;
+    }
+
+    // Exclude BIP21 URIs that have an ark/lightning parameter (they use off-chain)
+    if (lower.startsWith('bitcoin:')) {
+      final uri = Uri.tryParse(address);
+      if (uri != null) {
+        if (uri.queryParameters.containsKey('ark') ||
+            uri.queryParameters.containsKey('arkade') ||
+            uri.queryParameters.containsKey('lightning')) {
+          return false;
+        }
+        // BIP21 with just a Bitcoin address = on-chain
+        return true;
+      }
+    }
+
+    // Bitcoin mainnet addresses
+    if (address.startsWith('1') ||
+        address.startsWith('3') ||
+        address.startsWith('bc1')) {
+      return address.length >= 26 && address.length <= 62;
+    }
+
+    // Bitcoin testnet addresses
+    if (address.startsWith('m') ||
+        address.startsWith('n') ||
+        address.startsWith('2') ||
+        address.startsWith('tb1')) {
+      return address.length >= 26 && address.length <= 62;
+    }
+
+    return false;
+  }
+
+  /// Fetch recommended fees from mempool.space API
+  Future<void> _fetchRecommendedFees() async {
+    if (_isFetchingFees) return;
+
+    setState(() {
+      _isFetchingFees = true;
+    });
+
+    try {
+      final fees = await mempool_api.getRecommendedFees();
+      if (mounted) {
+        setState(() {
+          _recommendedFees = fees;
+          _isFetchingFees = false;
+        });
+        logger.i("Fetched recommended fees: halfHourFee=${fees.halfHourFee} sat/vB");
+      }
+    } catch (e) {
+      logger.e("Error fetching recommended fees: $e");
+      if (mounted) {
+        setState(() {
+          _isFetchingFees = false;
+        });
+      }
+    }
+  }
+
+  /// Calculate estimated network fee in sats for on-chain transaction
+  int get _estimatedNetworkFeeSats {
+    if (!_isOnChainAddress || _recommendedFees == null) {
+      return 0;
+    }
+    // Use halfHourFee (standard) fee rate
+    final feeRate = _recommendedFees!.halfHourFee;
+    return (feeRate * _estimatedTxVbytes).round();
   }
 
   void _toggleAddressExpanded() {
@@ -794,7 +904,7 @@ class SendScreenState extends State<SendScreen>
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.elementSpacing,
+        horizontal: AppTheme.cardPadding,
       ),
       child: GlassContainer(
         padding: const EdgeInsets.all(AppTheme.elementSpacing),
@@ -961,7 +1071,7 @@ class SendScreenState extends State<SendScreen>
 
     return Padding(
       padding:
-          const EdgeInsets.symmetric(horizontal: AppTheme.elementSpacing),
+          const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: ArkListTile(
         text: l10n.available,
         trailing: Column(
@@ -992,11 +1102,26 @@ class SendScreenState extends State<SendScreen>
       return const SizedBox.shrink();
     }
 
-    const networkFees = 0; // Ark has 0 fees
+    // Calculate network fees based on address type
+    final networkFees = _isOnChainAddress ? _estimatedNetworkFeeSats : 0;
     final total = amountSats.toInt() + networkFees;
 
+    // Fee display text
+    String feeText;
+    if (_isOnChainAddress) {
+      if (_isFetchingFees) {
+        feeText = '...';
+      } else if (_recommendedFees != null) {
+        feeText = '~$networkFees SATS';
+      } else {
+        feeText = '? SATS';
+      }
+    } else {
+      feeText = '0 SATS';
+    }
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.elementSpacing),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: GlassContainer(
         opacity: 0.05,
         borderRadius: AppTheme.cardRadiusSmall,
@@ -1041,11 +1166,28 @@ class SendScreenState extends State<SendScreen>
                 vertical: AppTheme.elementSpacing * 0.5,
               ),
               text: l10n.networkFees,
-              trailing: Text(
-                '$networkFees SATS',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_isOnChainAddress && _isFetchingFees)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: Theme.of(context).hintColor,
+                        ),
+                      ),
                     ),
+                  Text(
+                    feeText,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                  ),
+                ],
               ),
             ),
             // Total row
@@ -1057,7 +1199,7 @@ class SendScreenState extends State<SendScreen>
               ),
               text: l10n.total,
               trailing: Text(
-                '$total SATS',
+                _isFetchingFees ? '...' : '$total SATS',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
