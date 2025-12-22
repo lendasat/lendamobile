@@ -1921,7 +1921,7 @@ dependencies = [
 [[package]]
 name = "lendaswap-core"
 version = "0.1.0"
-source = "git+https://github.com/lendasat/lendaswap.git?tag=0.0.61#7a80566a65e27479b032fa5f156f37685fea49b1"
+source = "git+https://github.com/lendasat/lendaswap-sdk.git?rev=dce02ac#dce02acaacf257048b2e298dc647404651652a36"
 dependencies = [
  "anyhow",
  "ark-rest",
