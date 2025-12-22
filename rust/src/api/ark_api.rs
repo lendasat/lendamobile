@@ -135,6 +135,12 @@ pub enum Transaction {
         is_settled: bool,
         created_at: i64,
     },
+    /// On-chain send (collaborative redeem) - funds sent from Ark to on-chain address
+    Offboard {
+        txid: String,
+        amount_sats: i64,
+        confirmed_at: Option<i64>,
+    },
 }
 
 pub async fn tx_history() -> Result<Vec<Transaction>> {
@@ -180,6 +186,19 @@ pub async fn tx_history() -> Result<Vec<Transaction>> {
                     created_at,
                 }
             }
+            ark_core::history::Transaction::Offboard {
+                commitment_txid,
+                amount,
+                confirmed_at,
+            } => {
+                tracing::debug!("TX HISTORY: Offboard/On-chain send tx {}", commitment_txid);
+                Transaction::Offboard {
+                    txid: commitment_txid.to_string(),
+                    // Offboard is always outgoing, so make amount negative
+                    amount_sats: -(amount.to_sat() as i64),
+                    confirmed_at,
+                }
+            }
         })
         .collect();
 
@@ -217,6 +236,7 @@ pub async fn settle() -> Result<()> {
 /// Represents a pending boarding UTXO (on-chain funds waiting to be settled)
 pub struct BoardingUtxo {
     pub txid: String,
+    pub vout: u32,
     pub amount_sats: u64,
     pub is_confirmed: bool,
 }
@@ -228,6 +248,7 @@ pub async fn get_boarding_utxos() -> Result<Vec<BoardingUtxo>> {
         .into_iter()
         .map(|u| BoardingUtxo {
             txid: u.txid,
+            vout: u.vout,
             amount_sats: u.amount.to_sat(),
             is_confirmed: u.is_confirmed,
         })
@@ -238,6 +259,15 @@ pub async fn get_boarding_utxos() -> Result<Vec<BoardingUtxo>> {
 pub async fn get_pending_balance() -> Result<u64> {
     let amount = crate::ark::client::get_pending_balance().await?;
     Ok(amount.to_sat())
+}
+
+/// Settle only boarding UTXOs (on-chain funds) into the Ark protocol.
+/// This method settles ONLY the confirmed boarding UTXOs without including
+/// any existing VTXOs, avoiding the minExpiryGap rejection from the server.
+/// Use this for completing on-chain boarding when you have existing Ark balance.
+pub async fn settle_boarding() -> Result<()> {
+    crate::ark::client::settle_boarding().await?;
+    Ok(())
 }
 
 /// Get the Nostr secret key (nsec) derived from the wallet mnemonic

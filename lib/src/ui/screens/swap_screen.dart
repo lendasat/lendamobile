@@ -6,6 +6,7 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/api/lendaswap_api.dart' as lendaswap_api;
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
@@ -596,9 +597,7 @@ class SwapScreenState extends State<SwapScreen> {
     // Validate amounts
     final usd = double.tryParse(usdAmount);
     if (usd == null || usd <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid amount')),
-      );
+      OverlayService().showError('Please enter a valid amount');
       return;
     }
 
@@ -612,9 +611,7 @@ class SwapScreenState extends State<SwapScreen> {
       // BTC will be received to wallet's Arkade address automatically
       _showConfirmation();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid swap pair')),
-      );
+      OverlayService().showError('Invalid swap pair');
     }
   }
 
@@ -750,14 +747,9 @@ class SwapScreenState extends State<SwapScreen> {
           // Swap was created but we can't fund it - still navigate to show status
           logger.e('Insufficient balance for funding. Swap created but not funded.');
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Swap created but insufficient balance to fund. '
-                  'Need $satsToSend sats, have $availableSats sats.',
-                ),
-                duration: const Duration(seconds: 5),
-              ),
+            OverlayService().showError(
+              'Swap created but insufficient balance to fund. '
+              'Need $satsToSend sats, have $availableSats sats.',
             );
           }
           // Continue to navigate to processing screen - swap will show as waiting
@@ -773,12 +765,7 @@ class SwapScreenState extends State<SwapScreen> {
             // Funding failed but swap was created - still navigate to show status
             logger.e('Failed to fund swap: $fundingError');
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Failed to send funds: ${fundingError.toString()}'),
-                  duration: const Duration(seconds: 5),
-                ),
-              );
+              OverlayService().showError('Failed to send funds: ${fundingError.toString()}');
             }
             // Continue to navigate - user can see swap status and potentially retry
           }
@@ -865,12 +852,7 @@ class SwapScreenState extends State<SwapScreen> {
       logger.e('Swap failed: $e');
       if (mounted) {
         final errorMessage = _parseSwapError(e.toString());
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError(errorMessage);
       }
     } finally {
       if (mounted) {

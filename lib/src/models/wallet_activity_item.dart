@@ -9,7 +9,7 @@ sealed class WalletActivityItem {
   bool get isSwap;
 }
 
-/// A regular Ark transaction (boarding, round, or redeem).
+/// A regular Ark transaction (boarding, round, redeem, or offboard).
 class TransactionActivityItem implements WalletActivityItem {
   final Transaction transaction;
 
@@ -29,6 +29,16 @@ class TransactionActivityItem implements WalletActivityItem {
         },
         round: (tx) => tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
         redeem: (tx) => tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
+        offboard: (tx) {
+          // Offboard transactions use confirmedAt if available
+          if (tx.confirmedAt != null) {
+            return tx.confirmedAt is BigInt
+                ? (tx.confirmedAt as BigInt).toInt()
+                : tx.confirmedAt as int;
+          }
+          // Unconfirmed offboard txs should be at the TOP of the history
+          return (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 1;
+        },
       );
 
   @override
@@ -36,6 +46,7 @@ class TransactionActivityItem implements WalletActivityItem {
         boarding: (tx) => tx.txid,
         round: (tx) => tx.txid,
         redeem: (tx) => tx.txid,
+        offboard: (tx) => tx.txid,
       );
 
   @override
@@ -45,12 +56,14 @@ class TransactionActivityItem implements WalletActivityItem {
         boarding: (tx) => tx.amountSats.toInt(),
         round: (tx) => tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
         redeem: (tx) => tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
+        offboard: (tx) => tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
       );
 
   bool get isSettled => transaction.map(
         boarding: (tx) => tx.confirmedAt != null,
         round: (tx) => true,
         redeem: (tx) => tx.isSettled,
+        offboard: (tx) => tx.confirmedAt != null,
       );
 }
 

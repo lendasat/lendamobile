@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart' show LendaSwapService;
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
@@ -113,12 +114,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   Future<void> _copyToClipboard(String text, String label) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$label copied to clipboard'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      OverlayService().showOverlay('$label copied to clipboard');
     }
   }
 
@@ -153,23 +149,13 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     try {
       await _lendasatService.cancelContract(widget.contractId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Contract cancelled'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
+        OverlayService().showSuccess('Contract cancelled');
         Navigator.pop(context);
       }
     } catch (e) {
       logger.e('Error cancelling contract: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to cancel: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Failed to cancel: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -191,12 +177,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Collateral claimed! TXID: ${txid.substring(0, 16)}...'),
-              backgroundColor: AppTheme.successColor,
-            ),
-          );
+          OverlayService().showSuccess('Collateral claimed! TXID: ${txid.substring(0, 16)}...');
           await _refreshContract();
         }
       } else {
@@ -213,24 +194,14 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Collateral claimed! TXID: ${txid.substring(0, 16)}...'),
-              backgroundColor: AppTheme.successColor,
-            ),
-          );
+          OverlayService().showSuccess('Collateral claimed! TXID: ${txid.substring(0, 16)}...');
           await _refreshContract();
         }
       }
     } catch (e) {
       logger.e('Error claiming collateral: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -256,23 +227,13 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Collateral recovered! TXID: ${txid.substring(0, 16)}...'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
+        OverlayService().showSuccess('Collateral recovered! TXID: ${txid.substring(0, 16)}...');
         await _refreshContract();
       }
     } catch (e) {
       logger.e('Error recovering collateral: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -287,12 +248,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
     // Verify contract is ready for collateral (use effectiveCollateralSats which has initialCollateralSats fallback)
     if (_contract!.contractAddress == null || _contract!.effectiveCollateralSats <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Contract not ready for collateral yet. Please wait.'),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
+      OverlayService().showError('Contract not ready for collateral yet. Please wait.');
       return;
     }
 
@@ -347,23 +303,13 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Collateral sent! Loan is being processed.'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
+        OverlayService().showSuccess('Collateral sent! Loan is being processed.');
         await _refreshContract();
       }
     } catch (e) {
       logger.e('[Loan] Error sending collateral: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Failed: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -522,12 +468,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     } catch (e) {
       logger.e('[LoanRepay] Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Repayment failed: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Repayment failed: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -551,12 +492,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         .toList();
 
     if (unpaidInstallments.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('All installments are already paid.'),
-          backgroundColor: AppTheme.successColor,
-        ),
-      );
+      OverlayService().showSuccess('All installments are already paid.');
       return;
     }
 
@@ -687,12 +623,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             TextButton(
               onPressed: () {
                 if (txidController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a transaction ID'),
-                      backgroundColor: AppTheme.errorColor,
-                    ),
-                  );
+                  OverlayService().showError('Please enter a transaction ID');
                   return;
                 }
                 Navigator.pop(context, true);
@@ -716,23 +647,13 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Payment confirmed! Refreshing contract...'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
+        OverlayService().showSuccess('Payment confirmed! Refreshing contract...');
         await _refreshContract();
       }
     } catch (e) {
       logger.e('Error marking installment paid: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Failed: ${e.toString()}');
       }
     } finally {
       if (mounted) {

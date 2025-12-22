@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -194,12 +195,7 @@ class _ClaimSatsScreenState extends State<ClaimSatsScreen> {
     });
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Claim submitted! 500 sats will be added soon.'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      OverlayService().showSuccess('Claim submitted! 500 sats will be added soon.');
     }
   }
 

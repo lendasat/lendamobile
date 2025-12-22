@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:ark_flutter/src/services/feedback_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -57,9 +58,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to pick image')),
-        );
+        OverlayService().showError('Failed to pick image');
       }
     }
   }
@@ -72,9 +71,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   Future<void> _submitFeedback() async {
     if (_messageController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your feedback message')),
-      );
+      OverlayService().showError('Please enter your feedback message');
       return;
     }
 
@@ -99,23 +96,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
         if (success) {
           if (_attachedImages.isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Email app opened. Please attach your images manually.',
-                ),
-                duration: Duration(seconds: 4),
-              ),
+            OverlayService().showSuccess(
+              'Email app opened. Please attach your images manually.',
             );
           }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Could not open email app. Please email support@lendasat.com directly.',
-              ),
-              duration: Duration(seconds: 4),
-            ),
+          OverlayService().showError(
+            'Could not open email app. Please email support@lendasat.com directly.',
           );
         }
       }
@@ -124,9 +111,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        OverlayService().showError('Error: $e');
       }
     }
   }

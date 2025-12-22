@@ -7,6 +7,7 @@ import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/lnurl_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/ui/screens/qr_scanner_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transaction_success_screen.dart';
@@ -534,24 +535,14 @@ class SendScreenState extends State<SendScreen>
           }
         } else {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('No QR code found in image'),
-                backgroundColor: AppTheme.errorColor,
-              ),
-            );
+            OverlayService().showError('No QR code found in image');
           }
         }
       }
     } catch (e) {
       logger.e('Error picking/scanning image: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error scanning image: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Error scanning image: $e');
       }
     }
   }
@@ -739,12 +730,7 @@ class SendScreenState extends State<SendScreen>
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.transactionFailed} ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('${l10n.transactionFailed} ${e.toString()}');
       }
     } finally {
       // Stop suppression after a delay to allow change transaction to settle
@@ -756,12 +742,7 @@ class SendScreenState extends State<SendScreen>
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppTheme.errorColor,
-      ),
-    );
+    OverlayService().showError(message);
   }
 
   void _copyAddress() {
@@ -772,13 +753,7 @@ class SendScreenState extends State<SendScreen>
   }
 
   void _showCopiedSnackBar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context)!.walletAddressCopied),
-        backgroundColor: AppTheme.successColor,
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    OverlayService().showSuccess(AppLocalizations.of(context)!.walletAddressCopied);
   }
 
   /// Truncates an address for display (shows first 10 and last 10 chars)
