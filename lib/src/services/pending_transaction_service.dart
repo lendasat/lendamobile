@@ -162,7 +162,7 @@ class PendingTransactionService extends ChangeNotifier {
     final isSuccess = pending.status == PendingTransactionStatus.success;
     arkBottomSheet(
       context: context,
-      height: isSuccess ? 300 : 400,
+      height: isSuccess ? 450 : 500,
       child: _SendCompletionSheet(pending: pending),
     );
   }
