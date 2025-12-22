@@ -5,6 +5,8 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
+import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -58,6 +60,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   // Amount state
   int? _currentAmount;
 
+  // Bitcoin price for conversion
+  double? _bitcoinPrice;
+
   // Amount controllers
   final TextEditingController _btcController = TextEditingController();
   final TextEditingController _satController = TextEditingController();
@@ -99,7 +104,21 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     _currController.text = "0.0";
 
     _fetchAddresses();
+    _fetchBitcoinPrice();
     _animationController.forward();
+  }
+
+  Future<void> _fetchBitcoinPrice() async {
+    try {
+      final priceData = await fetchBitcoinPriceData(TimeRange.day);
+      if (priceData.isNotEmpty && mounted) {
+        setState(() {
+          _bitcoinPrice = priceData.last.price;
+        });
+      }
+    } catch (e) {
+      logger.e("Failed to fetch Bitcoin price: $e");
+    }
   }
 
   @override
@@ -568,7 +587,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                   bitcoinUnit: CurrencyType.sats,
                   swapped: false,
                   autoConvert: true,
-                  bitcoinPrice: 60000.0,
+                  bitcoinPrice: _bitcoinPrice,
                 ),
               ),
               const SizedBox(height: AppTheme.cardPadding),

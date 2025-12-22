@@ -9,8 +9,8 @@ import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/lnurl_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
+import 'package:ark_flutter/src/services/pending_transaction_service.dart';
 import 'package:ark_flutter/src/ui/screens/qr_scanner_screen.dart';
-import 'package:ark_flutter/src/ui/screens/transaction_success_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
@@ -667,25 +667,47 @@ class SendScreenState extends State<SendScreen>
       }
     }
 
-    // Start loading and sign/send the transaction
-    setState(() {
-      _isLoading = true;
-    });
+    final address = _addressController.text;
+    final amountSats = amount.round();
+    final isLightning = _isLightningInvoice(address);
 
     // Suppress payment notifications during send to avoid showing "payment received"
     // when change from the outgoing transaction is detected
     PaymentOverlayService().startSuppression();
 
+    // Stop suppression after a delay to allow change transaction to settle
+    Future.delayed(const Duration(seconds: 10), () {
+      PaymentOverlayService().stopSuppression();
+    });
+
+    // For Lightning payments, we still need to wait (they're fast)
+    // For onchain/Ark sends, use background processing
+    if (isLightning || _lnurlParams?.callback != null) {
+      // Lightning payments - keep the old synchronous flow (they're fast)
+      await _handleLightningPayment(address, amountSats);
+    } else {
+      // Onchain/Ark sends - use background processing for better UX
+      await _handleBackgroundSend(address, amountSats);
+    }
+  }
+
+  /// Handle Lightning payments synchronously (they're fast)
+  Future<void> _handleLightningPayment(String address, int amountSats) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       String? invoiceToPaymentRequest;
-      final address = _addressController.text;
 
       // If we have an LNURL callback, fetch the invoice first
       if (_lnurlParams?.callback != null) {
         logger.i("Fetching invoice from LNURL callback...");
         final invoiceResult = await LnurlService.requestInvoice(
           _lnurlParams!.callback,
-          amount.round(),
+          amountSats,
         );
 
         if (invoiceResult == null) {
@@ -697,35 +719,22 @@ class SendScreenState extends State<SendScreen>
             "Got invoice from LNURL: ${invoiceToPaymentRequest.substring(0, 30)}...");
       }
 
-      final isLightning = _isLightningInvoice(address);
-
       if (invoiceToPaymentRequest != null) {
         // Pay the LNURL-generated invoice via submarine swap
         logger.i("Paying LNURL invoice via submarine swap...");
         final result = await payLnInvoice(invoice: invoiceToPaymentRequest);
         logger.i("LNURL payment successful! TXID: ${result.txid}");
-      } else if (isLightning) {
+      } else {
         // Pay Lightning invoice via submarine swap
         logger.i("Paying Lightning invoice: ${address.substring(0, 20)}...");
         final result = await payLnInvoice(invoice: address);
         logger.i("Lightning payment successful! TXID: ${result.txid}");
-      } else {
-        // Regular Ark/Bitcoin send
-        logger.i("Signing transaction to $address for $amount SATS");
-        await send(address: address, amountSats: BigInt.from(amount));
       }
 
-      // Navigate to success screen after signing
+      // Return to wallet and show success
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TransactionSuccessScreen(
-              aspId: widget.aspId,
-              amount: amount,
-            ),
-          ),
-        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        OverlayService().showSuccess('Lightning payment sent!');
       }
     } catch (e) {
       setState(() {
@@ -734,12 +743,33 @@ class SendScreenState extends State<SendScreen>
       if (mounted) {
         OverlayService().showError('${l10n.transactionFailed} ${e.toString()}');
       }
-    } finally {
-      // Stop suppression after a delay to allow change transaction to settle
-      // without showing a "payment received" notification
-      Future.delayed(const Duration(seconds: 5), () {
-        PaymentOverlayService().stopSuppression();
-      });
+    }
+  }
+
+  /// Handle onchain/Ark sends in the background for better UX
+  Future<void> _handleBackgroundSend(String address, int amountSats) async {
+    logger.i("Starting background send to $address for $amountSats sats");
+
+    // Add pending transaction and start background send
+    await PendingTransactionService().addPendingTransaction(
+      address: address,
+      amountSats: amountSats,
+      sendFunction: () async {
+        logger.i("Background: Executing send to $address for $amountSats sats");
+        final txid = await send(
+          address: address,
+          amountSats: BigInt.from(amountSats),
+        );
+        logger.i("Background: Send completed with txid: $txid");
+        return txid;
+      },
+    );
+
+    // Return to wallet immediately - the send continues in background
+    if (mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      // Show a subtle notification that send is in progress
+      OverlayService().showSuccess('Sending transaction...');
     }
   }
 

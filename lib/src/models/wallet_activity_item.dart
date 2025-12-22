@@ -197,6 +197,75 @@ enum SwapDisplayStatus {
   failed,
 }
 
+/// Status of a pending transaction
+enum PendingTransactionStatus {
+  /// Transaction is being sent
+  sending,
+
+  /// Transaction was sent successfully
+  success,
+
+  /// Transaction failed
+  failed,
+}
+
+/// Represents a pending onchain transaction that is being processed in the background.
+class PendingTransaction {
+  final String id;
+  final String address;
+  final int amountSats;
+  final int createdAt;
+  PendingTransactionStatus status;
+  String? txid;
+  String? errorMessage;
+
+  PendingTransaction({
+    required this.id,
+    required this.address,
+    required this.amountSats,
+    required this.createdAt,
+    this.status = PendingTransactionStatus.sending,
+    this.txid,
+    this.errorMessage,
+  });
+
+  /// Check if this pending transaction matches a real transaction by txid
+  bool matchesTransaction(Transaction tx) {
+    if (txid == null) return false;
+    return tx.map(
+      boarding: (t) => t.txid == txid,
+      round: (t) => t.txid == txid,
+      redeem: (t) => t.txid == txid,
+      offboard: (t) => t.txid == txid,
+    );
+  }
+}
+
+/// A pending transaction activity item for display in the transaction history.
+class PendingActivityItem implements WalletActivityItem {
+  final PendingTransaction pending;
+
+  const PendingActivityItem(this.pending);
+
+  @override
+  int get timestamp =>
+      (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 2; // Float to very top
+
+  @override
+  String get id => pending.id;
+
+  @override
+  bool get isSwap => false;
+
+  int get amountSats => -pending.amountSats; // Negative for sends
+
+  bool get isSending => pending.status == PendingTransactionStatus.sending;
+  bool get isSuccess => pending.status == PendingTransactionStatus.success;
+  bool get isFailed => pending.status == PendingTransactionStatus.failed;
+
+  String get address => pending.address;
+}
+
 /// Extension to help with sorting and filtering.
 extension WalletActivityItemListExtension on List<WalletActivityItem> {
   /// Sort by timestamp, newest first.
