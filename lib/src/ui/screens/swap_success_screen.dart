@@ -109,22 +109,26 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                     // Title
                     Text(
                       'Swap Complete!',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Your swap has been executed successfully',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                           ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppTheme.cardPadding * 2),
                     // Swap summary
                     GlassContainer(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadiusMid),
                       child: Padding(
                         padding: const EdgeInsets.all(AppTheme.cardPadding),
                         child: Column(
@@ -136,7 +140,8 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                                 const SizedBox(width: AppTheme.elementSpacing),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Sent',
@@ -177,12 +182,14 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
                                   child: Container(
                                     width: 32,
                                     height: 32,
                                     decoration: BoxDecoration(
-                                      color: AppTheme.successColor.withValues(alpha: 0.2),
+                                      color: AppTheme.successColor
+                                          .withValues(alpha: 0.2),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
@@ -209,7 +216,8 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                                 const SizedBox(width: AppTheme.elementSpacing),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Received',
@@ -246,7 +254,8 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                     const SizedBox(height: AppTheme.cardPadding),
                     // Transaction details
                     GlassContainer(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadiusMid),
                       child: Padding(
                         padding: const EdgeInsets.all(AppTheme.cardPadding),
                         child: Column(
@@ -256,7 +265,8 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                               'Swap ID',
                               _truncateId(widget.swapId),
                               isDarkMode,
-                              onTap: () => _copyToClipboard(context, widget.swapId),
+                              onTap: () =>
+                                  _copyToClipboard(context, widget.swapId),
                             ),
                             if (widget.txHash != null) ...[
                               const SizedBox(height: AppTheme.elementSpacing),
@@ -265,7 +275,8 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                                 'Transaction',
                                 _truncateId(widget.txHash!),
                                 isDarkMode,
-                                onTap: () => _copyToClipboard(context, widget.txHash!),
+                                onTap: () =>
+                                    _copyToClipboard(context, widget.txHash!),
                               ),
                             ],
                           ],
@@ -283,7 +294,8 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                       title: 'Done',
                       customWidth: double.infinity,
                       onTap: () {
-                        Navigator.of(context).popUntil((route) => route.isFirst);
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst);
                       },
                     ),
                     const SizedBox(height: AppTheme.elementSpacing),
@@ -293,14 +305,16 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                         // Navigate to swap detail screen
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
-                            builder: (context) => SwapDetailScreen(swapId: widget.swapId),
+                            builder: (context) =>
+                                SwapDetailScreen(swapId: widget.swapId),
                           ),
                         );
                       },
                       child: Text(
                         'View Swap Details',
                         style: TextStyle(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                       ),
                     ),

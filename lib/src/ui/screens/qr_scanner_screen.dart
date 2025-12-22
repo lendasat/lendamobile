@@ -66,7 +66,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         } else {
           if (mounted) {
             OverlayService().showError(
-              AppLocalizations.of(context)?.error ?? 'No QR code found in image',
+              AppLocalizations.of(context)?.error ??
+                  'No QR code found in image',
             );
           }
         }

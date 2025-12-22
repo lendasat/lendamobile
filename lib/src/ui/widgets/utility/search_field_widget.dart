@@ -37,8 +37,6 @@ class _SearchFieldWidgetState extends State<SearchFieldWidget> {
 
   @override
   Widget build(BuildContext context) {
-    
-
     return GlassContainer(
       borderRadius: BorderRadius.circular(AppTheme.radiusL),
       child: Container(

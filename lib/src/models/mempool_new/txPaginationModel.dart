@@ -35,16 +35,16 @@ class TransactionDetailsModel {
       );
 
   Map<String, dynamic> toJson() => {
-    "txid": txid,
-    "version": version,
-    "locktime": locktime,
-    "vin": List<dynamic>.from(vin.map((x) => x.toJson())),
-    "vout": List<dynamic>.from(vout.map((x) => x.toJson())),
-    "size": size,
-    "weight": weight,
-    "fee": fee,
-    "status": status.toJson(),
-  };
+        "txid": txid,
+        "version": version,
+        "locktime": locktime,
+        "vin": List<dynamic>.from(vin.map((x) => x.toJson())),
+        "vout": List<dynamic>.from(vout.map((x) => x.toJson())),
+        "size": size,
+        "weight": weight,
+        "fee": fee,
+        "status": status.toJson(),
+      };
 }
 
 class Status {
@@ -61,18 +61,18 @@ class Status {
   });
 
   factory Status.fromJson(Map<String, dynamic> json) => Status(
-    confirmed: json["confirmed"],
-    blockHeight: json["block_height"],
-    blockHash: json["block_hash"],
-    blockTime: json["block_time"],
-  );
+        confirmed: json["confirmed"],
+        blockHeight: json["block_height"],
+        blockHash: json["block_hash"],
+        blockTime: json["block_time"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "confirmed": confirmed,
-    "block_height": blockHeight,
-    "block_hash": blockHash,
-    "block_time": blockTime,
-  };
+        "confirmed": confirmed,
+        "block_height": blockHeight,
+        "block_hash": blockHash,
+        "block_time": blockTime,
+      };
 }
 
 class Vin {
@@ -101,34 +101,34 @@ class Vin {
   });
 
   factory Vin.fromJson(Map<String, dynamic> json) => Vin(
-    txid: json["txid"],
-    vout: json["vout"],
-    prevout: json["prevout"] == null ? null : Vout.fromJson(json["prevout"]),
-    scriptsig: json["scriptsig"],
-    scriptsigAsm: json["scriptsig_asm"],
-    witness: json["witness"] == null
-        ? []
-        : List<String>.from(json["witness"]!.map((x) => x)),
-    isCoinbase: json["is_coinbase"],
-    sequence: json["sequence"],
-    innerRedeemscriptAsm: json["inner_redeemscript_asm"],
-    innerWitnessscriptAsm: json["inner_witnessscript_asm"],
-  );
+        txid: json["txid"],
+        vout: json["vout"],
+        prevout:
+            json["prevout"] == null ? null : Vout.fromJson(json["prevout"]),
+        scriptsig: json["scriptsig"],
+        scriptsigAsm: json["scriptsig_asm"],
+        witness: json["witness"] == null
+            ? []
+            : List<String>.from(json["witness"]!.map((x) => x)),
+        isCoinbase: json["is_coinbase"],
+        sequence: json["sequence"],
+        innerRedeemscriptAsm: json["inner_redeemscript_asm"],
+        innerWitnessscriptAsm: json["inner_witnessscript_asm"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "txid": txid,
-    "vout": vout,
-    "prevout": prevout?.toJson(),
-    "scriptsig": scriptsig,
-    "scriptsig_asm": scriptsigAsm,
-    "witness": witness == null
-        ? []
-        : List<dynamic>.from(witness!.map((x) => x)),
-    "is_coinbase": isCoinbase,
-    "sequence": sequence,
-    "inner_redeemscript_asm": innerRedeemscriptAsm,
-    "inner_witnessscript_asm": innerWitnessscriptAsm,
-  };
+        "txid": txid,
+        "vout": vout,
+        "prevout": prevout?.toJson(),
+        "scriptsig": scriptsig,
+        "scriptsig_asm": scriptsigAsm,
+        "witness":
+            witness == null ? [] : List<dynamic>.from(witness!.map((x) => x)),
+        "is_coinbase": isCoinbase,
+        "sequence": sequence,
+        "inner_redeemscript_asm": innerRedeemscriptAsm,
+        "inner_witnessscript_asm": innerWitnessscriptAsm,
+      };
 }
 
 class Vout {
@@ -147,18 +147,18 @@ class Vout {
   });
 
   factory Vout.fromJson(Map<String, dynamic> json) => Vout(
-    scriptpubkey: json["scriptpubkey"],
-    scriptpubkeyAsm: json["scriptpubkey_asm"],
-    scriptpubkeyType: json["scriptpubkey_type"],
-    scriptpubkeyAddress: json["scriptpubkey_address"],
-    value: json["value"],
-  );
+        scriptpubkey: json["scriptpubkey"],
+        scriptpubkeyAsm: json["scriptpubkey_asm"],
+        scriptpubkeyType: json["scriptpubkey_type"],
+        scriptpubkeyAddress: json["scriptpubkey_address"],
+        value: json["value"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "scriptpubkey": scriptpubkey,
-    "scriptpubkey_asm": scriptpubkeyAsm,
-    "scriptpubkey_type": scriptpubkeyType,
-    "scriptpubkey_address": scriptpubkeyAddress,
-    "value": value,
-  };
+        "scriptpubkey": scriptpubkey,
+        "scriptpubkey_asm": scriptpubkeyAsm,
+        "scriptpubkey_type": scriptpubkeyType,
+        "scriptpubkey_address": scriptpubkeyAddress,
+        "value": value,
+      };
 }

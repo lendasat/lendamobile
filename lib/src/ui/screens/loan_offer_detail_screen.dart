@@ -108,7 +108,8 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       final duration = int.parse(_durationController.text);
       final address = _addressController.text.trim();
 
-      logger.i('[Loan] Creating contract: offer=${widget.offer.id}, amount=\$$amount, duration=$duration days');
+      logger.i(
+          '[Loan] Creating contract: offer=${widget.offer.id}, amount=\$$amount, duration=$duration days');
 
       // Create the contract - initially in "Requested" status
       var contract = await _lendasatService.createContract(
@@ -118,11 +119,13 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
         borrowerLoanAddress: address,
       );
 
-      logger.i('[Loan] Contract ${contract.id}: status=${contract.statusText}, collateral=${contract.effectiveCollateralSats} sats');
+      logger.i(
+          '[Loan] Contract ${contract.id}: status=${contract.statusText}, collateral=${contract.effectiveCollateralSats} sats');
 
       // If contract not yet ready, poll for approval
       // Use effectiveCollateralSats which falls back to initialCollateralSats
-      if (contract.contractAddress == null || contract.effectiveCollateralSats <= 0) {
+      if (contract.contractAddress == null ||
+          contract.effectiveCollateralSats <= 0) {
         if (mounted) {
           setState(() => _processingStep = 'Waiting for approval...');
         }
@@ -159,7 +162,8 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       );
 
       if (mounted) {
-        OverlayService().showSuccess('Collateral sent! Loan is being processed.');
+        OverlayService()
+            .showSuccess('Collateral sent! Loan is being processed.');
 
         // Navigate to contract detail - it will show live status updates
         Navigator.pushReplacement(
@@ -198,13 +202,16 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
 
       final contract = await _lendasatService.getContract(contractId);
 
-      logger.d('[Loan] Poll ${attempt + 1}/$_maxPollingAttempts: status=${contract.statusText}, '
+      logger.d(
+          '[Loan] Poll ${attempt + 1}/$_maxPollingAttempts: status=${contract.statusText}, '
           'address=${contract.contractAddress != null ? "present" : "null"}, '
           'effectiveCollateral=${contract.effectiveCollateralSats} sats');
 
       // Check if contract is ready (has collateral address and amount)
-      if (contract.contractAddress != null && contract.effectiveCollateralSats > 0) {
-        logger.i('[Loan] Contract approved! Collateral: ${contract.effectiveCollateralSats} sats to ${contract.contractAddress}');
+      if (contract.contractAddress != null &&
+          contract.effectiveCollateralSats > 0) {
+        logger.i(
+            '[Loan] Contract approved! Collateral: ${contract.effectiveCollateralSats} sats to ${contract.contractAddress}');
         return contract;
       }
 
@@ -227,7 +234,8 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     // Timeout - provide helpful message based on current status
     final lastContract = await _lendasatService.getContract(contractId);
     if (lastContract.status == ContractStatus.approved) {
-      throw Exception('Collateral details pending. Check your contracts in a moment.');
+      throw Exception(
+          'Collateral details pending. Check your contracts in a moment.');
     }
     throw Exception('Approval timeout. Please check your contracts later.');
   }
@@ -291,7 +299,8 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
 
                   // Create button
                   LongButtonWidget(
-                    title: _isCreating ? 'Processing...' : 'Create Loan Request',
+                    title:
+                        _isCreating ? 'Processing...' : 'Create Loan Request',
                     customWidth: MediaQuery.of(context).size.width -
                         AppTheme.cardPadding * 2,
                     buttonType: widget.offer.isAvailable &&
@@ -306,20 +315,21 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                         : null,
                   ),
 
-              if (!_lendasatService.isAuthenticated)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppTheme.elementSpacing),
-                  child: Text(
-                    'Please sign in to create a loan request',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.errorColor,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-            ],
-          ),
-        ),
+                  if (!_lendasatService.isAuthenticated)
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(top: AppTheme.elementSpacing),
+                      child: Text(
+                        'Please sign in to create a loan request',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppTheme.errorColor,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
           // Processing overlay
           if (_isCreating)
@@ -350,10 +360,9 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     );
   }
 
-
   Widget _buildLenderCard() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Row(
@@ -439,10 +448,16 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             padding: const EdgeInsets.all(12),
             margin: const EdgeInsets.only(bottom: AppTheme.elementSpacing),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.03),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.08),
               ),
             ),
             child: Row(
@@ -454,7 +469,10 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                       Text(
                         'COLLATERAL',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.5),
                               fontWeight: FontWeight.w600,
                               fontSize: 9,
                               letterSpacing: 0.5,
@@ -470,7 +488,10 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                       Text(
                         '(Arkade)',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.5),
                             ),
                       ),
                     ],
@@ -482,7 +503,10 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                   child: Icon(
                     Icons.arrow_forward_rounded,
                     size: 20,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.5),
                   ),
                 ),
                 // Payout side
@@ -492,7 +516,10 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                       Text(
                         'PAYOUT',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.5),
                               fontWeight: FontWeight.w600,
                               fontSize: 9,
                               letterSpacing: 0.5,
@@ -508,7 +535,10 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                       Text(
                         '(Polygon)',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.5),
                             ),
                       ),
                     ],
@@ -517,7 +547,8 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
               ],
             ),
           ),
-          _buildDetailRow('Interest Rate', '${widget.offer.interestRatePercent} APY'),
+          _buildDetailRow(
+              'Interest Rate', '${widget.offer.interestRatePercent} APY'),
           _buildDetailRow('Loan Amount', widget.offer.loanAmountRange),
           _buildDetailRow('Duration', widget.offer.durationRange),
           _buildDetailRow(
@@ -575,13 +606,16 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             controller: _amountController,
             prefix: r'$',
             hint: '0.00',
-            helper: 'Min \$${widget.offer.loanAmountMin.toStringAsFixed(0)} - Max \$${widget.offer.loanAmountMax.toStringAsFixed(0)}',
+            helper:
+                'Min \$${widget.offer.loanAmountMin.toStringAsFixed(0)} - Max \$${widget.offer.loanAmountMax.toStringAsFixed(0)}',
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             validator: (value) {
               final amount = double.tryParse(value ?? '');
               if (amount == null) return 'Invalid amount';
-              if (amount < widget.offer.loanAmountMin) return 'Minimum \$${widget.offer.loanAmountMin.toStringAsFixed(0)}';
-              if (amount > widget.offer.loanAmountMax) return 'Maximum \$${widget.offer.loanAmountMax.toStringAsFixed(0)}';
+              if (amount < widget.offer.loanAmountMin)
+                return 'Minimum \$${widget.offer.loanAmountMin.toStringAsFixed(0)}';
+              if (amount > widget.offer.loanAmountMax)
+                return 'Maximum \$${widget.offer.loanAmountMax.toStringAsFixed(0)}';
               return null;
             },
           ),
@@ -593,13 +627,16 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             controller: _durationController,
             suffix: 'days',
             hint: '30',
-            helper: 'Min ${widget.offer.durationDaysMin} - Max ${widget.offer.durationDaysMax} days',
+            helper:
+                'Min ${widget.offer.durationDaysMin} - Max ${widget.offer.durationDaysMax} days',
             keyboardType: TextInputType.number,
             validator: (value) {
               final duration = int.tryParse(value ?? '');
               if (duration == null) return 'Invalid duration';
-              if (duration < widget.offer.durationDaysMin) return 'Min ${widget.offer.durationDaysMin} days';
-              if (duration > widget.offer.durationDaysMax) return 'Max ${widget.offer.durationDaysMax} days';
+              if (duration < widget.offer.durationDaysMin)
+                return 'Min ${widget.offer.durationDaysMin} days';
+              if (duration > widget.offer.durationDaysMax)
+                return 'Max ${widget.offer.durationDaysMax} days';
               return null;
             },
           ),
@@ -635,7 +672,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     String? Function(String?)? validator,
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -662,7 +699,8 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
               fontSize: 10,
               color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             filled: true,
             fillColor: Colors.black.withValues(alpha: 0.05),
             border: OutlineInputBorder(
@@ -671,11 +709,17 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05), width: 1),
+              borderSide: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.05), width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3), width: 1),
+              borderSide: BorderSide(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.3),
+                  width: 1),
             ),
             errorStyle: const TextStyle(fontSize: 10),
           ),
@@ -735,14 +779,14 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   }
 
   Widget _buildSummaryRow(
-    String label, 
+    String label,
     String value, {
-    bool isBold = false, 
+    bool isBold = false,
     bool highlight = false,
     bool isLarge = false,
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -762,7 +806,9 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             style: TextStyle(
               fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
               fontSize: isLarge ? 18 : 14,
-              color: highlight ? Theme.of(context).colorScheme.primary : (isLarge ? Theme.of(context).colorScheme.primary : null),
+              color: highlight
+                  ? Theme.of(context).colorScheme.primary
+                  : (isLarge ? Theme.of(context).colorScheme.primary : null),
             ),
           ),
         ],

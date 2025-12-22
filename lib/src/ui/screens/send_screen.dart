@@ -449,7 +449,8 @@ class SendScreenState extends State<SendScreen>
           _recommendedFees = fees;
           _isFetchingFees = false;
         });
-        logger.i("Fetched recommended fees: halfHourFee=${fees.halfHourFee} sat/vB");
+        logger.i(
+            "Fetched recommended fees: halfHourFee=${fees.halfHourFee} sat/vB");
       }
     } catch (e) {
       logger.e("Error fetching recommended fees: $e");
@@ -692,7 +693,8 @@ class SendScreenState extends State<SendScreen>
         }
 
         invoiceToPaymentRequest = invoiceResult.pr;
-        logger.i("Got invoice from LNURL: ${invoiceToPaymentRequest.substring(0, 30)}...");
+        logger.i(
+            "Got invoice from LNURL: ${invoiceToPaymentRequest.substring(0, 30)}...");
       }
 
       final isLightning = _isLightningInvoice(address);
@@ -753,7 +755,8 @@ class SendScreenState extends State<SendScreen>
   }
 
   void _showCopiedSnackBar() {
-    OverlayService().showSuccess(AppLocalizations.of(context)!.walletAddressCopied);
+    OverlayService()
+        .showSuccess(AppLocalizations.of(context)!.walletAddressCopied);
   }
 
   /// Truncates an address for display (shows first 10 and last 10 chars)
@@ -800,14 +803,12 @@ class SendScreenState extends State<SendScreen>
   }
 
   Widget _buildSendContent(BuildContext context) {
-    
     final l10n = AppLocalizations.of(context)!;
     // Add top padding to account for app bar when extendBodyBehindAppBar is true
     const topPadding = kToolbarHeight;
 
     return Padding(
-      padding:
-          const EdgeInsets.only(top: topPadding + AppTheme.elementSpacing),
+      padding: const EdgeInsets.only(top: topPadding + AppTheme.elementSpacing),
       child: Stack(
         children: [
           SingleChildScrollView(
@@ -845,7 +846,9 @@ class SendScreenState extends State<SendScreen>
                                     .textTheme
                                     .bodyLarge
                                     ?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurface,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                     ),
                                 textAlign: TextAlign.center,
                               ),
@@ -982,7 +985,8 @@ class SendScreenState extends State<SendScreen>
                       child: TextField(
                         controller: _addressController,
                         focusNode: _addressFocusNode,
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface),
                         decoration: InputDecoration(
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
@@ -990,7 +994,8 @@ class SendScreenState extends State<SendScreen>
                             vertical: AppTheme.elementSpacing,
                           ),
                           hintText: l10n.bitcoinOrArkAddress,
-                          hintStyle: TextStyle(color: Theme.of(context).hintColor),
+                          hintStyle:
+                              TextStyle(color: Theme.of(context).hintColor),
                         ),
                       ),
                     ),
@@ -1045,8 +1050,7 @@ class SendScreenState extends State<SendScreen>
         : '\$0.00';
 
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: ArkListTile(
         text: l10n.available,
         trailing: Column(
@@ -1210,7 +1214,9 @@ class SendScreenState extends State<SendScreen>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.0),
+                  Theme.of(context)
+                      .scaffoldBackgroundColor
+                      .withValues(alpha: 0.0),
                   Theme.of(context).scaffoldBackgroundColor,
                 ],
               ),

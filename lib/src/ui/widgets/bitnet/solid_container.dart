@@ -47,9 +47,8 @@ class SolidContainer extends StatelessWidget {
         alignment: alignment,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),
-          color: useBitcoinGradient
-              ? null
-              : Theme.of(context).colorScheme.primary,
+          color:
+              useBitcoinGradient ? null : Theme.of(context).colorScheme.primary,
           gradient: useBitcoinGradient
               ? LinearGradient(
                   begin: gradientBegin,

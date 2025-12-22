@@ -84,8 +84,9 @@ class DifficultyAdjustmentCard extends StatelessWidget {
                           DateTime.fromMillisecondsSinceEpoch(
                             da!.estimatedRetargetDate!.toInt(),
                           ).toUtc().add(
-                            Duration(milliseconds: loc.currentTimeZone.offset),
-                          ),
+                                Duration(
+                                    milliseconds: loc.currentTimeZone.offset),
+                              ),
                         ),
                         Icons.event,
                       ),
@@ -97,8 +98,9 @@ class DifficultyAdjustmentCard extends StatelessWidget {
                           DateTime.fromMillisecondsSinceEpoch(
                             da!.estimatedRetargetDate!.toInt(),
                           ).toUtc().add(
-                            Duration(milliseconds: loc.currentTimeZone.offset),
-                          ),
+                                Duration(
+                                    milliseconds: loc.currentTimeZone.offset),
+                              ),
                         ),
                         Icons.access_time,
                       ),
@@ -117,10 +119,10 @@ class DifficultyAdjustmentCard extends StatelessWidget {
               Text(
                 "Difficulty adjusts every 2016 blocks (~2 weeks)",
                 style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.white60
-                      : AppTheme.black60,
-                ),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppTheme.white60
+                          : AppTheme.black60,
+                    ),
               ),
             ],
           ),
@@ -164,20 +166,20 @@ class DifficultyAdjustmentCard extends StatelessWidget {
                 ? '${da!.difficultyChange!.abs().toStringAsFixed(2)}%'
                 : '${da!.difficultyChange!.toStringAsFixed(2)}%',
             style: Theme.of(context).textTheme.titleLarge!.copyWith(
-              color: da!.difficultyChange!.isNegative
-                  ? AppTheme.errorColor
-                  : AppTheme.successColor,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: da!.difficultyChange!.isNegative
+                      ? AppTheme.errorColor
+                      : AppTheme.successColor,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           SizedBox(height: 4),
           Text(
             da!.difficultyChange!.isNegative ? "Decrease" : "Increase",
             style: Theme.of(context).textTheme.bodySmall!.copyWith(
-              color: da!.difficultyChange!.isNegative
-                  ? AppTheme.errorColor
-                  : AppTheme.successColor,
-            ),
+                  color: da!.difficultyChange!.isNegative
+                      ? AppTheme.errorColor
+                      : AppTheme.successColor,
+                ),
           ),
         ],
       ),
@@ -201,10 +203,10 @@ class DifficultyAdjustmentCard extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppTheme.white60
-                    : AppTheme.black60,
-              ),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppTheme.white60
+                        : AppTheme.black60,
+                  ),
             ),
             Text(
               value,

@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
-import 'package:ark_flutter/src/services/amount_widget_service.dart' show CurrencyType;
+import 'package:ark_flutter/src/services/amount_widget_service.dart'
+    show CurrencyType;
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/api/lendaswap_api.dart' as lendaswap_api;
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
@@ -199,7 +200,8 @@ class SwapScreenState extends State<SwapScreen> {
   /// Check if BTC unit should switch based on amount thresholds
   /// Returns (newUnit, convertedAmount)
   /// Thresholds: >= 100M sats -> BTC, < 0.001 BTC -> sats
-  (CurrencyType, String) _checkBtcUnitThreshold(double amount, CurrencyType currentUnit) {
+  (CurrencyType, String) _checkBtcUnitThreshold(
+      double amount, CurrencyType currentUnit) {
     if (currentUnit == CurrencyType.sats) {
       // If sats >= 1 BTC (100,000,000), switch to BTC
       if (amount >= 100000000) {
@@ -237,7 +239,8 @@ class SwapScreenState extends State<SwapScreen> {
 
             // Check for auto-switch to BTC
             if (sats > 0) {
-              final (newUnit, newAmount) = _checkBtcUnitThreshold(sats, CurrencyType.sats);
+              final (newUnit, newAmount) =
+                  _checkBtcUnitThreshold(sats, CurrencyType.sats);
               if (newUnit != _sourceBtcUnit) {
                 _sourceBtcUnit = newUnit;
                 // Update controller text after setState completes
@@ -255,7 +258,8 @@ class SwapScreenState extends State<SwapScreen> {
 
             // Check for auto-switch to sats
             if (btc > 0) {
-              final (newUnit, newAmount) = _checkBtcUnitThreshold(btc, CurrencyType.bitcoin);
+              final (newUnit, newAmount) =
+                  _checkBtcUnitThreshold(btc, CurrencyType.bitcoin);
               if (newUnit != _sourceBtcUnit) {
                 _sourceBtcUnit = newUnit;
                 // Update controller text after setState completes
@@ -316,7 +320,8 @@ class SwapScreenState extends State<SwapScreen> {
 
             // Check for auto-switch to BTC
             if (sats > 0) {
-              final (newUnit, newAmount) = _checkBtcUnitThreshold(sats, CurrencyType.sats);
+              final (newUnit, newAmount) =
+                  _checkBtcUnitThreshold(sats, CurrencyType.sats);
               if (newUnit != _targetBtcUnit) {
                 _targetBtcUnit = newUnit;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -333,7 +338,8 @@ class SwapScreenState extends State<SwapScreen> {
 
             // Check for auto-switch to sats
             if (btc > 0) {
-              final (newUnit, newAmount) = _checkBtcUnitThreshold(btc, CurrencyType.bitcoin);
+              final (newUnit, newAmount) =
+                  _checkBtcUnitThreshold(btc, CurrencyType.bitcoin);
               if (newUnit != _targetBtcUnit) {
                 _targetBtcUnit = newUnit;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -377,7 +383,8 @@ class SwapScreenState extends State<SwapScreen> {
         _targetController.text = usdAmount;
       } else {
         // Show sats or BTC based on current unit
-        _targetController.text = _targetBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
+        _targetController.text =
+            _targetBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
       }
     } else if (targetToken.isStablecoin) {
       // Target is stablecoin - show USD amount (1:1 with token)
@@ -403,7 +410,8 @@ class SwapScreenState extends State<SwapScreen> {
         _sourceController.text = usdAmount;
       } else {
         // Show sats or BTC based on current unit
-        _sourceController.text = _sourceBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
+        _sourceController.text =
+            _sourceBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
       }
     } else if (sourceToken.isStablecoin) {
       // Source is stablecoin - show USD amount (1:1 with token)
@@ -430,7 +438,8 @@ class SwapScreenState extends State<SwapScreen> {
         if (sourceShowUsd) {
           _sourceController.text = usdAmount;
         } else {
-          _sourceController.text = _sourceBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
+          _sourceController.text =
+              _sourceBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
         }
       }
     });
@@ -443,7 +452,8 @@ class SwapScreenState extends State<SwapScreen> {
         if (targetShowUsd) {
           _targetController.text = usdAmount;
         } else {
-          _targetController.text = _targetBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
+          _targetController.text =
+              _targetBtcUnit == CurrencyType.sats ? satsAmount : btcAmount;
         }
       }
     });
@@ -738,14 +748,16 @@ class SwapScreenState extends State<SwapScreen> {
         final satsToSend = result.satsToSend;
         final htlcAddress = result.arkadeHtlcAddress;
 
-        logger.i('Auto-funding swap $swapId: sending $satsToSend sats to $htlcAddress');
+        logger.i(
+            'Auto-funding swap $swapId: sending $satsToSend sats to $htlcAddress');
 
         // Verify we have enough for the actual amount (may differ slightly from estimate)
         // satsToSend is PlatformInt64 (int on native, BigInt on web), convert to BigInt for comparison
         final satsToSendBigInt = BigInt.from(satsToSend);
         if (availableSats < satsToSendBigInt) {
           // Swap was created but we can't fund it - still navigate to show status
-          logger.e('Insufficient balance for funding. Swap created but not funded.');
+          logger.e(
+              'Insufficient balance for funding. Swap created but not funded.');
           if (mounted) {
             OverlayService().showError(
               'Swap created but insufficient balance to fund. '
@@ -765,7 +777,8 @@ class SwapScreenState extends State<SwapScreen> {
             // Funding failed but swap was created - still navigate to show status
             logger.e('Failed to fund swap: $fundingError');
             if (mounted) {
-              OverlayService().showError('Failed to send funds: ${fundingError.toString()}');
+              OverlayService().showError(
+                  'Failed to send funds: ${fundingError.toString()}');
             }
             // Continue to navigate - user can see swap status and potentially retry
           }
@@ -873,9 +886,12 @@ class SwapScreenState extends State<SwapScreen> {
     // Check for minimum amount error
     if (errorLower.contains('min amount')) {
       // Try to extract the minimum amount from the error
-      final minAmountMatch = RegExp(r'min amount is [₿B]?\s*([\d.,\s]+)', caseSensitive: false).firstMatch(error);
+      final minAmountMatch =
+          RegExp(r'min amount is [₿B]?\s*([\d.,\s]+)', caseSensitive: false)
+              .firstMatch(error);
       if (minAmountMatch != null) {
-        final minAmount = minAmountMatch.group(1)?.replaceAll(' ', '') ?? '0.00001';
+        final minAmount =
+            minAmountMatch.group(1)?.replaceAll(' ', '') ?? '0.00001';
         return 'Amount too small. Minimum is ₿$minAmount (1,000 sats)';
       }
       return 'Amount too small. Minimum swap amount is 1,000 sats.';
@@ -887,12 +903,14 @@ class SwapScreenState extends State<SwapScreen> {
     }
 
     // Check for insufficient balance
-    if (errorLower.contains('insufficient') || errorLower.contains('not enough')) {
+    if (errorLower.contains('insufficient') ||
+        errorLower.contains('not enough')) {
       return 'Insufficient balance for this swap.';
     }
 
     // Check for network errors
-    if (errorLower.contains('network error') || errorLower.contains('connection')) {
+    if (errorLower.contains('network error') ||
+        errorLower.contains('connection')) {
       return 'Network error. Please check your connection and try again.';
     }
 
@@ -905,7 +923,8 @@ class SwapScreenState extends State<SwapScreen> {
     // Remove "AnyhowException", stack traces, etc.
     String cleanError = error;
     if (cleanError.contains('AnyhowException(')) {
-      cleanError = cleanError.replaceAll('AnyhowException(', '').replaceAll(')', '');
+      cleanError =
+          cleanError.replaceAll('AnyhowException(', '').replaceAll(')', '');
     }
     if (cleanError.contains('Stack backtrace:')) {
       cleanError = cleanError.split('Stack backtrace:')[0].trim();
@@ -959,7 +978,8 @@ class SwapScreenState extends State<SwapScreen> {
                             showUsdMode: sourceShowUsd,
                             conversionText: _getSourceConversionText(),
                             onAmountChanged: _onSourceAmountChanged,
-                            onToggleMode: sourceToken.isBtc ? _toggleSourceMode : null,
+                            onToggleMode:
+                                sourceToken.isBtc ? _toggleSourceMode : null,
                             availableTokens: _getAvailableSourceTokens(),
                             onTokenChanged: _onSourceTokenChanged,
                             showBalance: true,
@@ -977,7 +997,8 @@ class SwapScreenState extends State<SwapScreen> {
                             showUsdMode: targetShowUsd,
                             conversionText: _getTargetConversionText(),
                             onAmountChanged: _onTargetAmountChanged,
-                            onToggleMode: targetToken.isBtc ? _toggleTargetMode : null,
+                            onToggleMode:
+                                targetToken.isBtc ? _toggleTargetMode : null,
                             availableTokens: _getAvailableTargetTokens(),
                             onTokenChanged: _onTargetTokenChanged,
                             showBalance: false,
@@ -1041,10 +1062,13 @@ class SwapScreenState extends State<SwapScreen> {
                 title: _getButtonTitle(),
                 customWidth: MediaQuery.of(context).size.width -
                     AppTheme.cardPadding * 2,
-                buttonType: _isAmountValid ? ButtonType.solid : ButtonType.transparent,
+                buttonType:
+                    _isAmountValid ? ButtonType.solid : ButtonType.transparent,
                 state: isLoading
                     ? ButtonState.loading
-                    : (_isAmountTooSmall ? ButtonState.disabled : ButtonState.idle),
+                    : (_isAmountTooSmall
+                        ? ButtonState.disabled
+                        : ButtonState.idle),
                 onTap: _isAmountValid ? _initiateSwap : null,
               ),
             ),
@@ -1289,11 +1313,15 @@ class _SwapAmountCard extends StatelessWidget {
                         controller: controller,
                         focusNode: focusNode,
                         keyboardType: TextInputType.numberWithOptions(
-                          decimal: !(token.isBtc && !showUsdMode && btcUnit == CurrencyType.sats),
+                          decimal: !(token.isBtc &&
+                              !showUsdMode &&
+                              btcUnit == CurrencyType.sats),
                         ),
                         inputFormatters: [
                           // Use digits only for sats, decimals for BTC/USD
-                          if (token.isBtc && !showUsdMode && btcUnit == CurrencyType.sats)
+                          if (token.isBtc &&
+                              !showUsdMode &&
+                              btcUnit == CurrencyType.sats)
                             FilteringTextInputFormatter.digitsOnly
                           else
                             FilteringTextInputFormatter.allow(
@@ -1333,7 +1361,8 @@ class _SwapAmountCard extends StatelessWidget {
                       horizontal: 8,
                     ),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadiusSmall),
                       color: isDarkMode
                           ? Colors.white.withValues(alpha: 0.05)
                           : Colors.black.withValues(alpha: 0.03),
@@ -1346,7 +1375,9 @@ class _SwapAmountCard extends StatelessWidget {
                           Icon(
                             Icons.currency_bitcoin,
                             size: 14,
-                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                           ),
                           const SizedBox(width: 2),
                           Text(
@@ -1354,7 +1385,9 @@ class _SwapAmountCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
                             ),
                           ),
                         ] else if (conversionText.endsWith('sats')) ...[
@@ -1362,7 +1395,9 @@ class _SwapAmountCard extends StatelessWidget {
                           Icon(
                             AppTheme.satoshiIcon,
                             size: 14,
-                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                           ),
                           const SizedBox(width: 2),
                           Text(
@@ -1370,7 +1405,9 @@ class _SwapAmountCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
                             ),
                           ),
                         ] else
@@ -1379,7 +1416,9 @@ class _SwapAmountCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
                             ),
                           ),
                         if (onToggleMode != null) ...[
@@ -1387,7 +1426,9 @@ class _SwapAmountCard extends StatelessWidget {
                           Icon(
                             Icons.swap_vert,
                             size: 14,
-                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                           ),
                         ],
                       ],
@@ -1415,9 +1456,11 @@ class _SwapAmountCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isDarkMode
-                          ? const Color(0xFF3D3D3D) // Lighter grey for dark mode
+                          ? const Color(
+                              0xFF3D3D3D) // Lighter grey for dark mode
                           : Colors.white,
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadiusMid),
                       border: Border.all(
                         color: isDarkMode
                             ? Colors.white.withValues(alpha: 0.1)
@@ -1642,18 +1685,20 @@ class _TokenListItem extends StatelessWidget {
                       children: [
                         Text(
                           token.symbol,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           token.network,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: isDarkMode
-                                    ? AppTheme.white60
-                                    : AppTheme.black60,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: isDarkMode
+                                        ? AppTheme.white60
+                                        : AppTheme.black60,
+                                  ),
                         ),
                       ],
                     ),

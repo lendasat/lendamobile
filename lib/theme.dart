@@ -287,15 +287,11 @@ abstract class AppTheme {
   // Text Theme (Dark Mode)
   static final textThemeDarkMode = textTheme.copyWith(
     displayLarge: textTheme.displayLarge!.copyWith(color: AppTheme.white90),
-    displayMedium:
-        textTheme.displayMedium!.copyWith(color: AppTheme.white90),
+    displayMedium: textTheme.displayMedium!.copyWith(color: AppTheme.white90),
     displaySmall: textTheme.displaySmall!.copyWith(color: AppTheme.white90),
-    headlineLarge:
-        textTheme.headlineMedium!.copyWith(color: AppTheme.white90),
-    headlineMedium:
-        textTheme.headlineMedium!.copyWith(color: AppTheme.white90),
-    headlineSmall:
-        textTheme.headlineSmall!.copyWith(color: AppTheme.white90),
+    headlineLarge: textTheme.headlineMedium!.copyWith(color: AppTheme.white90),
+    headlineMedium: textTheme.headlineMedium!.copyWith(color: AppTheme.white90),
+    headlineSmall: textTheme.headlineSmall!.copyWith(color: AppTheme.white90),
     titleLarge: textTheme.titleLarge!.copyWith(color: AppTheme.white90),
     titleMedium: textTheme.titleMedium!.copyWith(color: AppTheme.white80),
     titleSmall: textTheme.titleSmall!.copyWith(color: AppTheme.white80),
@@ -429,5 +425,4 @@ Color lighten(Color c, [int percent = 10]) {
 
 /// Calculate QR code size based on context
 dynamic qrCodeSize(BuildContext context) =>
-    min(AppTheme.cardPadding * 9.5, AppTheme.cardPadding * 9.5)
-        .toDouble();
+    min(AppTheme.cardPadding * 9.5, AppTheme.cardPadding * 9.5).toDouble();

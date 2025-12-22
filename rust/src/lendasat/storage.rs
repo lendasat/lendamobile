@@ -2,7 +2,7 @@
 //!
 //! Handles persistent storage of JWT tokens and user data.
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
@@ -64,8 +64,8 @@ pub fn load_auth(data_dir: &str) -> Result<Option<StoredAuth>> {
 pub fn save_auth(data_dir: &str, auth: &StoredAuth) -> Result<()> {
     let path = Path::new(data_dir).join(LENDASAT_AUTH_FILE);
 
-    let content =
-        serde_json::to_string_pretty(auth).map_err(|e| anyhow!("Failed to serialize auth: {}", e))?;
+    let content = serde_json::to_string_pretty(auth)
+        .map_err(|e| anyhow!("Failed to serialize auth: {}", e))?;
 
     fs::write(&path, content).map_err(|e| anyhow!("Failed to write auth file: {}", e))?;
 

@@ -52,4 +52,15 @@ android/build/
 
 # FVM Version Cache
 .fvm/
-.fvmrc
+
+# Flutter Rust Bridge generated files
+lib/src/rust/frb_generated.dart
+lib/src/rust/frb_generated.io.dart
+lib/src/rust/frb_generated.web.dart
+rust/src/frb_generated.rs
+*.freezed.dart
+*.g.dart
+
+# Build and log files
+*.log
+firebase-debug.log

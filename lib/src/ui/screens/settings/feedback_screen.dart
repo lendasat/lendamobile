@@ -239,7 +239,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 if (_attachedImages.length < 5)
                   TextButton.icon(
                     onPressed: _pickImageFromGallery,
-                    icon: const Icon(Icons.add_photo_alternate_rounded, size: 20),
+                    icon:
+                        const Icon(Icons.add_photo_alternate_rounded, size: 20),
                     label: const Text('Add'),
                     style: TextButton.styleFrom(
                       foregroundColor: AppTheme.colorBitcoin,
@@ -265,14 +266,16 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         Icon(
                           Icons.add_photo_alternate_outlined,
                           size: 32,
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Tap to add images from gallery',
                           style: TextStyle(
-                            color:
-                                isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                           ),
                         ),
                       ],
@@ -314,7 +317,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                                   color: Colors.red,
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Theme.of(context).scaffoldBackgroundColor,
+                                    color: Theme.of(context)
+                                        .scaffoldBackgroundColor,
                                     width: 2,
                                   ),
                                 ),

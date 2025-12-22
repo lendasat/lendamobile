@@ -213,7 +213,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   Future<void> _fetchLightningInvoice() async {
     try {
       // Boltz requires minimum 333 sats, use default if no amount set
-      final int amount = (_currentAmount ?? 0) > 0 ? _currentAmount! : _defaultLightningAmount;
+      final int amount =
+          (_currentAmount ?? 0) > 0 ? _currentAmount! : _defaultLightningAmount;
       final BigInt amountSats = BigInt.from(amount);
       final addresses = await address(amount: amountSats);
 
@@ -233,7 +234,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       }
     } catch (e) {
       logger.e("Error fetching Lightning invoice: $e");
-      OverlayService().showError("Lightning error: ${e.toString().split('\n').first}");
+      OverlayService()
+          .showError("Lightning error: ${e.toString().split('\n').first}");
       // Fall back to combined view
       setState(() {
         _receiveType = ReceiveType.combined;
@@ -398,7 +400,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   void _copyAddress() {
     final address = _getRawAddress();
     Clipboard.setData(ClipboardData(text: address));
-    OverlayService().showSuccess(AppLocalizations.of(context)!.addressCopiedToClipboard);
+    OverlayService()
+        .showSuccess(AppLocalizations.of(context)!.addressCopiedToClipboard);
   }
 
   void _shareAddress() {
@@ -542,7 +545,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
           text: AppLocalizations.of(context)!.setAmount,
           actions: [
             IconButton(
-              icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
+              icon: Icon(Icons.close,
+                  color: Theme.of(context).colorScheme.onSurface),
               onPressed: () => Navigator.pop(context),
             ),
           ],
@@ -618,7 +622,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 sizeFactor: _animation,
                 axis: Axis.horizontal,
                 axisAlignment: -1.0,
-                child: _receiveType == ReceiveType.lightning && _isLightningAvailable()
+                child: _receiveType == ReceiveType.lightning &&
+                        _isLightningAvailable()
                     ? LongButtonWidget(
                         customShadow: isLight ? [] : null,
                         buttonType: ButtonType.transparent,
@@ -657,15 +662,13 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                             children: [
                               const Icon(Icons.error_outline,
                                   color: AppTheme.errorColor, size: 48),
-                              const SizedBox(
-                                  height: AppTheme.elementSpacing),
+                              const SizedBox(height: AppTheme.elementSpacing),
                               Text(
                                 l10n.errorLoadingAddresses,
-                                style: const TextStyle(
-                                    color: AppTheme.errorColor),
+                                style:
+                                    const TextStyle(color: AppTheme.errorColor),
                               ),
-                              const SizedBox(
-                                  height: AppTheme.elementSpacing),
+                              const SizedBox(height: AppTheme.elementSpacing),
                               LongButtonWidget(
                                 title: l10n.retry,
                                 buttonType: ButtonType.primary,
@@ -689,8 +692,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                             _buildAmountTile(l10n),
                             // Type tile
                             _buildTypeTile(),
-                            const SizedBox(
-                                height: AppTheme.cardPadding * 2),
+                            const SizedBox(height: AppTheme.cardPadding * 2),
                           ],
                         ),
                 ),
@@ -858,5 +860,4 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       onTap: _showReceiveTypeSheet,
     );
   }
-
 }

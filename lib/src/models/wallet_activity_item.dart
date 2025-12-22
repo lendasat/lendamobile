@@ -27,8 +27,12 @@ class TransactionActivityItem implements WalletActivityItem {
           // Unconfirmed boarding txs should be at the TOP of the history
           return (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 1;
         },
-        round: (tx) => tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
-        redeem: (tx) => tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
+        round: (tx) => tx.createdAt is BigInt
+            ? (tx.createdAt as BigInt).toInt()
+            : tx.createdAt as int,
+        redeem: (tx) => tx.createdAt is BigInt
+            ? (tx.createdAt as BigInt).toInt()
+            : tx.createdAt as int,
         offboard: (tx) {
           // Offboard transactions use confirmedAt if available
           if (tx.confirmedAt != null) {
@@ -54,9 +58,15 @@ class TransactionActivityItem implements WalletActivityItem {
 
   int get amountSats => transaction.map(
         boarding: (tx) => tx.amountSats.toInt(),
-        round: (tx) => tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
-        redeem: (tx) => tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
-        offboard: (tx) => tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
+        round: (tx) => tx.amountSats is BigInt
+            ? (tx.amountSats as BigInt).toInt()
+            : tx.amountSats as int,
+        redeem: (tx) => tx.amountSats is BigInt
+            ? (tx.amountSats as BigInt).toInt()
+            : tx.amountSats as int,
+        offboard: (tx) => tx.amountSats is BigInt
+            ? (tx.amountSats as BigInt).toInt()
+            : tx.amountSats as int,
       );
 
   bool get isSettled => transaction.map(

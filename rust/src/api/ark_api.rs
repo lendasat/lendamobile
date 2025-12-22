@@ -41,7 +41,15 @@ pub async fn restore_wallet(
     boltz_url: String,
 ) -> Result<String> {
     let network = Network::from_str(network.as_str())?;
-    crate::ark::restore_wallet(mnemonic_words, data_dir, network, esplora, server, boltz_url).await
+    crate::ark::restore_wallet(
+        mnemonic_words,
+        data_dir,
+        network,
+        esplora,
+        server,
+        boltz_url,
+    )
+    .await
 }
 
 pub struct Balance {
@@ -92,7 +100,10 @@ pub async fn address(amount: Option<u64>) -> Result<Addresses> {
         Some(sats) => {
             let btc = sats as f64 / 100_000_000.0;
             // Format with up to 8 decimal places, removing trailing zeros
-            let btc_str = format!("{:.8}", btc).trim_end_matches('0').trim_end_matches('.').to_string();
+            let btc_str = format!("{:.8}", btc)
+                .trim_end_matches('0')
+                .trim_end_matches('.')
+                .to_string();
             format!("&amount={}", btc_str)
         }
     };

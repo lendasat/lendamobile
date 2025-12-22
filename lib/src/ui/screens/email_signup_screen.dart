@@ -112,7 +112,8 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
       await _settingsService.clearWordRecoveryStatus();
       logger.i('[SIGNUP] Step 2 DONE');
 
-      logger.i('[SIGNUP] Step 3: Checking settings - network: $_network, esplora: $_esploraUrl, arkServer: $_arkServerUrl, boltz: $_boltzUrl');
+      logger.i(
+          '[SIGNUP] Step 3: Checking settings - network: $_network, esplora: $_esploraUrl, arkServer: $_arkServerUrl, boltz: $_boltzUrl');
 
       String aspId;
 
@@ -165,13 +166,15 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
           name: 'Lendasat User',
           inviteCode: 'LAS-651K4',
         );
-        logger.i('[SIGNUP] Step 7 DONE: Registration successful, userId: $userId');
+        logger.i(
+            '[SIGNUP] Step 7 DONE: Registration successful, userId: $userId');
 
         logger.i('[SIGNUP] Step 8: Saving user email...');
         await _settingsService.setUserEmail(email);
         logger.i('[SIGNUP] Step 8 DONE');
       } catch (e) {
-        logger.w('[SIGNUP] Step 7 WARNING: Lendasat registration failed (non-fatal): $e');
+        logger.w(
+            '[SIGNUP] Step 7 WARNING: Lendasat registration failed (non-fatal): $e');
 
         // Check if it's "already registered" error - that's fine
         if (!e.toString().toLowerCase().contains('already') &&
@@ -241,7 +244,8 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
                         AppLocalizations.of(context)!.emailSignupDescription,
                         style: TextStyle(
                           fontSize: 16,
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -261,7 +265,9 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
                           hintText: 'you@example.com',
                           prefixIcon: Icon(
                             Icons.email_outlined,
-                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                           ),
                           filled: true,
                           fillColor: isDarkMode
@@ -285,7 +291,8 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.orange, width: 2),
+                            borderSide: const BorderSide(
+                                color: Colors.orange, width: 2),
                           ),
                           errorText: _errorMessage,
                         ),
@@ -307,7 +314,9 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
                           Icon(
                             Icons.info_outline,
                             size: 18,
-                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -315,7 +324,9 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
                               AppLocalizations.of(context)!.emailUsageInfo,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                                color: isDarkMode
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
                               ),
                             ),
                           ),

@@ -266,7 +266,9 @@ class _EmergencyRecoveryViewState extends State<EmergencyRecoveryView> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: isDisabled
-                      ? (isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.3))
+                      ? (isDark
+                          ? Colors.white.withOpacity(0.3)
+                          : Colors.black.withOpacity(0.3))
                       : (isSetUp ? AppTheme.successColor : AppTheme.errorColor),
                   border: Border.all(
                     color: isDark ? Colors.black : Colors.white,
@@ -327,5 +329,4 @@ class _EmergencyRecoveryViewState extends State<EmergencyRecoveryView> {
       ),
     );
   }
-
 }

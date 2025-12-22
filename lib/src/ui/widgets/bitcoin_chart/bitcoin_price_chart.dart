@@ -15,6 +15,7 @@ class BitcoinPriceChart extends StatefulWidget {
   final ActivationMode? trackballActivationMode;
   final VoidCallback? onChartTouchEnd;
   final Color? lineColor;
+
   /// Unique key for forcing chart rebuild (e.g., when time period changes)
   final String? chartKey;
 

@@ -182,191 +182,191 @@ class SettingsViewState extends State<SettingsView> {
         hasBackButton: false,
       ),
       body: ListTileTheme(
-              iconColor: Theme.of(context).colorScheme.onSurface,
-              child: Container(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.elementSpacing * 0.25,
+        iconColor: Theme.of(context).colorScheme.onSurface,
+        child: Container(
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppTheme.elementSpacing * 0.25,
+          ),
+          child: ListView(
+            key: const Key('SettingsListViewContent'),
+            children: [
+              // Recovery Options (with status indicator dot) - most important
+              _buildRecoveryOptionsTile(context, controller),
+
+              // Language
+              ArkListTile(
+                leading: RoundedButtonWidget(
+                  iconData: Icons.language,
+                  onTap: () => controller.switchTab('language'),
+                  size: AppTheme.iconSize * 1.5,
+                  buttonType: ButtonType.transparent,
                 ),
-                child: ListView(
-                  key: const Key('SettingsListViewContent'),
-                  children: [
-                    // Recovery Options (with status indicator dot) - most important
-                    _buildRecoveryOptionsTile(context, controller),
+                text: AppLocalizations.of(context)!.language,
+                trailing: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: AppTheme.iconSize * 0.75,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.white60
+                      : AppTheme.black60,
+                ),
+                onTap: () => controller.switchTab('language'),
+              ),
 
-                    // Language
-                    ArkListTile(
-                      leading: RoundedButtonWidget(
-                        iconData: Icons.language,
-                        onTap: () => controller.switchTab('language'),
-                        size: AppTheme.iconSize * 1.5,
-                        buttonType: ButtonType.transparent,
-                      ),
-                      text: AppLocalizations.of(context)!.language,
-                      trailing: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: AppTheme.iconSize * 0.75,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppTheme.white60
-                            : AppTheme.black60,
-                      ),
-                      onTap: () => controller.switchTab('language'),
-                    ),
+              // Timezone
+              ArkListTile(
+                leading: RoundedButtonWidget(
+                  iconData: Icons.access_time_rounded,
+                  onTap: () => controller.switchTab('timezone'),
+                  size: AppTheme.iconSize * 1.5,
+                  buttonType: ButtonType.transparent,
+                ),
+                text: AppLocalizations.of(context)!.timezone,
+                trailing: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: AppTheme.iconSize * 0.75,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.white60
+                      : AppTheme.black60,
+                ),
+                onTap: () => controller.switchTab('timezone'),
+              ),
 
-                    // Timezone
-                    ArkListTile(
-                      leading: RoundedButtonWidget(
-                        iconData: Icons.access_time_rounded,
-                        onTap: () => controller.switchTab('timezone'),
-                        size: AppTheme.iconSize * 1.5,
-                        buttonType: ButtonType.transparent,
-                      ),
-                      text: AppLocalizations.of(context)!.timezone,
-                      trailing: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: AppTheme.iconSize * 0.75,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppTheme.white60
-                            : AppTheme.black60,
-                      ),
-                      onTap: () => controller.switchTab('timezone'),
-                    ),
+              // Currency
+              ArkListTile(
+                leading: RoundedButtonWidget(
+                  iconData: Icons.currency_bitcoin,
+                  onTap: () => controller.switchTab('currency'),
+                  size: AppTheme.iconSize * 1.5,
+                  buttonType: ButtonType.transparent,
+                ),
+                text: AppLocalizations.of(context)!.currency,
+                trailing: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: AppTheme.iconSize * 0.75,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.white60
+                      : AppTheme.black60,
+                ),
+                onTap: () => controller.switchTab('currency'),
+              ),
 
-                    // Currency
-                    ArkListTile(
-                      leading: RoundedButtonWidget(
-                        iconData: Icons.currency_bitcoin,
-                        onTap: () => controller.switchTab('currency'),
-                        size: AppTheme.iconSize * 1.5,
-                        buttonType: ButtonType.transparent,
-                      ),
-                      text: AppLocalizations.of(context)!.currency,
-                      trailing: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: AppTheme.iconSize * 0.75,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppTheme.white60
-                            : AppTheme.black60,
-                      ),
-                      onTap: () => controller.switchTab('currency'),
-                    ),
-
-                    // Chart Time Range
-                    Consumer<UserPreferencesService>(
-                      builder: (context, userPrefs, _) => ArkListTile(
-                        leading: RoundedButtonWidget(
-                          iconData: Icons.show_chart_rounded,
-                          onTap: () => controller.switchTab('chart_time_range'),
-                          size: AppTheme.iconSize * 1.5,
-                          buttonType: ButtonType.transparent,
+              // Chart Time Range
+              Consumer<UserPreferencesService>(
+                builder: (context, userPrefs, _) => ArkListTile(
+                  leading: RoundedButtonWidget(
+                    iconData: Icons.show_chart_rounded,
+                    onTap: () => controller.switchTab('chart_time_range'),
+                    size: AppTheme.iconSize * 1.5,
+                    buttonType: ButtonType.transparent,
+                  ),
+                  text: 'Chart Time Range',
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        userPrefs.getChartTimeRangeLabel(),
+                        style: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppTheme.white60
+                              : AppTheme.black60,
+                          fontSize: 14,
                         ),
-                        text: 'Chart Time Range',
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              userPrefs.getChartTimeRangeLabel(),
-                              style: TextStyle(
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? AppTheme.white60
-                                    : AppTheme.black60,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: AppTheme.iconSize * 0.75,
-                              color: Theme.of(context).brightness == Brightness.dark
-                                  ? AppTheme.white60
-                                  : AppTheme.black60,
-                            ),
-                          ],
-                        ),
-                        onTap: () => controller.switchTab('chart_time_range'),
                       ),
-                    ),
-
-                    // Recovery Key - temporarily disabled (already included in Recovery Options)
-                    // ArkListTile(
-                    //   leading: RoundedButtonWidget(
-                    //     iconData: Icons.key_rounded,
-                    //     onTap: () => controller.switchTab('recovery'),
-                    //     size: AppTheme.iconSize * 1.5,
-                    //     buttonType: ButtonType.transparent,
-                    //   ),
-                    //   text: AppLocalizations.of(context)!.viewRecoveryKey,
-                    //   trailing: Icon(
-                    //     Icons.arrow_forward_ios_rounded,
-                    //     size: AppTheme.iconSize * 0.75,
-                    //     color: Theme.of(context).brightness == Brightness.dark
-                    //         ? AppTheme.white60
-                    //         : AppTheme.black60,
-                    //   ),
-                    //   onTap: () => controller.switchTab('recovery'),
-                    // ),
-
-                    // Feedback / Report Bug - temporarily disabled
-                    // ArkListTile(
-                    //   leading: RoundedButtonWidget(
-                    //     iconData: Icons.feedback_rounded,
-                    //     onTap: () => controller.switchTab('feedback'),
-                    //     size: AppTheme.iconSize * 1.5,
-                    //     buttonType: ButtonType.transparent,
-                    //   ),
-                    //   text: AppLocalizations.of(context)!.reportBugFeedback,
-                    //   trailing: Icon(
-                    //     Icons.arrow_forward_ios_rounded,
-                    //     size: AppTheme.iconSize * 0.75,
-                    //     color: Theme.of(context).brightness == Brightness.dark
-                    //         ? AppTheme.white60
-                    //         : AppTheme.black60,
-                    //   ),
-                    //   onTap: () => controller.switchTab('feedback'),
-                    // ),
-
-                    // Claim Gifts - temporarily disabled
-                    // ArkListTile(
-                    //   leading: RoundedButtonWidget(
-                    //     iconData: Icons.card_giftcard_rounded,
-                    //     onTap: () => controller.switchTab('claim_sats'),
-                    //     size: AppTheme.iconSize * 1.5,
-                    //     buttonType: ButtonType.transparent,
-                    //   ),
-                    //   text: 'Claim Gifts',
-                    //   trailing: Icon(
-                    //     Icons.arrow_forward_ios_rounded,
-                    //     size: AppTheme.iconSize * 0.75,
-                    //     color: Theme.of(context).brightness == Brightness.dark
-                    //         ? AppTheme.white60
-                    //         : AppTheme.black60,
-                    //   ),
-                    //   onTap: () => controller.switchTab('claim_sats'),
-                    // ),
-
-                    // Reset Wallet
-                    ArkListTile(
-                      leading: RoundedButtonWidget(
-                        iconData: Icons.warning_amber_rounded,
-                        onTap: _showResetWalletDialog,
-                        size: AppTheme.iconSize * 1.5,
-                        buttonType: ButtonType.transparent,
-                      ),
-                      text: AppLocalizations.of(context)!.resetWallet,
-                      trailing: Icon(
+                      const SizedBox(width: 8),
+                      Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: AppTheme.iconSize * 0.75,
                         color: Theme.of(context).brightness == Brightness.dark
                             ? AppTheme.white60
                             : AppTheme.black60,
                       ),
-                      onTap: _showResetWalletDialog,
-                    ),
-
-                    const SizedBox(height: AppTheme.cardPadding * 2),
-                  ],
+                    ],
+                  ),
+                  onTap: () => controller.switchTab('chart_time_range'),
                 ),
               ),
-            ),
+
+              // Recovery Key - temporarily disabled (already included in Recovery Options)
+              // ArkListTile(
+              //   leading: RoundedButtonWidget(
+              //     iconData: Icons.key_rounded,
+              //     onTap: () => controller.switchTab('recovery'),
+              //     size: AppTheme.iconSize * 1.5,
+              //     buttonType: ButtonType.transparent,
+              //   ),
+              //   text: AppLocalizations.of(context)!.viewRecoveryKey,
+              //   trailing: Icon(
+              //     Icons.arrow_forward_ios_rounded,
+              //     size: AppTheme.iconSize * 0.75,
+              //     color: Theme.of(context).brightness == Brightness.dark
+              //         ? AppTheme.white60
+              //         : AppTheme.black60,
+              //   ),
+              //   onTap: () => controller.switchTab('recovery'),
+              // ),
+
+              // Feedback / Report Bug - temporarily disabled
+              // ArkListTile(
+              //   leading: RoundedButtonWidget(
+              //     iconData: Icons.feedback_rounded,
+              //     onTap: () => controller.switchTab('feedback'),
+              //     size: AppTheme.iconSize * 1.5,
+              //     buttonType: ButtonType.transparent,
+              //   ),
+              //   text: AppLocalizations.of(context)!.reportBugFeedback,
+              //   trailing: Icon(
+              //     Icons.arrow_forward_ios_rounded,
+              //     size: AppTheme.iconSize * 0.75,
+              //     color: Theme.of(context).brightness == Brightness.dark
+              //         ? AppTheme.white60
+              //         : AppTheme.black60,
+              //   ),
+              //   onTap: () => controller.switchTab('feedback'),
+              // ),
+
+              // Claim Gifts - temporarily disabled
+              // ArkListTile(
+              //   leading: RoundedButtonWidget(
+              //     iconData: Icons.card_giftcard_rounded,
+              //     onTap: () => controller.switchTab('claim_sats'),
+              //     size: AppTheme.iconSize * 1.5,
+              //     buttonType: ButtonType.transparent,
+              //   ),
+              //   text: 'Claim Gifts',
+              //   trailing: Icon(
+              //     Icons.arrow_forward_ios_rounded,
+              //     size: AppTheme.iconSize * 0.75,
+              //     color: Theme.of(context).brightness == Brightness.dark
+              //         ? AppTheme.white60
+              //         : AppTheme.black60,
+              //   ),
+              //   onTap: () => controller.switchTab('claim_sats'),
+              // ),
+
+              // Reset Wallet
+              ArkListTile(
+                leading: RoundedButtonWidget(
+                  iconData: Icons.warning_amber_rounded,
+                  onTap: _showResetWalletDialog,
+                  size: AppTheme.iconSize * 1.5,
+                  buttonType: ButtonType.transparent,
+                ),
+                text: AppLocalizations.of(context)!.resetWallet,
+                trailing: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: AppTheme.iconSize * 0.75,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.white60
+                      : AppTheme.black60,
+                ),
+                onTap: _showResetWalletDialog,
+              ),
+
+              const SizedBox(height: AppTheme.cardPadding * 2),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

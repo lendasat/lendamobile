@@ -15,7 +15,8 @@
       "Bash(flutter pub get:*)",
       "Bash(cat:*)",
       "Bash(flutter gen-l10n:*)",
-      "Bash(flutter_rust_bridge_codegen generate:*)"
+      "Bash(flutter_rust_bridge_codegen generate:*)",
+      "Bash(git rebase:*)"
     ],
     "deny": [],
     "ask": []

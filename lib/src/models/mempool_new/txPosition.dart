@@ -17,16 +17,16 @@ class TxPosition {
   TxPosition({required this.txid, required this.position, required this.cpfp});
 
   factory TxPosition.fromJson(Map<String, dynamic> json) => TxPosition(
-    txid: json["txid"],
-    position: Position.fromJson(json["position"]),
-    cpfp: Cpfp.fromJson(json["cpfp"] ?? {}),
-  );
+        txid: json["txid"],
+        position: Position.fromJson(json["position"]),
+        cpfp: Cpfp.fromJson(json["cpfp"] ?? {}),
+      );
 
   Map<String, dynamic> toJson() => {
-    "txid": txid,
-    "position": position.toJson(),
-    "cpfp": cpfp.toJson(),
-  };
+        "txid": txid,
+        "position": position.toJson(),
+        "cpfp": cpfp.toJson(),
+      };
 }
 
 class Cpfp {
@@ -47,30 +47,30 @@ class Cpfp {
   });
 
   factory Cpfp.fromJson(Map<String, dynamic> json) => Cpfp(
-    ancestors: json["ancestors"] != null
-        ? List<Ancestor>.from(
-            json["ancestors"].map((x) => Ancestor.fromJson(x)),
-          )
-        : [],
-    bestDescendant: json["bestDescendant"],
-    descendants: json["descendants"] != null
-        ? List<dynamic>.from(json["descendants"].map((x) => x))
-        : [],
-    effectiveFeePerVsize: json["effectiveFeePerVsize"] != null
-        ? json["effectiveFeePerVsize"]?.toDouble()
-        : 0.0,
-    sigops: json["sigops"] ?? 0,
-    adjustedVsize: json["adjustedVsize"]?.toDouble() ?? 0.0,
-  );
+        ancestors: json["ancestors"] != null
+            ? List<Ancestor>.from(
+                json["ancestors"].map((x) => Ancestor.fromJson(x)),
+              )
+            : [],
+        bestDescendant: json["bestDescendant"],
+        descendants: json["descendants"] != null
+            ? List<dynamic>.from(json["descendants"].map((x) => x))
+            : [],
+        effectiveFeePerVsize: json["effectiveFeePerVsize"] != null
+            ? json["effectiveFeePerVsize"]?.toDouble()
+            : 0.0,
+        sigops: json["sigops"] ?? 0,
+        adjustedVsize: json["adjustedVsize"]?.toDouble() ?? 0.0,
+      );
 
   Map<String, dynamic> toJson() => {
-    "ancestors": List<dynamic>.from(ancestors.map((x) => x.toJson())),
-    "bestDescendant": bestDescendant,
-    "descendants": List<dynamic>.from(descendants.map((x) => x)),
-    "effectiveFeePerVsize": effectiveFeePerVsize,
-    "sigops": sigops,
-    "adjustedVsize": adjustedVsize,
-  };
+        "ancestors": List<dynamic>.from(ancestors.map((x) => x.toJson())),
+        "bestDescendant": bestDescendant,
+        "descendants": List<dynamic>.from(descendants.map((x) => x)),
+        "effectiveFeePerVsize": effectiveFeePerVsize,
+        "sigops": sigops,
+        "adjustedVsize": adjustedVsize,
+      };
 }
 
 class Ancestor {

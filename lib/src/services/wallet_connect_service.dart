@@ -26,16 +26,17 @@ enum EvmChain {
       namespace: namespace,
     );
     return networks.cast<ReownAppKitModalNetworkInfo?>().firstWhere(
-      (n) => n?.chainId == chainId,
-      orElse: () => null,
-    );
+          (n) => n?.chainId == chainId,
+          orElse: () => null,
+        );
   }
 }
 
 /// Service for managing WalletConnect connections to EVM wallets
 /// Uses Reown AppKit for the modal UI (same as lendaswap web frontend)
 class WalletConnectService extends ChangeNotifier {
-  static final WalletConnectService _instance = WalletConnectService._internal();
+  static final WalletConnectService _instance =
+      WalletConnectService._internal();
   factory WalletConnectService() => _instance;
   WalletConnectService._internal();
 
@@ -65,7 +66,8 @@ class WalletConnectService extends ChangeNotifier {
   bool get isEvmAddress => _appKitModal?.session?.getAddress('eip155') != null;
 
   /// Whether the current address is a Solana address
-  bool get isSolanaAddress => _appKitModal?.session?.getAddress('solana') != null;
+  bool get isSolanaAddress =>
+      _appKitModal?.session?.getAddress('solana') != null;
 
   /// Connected chain ID (null if not connected)
   String? get connectedChainId => _appKitModal?.selectedChain?.chainId;
@@ -75,9 +77,9 @@ class WalletConnectService extends ChangeNotifier {
     final chainId = connectedChainId;
     if (chainId == null) return null;
     return EvmChain.values.cast<EvmChain?>().firstWhere(
-      (c) => c?.chainId == chainId,
-      orElse: () => null,
-    );
+          (c) => c?.chainId == chainId,
+          orElse: () => null,
+        );
   }
 
   /// Shortened address for display (e.g., "0x1234...5678")
@@ -117,7 +119,8 @@ class WalletConnectService extends ChangeNotifier {
           icons: ['https://lendasat.com/logo.png'],
           redirect: Redirect(
             native: 'lendamobile://',
-            universal: 'https://lendasat.com', // Added universal link for better MetaMask compatibility
+            universal:
+                'https://lendasat.com', // Added universal link for better MetaMask compatibility
             linkMode: true,
           ),
         ),
@@ -201,7 +204,8 @@ class WalletConnectService extends ChangeNotifier {
         if (uri.queryParameters.isNotEmpty) {
           for (final entry in uri.queryParameters.entries) {
             logger.i('Trying query param: ${entry.key}');
-            final altHandled = await _appKitModal!.dispatchEnvelope(entry.value);
+            final altHandled =
+                await _appKitModal!.dispatchEnvelope(entry.value);
             if (altHandled) {
               logger.i('Handled via query param: ${entry.key}');
               notifyListeners();
@@ -212,7 +216,8 @@ class WalletConnectService extends ChangeNotifier {
       }
 
       // Log current state after handling
-      logger.i('After deep link - isConnected: $isConnected, address: $connectedAddress');
+      logger.i(
+          'After deep link - isConnected: $isConnected, address: $connectedAddress');
     } catch (e) {
       logger.e('Error handling deep link: $e');
     }
@@ -222,7 +227,8 @@ class WalletConnectService extends ChangeNotifier {
   /// This shows the same UI as lendaswap website (all wallets, social login, etc.)
   Future<void> openModal() async {
     if (_appKitModal == null) {
-      throw Exception('AppKit not initialized. Call initialize(context) first.');
+      throw Exception(
+          'AppKit not initialized. Call initialize(context) first.');
     }
 
     try {
@@ -230,7 +236,8 @@ class WalletConnectService extends ChangeNotifier {
     } catch (e) {
       // Handle "Bad state: No element" bug in reown_appkit after disconnect
       // The modal's internal widget stack is empty after disconnect
-      if (e.toString().contains('No element') || e.toString().contains('Bad state')) {
+      if (e.toString().contains('No element') ||
+          e.toString().contains('Bad state')) {
         logger.w('Modal widget stack error, reinitializing...');
         // Reset and reinitialize the modal
         if (_context != null) {
@@ -258,7 +265,8 @@ class WalletConnectService extends ChangeNotifier {
   /// Open modal with network selection first
   Future<void> openNetworkModal() async {
     if (_appKitModal == null) {
-      throw Exception('AppKit not initialized. Call initialize(context) first.');
+      throw Exception(
+          'AppKit not initialized. Call initialize(context) first.');
     }
 
     try {
@@ -297,7 +305,8 @@ class WalletConnectService extends ChangeNotifier {
 
     final currentChainId = connectedChainId;
     if (currentChainId != requiredChain.chainId) {
-      logger.i('Current chain: $currentChainId, required: ${requiredChain.chainId}');
+      logger.i(
+          'Current chain: $currentChainId, required: ${requiredChain.chainId}');
       await switchChain(requiredChain);
     }
   }
@@ -401,7 +410,8 @@ class WalletConnectService extends ChangeNotifier {
   String buildApproveCalldata(String spender, BigInt amount) {
     // approve(address spender, uint256 amount)
     // Function selector: 0x095ea7b3
-    final spenderPadded = spender.toLowerCase().replaceFirst('0x', '').padLeft(64, '0');
+    final spenderPadded =
+        spender.toLowerCase().replaceFirst('0x', '').padLeft(64, '0');
     final amountHex = amount.toRadixString(16).padLeft(64, '0');
     return '0x095ea7b3$spenderPadded$amountHex';
   }
@@ -413,10 +423,11 @@ class WalletConnectService extends ChangeNotifier {
     BigInt? amount,
   }) async {
     // Use max uint256 if no amount specified
-    final approveAmount = amount ?? BigInt.parse(
-      'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
-      radix: 16,
-    );
+    final approveAmount = amount ??
+        BigInt.parse(
+          'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+          radix: 16,
+        );
 
     final calldata = buildApproveCalldata(spenderAddress, approveAmount);
 

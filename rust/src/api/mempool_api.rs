@@ -1,4 +1,6 @@
-use crate::models::mempool::{BitcoinTransaction, Block, FearGreedIndex, HashrateData, RecommendedFees};
+use crate::models::mempool::{
+    BitcoinTransaction, Block, FearGreedIndex, HashrateData, RecommendedFees,
+};
 use anyhow::{Context, Result, bail};
 
 /// Get the latest 15 Bitcoin blocks

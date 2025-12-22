@@ -5,16 +5,16 @@
 //!
 //! Uses a dedicated derivation path for Lendasat keys: m/10101'/0'/0
 
-use crate::ark::mnemonic_file::{read_mnemonic_file, LENDASAT_DERIVATION_PATH};
-use anyhow::{anyhow, Result};
-use bitcoin::bip32::{DerivationPath, Xpriv};
-use bitcoin::hashes::{sha256, Hash};
-use bitcoin::key::{Keypair, Secp256k1};
-use bitcoin::psbt::Psbt;
-use bitcoin::secp256k1::ecdsa::Signature;
-use bitcoin::secp256k1::Message;
+use crate::ark::mnemonic_file::{LENDASAT_DERIVATION_PATH, read_mnemonic_file};
+use anyhow::{Result, anyhow};
 use bitcoin::Network;
 use bitcoin::PrivateKey;
+use bitcoin::bip32::{DerivationPath, Xpriv};
+use bitcoin::hashes::{Hash, sha256};
+use bitcoin::key::{Keypair, Secp256k1};
+use bitcoin::psbt::Psbt;
+use bitcoin::secp256k1::Message;
+use bitcoin::secp256k1::ecdsa::Signature;
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::OnceLock;
@@ -62,8 +62,8 @@ async fn get_or_derive_keypair(data_dir: &str, network: Network) -> Result<Keypa
 
     // Derive at Lendasat path: m/10101'/0'/0
     let path = format!("{}/0", LENDASAT_DERIVATION_PATH);
-    let derivation_path = DerivationPath::from_str(&path)
-        .map_err(|e| anyhow!("Invalid derivation path: {}", e))?;
+    let derivation_path =
+        DerivationPath::from_str(&path).map_err(|e| anyhow!("Invalid derivation path: {}", e))?;
 
     let derived = master
         .derive_priv(&secp, &derivation_path)
@@ -181,10 +181,9 @@ pub async fn sign_psbt(
     }
 
     // Parse PSBT from hex
-    let psbt_bytes = hex::decode(psbt_hex)
-        .map_err(|e| anyhow!("Invalid PSBT hex: {}", e))?;
-    let mut psbt = Psbt::deserialize(&psbt_bytes)
-        .map_err(|e| anyhow!("Failed to parse PSBT: {}", e))?;
+    let psbt_bytes = hex::decode(psbt_hex).map_err(|e| anyhow!("Invalid PSBT hex: {}", e))?;
+    let mut psbt =
+        Psbt::deserialize(&psbt_bytes).map_err(|e| anyhow!("Failed to parse PSBT: {}", e))?;
 
     tracing::debug!("Signing PSBT with {} inputs", psbt.inputs.len());
 
@@ -229,8 +228,7 @@ pub async fn sign_psbt(
 #[allow(dead_code)]
 pub fn verify_signature(pubkey_hex: &str, message: &str, signature_hex: &str) -> Result<bool> {
     // Decode public key
-    let pubkey_bytes =
-        hex::decode(pubkey_hex).map_err(|e| anyhow!("Invalid pubkey hex: {}", e))?;
+    let pubkey_bytes = hex::decode(pubkey_hex).map_err(|e| anyhow!("Invalid pubkey hex: {}", e))?;
     let pubkey = bitcoin::secp256k1::PublicKey::from_slice(&pubkey_bytes)
         .map_err(|e| anyhow!("Invalid public key: {}", e))?;
 
@@ -242,8 +240,8 @@ pub fn verify_signature(pubkey_hex: &str, message: &str, signature_hex: &str) ->
     // Decode signature
     let sig_bytes =
         hex::decode(signature_hex).map_err(|e| anyhow!("Invalid signature hex: {}", e))?;
-    let signature = Signature::from_der(&sig_bytes)
-        .map_err(|e| anyhow!("Invalid DER signature: {}", e))?;
+    let signature =
+        Signature::from_der(&sig_bytes).map_err(|e| anyhow!("Invalid DER signature: {}", e))?;
 
     // Verify
     let secp = Secp256k1::new();

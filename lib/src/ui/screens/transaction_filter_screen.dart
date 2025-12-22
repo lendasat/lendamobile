@@ -18,7 +18,6 @@ class TransactionFilterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final filterService = context.watch<TransactionFilterService>();
 
     return Scaffold(
@@ -27,7 +26,8 @@ class TransactionFilterScreen extends StatelessWidget {
         context: context,
         text: 'Filter',
         customLeading: IconButton(
-          icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
+          icon:
+              Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -234,8 +234,6 @@ class _FilterPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
-
     return InkWell(
       onTap: onTap,
       child: GlassContainer(
@@ -248,7 +246,9 @@ class _FilterPill extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).hintColor,
+              color: isSelected
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).hintColor,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),

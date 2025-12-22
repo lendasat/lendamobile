@@ -11,9 +11,9 @@ class TransactionRbfModel {
       );
 
   Map<String, dynamic> toJson() => {
-    "replacements": replacements.toJson(),
-    "replaces": List<dynamic>.from(replaces.map((x) => x)),
-  };
+        "replacements": replacements.toJson(),
+        "replaces": List<dynamic>.from(replaces.map((x) => x)),
+      };
 }
 
 class Replacements {
@@ -32,22 +32,22 @@ class Replacements {
   });
 
   factory Replacements.fromJson(Map<String, dynamic> json) => Replacements(
-    tx: Tx.fromJson(json["tx"]),
-    time: json["time"],
-    fullRbf: json["fullRbf"],
-    replaces: List<Replace>.from(
-      json["replaces"].map((x) => Replace.fromJson(x)),
-    ),
-    mined: json["mined"],
-  );
+        tx: Tx.fromJson(json["tx"]),
+        time: json["time"],
+        fullRbf: json["fullRbf"],
+        replaces: List<Replace>.from(
+          json["replaces"].map((x) => Replace.fromJson(x)),
+        ),
+        mined: json["mined"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "tx": tx.toJson(),
-    "time": time,
-    "fullRbf": fullRbf,
-    "replaces": List<dynamic>.from(replaces.map((x) => x.toJson())),
-    "mined": mined,
-  };
+        "tx": tx.toJson(),
+        "time": time,
+        "fullRbf": fullRbf,
+        "replaces": List<dynamic>.from(replaces.map((x) => x.toJson())),
+        "mined": mined,
+      };
 }
 
 class Replace {
@@ -66,22 +66,22 @@ class Replace {
   });
 
   factory Replace.fromJson(Map<String, dynamic> json) => Replace(
-    tx: Tx.fromJson(json["tx"]),
-    time: json["time"],
-    fullRbf: json["fullRbf"],
-    replaces: List<Replace>.from(
-      json["replaces"].map((x) => Replace.fromJson(x)),
-    ),
-    interval: json["interval"],
-  );
+        tx: Tx.fromJson(json["tx"]),
+        time: json["time"],
+        fullRbf: json["fullRbf"],
+        replaces: List<Replace>.from(
+          json["replaces"].map((x) => Replace.fromJson(x)),
+        ),
+        interval: json["interval"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "tx": tx.toJson(),
-    "time": time,
-    "fullRbf": fullRbf,
-    "replaces": List<dynamic>.from(replaces.map((x) => x.toJson())),
-    "interval": interval,
-  };
+        "tx": tx.toJson(),
+        "time": time,
+        "fullRbf": fullRbf,
+        "replaces": List<dynamic>.from(replaces.map((x) => x.toJson())),
+        "interval": interval,
+      };
 }
 
 class Tx {
@@ -106,24 +106,24 @@ class Tx {
   });
 
   factory Tx.fromJson(Map<String, dynamic> json) => Tx(
-    txid: json["txid"],
-    fee: json["fee"],
-    vsize: json["vsize"]?.toDouble(),
-    value: json["value"],
-    rate: json["rate"]?.toDouble(),
-    rbf: json["rbf"],
-    fullRbf: json["fullRbf"],
-    mined: json["mined"],
-  );
+        txid: json["txid"],
+        fee: json["fee"],
+        vsize: json["vsize"]?.toDouble(),
+        value: json["value"],
+        rate: json["rate"]?.toDouble(),
+        rbf: json["rbf"],
+        fullRbf: json["fullRbf"],
+        mined: json["mined"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "txid": txid,
-    "fee": fee,
-    "vsize": vsize,
-    "value": value,
-    "rate": rate,
-    "rbf": rbf,
-    "fullRbf": fullRbf,
-    "mined": mined,
-  };
+        "txid": txid,
+        "fee": fee,
+        "vsize": vsize,
+        "value": value,
+        "rate": rate,
+        "rbf": rbf,
+        "fullRbf": fullRbf,
+        "mined": mined,
+      };
 }
