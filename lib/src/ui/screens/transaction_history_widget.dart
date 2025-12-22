@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
+import 'package:ark_flutter/src/services/pending_transaction_service.dart';
 import 'package:ark_flutter/src/ui/screens/mempool/single_transaction_screen.dart';
 import 'package:ark_flutter/src/ui/screens/swap_detail_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
@@ -50,9 +51,15 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   Timer? _searchTimer;
   List<WalletActivityItem> _filteredActivity = [];
 
+  // Listen to pending transaction updates
+  final PendingTransactionService _pendingService = PendingTransactionService();
+
   @override
   void initState() {
     super.initState();
+    // Listen to pending transaction changes
+    _pendingService.addListener(_onPendingTransactionsChanged);
+
     // Debug: Print transaction types to diagnose network label bug
     for (final tx in widget.transactions) {
       tx.map(
@@ -66,7 +73,39 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             'TX DEBUG: Offboard (Onchain Send) - ${t.txid.substring(0, 8)}...'),
       );
     }
-    _filteredActivity = combineActivity(widget.transactions, widget.swaps);
+    _filteredActivity = _combineAllActivity();
+
+    // Reconcile pending with real transactions when widget loads
+    _pendingService.reconcileWithRealTransactions(widget.transactions);
+  }
+
+  void _onPendingTransactionsChanged() {
+    if (mounted) {
+      _applySearch(_searchController.text);
+    }
+  }
+
+  /// Combine transactions, swaps, and pending items into a unified list
+  List<WalletActivityItem> _combineAllActivity() {
+    final List<WalletActivityItem> items = [];
+
+    // Add pending transactions first (they'll float to top due to high timestamp)
+    items.addAll(_pendingService.pendingItems);
+
+    // Add regular transactions
+    for (final tx in widget.transactions) {
+      items.add(TransactionActivityItem(tx));
+    }
+
+    // Add swaps
+    for (final swap in widget.swaps) {
+      items.add(SwapActivityItem(swap));
+    }
+
+    // Sort by timestamp (newest first)
+    items.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+    return items;
   }
 
   @override
@@ -74,12 +113,15 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.transactions != widget.transactions ||
         oldWidget.swaps != widget.swaps) {
+      // Reconcile pending with real transactions when data updates
+      _pendingService.reconcileWithRealTransactions(widget.transactions);
       _applySearch(_searchController.text);
     }
   }
 
   @override
   void dispose() {
+    _pendingService.removeListener(_onPendingTransactionsChanged);
     _searchController.dispose();
     _searchTimer?.cancel();
     super.dispose();
@@ -90,12 +132,17 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     final lowerSearch = searchText.toLowerCase();
 
     setState(() {
-      var allActivity = combineActivity(widget.transactions, widget.swaps);
+      var allActivity = _combineAllActivity();
 
       // Search filter
       if (searchText.isNotEmpty) {
         allActivity = allActivity.where((item) {
-          if (item is TransactionActivityItem) {
+          if (item is PendingActivityItem) {
+            // Allow searching by address for pending items
+            return item.address.toLowerCase().contains(lowerSearch) ||
+                'sending'.contains(lowerSearch) ||
+                'pending'.contains(lowerSearch);
+          } else if (item is TransactionActivityItem) {
             return item.id.toLowerCase().contains(lowerSearch);
           } else if (item is SwapActivityItem) {
             return item.id.toLowerCase().contains(lowerSearch) ||
@@ -111,7 +158,10 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       );
       if (hasTypeFilter) {
         allActivity = allActivity.where((item) {
-          if (item is TransactionActivityItem) {
+          if (item is PendingActivityItem) {
+            // Pending sends are onchain
+            return filterService.selectedFilters.contains('Onchain');
+          } else if (item is TransactionActivityItem) {
             return item.transaction.map(
               boarding: (_) =>
                   filterService.selectedFilters.contains('Onchain'),
@@ -141,7 +191,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       final filterReceived = filterService.selectedFilters.contains('Received');
       if (filterSent && !filterReceived) {
         allActivity = allActivity.where((item) {
-          if (item is TransactionActivityItem) {
+          if (item is PendingActivityItem) {
+            return true; // Pending sends are always outgoing
+          } else if (item is TransactionActivityItem) {
             return item.amountSats < 0;
           } else if (item is SwapActivityItem) {
             return item.isBtcToEvm; // Sending BTC
@@ -150,7 +202,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         }).toList();
       } else if (filterReceived && !filterSent) {
         allActivity = allActivity.where((item) {
-          if (item is TransactionActivityItem) {
+          if (item is PendingActivityItem) {
+            return false; // Pending sends are never incoming
+          } else if (item is TransactionActivityItem) {
             return item.amountSats >= 0;
           } else if (item is SwapActivityItem) {
             return !item.isBtcToEvm; // Receiving BTC
@@ -187,14 +241,45 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     });
   }
 
+  /// Check if a transaction is pending (unconfirmed)
+  bool _isPendingTransaction(WalletActivityItem item) {
+    if (item is PendingActivityItem) {
+      return true; // Pending sends are always pending
+    }
+    if (item is TransactionActivityItem) {
+      return item.transaction.map(
+        boarding: (tx) =>
+            tx.confirmedAt == null, // Unconfirmed boarding = pending receive
+        round: (_) => false, // Round transactions are instant
+        redeem: (_) => false, // Redeem transactions handled differently
+        offboard: (tx) =>
+            tx.confirmedAt == null, // Unconfirmed offboard = pending send
+      );
+    }
+    return false;
+  }
+
   List<Widget> _arrangeActivityByTime() {
     if (_filteredActivity.isEmpty) return [];
+
+    // Separate pending items from confirmed items
+    final List<WalletActivityItem> pendingItems = [];
+    final List<WalletActivityItem> confirmedItems = [];
+
+    for (final item in _filteredActivity) {
+      if (_isPendingTransaction(item)) {
+        pendingItems.add(item);
+      } else {
+        confirmedItems.add(item);
+      }
+    }
 
     Map<String, List<WalletActivityItem>> categorizedActivity = {};
     DateTime now = DateTime.now();
     DateTime startOfThisMonth = DateTime(now.year, now.month, 1);
 
-    for (WalletActivityItem item in _filteredActivity) {
+    // Categorize confirmed items by time
+    for (WalletActivityItem item in confirmedItems) {
       final timestamp = item.timestamp;
 
       if (timestamp == 0) {
@@ -214,6 +299,54 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     }
 
     List<Widget> finalWidgets = [];
+
+    // Add "Pending" section first if there are pending items
+    if (pendingItems.isNotEmpty) {
+      finalWidgets.add(
+        Padding(
+          key: const ValueKey('header_Pending'),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.cardPadding,
+            vertical: AppTheme.elementSpacing,
+          ),
+          child: Row(
+            children: [
+              Text(
+                'Pending',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(width: AppTheme.elementSpacing / 2),
+              SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      finalWidgets.add(
+        _ActivityContainer(
+          key: const ValueKey('container_Pending'),
+          activityItems: pendingItems,
+          aspId: widget.aspId,
+          hideAmounts: widget.hideAmounts,
+          showBtcAsMain: widget.showBtcAsMain,
+          bitcoinPrice: widget.bitcoinPrice,
+        ),
+      );
+    }
+
+    // Add categorized confirmed items
     categorizedActivity.forEach((category, activityItems) {
       if (activityItems.isEmpty) return;
 
@@ -433,7 +566,14 @@ class _ActivityContainer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: activityItems.map((item) {
-                if (item is TransactionActivityItem) {
+                if (item is PendingActivityItem) {
+                  return _PendingTransactionItemWidget(
+                    pendingItem: item,
+                    hideAmounts: hideAmounts,
+                    showBtcAsMain: showBtcAsMain,
+                    bitcoinPrice: bitcoinPrice,
+                  );
+                } else if (item is TransactionActivityItem) {
                   return _TransactionItemWidget(
                     transaction: item.transaction,
                     aspId: aspId,
@@ -868,6 +1008,189 @@ class _SwapItemWidget extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Widget for displaying a pending transaction with a loading spinner
+class _PendingTransactionItemWidget extends StatelessWidget {
+  final PendingActivityItem pendingItem;
+  final bool hideAmounts;
+  final bool showBtcAsMain;
+  final double? bitcoinPrice;
+
+  const _PendingTransactionItemWidget({
+    required this.pendingItem,
+    required this.hideAmounts,
+    required this.showBtcAsMain,
+    this.bitcoinPrice,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final amountSats = pendingItem.amountSats;
+
+    // Determine status
+    final isSending = pendingItem.isSending;
+    final isSuccess = pendingItem.isSuccess;
+
+    // Status text
+    String statusText;
+    Color statusColor;
+    if (isSending) {
+      statusText = 'Sending...';
+      statusColor = AppTheme.colorBitcoin;
+    } else if (isSuccess) {
+      statusText = 'Sent!';
+      statusColor = AppTheme.successColor;
+    } else {
+      statusText = 'Failed';
+      statusColor = AppTheme.errorColor;
+    }
+
+    return RepaintBoundary(
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: AppTheme.elementSpacing,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(
+              left: AppTheme.elementSpacing * 0.75,
+              right: AppTheme.elementSpacing * 1,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // LEFT SIDE
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Icon with loading indicator
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        RoundedButtonWidget(
+                          iconData: Icons.north_east,
+                          iconColor: isSending
+                              ? AppTheme.colorBitcoin
+                              : (isSuccess
+                                  ? AppTheme.successColor
+                                  : AppTheme.errorColor),
+                          backgroundColor: (isSending
+                                  ? AppTheme.colorBitcoin
+                                  : (isSuccess
+                                      ? AppTheme.successColor
+                                      : AppTheme.errorColor))
+                              .withValues(alpha: 0.15),
+                          buttonType: ButtonType.secondary,
+                          size: AppTheme.cardPadding * 2,
+                          iconSize: AppTheme.cardPadding * 0.9,
+                        ),
+                        if (isSending)
+                          SizedBox(
+                            width: AppTheme.cardPadding * 2.3,
+                            height: AppTheme.cardPadding * 2.3,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppTheme.colorBitcoin.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: AppTheme.elementSpacing * 0.75),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: AppTheme.cardPadding * 6.5,
+                          child: Text(
+                            'Onchain Send',
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(
+                                  color: isDark
+                                      ? AppTheme.white90
+                                      : AppTheme.black90,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.elementSpacing / 2),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            if (isSending)
+                              SizedBox(
+                                width: 10,
+                                height: 10,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    statusColor,
+                                  ),
+                                ),
+                              )
+                            else
+                              Icon(
+                                isSuccess
+                                    ? Icons.check_circle_rounded
+                                    : Icons.error_rounded,
+                                size: AppTheme.cardPadding * 0.6,
+                                color: statusColor,
+                              ),
+                            const SizedBox(width: AppTheme.elementSpacing / 2),
+                            Text(
+                              statusText,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall!
+                                  .copyWith(
+                                    color: statusColor,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                // RIGHT SIDE
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    hideAmounts
+                        ? Text(
+                            '*****',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          )
+                        : Row(
+                            children: [
+                              Text(
+                                '${amountSats.abs()}',
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              Icon(
+                                AppTheme.satoshiIcon,
+                              ),
+                            ],
+                          ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
