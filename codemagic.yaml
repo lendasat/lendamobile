@@ -25,6 +25,11 @@ workflows:
         script: |
           source "$HOME/.cargo/env"
           cargo install flutter_rust_bridge_codegen
+      # Install cargo expand
+      - name: Install cargo expand
+        script: |
+          source "$HOME/.cargo/env"
+          cargo install cargo-expand
 
       # Generate FFI bindings (equivalent to: just ffi-build)
       - name: Generate FFI bindings
