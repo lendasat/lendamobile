@@ -2,7 +2,7 @@ workflows:
   ios-workflow:
     name: iOS Workflow
     integrations:
-      app_store_connect: NYS23J8UQG
+      app_store_connect: lendamobile-22.12.2025
     environment:
       ios_signing:
         distribution_type: app_store # or: ad_hoc | development | enterprise
