@@ -5,6 +5,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -224,12 +225,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       if (_lightningInvoice != null && _lightningInvoice!.isNotEmpty) {
         _startInvoiceTimer();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Lightning service temporarily unavailable"),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError("Lightning service temporarily unavailable");
         // Fall back to combined view
         setState(() {
           _receiveType = ReceiveType.combined;
@@ -237,12 +233,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       }
     } catch (e) {
       logger.e("Error fetching Lightning invoice: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Lightning error: ${e.toString().split('\n').first}"),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
+      OverlayService().showError("Lightning error: ${e.toString().split('\n').first}");
       // Fall back to combined view
       setState(() {
         _receiveType = ReceiveType.combined;
@@ -300,12 +291,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
           errorStr.contains('cancelled');
 
       if (!isExpectedError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!
-                .paymentMonitoringError(e.toString())),
-            backgroundColor: AppTheme.errorColor,
-          ),
+        OverlayService().showError(
+          AppLocalizations.of(context)!.paymentMonitoringError(e.toString()),
         );
       }
     }
@@ -411,13 +398,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   void _copyAddress() {
     final address = _getRawAddress();
     Clipboard.setData(ClipboardData(text: address));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context)!.addressCopiedToClipboard),
-        backgroundColor: AppTheme.successColor,
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    OverlayService().showSuccess(AppLocalizations.of(context)!.addressCopiedToClipboard);
   }
 
   void _shareAddress() {

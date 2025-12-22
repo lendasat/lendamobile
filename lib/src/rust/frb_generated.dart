@@ -85,7 +85,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -511400265;
+  int get rustContentHash => 1058841333;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -344,6 +344,8 @@ abstract class RustLibApi extends BaseApi {
       {required String address, required BigInt amountSats});
 
   Future<void> crateApiArkApiSettle();
+
+  Future<void> crateApiArkApiSettleBoarding();
 
   Future<String> crateApiArkApiSetupNewWallet(
       {required String dataDir,
@@ -2537,6 +2539,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiArkApiSettleBoarding() {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 81, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiArkApiSettleBoardingConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiArkApiSettleBoardingConstMeta =>
+      const TaskConstMeta(
+        debugName: "settle_boarding",
+        argNames: [],
+      );
+
+  @override
   Future<String> crateApiArkApiSetupNewWallet(
       {required String dataDir,
       required String network,
@@ -2552,7 +2578,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(server, serializer);
         sse_encode_String(boltzUrl, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 81, port: port_);
+            funcId: 82, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -2578,7 +2604,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_StreamSink_mempool_ws_message_Sse(sink, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 82, port: port_);
+            funcId: 83, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2605,7 +2631,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_StreamSink_mempool_ws_message_Sse(sink, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 83, port: port_);
+            funcId: 84, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2635,7 +2661,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_StreamSink_projected_block_transactions_Sse(
             sink, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 84, port: port_);
+            funcId: 85, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2664,7 +2690,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_StreamSink_projected_block_transactions_Sse(
             sink, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 85, port: port_);
+            funcId: 86, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2689,7 +2715,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 86, port: port_);
+            funcId: 87, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_transaction,
@@ -2720,7 +2746,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_opt_String(boltzSwapId, serializer);
         sse_encode_u_64(timeoutSeconds, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 87, port: port_);
+            funcId: 88, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_payment_received,
@@ -2750,7 +2776,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(dataDir, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 88, port: port_);
+            funcId: 89, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
@@ -2944,12 +2970,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BoardingUtxo dco_decode_boarding_utxo(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return BoardingUtxo(
       txid: dco_decode_String(arr[0]),
-      amountSats: dco_decode_u_64(arr[1]),
-      isConfirmed: dco_decode_bool(arr[2]),
+      vout: dco_decode_u_32(arr[1]),
+      amountSats: dco_decode_u_64(arr[2]),
+      isConfirmed: dco_decode_bool(arr[3]),
     );
   }
 
@@ -4159,6 +4186,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           isSettled: dco_decode_bool(raw[3]),
           createdAt: dco_decode_i_64(raw[4]),
         );
+      case 3:
+        return Transaction_Offboard(
+          txid: dco_decode_String(raw[1]),
+          amountSats: dco_decode_i_64(raw[2]),
+          confirmedAt: dco_decode_opt_box_autoadd_i_64(raw[3]),
+        );
       default:
         throw Exception("unreachable");
     }
@@ -4437,10 +4470,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BoardingUtxo sse_decode_boarding_utxo(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_txid = sse_decode_String(deserializer);
+    var var_vout = sse_decode_u_32(deserializer);
     var var_amountSats = sse_decode_u_64(deserializer);
     var var_isConfirmed = sse_decode_bool(deserializer);
     return BoardingUtxo(
         txid: var_txid,
+        vout: var_vout,
         amountSats: var_amountSats,
         isConfirmed: var_isConfirmed);
   }
@@ -5990,6 +6025,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             amountSats: var_amountSats,
             isSettled: var_isSettled,
             createdAt: var_createdAt);
+      case 3:
+        var var_txid = sse_decode_String(deserializer);
+        var var_amountSats = sse_decode_i_64(deserializer);
+        var var_confirmedAt = sse_decode_opt_box_autoadd_i_64(deserializer);
+        return Transaction_Offboard(
+            txid: var_txid,
+            amountSats: var_amountSats,
+            confirmedAt: var_confirmedAt);
       default:
         throw UnimplementedError('');
     }
@@ -6236,6 +6279,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_boarding_utxo(BoardingUtxo self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.txid, serializer);
+    sse_encode_u_32(self.vout, serializer);
     sse_encode_u_64(self.amountSats, serializer);
     sse_encode_bool(self.isConfirmed, serializer);
   }
@@ -7456,6 +7500,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_64(amountSats, serializer);
         sse_encode_bool(isSettled, serializer);
         sse_encode_i_64(createdAt, serializer);
+      case Transaction_Offboard(
+          txid: final txid,
+          amountSats: final amountSats,
+          confirmedAt: final confirmedAt
+        ):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(txid, serializer);
+        sse_encode_i_64(amountSats, serializer);
+        sse_encode_opt_box_autoadd_i_64(confirmedAt, serializer);
     }
   }
 

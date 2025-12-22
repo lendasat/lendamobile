@@ -1,5 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
@@ -181,12 +182,8 @@ class _CurrencyPickerBodyState extends State<_CurrencyPickerBody> {
       onTap: () async {
         await currencyService.setCurrency(currency);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  AppLocalizations.of(context)!.currencyUpdatedSuccessfully),
-              duration: const Duration(seconds: 2),
-            ),
+          OverlayService().showSuccess(
+            AppLocalizations.of(context)!.currencyUpdatedSuccessfully,
           );
         }
       },

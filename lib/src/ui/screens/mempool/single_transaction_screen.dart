@@ -3,6 +3,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
@@ -97,19 +98,14 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
     });
 
     try {
-      await ark_api.settle();
+      await ark_api.settleBoarding();
 
       if (mounted) {
         setState(() {
           _isSettling = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.transactionSettledSuccessfully),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
+        OverlayService().showSuccess(l10n.transactionSettledSuccessfully);
 
         Navigator.of(context).pop(true); // Return true to indicate settlement occurred
       }
@@ -119,12 +115,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
           _isSettling = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.failedToSettleTransaction} ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('${l10n.failedToSettleTransaction} ${e.toString()}');
       }
     }
   }
@@ -461,14 +452,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   ClipboardData(text: txID!),
                                                 );
                                                 if (context.mounted) {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        l10n.copiedToClipboard,
-                                                      ),
-                                                    ),
-                                                  );
+                                                  OverlayService().showSuccess(l10n.copiedToClipboard);
                                                 }
                                               },
                                               trailing: Row(
@@ -948,14 +932,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                             ClipboardData(text: txID!),
                                           );
                                           if (context.mounted) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  l10n.copiedToClipboard,
-                                                ),
-                                              ),
-                                            );
+                                            OverlayService().showSuccess(l10n.copiedToClipboard);
                                           }
                                         }
                                       : null,

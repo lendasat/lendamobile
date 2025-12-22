@@ -1,5 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/qr_scanner_overlay.dart';
@@ -64,25 +65,15 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           }
         } else {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  AppLocalizations.of(context)?.error ?? 'No QR code found in image',
-                ),
-                backgroundColor: AppTheme.errorColor,
-              ),
+            OverlayService().showError(
+              AppLocalizations.of(context)?.error ?? 'No QR code found in image',
             );
           }
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error scanning image: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Error scanning image: $e');
       }
     }
   }

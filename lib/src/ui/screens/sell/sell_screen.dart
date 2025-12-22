@@ -7,6 +7,7 @@ import 'package:ark_flutter/src/rust/models/moonpay.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/moonpay_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -213,12 +214,8 @@ class _SellScreenState extends State<SellScreen> {
     } catch (e) {
       logger.e('Error processing sell: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                '${AppLocalizations.of(context)!.failedToLaunchMoonpay}: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
+        OverlayService().showError(
+          '${AppLocalizations.of(context)!.failedToLaunchMoonpay}: ${e.toString()}',
         );
       }
     } finally {
