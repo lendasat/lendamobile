@@ -943,14 +943,14 @@ class WalletScreenState extends State<WalletScreen> {
                   height: 12,
                   child: CircularProgressIndicator(
                     strokeWidth: 1.5,
-                    color: AppTheme.colorBitcoin,
+                    color: Colors.grey,
                   ),
                 )
               else
                 Icon(
                   FontAwesomeIcons.arrowDown,
                   size: 12,
-                  color: AppTheme.colorBitcoin,
+                  color: Colors.grey,
                 ),
               const SizedBox(width: 6),
               Text(
@@ -960,14 +960,14 @@ class WalletScreenState extends State<WalletScreen> {
                         : currencyService.formatAmount(boardingFiat))
                     : '****',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.colorBitcoin,
+                      color: Colors.grey,
                     ),
               ),
               const SizedBox(width: 4),
               Text(
                 _isSettling ? 'settling...' : 'incoming',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.colorBitcoin.withValues(alpha: 0.7),
+                      color: Colors.grey,
                     ),
               ),
             ],

@@ -474,6 +474,7 @@ class _TransactionItemWidget extends StatelessWidget {
     String? transactionType,
     String? networkType,
     bool? isConfirmed,
+    bool isSettleable = false,
   }) {
     Navigator.push(
       context,
@@ -485,6 +486,7 @@ class _TransactionItemWidget extends StatelessWidget {
           transactionType: transactionType,
           networkType: networkType,
           isConfirmed: isConfirmed,
+          isSettleable: isSettleable,
         ),
       ),
     );
