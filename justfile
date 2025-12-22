@@ -1,5 +1,7 @@
 set dotenv-load := true
 
+mod flutter
+
 ## ------------------------
 ## rust helper functions
 ## ------------------------
