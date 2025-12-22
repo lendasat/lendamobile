@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -511400265;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1058841333;
 
 // Section: executor
 
@@ -3103,6 +3103,41 @@ fn wire__crate__api__ark_api__settle_impl(
         },
     )
 }
+fn wire__crate__api__ark_api__settle_boarding_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "settle_boarding",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::ark_api::settle_boarding().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__ark_api__setup_new_wallet_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -3672,10 +3707,12 @@ impl SseDecode for crate::api::ark_api::BoardingUtxo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_txid = <String>::sse_decode(deserializer);
+        let mut var_vout = <u32>::sse_decode(deserializer);
         let mut var_amountSats = <u64>::sse_decode(deserializer);
         let mut var_isConfirmed = <bool>::sse_decode(deserializer);
         return crate::api::ark_api::BoardingUtxo {
             txid: var_txid,
+            vout: var_vout,
             amount_sats: var_amountSats,
             is_confirmed: var_isConfirmed,
         };
@@ -5383,6 +5420,16 @@ impl SseDecode for crate::api::ark_api::Transaction {
                     created_at: var_createdAt,
                 };
             }
+            3 => {
+                let mut var_txid = <String>::sse_decode(deserializer);
+                let mut var_amountSats = <i64>::sse_decode(deserializer);
+                let mut var_confirmedAt = <Option<i64>>::sse_decode(deserializer);
+                return crate::api::ark_api::Transaction::Offboard {
+                    txid: var_txid,
+                    amount_sats: var_amountSats,
+                    confirmed_at: var_confirmedAt,
+                };
+            }
             _ => {
                 unimplemented!("");
             }
@@ -5786,24 +5833,25 @@ fn pde_ffi_dispatcher_primary_impl(
         78 => wire__crate__api__ark_api__restore_wallet_impl(port, ptr, rust_vec_len, data_len),
         79 => wire__crate__api__ark_api__send_impl(port, ptr, rust_vec_len, data_len),
         80 => wire__crate__api__ark_api__settle_impl(port, ptr, rust_vec_len, data_len),
-        81 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
-        82 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
-        83 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
+        81 => wire__crate__api__ark_api__settle_boarding_impl(port, ptr, rust_vec_len, data_len),
+        82 => wire__crate__api__ark_api__setup_new_wallet_impl(port, ptr, rust_vec_len, data_len),
+        83 => wire__crate__api__subscribe_mempool_updates_impl(port, ptr, rust_vec_len, data_len),
+        84 => wire__crate__api__mempool_ws__subscribe_mempool_updates_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        84 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
-        85 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
+        85 => wire__crate__api__track_mempool_block_impl(port, ptr, rust_vec_len, data_len),
+        86 => wire__crate__api__mempool_block_tracker__track_mempool_block_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        86 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
-        87 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
-        88 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
+        87 => wire__crate__api__ark_api__tx_history_impl(port, ptr, rust_vec_len, data_len),
+        88 => wire__crate__api__ark_api__wait_for_payment_impl(port, ptr, rust_vec_len, data_len),
+        89 => wire__crate__api__ark_api__wallet_exists_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -6038,6 +6086,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::ark_api::BoardingUtxo {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.txid.into_into_dart().into_dart(),
+            self.vout.into_into_dart().into_dart(),
             self.amount_sats.into_into_dart().into_dart(),
             self.is_confirmed.into_into_dart().into_dart(),
         ]
@@ -7410,6 +7459,17 @@ impl flutter_rust_bridge::IntoDart for crate::api::ark_api::Transaction {
                 created_at.into_into_dart().into_dart(),
             ]
             .into_dart(),
+            crate::api::ark_api::Transaction::Offboard {
+                txid,
+                amount_sats,
+                confirmed_at,
+            } => [
+                3.into_dart(),
+                txid.into_into_dart().into_dart(),
+                amount_sats.into_into_dart().into_dart(),
+                confirmed_at.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -7672,6 +7732,7 @@ impl SseEncode for crate::api::ark_api::BoardingUtxo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.txid, serializer);
+        <u32>::sse_encode(self.vout, serializer);
         <u64>::sse_encode(self.amount_sats, serializer);
         <bool>::sse_encode(self.is_confirmed, serializer);
     }
@@ -8950,6 +9011,16 @@ impl SseEncode for crate::api::ark_api::Transaction {
                 <i64>::sse_encode(amount_sats, serializer);
                 <bool>::sse_encode(is_settled, serializer);
                 <i64>::sse_encode(created_at, serializer);
+            }
+            crate::api::ark_api::Transaction::Offboard {
+                txid,
+                amount_sats,
+                confirmed_at,
+            } => {
+                <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(txid, serializer);
+                <i64>::sse_encode(amount_sats, serializer);
+                <Option<i64>>::sse_encode(confirmed_at, serializer);
             }
             _ => {
                 unimplemented!("");

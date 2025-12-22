@@ -2,6 +2,7 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -177,13 +178,9 @@ class _EmailSignupScreenState extends State<EmailSignupScreen> {
             !e.toString().toLowerCase().contains('exists')) {
           // Show warning but continue
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  AppLocalizations.of(context)!.registrationWarning,
-                ),
-                backgroundColor: Colors.orange,
-              ),
+            OverlayService().showOverlay(
+              AppLocalizations.of(context)!.registrationWarning,
+              color: Colors.orange,
             );
           }
         }

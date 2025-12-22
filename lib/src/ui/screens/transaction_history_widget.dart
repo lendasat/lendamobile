@@ -59,6 +59,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         boarding: (t) => debugPrint('TX DEBUG: Boarding (Onchain) - ${t.txid.substring(0, 8)}...'),
         round: (t) => debugPrint('TX DEBUG: Round (Arkade) - ${t.txid.substring(0, 8)}...'),
         redeem: (t) => debugPrint('TX DEBUG: Redeem isSettled=${t.isSettled} (${t.isSettled ? "Onchain" : "Arkade"}) - ${t.txid.substring(0, 8)}...'),
+        offboard: (t) => debugPrint('TX DEBUG: Offboard (Onchain Send) - ${t.txid.substring(0, 8)}...'),
       );
     }
     _filteredActivity = combineActivity(widget.transactions, widget.swaps);
@@ -119,6 +120,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                   return filterService.selectedFilters.contains('Arkade');
                 }
               },
+              // Offboard is always an on-chain send
+              offboard: (_) => filterService.selectedFilters.contains('Onchain'),
             );
           } else if (item is SwapActivityItem) {
             return filterService.selectedFilters.contains('Swap');
@@ -529,6 +532,19 @@ class _TransactionItemWidget extends StatelessWidget {
         // Ark virtual transactions stay within Arkade network
         'Arkade',
         isConfirmed: tx.isSettled,
+      ),
+      offboard: (tx) => _buildTransactionTile(
+        context,
+        'Onchain Send', // Offboard = collaborative redeem to on-chain
+        tx.txid,
+        tx.confirmedAt is BigInt
+            ? (tx.confirmedAt as BigInt).toInt()
+            : (tx.confirmedAt as int?) ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+        tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
+        showBtcAsMain,
+        hideAmounts,
+        'Onchain',
+        isConfirmed: tx.confirmedAt != null,
       ),
     );
   }

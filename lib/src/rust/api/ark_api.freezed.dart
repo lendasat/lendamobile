@@ -95,6 +95,7 @@ extension TransactionPatterns on Transaction {
     TResult Function(Transaction_Boarding value)? boarding,
     TResult Function(Transaction_Round value)? round,
     TResult Function(Transaction_Redeem value)? redeem,
+    TResult Function(Transaction_Offboard value)? offboard,
     required TResult orElse(),
   }) {
     final _that = this;
@@ -105,6 +106,8 @@ extension TransactionPatterns on Transaction {
         return round(_that);
       case Transaction_Redeem() when redeem != null:
         return redeem(_that);
+      case Transaction_Offboard() when offboard != null:
+        return offboard(_that);
       case _:
         return orElse();
     }
@@ -128,6 +131,7 @@ extension TransactionPatterns on Transaction {
     required TResult Function(Transaction_Boarding value) boarding,
     required TResult Function(Transaction_Round value) round,
     required TResult Function(Transaction_Redeem value) redeem,
+    required TResult Function(Transaction_Offboard value) offboard,
   }) {
     final _that = this;
     switch (_that) {
@@ -137,6 +141,8 @@ extension TransactionPatterns on Transaction {
         return round(_that);
       case Transaction_Redeem():
         return redeem(_that);
+      case Transaction_Offboard():
+        return offboard(_that);
     }
   }
 
@@ -157,6 +163,7 @@ extension TransactionPatterns on Transaction {
     TResult? Function(Transaction_Boarding value)? boarding,
     TResult? Function(Transaction_Round value)? round,
     TResult? Function(Transaction_Redeem value)? redeem,
+    TResult? Function(Transaction_Offboard value)? offboard,
   }) {
     final _that = this;
     switch (_that) {
@@ -166,6 +173,8 @@ extension TransactionPatterns on Transaction {
         return round(_that);
       case Transaction_Redeem() when redeem != null:
         return redeem(_that);
+      case Transaction_Offboard() when offboard != null:
+        return offboard(_that);
       case _:
         return null;
     }
@@ -194,6 +203,9 @@ extension TransactionPatterns on Transaction {
     TResult Function(String txid, PlatformInt64 amountSats, bool isSettled,
             PlatformInt64 createdAt)?
         redeem,
+    TResult Function(
+            String txid, PlatformInt64 amountSats, PlatformInt64? confirmedAt)?
+        offboard,
     required TResult orElse(),
   }) {
     final _that = this;
@@ -205,6 +217,8 @@ extension TransactionPatterns on Transaction {
       case Transaction_Redeem() when redeem != null:
         return redeem(
             _that.txid, _that.amountSats, _that.isSettled, _that.createdAt);
+      case Transaction_Offboard() when offboard != null:
+        return offboard(_that.txid, _that.amountSats, _that.confirmedAt);
       case _:
         return orElse();
     }
@@ -234,6 +248,9 @@ extension TransactionPatterns on Transaction {
     required TResult Function(String txid, PlatformInt64 amountSats,
             bool isSettled, PlatformInt64 createdAt)
         redeem,
+    required TResult Function(
+            String txid, PlatformInt64 amountSats, PlatformInt64? confirmedAt)
+        offboard,
   }) {
     final _that = this;
     switch (_that) {
@@ -244,6 +261,8 @@ extension TransactionPatterns on Transaction {
       case Transaction_Redeem():
         return redeem(
             _that.txid, _that.amountSats, _that.isSettled, _that.createdAt);
+      case Transaction_Offboard():
+        return offboard(_that.txid, _that.amountSats, _that.confirmedAt);
     }
   }
 
@@ -270,6 +289,9 @@ extension TransactionPatterns on Transaction {
     TResult? Function(String txid, PlatformInt64 amountSats, bool isSettled,
             PlatformInt64 createdAt)?
         redeem,
+    TResult? Function(
+            String txid, PlatformInt64 amountSats, PlatformInt64? confirmedAt)?
+        offboard,
   }) {
     final _that = this;
     switch (_that) {
@@ -280,6 +302,8 @@ extension TransactionPatterns on Transaction {
       case Transaction_Redeem() when redeem != null:
         return redeem(
             _that.txid, _that.amountSats, _that.isSettled, _that.createdAt);
+      case Transaction_Offboard() when offboard != null:
+        return offboard(_that.txid, _that.amountSats, _that.confirmedAt);
       case _:
         return null;
     }
@@ -560,6 +584,95 @@ class _$Transaction_RedeemCopyWithImpl<$Res>
           ? _self.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as PlatformInt64,
+    ));
+  }
+}
+
+/// @nodoc
+
+class Transaction_Offboard extends Transaction {
+  const Transaction_Offboard(
+      {required this.txid, required this.amountSats, this.confirmedAt})
+      : super._();
+
+  @override
+  final String txid;
+  @override
+  final PlatformInt64 amountSats;
+  final PlatformInt64? confirmedAt;
+
+  /// Create a copy of Transaction
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $Transaction_OffboardCopyWith<Transaction_Offboard> get copyWith =>
+      _$Transaction_OffboardCopyWithImpl<Transaction_Offboard>(
+          this, _$identity);
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is Transaction_Offboard &&
+            (identical(other.txid, txid) || other.txid == txid) &&
+            (identical(other.amountSats, amountSats) ||
+                other.amountSats == amountSats) &&
+            (identical(other.confirmedAt, confirmedAt) ||
+                other.confirmedAt == confirmedAt));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, txid, amountSats, confirmedAt);
+
+  @override
+  String toString() {
+    return 'Transaction.offboard(txid: $txid, amountSats: $amountSats, confirmedAt: $confirmedAt)';
+  }
+}
+
+/// @nodoc
+abstract mixin class $Transaction_OffboardCopyWith<$Res>
+    implements $TransactionCopyWith<$Res> {
+  factory $Transaction_OffboardCopyWith(Transaction_Offboard value,
+          $Res Function(Transaction_Offboard) _then) =
+      _$Transaction_OffboardCopyWithImpl;
+  @override
+  @useResult
+  $Res call(
+      {String txid, PlatformInt64 amountSats, PlatformInt64? confirmedAt});
+}
+
+/// @nodoc
+class _$Transaction_OffboardCopyWithImpl<$Res>
+    implements $Transaction_OffboardCopyWith<$Res> {
+  _$Transaction_OffboardCopyWithImpl(this._self, this._then);
+
+  final Transaction_Offboard _self;
+  final $Res Function(Transaction_Offboard) _then;
+
+  /// Create a copy of Transaction
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? txid = null,
+    Object? amountSats = null,
+    Object? confirmedAt = freezed,
+  }) {
+    return _then(Transaction_Offboard(
+      txid: null == txid
+          ? _self.txid
+          : txid // ignore: cast_nullable_to_non_nullable
+              as String,
+      amountSats: null == amountSats
+          ? _self.amountSats
+          : amountSats // ignore: cast_nullable_to_non_nullable
+              as PlatformInt64,
+      confirmedAt: freezed == confirmedAt
+          ? _self.confirmedAt
+          : confirmedAt // ignore: cast_nullable_to_non_nullable
+              as PlatformInt64?,
     ));
   }
 }

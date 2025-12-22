@@ -1,4 +1,5 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
@@ -174,12 +175,8 @@ class _TimezoneTile extends StatelessWidget {
       onTap: () async {
         await timezoneService.setTimezone(timezone.name);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  AppLocalizations.of(context)!.timezoneUpdatedSuccessfully),
-              duration: const Duration(seconds: 2),
-            ),
+          OverlayService().showSuccess(
+            AppLocalizations.of(context)!.timezoneUpdatedSuccessfully,
           );
         }
       },

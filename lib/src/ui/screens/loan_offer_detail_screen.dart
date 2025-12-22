@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -90,12 +91,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (!_lendasatService.isAuthenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please sign in first'),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
+      OverlayService().showError('Please sign in first');
       return;
     }
 
@@ -163,12 +159,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Collateral sent! Loan is being processed.'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
+        OverlayService().showSuccess('Collateral sent! Loan is being processed.');
 
         // Navigate to contract detail - it will show live status updates
         Navigator.pushReplacement(
@@ -181,12 +172,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     } catch (e) {
       logger.e('[Loan] Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Failed: ${e.toString()}');
       }
     } finally {
       if (mounted) {

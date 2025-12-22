@@ -1,5 +1,5 @@
 use ark_client::error::IntoError;
-use ark_client::{Blockchain, Error, SpendStatus};
+use ark_client::{Blockchain, Error, SpendStatus, TxStatus};
 use ark_core::ExplorerUtxo;
 use bitcoin::OutPoint;
 use bitcoin::{Address, Amount, Transaction, Txid};
@@ -111,6 +111,20 @@ impl Blockchain for EsploraClient {
             self.broadcast(tx).await?;
         }
         Ok(())
+    }
+
+    async fn get_tx_status(&self, txid: &Txid) -> Result<TxStatus, Error> {
+        let res = self.esplora_client.get_tx_status(txid).await;
+
+        match res {
+            Ok(status) => Ok(TxStatus {
+                confirmed_at: status.block_time.map(|t| t as i64),
+            }),
+            Err(e) => {
+                tracing::error!("Could not fetch tx status {e:#}");
+                Err(format!("Could not fetch tx status {e:#}").into_error())
+            }
+        }
     }
 }
 

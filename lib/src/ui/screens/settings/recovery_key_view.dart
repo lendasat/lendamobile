@@ -1,5 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -273,13 +274,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   void _copyToClipboard() {
     if (_mnemonic != null) {
       Clipboard.setData(ClipboardData(text: _mnemonic!));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.recoveryPhraseCopiedToClipboard,
-          ),
-          backgroundColor: AppTheme.successColor,
-        ),
+      OverlayService().showSuccess(
+        AppLocalizations.of(context)!.recoveryPhraseCopiedToClipboard,
       );
     }
   }

@@ -6,6 +6,7 @@ import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
@@ -323,13 +324,7 @@ class WalletScreenState extends State<WalletScreen> {
       await _fetchBoardingBalance();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Funds settled successfully!'),
-            duration: const Duration(seconds: 2),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
+        OverlayService().showSuccess('Funds settled successfully!');
       }
     } catch (e) {
       logger.e("Error settling boarding UTXOs: $e");
@@ -358,7 +353,7 @@ class WalletScreenState extends State<WalletScreen> {
     } catch (e) {
       logger.e("Error fetching transaction history: $e");
       if (mounted) {
-        _showErrorSnackbar(
+        _showError(
             "${AppLocalizations.of(context)!.couldntUpdateTransactions} ${e.toString()}");
       }
     } finally {
@@ -396,7 +391,7 @@ class WalletScreenState extends State<WalletScreen> {
       });
 
       if (mounted) {
-        _showErrorSnackbar(
+        _showError(
             "${AppLocalizations.of(context)!.couldntUpdateBalance} ${e.toString()}");
       }
     }
@@ -417,14 +412,9 @@ class WalletScreenState extends State<WalletScreen> {
       }
     });
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context)!
-            .showingBalanceType(_currentBalanceType.name)),
-        duration: const Duration(seconds: 1),
-        backgroundColor: AppTheme.colorBitcoin,
-      ),
+    OverlayService().showOverlay(
+      AppLocalizations.of(context)!.showingBalanceType(_currentBalanceType.name),
+      color: AppTheme.colorBitcoin,
     );
   }
 
@@ -432,18 +422,8 @@ class WalletScreenState extends State<WalletScreen> {
     context.read<CurrencyPreferenceService>().toggleShowCoinBalance();
   }
 
-  void _showErrorSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppTheme.errorColor,
-        action: SnackBarAction(
-          label: AppLocalizations.of(context)!.retry,
-          textColor: Colors.white,
-          onPressed: fetchWalletData,
-        ),
-      ),
-    );
+  void _showError(String message) {
+    OverlayService().showError(message);
   }
 
   double _getSelectedBalance() {
@@ -909,7 +889,7 @@ class WalletScreenState extends State<WalletScreen> {
               Text(
                 'locked',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
               ),
             ],
@@ -943,14 +923,14 @@ class WalletScreenState extends State<WalletScreen> {
                   height: 12,
                   child: CircularProgressIndicator(
                     strokeWidth: 1.5,
-                    color: Colors.grey,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 )
               else
                 Icon(
                   FontAwesomeIcons.arrowDown,
                   size: 12,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               const SizedBox(width: 6),
               Text(
@@ -960,14 +940,14 @@ class WalletScreenState extends State<WalletScreen> {
                         : currencyService.formatAmount(boardingFiat))
                     : '****',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
               ),
               const SizedBox(width: 4),
               Text(
                 _isSettling ? 'settling...' : 'incoming',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
               ),
             ],

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -182,12 +183,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   Future<void> _copyToClipboard(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Copied to clipboard'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      OverlayService().showSuccess('Copied to clipboard');
     }
   }
 
@@ -689,12 +685,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     } catch (e) {
       logger.e('Failed to claim via WalletConnect: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to claim: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Failed to claim: ${e.toString()}');
       }
     } finally {
       if (mounted) {

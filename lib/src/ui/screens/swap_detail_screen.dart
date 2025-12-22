@@ -3,6 +3,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
@@ -105,12 +106,7 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
   Future<void> _copyToClipboard(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Copied to clipboard'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      OverlayService().showSuccess('Copied to clipboard');
     }
   }
 
@@ -126,23 +122,13 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
     try {
       final txid = await _swapService.refundVhtlc(widget.swapId, refundAddress);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Refund initiated: ${_truncateId(txid)}'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
+        OverlayService().showSuccess('Refund initiated: ${_truncateId(txid)}');
         await _loadSwapInfo();
       }
     } catch (e) {
       logger.e('Refund failed: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Refund failed: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Refund failed: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -162,36 +148,21 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
         logger.i('Claiming BTC→EVM swap via Gelato');
         await _swapService.claimGelato(widget.swapId);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Claim submitted! Funds will arrive shortly.'),
-              backgroundColor: AppTheme.successColor,
-            ),
-          );
+          OverlayService().showSuccess('Claim submitted! Funds will arrive shortly.');
         }
       } else if (_swapInfo!.canClaimVhtlc) {
         // EVM → BTC: Claim VHTLC
         logger.i('Claiming EVM→BTC swap via VHTLC');
         final txid = await _swapService.claimVhtlc(widget.swapId);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Claimed! TXID: ${_truncateId(txid)}'),
-              backgroundColor: AppTheme.successColor,
-            ),
-          );
+          OverlayService().showSuccess('Claimed! TXID: ${_truncateId(txid)}');
         }
       }
       await _loadSwapInfo();
     } catch (e) {
       logger.e('Claim failed: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Claim failed: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService().showError('Claim failed: ${e.toString()}');
       }
     } finally {
       if (mounted) {

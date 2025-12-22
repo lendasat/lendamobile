@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/rust/api.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/language_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
@@ -176,6 +177,7 @@ class MyApp extends StatelessWidget {
             title: 'Ark - Flutter - Sample',
             theme: themeProvider.getMaterialTheme(),
             locale: languageService.currentLocale,
+            navigatorKey: OverlayService.navigatorKey,
             navigatorObservers: [PosthogObserver()],
             localizationsDelegates: const [
               AppLocalizations.delegate,

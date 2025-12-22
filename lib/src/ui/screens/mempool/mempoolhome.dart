@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/api/mempool_ws.dart' as mempool_ws;
@@ -673,11 +674,7 @@ class _MempoolHomeState extends State<MempoolHome> {
           blockId: block.id,
           onClose: _closeBlockDetails,
           onCopied: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalizations.of(context)!.copiedToClipboard),
-              ),
-            );
+            OverlayService().showSuccess(AppLocalizations.of(context)!.copiedToClipboard);
           },
         ),
 
