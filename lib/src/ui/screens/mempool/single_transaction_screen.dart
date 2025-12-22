@@ -215,7 +215,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                       margin: const EdgeInsets.only(bottom: AppTheme.elementSpacing),
                       decoration: BoxDecoration(
                         color: AppTheme.colorBitcoin.withAlpha(30),
-                        borderRadius: BorderRadius.circular(AppTheme.cardRadiusSmall),
+                        borderRadius: AppTheme.cardRadiusSmall,
                       ),
                       child: Row(
                         children: [
@@ -235,7 +235,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                       ),
                     ),
                     LongButtonWidget(
-                      title: _isSettling ? l10n.settling : l10n.settle,
+                      title: _isSettling ? l10n.settlingTransaction : l10n.settle,
                       customWidth: double.infinity,
                       customHeight: 48,
                       isLoading: _isSettling,

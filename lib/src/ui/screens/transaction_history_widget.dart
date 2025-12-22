@@ -505,6 +505,7 @@ class _TransactionItemWidget extends StatelessWidget {
         hideAmounts,
         'Onchain',
         isConfirmed: tx.confirmedAt != null,
+        isSettleable: true, // Boarding transactions can always be settled
       ),
       round: (tx) => _buildTransactionTile(
         context,
@@ -542,6 +543,7 @@ class _TransactionItemWidget extends StatelessWidget {
     bool hideAmounts,
     String network, {
     bool isConfirmed = true,
+    bool isSettleable = false,
   }) {
     final currencyService = context.watch<CurrencyPreferenceService>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -568,6 +570,7 @@ class _TransactionItemWidget extends StatelessWidget {
             transactionType: transactionType,
             networkType: network,
             isConfirmed: isConfirmed,
+            isSettleable: isSettleable,
           ),
           child: Container(
             padding: const EdgeInsets.symmetric(
