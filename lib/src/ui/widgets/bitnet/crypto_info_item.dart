@@ -83,10 +83,11 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
                       SizedBox(width: AppTheme.elementSpacing / 1.5),
                       Text(
                         widget.currency.name,
-                        style: Theme.of(widget.context).textTheme.titleSmall!
+                        style: Theme.of(widget.context)
+                            .textTheme
+                            .titleSmall!
                             .copyWith(
-                              color:
-                                  Theme.of(context).brightness ==
+                              color: Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? AppTheme.white90
                                   : AppTheme.black90,

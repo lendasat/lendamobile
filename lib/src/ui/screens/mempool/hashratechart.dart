@@ -107,8 +107,7 @@ class _HashrateChartState extends State<HashrateChart> {
     return Column(
       children: [
         Container(
-          margin:
-              const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+          margin: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
           child: HashRealTimeValues(key: hashKey),
         ),
         widget.chartData.isEmpty

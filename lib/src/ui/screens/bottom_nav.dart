@@ -35,7 +35,8 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
   BigInt? _lastKnownBalance;
 
   // Key for WalletScreen to trigger refresh
-  final GlobalKey<WalletScreenState> _walletKey = GlobalKey<WalletScreenState>();
+  final GlobalKey<WalletScreenState> _walletKey =
+      GlobalKey<WalletScreenState>();
   // Key for SwapScreen to unfocus text fields
   final GlobalKey<SwapScreenState> _swapKey = GlobalKey<SwapScreenState>();
 
@@ -97,7 +98,8 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
       final currentBalance = balanceResult.offchain.totalSats;
       final previousBalance = _lastKnownBalance!;
 
-      logger.i("Checking for missed payments - Previous: $previousBalance, Current: $currentBalance");
+      logger.i(
+          "Checking for missed payments - Previous: $previousBalance, Current: $currentBalance");
 
       if (currentBalance > previousBalance) {
         final difference = currentBalance - previousBalance;
@@ -112,12 +114,14 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
               boarding: (t) => t.amountSats,
               round: (t) => t.amountSats,
               redeem: (t) => t.amountSats,
+              offboard: (t) => BigInt.from(t.amountSats),
             ) as BigInt;
 
             final txid = tx.map(
               boarding: (t) => t.txid,
               round: (t) => t.txid,
               redeem: (t) => t.txid,
+              offboard: (t) => t.txid,
             );
 
             // Check if this is a positive (incoming) transaction
@@ -203,7 +207,8 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
         // Check if notifications are suppressed (e.g., during swap/send operations)
         final overlayService = PaymentOverlayService();
         if (overlayService.suppressPaymentNotifications) {
-          logger.i("Payment notification suppressed (likely change from outgoing tx)");
+          logger.i(
+              "Payment notification suppressed (likely change from outgoing tx)");
         } else {
           // Show the payment overlay
           overlayService.showPaymentReceivedOverlay(
@@ -294,8 +299,10 @@ class _BottomNavState extends State<BottomNav> with WidgetsBindingObserver {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     _buildNavItem(0, FontAwesomeIcons.wallet, isLight),
-                    _buildNavItem(1, FontAwesomeIcons.arrowRightArrowLeft, isLight),
-                    _buildNavItem(2, FontAwesomeIcons.handHoldingDollar, isLight),
+                    _buildNavItem(
+                        1, FontAwesomeIcons.arrowRightArrowLeft, isLight),
+                    _buildNavItem(
+                        2, FontAwesomeIcons.handHoldingDollar, isLight),
                   ],
                 ),
               ),

@@ -98,7 +98,9 @@ class _LanguagePickerBodyState extends State<_LanguagePickerBody> {
           final languageName = languages[languageCode]!;
 
           if (_searchText.isNotEmpty &&
-              !languageName.toLowerCase().startsWith(_searchText.toLowerCase())) {
+              !languageName
+                  .toLowerCase()
+                  .startsWith(_searchText.toLowerCase())) {
             return const SizedBox.shrink();
           }
 

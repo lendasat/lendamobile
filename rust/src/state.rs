@@ -4,8 +4,8 @@ use crate::frb_generated::StreamSink;
 use crate::logger::LogEntry;
 use ark_bdk_wallet::Wallet;
 use ark_client::{Bip32KeyProvider, Client, Error, KeyProvider, SqliteSwapStorage};
-use bitcoin::key::Keypair;
 use bitcoin::XOnlyPublicKey;
+use bitcoin::key::Keypair;
 use parking_lot::RwLock;
 use state::InitCell;
 use std::sync::Arc;
@@ -76,12 +76,8 @@ impl KeyProvider for UnifiedKeyProvider {
 
 /// Type alias for the Ark client with HD key provider
 #[allow(clippy::type_complexity)]
-pub type ArkClient = Client<
-    EsploraClient,
-    Wallet<InMemoryDb>,
-    SqliteSwapStorage,
-    UnifiedKeyProvider,
->;
+pub type ArkClient =
+    Client<EsploraClient, Wallet<InMemoryDb>, SqliteSwapStorage, UnifiedKeyProvider>;
 
 #[allow(clippy::type_complexity)]
 pub static ARK_CLIENT: InitCell<RwLock<Arc<ArkClient>>> = InitCell::new();

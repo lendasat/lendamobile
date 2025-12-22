@@ -357,9 +357,9 @@ impl Contract {
 
     /// Check if all installments are paid
     pub fn is_fully_repaid(&self) -> bool {
-        self.installments
-            .iter()
-            .all(|i| i.status == InstallmentStatus::Confirmed || i.status == InstallmentStatus::Cancelled)
+        self.installments.iter().all(|i| {
+            i.status == InstallmentStatus::Confirmed || i.status == InstallmentStatus::Cancelled
+        })
     }
 }
 

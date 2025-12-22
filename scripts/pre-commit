@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Pre-commit hook for auto-formatting
+# Runs dart format and dprint fmt on staged files
+
+set -e
+
+echo "Running pre-commit formatting checks..."
+
+# Get list of staged Dart files (excluding generated files)
+STAGED_DART_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.dart$' | grep -v '\.freezed\.dart$' | grep -v '\.g\.dart$' | grep -v 'frb_generated' || true)
+
+# Get list of staged Rust files (excluding generated files)
+STAGED_RUST_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.rs$' | grep -v 'frb_generated' || true)
+
+# Format staged Dart files
+if [ -n "$STAGED_DART_FILES" ]; then
+    echo "Formatting Dart files..."
+    echo "$STAGED_DART_FILES" | xargs dart format --output=write 2>/dev/null || true
+    echo "$STAGED_DART_FILES" | xargs git add
+fi
+
+# Format staged Rust files
+if [ -n "$STAGED_RUST_FILES" ]; then
+    echo "Formatting Rust files..."
+    for file in $STAGED_RUST_FILES; do
+        if [ -f "$file" ]; then
+            rustfmt +nightly "$file" 2>/dev/null || rustfmt "$file" 2>/dev/null || true
+            git add "$file"
+        fi
+    done
+fi
+
+# Run dprint if available (handles JSON, YAML, TOML, Markdown)
+if command -v dprint &> /dev/null; then
+    STAGED_OTHER_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(json|yaml|yml|toml|md)$' || true)
+    if [ -n "$STAGED_OTHER_FILES" ]; then
+        echo "Formatting config files with dprint..."
+        dprint fmt 2>/dev/null || true
+        echo "$STAGED_OTHER_FILES" | xargs git add 2>/dev/null || true
+    fi
+fi
+
+echo "Pre-commit formatting complete!"
+exit 0

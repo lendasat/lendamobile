@@ -77,7 +77,8 @@ class LendaSwapService extends ChangeNotifier {
       // but the user has previous swaps associated with their mnemonic
       if (_swaps.isEmpty) {
         try {
-          logger.i('No local swaps found, attempting to recover from server...');
+          logger
+              .i('No local swaps found, attempting to recover from server...');
           final recoveredSwaps = await lendaswap_api.lendaswapRecoverSwaps();
           if (recoveredSwaps.isNotEmpty) {
             _swaps = recoveredSwaps;
@@ -150,7 +151,8 @@ class LendaSwapService extends ChangeNotifier {
     try {
       final result = await lendaswap_api.lendaswapCreateBtcToEvmSwap(
         targetEvmAddress: targetEvmAddress,
-        targetAmountUsd: targetAmount, // API still uses this name but it's actually token amount
+        targetAmountUsd:
+            targetAmount, // API still uses this name but it's actually token amount
         targetToken: targetToken,
         targetChain: targetChain,
         referralCode: referralCode,
@@ -186,7 +188,8 @@ class LendaSwapService extends ChangeNotifier {
       final result = await lendaswap_api.lendaswapCreateEvmToBtcSwap(
         targetArkAddress: targetArkAddress,
         userEvmAddress: userEvmAddress,
-        sourceAmountUsd: sourceAmount, // API still uses this name but it's actually token amount
+        sourceAmountUsd:
+            sourceAmount, // API still uses this name but it's actually token amount
         sourceToken: sourceToken,
         sourceChain: sourceChain,
         referralCode: referralCode,

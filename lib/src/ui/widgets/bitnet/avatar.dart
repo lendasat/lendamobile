@@ -38,7 +38,6 @@ class Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     final avatarSize = size ?? AppTheme.cardPadding * 1.5;
@@ -107,7 +106,10 @@ class Avatar extends StatelessWidget {
         color: backgroundColor ??
             (isLight
                 ? Colors.black.withValues(alpha: 0.04)
-                : Theme.of(context).colorScheme.secondary.withValues(alpha: 0.5)),
+                : Theme.of(context)
+                    .colorScheme
+                    .secondary
+                    .withValues(alpha: 0.5)),
         borderRadius: type == ProfilePictureType.square
             ? BorderRadius.circular(size / 4)
             : BorderRadius.circular(size / 3),

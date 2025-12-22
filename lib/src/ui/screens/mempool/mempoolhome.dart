@@ -619,8 +619,7 @@ class _MempoolHomeState extends State<MempoolHome> {
         ),
 
         Container(
-          margin:
-              const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+          margin: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
           child: Column(
             children: [
               const SizedBox(height: AppTheme.cardPadding),
@@ -674,7 +673,8 @@ class _MempoolHomeState extends State<MempoolHome> {
           blockId: block.id,
           onClose: _closeBlockDetails,
           onCopied: () {
-            OverlayService().showSuccess(AppLocalizations.of(context)!.copiedToClipboard);
+            OverlayService()
+                .showSuccess(AppLocalizations.of(context)!.copiedToClipboard);
           },
         ),
 
@@ -698,8 +698,7 @@ class _MempoolHomeState extends State<MempoolHome> {
         ),
 
         Container(
-          margin:
-              const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+          margin: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

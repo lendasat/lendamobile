@@ -55,8 +55,6 @@ class AmountInputScreenState extends State<AmountInputScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: BitNetAppBar(
@@ -148,8 +146,6 @@ class AmountInputScreenState extends State<AmountInputScreen> {
   }
 
   Widget _buildNumberButton(String number, {VoidCallback? onPressed}) {
-    
-
     return SizedBox(
       width: 80,
       height: 80,

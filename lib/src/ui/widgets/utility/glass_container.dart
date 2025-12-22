@@ -78,7 +78,9 @@ class GlassContainer extends StatelessWidget {
                   ? boxShadow!
                   : Theme.of(context).brightness == Brightness.light
                       ? [] // No shadows in light mode
-                      : [AppTheme.boxShadowSuperSmall], // Minimal shadow in dark mode
+                      : [
+                          AppTheme.boxShadowSuperSmall
+                        ], // Minimal shadow in dark mode
         ),
         child: child,
       ),

@@ -19,9 +19,8 @@ class PercentageChangeWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     // Fixed logic: Only treat zero percentages as positive, not all positive values
     final isReallyPositive = isPositive && !percentage.trim().startsWith('-');
-    final color = isReallyPositive
-        ? AppTheme.successColor
-        : AppTheme.errorColor;
+    final color =
+        isReallyPositive ? AppTheme.successColor : AppTheme.errorColor;
 
     return Container(
       padding: EdgeInsets.symmetric(

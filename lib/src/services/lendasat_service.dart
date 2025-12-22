@@ -115,7 +115,8 @@ class LendasatService extends ChangeNotifier {
       );
 
       _isInitialized = true;
-      logger.i('Lendasat initialized on network: $network (API key: ${apiKey != null ? "present" : "none"})');
+      logger.i(
+          'Lendasat initialized on network: $network (API key: ${apiKey != null ? "present" : "none"})');
 
       // Check if already authenticated
       _isAuthenticated = await lendasat_api.lendasatIsAuthenticated();
@@ -162,7 +163,8 @@ class LendasatService extends ChangeNotifier {
         logger.i('Lendasat: Authenticated as ${result.userName}');
       } else if (result is lendasat_api.AuthResult_NeedsRegistration) {
         _publicKey = result.pubkey;
-        logger.i('Lendasat: User needs to register with pubkey: ${result.pubkey}');
+        logger.i(
+            'Lendasat: User needs to register with pubkey: ${result.pubkey}');
       }
 
       notifyListeners();
@@ -252,9 +254,10 @@ class LendasatService extends ChangeNotifier {
     try {
       // Default to Arkade collateral filter if not specified
       // Our mobile wallet uses Arkade, so we only show compatible offers
-      final effectiveFilters = filters ?? const OfferFilters(
-        collateralAssetType: 'Arkade',
-      );
+      final effectiveFilters = filters ??
+          const OfferFilters(
+            collateralAssetType: 'Arkade',
+          );
 
       _offers = await lendasat_api.lendasatGetOffers(filters: effectiveFilters);
       logger.i('Lendasat: Loaded ${_offers.length} Arkade offers');
@@ -283,11 +286,12 @@ class LendasatService extends ChangeNotifier {
   /// Automatically re-authenticates if token is expired.
   Future<void> refreshContracts({ContractFilters? filters}) async {
     try {
-      final response = await _withAutoReauth(() =>
-          lendasat_api.lendasatGetContracts(filters: filters));
+      final response = await _withAutoReauth(
+          () => lendasat_api.lendasatGetContracts(filters: filters));
       _contracts = response.data;
       _totalContracts = response.total;
-      logger.i('Lendasat: Loaded ${_contracts.length} contracts (total: $_totalContracts)');
+      logger.i(
+          'Lendasat: Loaded ${_contracts.length} contracts (total: $_totalContracts)');
       notifyListeners();
     } catch (e) {
       logger.e('Error fetching contracts: $e');
@@ -299,8 +303,8 @@ class LendasatService extends ChangeNotifier {
   /// Automatically re-authenticates if token is expired.
   Future<Contract> getContract(String contractId) async {
     try {
-      final contract = await _withAutoReauth(() =>
-          lendasat_api.lendasatGetContract(contractId: contractId));
+      final contract = await _withAutoReauth(
+          () => lendasat_api.lendasatGetContract(contractId: contractId));
 
       // Update in local list if exists
       final index = _contracts.indexWhere((c) => c.id == contractId);
@@ -322,7 +326,9 @@ class LendasatService extends ChangeNotifier {
       return await apiCall();
     } catch (e) {
       final errorStr = e.toString();
-      if (errorStr.contains('401') || errorStr.contains('Unauthorized') || errorStr.contains('Invalid token')) {
+      if (errorStr.contains('401') ||
+          errorStr.contains('Unauthorized') ||
+          errorStr.contains('Invalid token')) {
         logger.w('Lendasat: Token expired, attempting re-authentication...');
         try {
           await authenticate();
@@ -346,13 +352,13 @@ class LendasatService extends ChangeNotifier {
     String? borrowerLoanAddress,
   }) async {
     try {
-      final contract = await _withAutoReauth(() =>
-          lendasat_api.lendasatCreateContract(
-            offerId: offerId,
-            loanAmount: loanAmount,
-            durationDays: durationDays,
-            borrowerLoanAddress: borrowerLoanAddress,
-          ));
+      final contract =
+          await _withAutoReauth(() => lendasat_api.lendasatCreateContract(
+                offerId: offerId,
+                loanAmount: loanAmount,
+                durationDays: durationDays,
+                borrowerLoanAddress: borrowerLoanAddress,
+              ));
 
       logger.i('Lendasat: Created contract ${contract.id}');
 
@@ -595,8 +601,7 @@ class LendasatService extends ChangeNotifier {
       signedForfeitPsbts: signedForfeitPsbts,
     );
 
-    logger.i(
-        'Lendasat: Settlement finished, commitment txid: $commitmentTxid');
+    logger.i('Lendasat: Settlement finished, commitment txid: $commitmentTxid');
 
     return commitmentTxid;
   }
@@ -809,8 +814,7 @@ extension ContractExtension on Contract {
 
   /// Check if contract is awaiting collateral deposit.
   bool get isAwaitingDeposit =>
-      status == ContractStatus.approved ||
-      status == ContractStatus.requested;
+      status == ContractStatus.approved || status == ContractStatus.requested;
 
   /// Check if contract has collateral confirmed.
   bool get hasCollateralConfirmed =>
@@ -848,7 +852,8 @@ extension ContractExtension on Contract {
   double get depositedBtc => depositedSats.toInt() / 100000000.0;
 
   /// Get initial collateral in BTC.
-  double get initialCollateralBtc => initialCollateralSats.toInt() / 100000000.0;
+  double get initialCollateralBtc =>
+      initialCollateralSats.toInt() / 100000000.0;
 
   /// Get effective collateral in sats (uses initialCollateralSats as fallback).
   /// This is needed because the backend may populate initial_collateral_sats
@@ -882,16 +887,16 @@ extension ContractExtension on Contract {
   }
 
   /// Get paid installments.
-  List<Installment> get paidInstallments =>
-      installments
-          .where((i) =>
-              i.status == InstallmentStatus.paid ||
-              i.status == InstallmentStatus.confirmed)
-          .toList();
+  List<Installment> get paidInstallments => installments
+      .where((i) =>
+          i.status == InstallmentStatus.paid ||
+          i.status == InstallmentStatus.confirmed)
+      .toList();
 
   /// Get total amount paid so far.
   double get totalPaid {
-    return paidInstallments.fold(0.0, (sum, i) => sum + i.principal + i.interest);
+    return paidInstallments.fold(
+        0.0, (sum, i) => sum + i.principal + i.interest);
   }
 
   /// Get remaining balance.
@@ -1053,7 +1058,8 @@ extension LoanOfferExtension on LoanOffer {
   }
 
   /// Get interest rate as percentage string.
-  String get interestRatePercent => '${(interestRate * 100).toStringAsFixed(2)}%';
+  String get interestRatePercent =>
+      '${(interestRate * 100).toStringAsFixed(2)}%';
 
   /// Get origination fee for a given duration.
   double getOriginationFee(int durationDays) {

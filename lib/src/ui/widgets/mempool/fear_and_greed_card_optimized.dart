@@ -213,9 +213,7 @@ class FearAndGreedCardOptimized extends StatelessWidget {
         Text(
           '${isPositive ? '+' : ''}$change',
           style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                color: isPositive
-                    ? AppTheme.successColor
-                    : AppTheme.errorColor,
+                color: isPositive ? AppTheme.successColor : AppTheme.errorColor,
                 fontWeight: FontWeight.w600,
               ),
         ),

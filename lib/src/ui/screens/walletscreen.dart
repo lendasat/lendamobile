@@ -175,7 +175,8 @@ class WalletScreenState extends State<WalletScreen> {
   /// - Had balance, now zero: loss (red) - user withdrew/spent everything
   /// - Had zero, now have balance: gain (green) - user received first deposit
   /// - Otherwise: compare portfolio values
-  bool _isBalanceChangePositive(double firstBalance, double lastBalance, double firstValue, double lastValue) {
+  bool _isBalanceChangePositive(double firstBalance, double lastBalance,
+      double firstValue, double lastValue) {
     // 1 satoshi threshold for "essentially zero" (handles floating point precision)
     const satoshiThreshold = 0.00000001;
 
@@ -203,7 +204,7 @@ class WalletScreenState extends State<WalletScreen> {
 
     // Calculate portfolio value change (balance at time × price)
     final firstData = _bitcoinPriceData.first;
-    
+
     // Compare first point with the ACTUAL current state (not the last price point which might be stale)
     final firstBalance = _getBalanceAtTimestamp(firstData.time);
     final currentBalance = _getSelectedBalance();
@@ -212,7 +213,8 @@ class WalletScreenState extends State<WalletScreen> {
     final firstValue = firstData.price * firstBalance;
     final currentValue = currentPrice * currentBalance;
 
-    return _isBalanceChangePositive(firstBalance, currentBalance, firstValue, currentValue);
+    return _isBalanceChangePositive(
+        firstBalance, currentBalance, firstValue, currentValue);
   }
 
   /// Fetches all wallet data (balance, transactions, swaps, and locked collateral)
@@ -280,7 +282,8 @@ class WalletScreenState extends State<WalletScreen> {
             _lockedCollateralSats = totalLocked;
           });
         }
-        logger.i("Locked collateral: $_lockedCollateralSats sats from ${_lendasatService.activeContracts.length} active contracts");
+        logger.i(
+            "Locked collateral: $_lockedCollateralSats sats from ${_lendasatService.activeContracts.length} active contracts");
       }
     } catch (e) {
       // Silently handle errors - locked collateral display is optional
@@ -413,7 +416,8 @@ class WalletScreenState extends State<WalletScreen> {
     });
 
     OverlayService().showOverlay(
-      AppLocalizations.of(context)!.showingBalanceType(_currentBalanceType.name),
+      AppLocalizations.of(context)!
+          .showingBalanceType(_currentBalanceType.name),
       color: AppTheme.colorBitcoin,
     );
   }
@@ -689,18 +693,36 @@ class WalletScreenState extends State<WalletScreen> {
     // These include all boarding, round, and redeem transactions
     for (final tx in _transactions) {
       final txTimestamp = tx.map(
-        boarding: (t) => (t.confirmedAt is BigInt ? (t.confirmedAt as BigInt).toInt() : t.confirmedAt as int?) ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000),
-        round: (t) => t.createdAt is BigInt ? (t.createdAt as BigInt).toInt() : t.createdAt as int,
-        redeem: (t) => t.createdAt is BigInt ? (t.createdAt as BigInt).toInt() : t.createdAt as int,
+        boarding: (t) =>
+            (t.confirmedAt is BigInt
+                ? (t.confirmedAt as BigInt).toInt()
+                : t.confirmedAt as int?) ??
+            (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+        round: (t) => t.createdAt is BigInt
+            ? (t.createdAt as BigInt).toInt()
+            : t.createdAt as int,
+        redeem: (t) => t.createdAt is BigInt
+            ? (t.createdAt as BigInt).toInt()
+            : t.createdAt as int,
+        offboard: (t) =>
+            (t.confirmedAt is BigInt
+                ? (t.confirmedAt as BigInt).toInt()
+                : t.confirmedAt as int?) ??
+            (DateTime.now().millisecondsSinceEpoch ~/ 1000),
       );
 
       // Only count transactions that happened AFTER our target point
       if (txTimestamp > timestampSec) {
         final amountSats = tx.map(
           boarding: (t) => t.amountSats.toInt(),
-          round: (t) => t.amountSats is BigInt ? (t.amountSats as BigInt).toInt() : t.amountSats as int,
+          round: (t) => t.amountSats is BigInt
+              ? (t.amountSats as BigInt).toInt()
+              : t.amountSats as int,
           // Redeem transactions already have the correct sign from the backend (negative for outgoing)
-          redeem: (t) => t.amountSats is BigInt ? (t.amountSats as BigInt).toInt() : t.amountSats as int,
+          redeem: (t) => t.amountSats is BigInt
+              ? (t.amountSats as BigInt).toInt()
+              : t.amountSats as int,
+          offboard: (t) => t.amountSats.toInt(),
         );
         amountAfterTimestamp += amountSats / 100000000.0;
       }
@@ -743,7 +765,9 @@ class WalletScreenState extends State<WalletScreen> {
         data: balanceChartData,
         alpha: 255,
         trackballActivationMode: null,
-        lineColor: _isPriceChangePositive() ? AppTheme.successColor : AppTheme.errorColor,
+        lineColor: _isPriceChangePositive()
+            ? AppTheme.successColor
+            : AppTheme.errorColor,
       ),
     );
   }
@@ -812,11 +836,15 @@ class WalletScreenState extends State<WalletScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          userPrefs.balancesVisible ? formattedSats : '********',
-                          style:
-                              Theme.of(context).textTheme.displayLarge?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurface,
-                                  ),
+                          userPrefs.balancesVisible
+                              ? formattedSats
+                              : '********',
+                          style: Theme.of(context)
+                              .textTheme
+                              .displayLarge
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                         ),
                         const SizedBox(width: 8),
                         Icon(
@@ -872,7 +900,10 @@ class WalletScreenState extends State<WalletScreen> {
               Icon(
                 FontAwesomeIcons.lock,
                 size: 12,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
               ),
               const SizedBox(width: 6),
               Text(
@@ -882,14 +913,20 @@ class WalletScreenState extends State<WalletScreen> {
                         : currencyService.formatAmount(lockedFiat))
                     : '****',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.6),
                     ),
               ),
               const SizedBox(width: 4),
               Text(
                 'locked',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.6),
                     ),
               ),
             ],
@@ -923,14 +960,20 @@ class WalletScreenState extends State<WalletScreen> {
                   height: 12,
                   child: CircularProgressIndicator(
                     strokeWidth: 1.5,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.6),
                   ),
                 )
               else
                 Icon(
                   FontAwesomeIcons.arrowDown,
                   size: 12,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.6),
                 ),
               const SizedBox(width: 6),
               Text(
@@ -940,14 +983,20 @@ class WalletScreenState extends State<WalletScreen> {
                         : currencyService.formatAmount(boardingFiat))
                     : '****',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.6),
                     ),
               ),
               const SizedBox(width: 4),
               Text(
                 _isSettling ? 'settling...' : 'incoming',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.6),
                     ),
               ),
             ],
@@ -969,7 +1018,7 @@ class WalletScreenState extends State<WalletScreen> {
     if (_bitcoinPriceData.isNotEmpty) {
       // Calculate portfolio value change (balance at time x price) to match the chart and gradient
       final firstData = _bitcoinPriceData.first;
-      
+
       // Use the ACTUAL current state (not the last price point which might be stale)
       final firstBalance = _getBalanceAtTimestamp(firstData.time);
       final currentBalance = _getSelectedBalance();
@@ -981,20 +1030,25 @@ class WalletScreenState extends State<WalletScreen> {
       final valueDiff = currentValue - firstValue;
 
       // Use the same balance-aware logic for consistency with gradient/chart
-      isPositive = _isBalanceChangePositive(firstBalance, currentBalance, firstValue, currentValue);
+      isPositive = _isBalanceChangePositive(
+          firstBalance, currentBalance, firstValue, currentValue);
 
       // Calculate percent change with proper edge case handling
       const satoshiThreshold = 0.00000001;
-      if (firstBalance < satoshiThreshold && currentBalance < satoshiThreshold) {
+      if (firstBalance < satoshiThreshold &&
+          currentBalance < satoshiThreshold) {
         // No balance before or now - show BTC price change
         if (firstData.price > 0) {
-          percentChange = ((currentPrice - firstData.price) / firstData.price) * 100;
+          percentChange =
+              ((currentPrice - firstData.price) / firstData.price) * 100;
         } else {
           percentChange = 0.0;
         }
-      } else if (firstBalance >= satoshiThreshold && currentBalance < satoshiThreshold) {
+      } else if (firstBalance >= satoshiThreshold &&
+          currentBalance < satoshiThreshold) {
         percentChange = -100.0;
-      } else if (firstBalance < satoshiThreshold && currentBalance >= satoshiThreshold) {
+      } else if (firstBalance < satoshiThreshold &&
+          currentBalance >= satoshiThreshold) {
         // Went from zero to having balance - use special infinity marker
         percentChange = double.infinity;
       } else if (firstValue != 0) {
@@ -1016,8 +1070,7 @@ class WalletScreenState extends State<WalletScreen> {
       onTap: _toggleDisplayUnit,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -1056,7 +1109,8 @@ class WalletScreenState extends State<WalletScreen> {
                     ],
                   )
                 : ColoredPriceWidget(
-                    price: currencyService.formatAmount(balanceChangeInFiat.abs()),
+                    price:
+                        currencyService.formatAmount(balanceChangeInFiat.abs()),
                     isPositive: isPositive,
                     shouldHideAmount: true,
                   ),
@@ -1230,8 +1284,7 @@ class WalletChartWidget extends StatelessWidget {
             animationDuration: 0,
             xValueMapper: (PriceData data, _) => data.time.toDouble(),
             yValueMapper: (PriceData data, _) => data.price,
-            color:
-                isPositive ? AppTheme.successColor : AppTheme.errorColor,
+            color: isPositive ? AppTheme.successColor : AppTheme.errorColor,
             width: 3,
             splineType: SplineType.natural,
           ),

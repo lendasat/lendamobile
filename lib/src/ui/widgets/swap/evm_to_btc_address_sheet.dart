@@ -63,8 +63,10 @@ class _EvmToBtcAddressSheetState extends State<EvmToBtcAddressSheet> {
     }
 
     // Legacy Bitcoin addresses
-    if (address.startsWith('1') || address.startsWith('3') ||
-        address.startsWith('m') || address.startsWith('n') ||
+    if (address.startsWith('1') ||
+        address.startsWith('3') ||
+        address.startsWith('m') ||
+        address.startsWith('n') ||
         address.startsWith('2')) {
       return address.length >= 26 && address.length <= 35;
     }
@@ -102,7 +104,8 @@ class _EvmToBtcAddressSheetState extends State<EvmToBtcAddressSheet> {
     });
   }
 
-  Future<void> _pasteToController(TextEditingController controller, Function(String) onChange) async {
+  Future<void> _pasteToController(
+      TextEditingController controller, Function(String) onChange) async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     if (data?.text != null) {
       controller.text = data!.text!.trim();
@@ -265,7 +268,8 @@ class _EvmToBtcAddressSheetState extends State<EvmToBtcAddressSheet> {
                   child: Text(
                     'You will need to send ${widget.sourceTokenSymbol} from the address above to complete the swap. The BTC will be sent to your Bitcoin address.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                   ),
                 ),

@@ -31,8 +31,6 @@ class _BitcoinChartDetailScreenState extends State<BitcoinChartDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
-
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,

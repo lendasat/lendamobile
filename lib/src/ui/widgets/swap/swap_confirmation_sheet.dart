@@ -140,7 +140,8 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                   Text(
                     'You pay',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                   ),
                   const SizedBox(height: 4),
@@ -157,7 +158,8 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                         ? '≈ \$${widget.sourceAmountUsd}'
                         : '≈ ${widget.sourceAmount} ${widget.sourceToken.symbol}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                   ),
                 ],
@@ -187,7 +189,8 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                   Text(
                     'You receive',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                   ),
                   const SizedBox(height: 4),
@@ -206,7 +209,9 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                     Text(
                       'before fees: \$$grossAmount',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                           ),
                     ),
                 ],
@@ -257,7 +262,8 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                         child: Icon(
                           Icons.keyboard_arrow_down_rounded,
                           size: 20,
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                       ),
                     ],

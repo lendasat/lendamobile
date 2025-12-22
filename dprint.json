@@ -20,7 +20,10 @@
     "rust_builder",
     "lib/src/rust/frb_generated.dart",
     "lib/src/rust/frb_generated.io.dart",
-    "lib/src/rust/frb_generated.web.dart"
+    "lib/src/rust/frb_generated.web.dart",
+    "rust/src/frb_generated.rs",
+    "**/*.freezed.dart",
+    "**/*.g.dart"
   ],
   "exec": {
     "commands": [

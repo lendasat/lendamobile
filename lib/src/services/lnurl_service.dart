@@ -82,9 +82,8 @@ class LnurlService {
   static bool isLnurl(String input) {
     final lower = input.toLowerCase().trim();
     // Remove lightning: prefix if present
-    final cleaned = lower.startsWith('lightning:')
-        ? lower.substring(10)
-        : lower;
+    final cleaned =
+        lower.startsWith('lightning:') ? lower.substring(10) : lower;
     return cleaned.startsWith('lnurl');
   }
 

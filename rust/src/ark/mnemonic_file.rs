@@ -1,7 +1,7 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use bip39::Mnemonic;
-use bitcoin::bip32::{DerivationPath, Xpriv};
 use bitcoin::Network;
+use bitcoin::bip32::{DerivationPath, Xpriv};
 use rand::RngCore;
 use std::fs;
 use std::fs::File;
@@ -37,8 +37,8 @@ pub fn generate_mnemonic() -> Result<Mnemonic> {
 
 /// Parse a mnemonic from a string (supports 12 or 24 words)
 pub fn parse_mnemonic(words: &str) -> Result<Mnemonic> {
-    let mnemonic = Mnemonic::from_str(words.trim())
-        .map_err(|e| anyhow!("Failed to parse mnemonic: {}", e))?;
+    let mnemonic =
+        Mnemonic::from_str(words.trim()).map_err(|e| anyhow!("Failed to parse mnemonic: {}", e))?;
     Ok(mnemonic)
 }
 
@@ -69,8 +69,7 @@ pub fn derive_xpriv_at_path(mnemonic: &Mnemonic, path: &str, network: Network) -
 /// Write the mnemonic to a file (encrypted storage recommended for production)
 pub fn write_mnemonic_file(mnemonic: &Mnemonic, data_dir: &str) -> Result<()> {
     let data_path = Path::new(data_dir);
-    fs::create_dir_all(data_path)
-        .map_err(|e| anyhow!("Failed to create data directory: {}", e))?;
+    fs::create_dir_all(data_path).map_err(|e| anyhow!("Failed to create data directory: {}", e))?;
 
     let mnemonic_path = data_path.join("mnemonic");
     let mut file = File::create(&mnemonic_path)

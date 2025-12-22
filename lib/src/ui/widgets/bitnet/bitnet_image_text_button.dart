@@ -25,7 +25,6 @@ class BitNetImageWithTextButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     final buttonSize = width ?? 60.0;

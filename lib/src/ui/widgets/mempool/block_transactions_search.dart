@@ -20,8 +20,6 @@ class BlockTransactionsSearch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
-
     // This widget is designed to be a navigation button, not an actual search field
     // Tapping navigates to BlockTransactions screen where real search happens
     return Padding(

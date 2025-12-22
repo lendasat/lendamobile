@@ -84,7 +84,8 @@ class _WalletConnectButtonState extends State<WalletConnectButton> {
     } catch (e) {
       logger.e('Failed to open modal: $e');
       if (mounted) {
-        OverlayService().showError('Failed to open wallet modal: ${e.toString()}');
+        OverlayService()
+            .showError('Failed to open wallet modal: ${e.toString()}');
       }
     }
   }

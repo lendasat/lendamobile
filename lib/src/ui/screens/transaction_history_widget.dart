@@ -56,10 +56,14 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     // Debug: Print transaction types to diagnose network label bug
     for (final tx in widget.transactions) {
       tx.map(
-        boarding: (t) => debugPrint('TX DEBUG: Boarding (Onchain) - ${t.txid.substring(0, 8)}...'),
-        round: (t) => debugPrint('TX DEBUG: Round (Arkade) - ${t.txid.substring(0, 8)}...'),
-        redeem: (t) => debugPrint('TX DEBUG: Redeem isSettled=${t.isSettled} (${t.isSettled ? "Onchain" : "Arkade"}) - ${t.txid.substring(0, 8)}...'),
-        offboard: (t) => debugPrint('TX DEBUG: Offboard (Onchain Send) - ${t.txid.substring(0, 8)}...'),
+        boarding: (t) => debugPrint(
+            'TX DEBUG: Boarding (Onchain) - ${t.txid.substring(0, 8)}...'),
+        round: (t) => debugPrint(
+            'TX DEBUG: Round (Arkade) - ${t.txid.substring(0, 8)}...'),
+        redeem: (t) => debugPrint(
+            'TX DEBUG: Redeem isSettled=${t.isSettled} (${t.isSettled ? "Onchain" : "Arkade"}) - ${t.txid.substring(0, 8)}...'),
+        offboard: (t) => debugPrint(
+            'TX DEBUG: Offboard (Onchain Send) - ${t.txid.substring(0, 8)}...'),
       );
     }
     _filteredActivity = combineActivity(widget.transactions, widget.swaps);
@@ -109,7 +113,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         allActivity = allActivity.where((item) {
           if (item is TransactionActivityItem) {
             return item.transaction.map(
-              boarding: (_) => filterService.selectedFilters.contains('Onchain'),
+              boarding: (_) =>
+                  filterService.selectedFilters.contains('Onchain'),
               round: (_) => filterService.selectedFilters.contains('Arkade'),
               redeem: (tx) {
                 // If not settled, it's still a virtual Ark transaction (Arkade)
@@ -121,7 +126,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                 }
               },
               // Offboard is always an on-chain send
-              offboard: (_) => filterService.selectedFilters.contains('Onchain'),
+              offboard: (_) =>
+                  filterService.selectedFilters.contains('Onchain'),
             );
           } else if (item is SwapActivityItem) {
             return filterService.selectedFilters.contains('Swap');
@@ -260,15 +266,13 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -280,7 +284,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
           ),
         ),
         const SizedBox(height: AppTheme.elementSpacing),
-        if (!widget.loading && (widget.transactions.isNotEmpty || widget.swaps.isNotEmpty))
+        if (!widget.loading &&
+            (widget.transactions.isNotEmpty || widget.swaps.isNotEmpty))
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppTheme.cardPadding,
@@ -343,7 +348,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             child: Padding(
               padding: EdgeInsets.all(32.0),
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
               ),
             ),
           )
@@ -514,19 +520,28 @@ class _TransactionItemWidget extends StatelessWidget {
         context,
         AppLocalizations.of(context)!.roundTransaction,
         tx.txid,
-        tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
-        tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
+        tx.createdAt is BigInt
+            ? (tx.createdAt as BigInt).toInt()
+            : tx.createdAt as int,
+        tx.amountSats is BigInt
+            ? (tx.amountSats as BigInt).toInt()
+            : tx.amountSats as int,
         showBtcAsMain,
         hideAmounts,
         'Arkade',
-        isConfirmed: true, // Round transactions are instantly confirmed in Arkade
+        isConfirmed:
+            true, // Round transactions are instantly confirmed in Arkade
       ),
       redeem: (tx) => _buildTransactionTile(
         context,
         AppLocalizations.of(context)!.redeemTransaction,
         tx.txid,
-        tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
-        tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
+        tx.createdAt is BigInt
+            ? (tx.createdAt as BigInt).toInt()
+            : tx.createdAt as int,
+        tx.amountSats is BigInt
+            ? (tx.amountSats as BigInt).toInt()
+            : tx.amountSats as int,
         showBtcAsMain,
         hideAmounts,
         // Ark virtual transactions stay within Arkade network
@@ -539,8 +554,11 @@ class _TransactionItemWidget extends StatelessWidget {
         tx.txid,
         tx.confirmedAt is BigInt
             ? (tx.confirmedAt as BigInt).toInt()
-            : (tx.confirmedAt as int?) ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000),
-        tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
+            : (tx.confirmedAt as int?) ??
+                (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+        tx.amountSats is BigInt
+            ? (tx.amountSats as BigInt).toInt()
+            : tx.amountSats as int,
         showBtcAsMain,
         hideAmounts,
         'Onchain',
@@ -606,9 +624,16 @@ class _TransactionItemWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       RoundedButtonWidget(
-                        iconData: amountSats >= 0 ? Icons.south_west : Icons.north_east,
-                        iconColor: amountSats >= 0 ? AppTheme.successColor : AppTheme.errorColor,
-                        backgroundColor: (amountSats >= 0 ? AppTheme.successColor : AppTheme.errorColor).withValues(alpha: 0.15),
+                        iconData: amountSats >= 0
+                            ? Icons.south_west
+                            : Icons.north_east,
+                        iconColor: amountSats >= 0
+                            ? AppTheme.successColor
+                            : AppTheme.errorColor,
+                        backgroundColor: (amountSats >= 0
+                                ? AppTheme.successColor
+                                : AppTheme.errorColor)
+                            .withValues(alpha: 0.15),
                         buttonType: ButtonType.secondary,
                         size: AppTheme.cardPadding * 2,
                         iconSize: AppTheme.cardPadding * 0.9,
@@ -632,8 +657,7 @@ class _TransactionItemWidget extends StatelessWidget {
                                   ),
                             ),
                           ),
-                          const SizedBox(
-                              height: AppTheme.elementSpacing / 2),
+                          const SizedBox(height: AppTheme.elementSpacing / 2),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -768,9 +792,12 @@ class _SwapItemWidget extends StatelessWidget {
                     children: [
                       // Swap icon
                       RoundedButtonWidget(
-                        iconData: swapItem.isBtcToEvm ? Icons.north_east : Icons.south_west,
+                        iconData: swapItem.isBtcToEvm
+                            ? Icons.north_east
+                            : Icons.south_west,
                         iconColor: AppTheme.colorBitcoin,
-                        backgroundColor: AppTheme.colorBitcoin.withValues(alpha: 0.15),
+                        backgroundColor:
+                            AppTheme.colorBitcoin.withValues(alpha: 0.15),
                         buttonType: ButtonType.secondary,
                         size: AppTheme.cardPadding * 2,
                         iconSize: AppTheme.cardPadding * 0.9,
@@ -804,7 +831,8 @@ class _SwapItemWidget extends StatelessWidget {
                                 size: AppTheme.cardPadding * 0.6,
                                 color: AppTheme.colorBitcoin,
                               ),
-                              const SizedBox(width: AppTheme.elementSpacing / 2),
+                              const SizedBox(
+                                  width: AppTheme.elementSpacing / 2),
                               Text(
                                 _getSwapTypeLabel(),
                                 overflow: TextOverflow.ellipsis,
@@ -832,7 +860,8 @@ class _SwapItemWidget extends StatelessWidget {
                                       ? '${amountSats.isNegative ? "" : "+"}${amountSats.abs()}'
                                       : '${amountSats.isNegative ? "-" : "+"}\$${usdAmount.toStringAsFixed(2)}',
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.titleMedium,
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
                                 ),
                                 if (showBtcAsMain)
                                   Icon(

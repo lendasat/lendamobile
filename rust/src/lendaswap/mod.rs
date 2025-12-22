@@ -9,18 +9,18 @@
 pub mod storage;
 
 use crate::lendaswap::storage::{FileSwapStorage, FileWalletStorage};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use lendaswap_core::api::{
-    AssetPair, BtcToEvmSwapResponse, EvmChain, EvmToBtcSwapResponse, GetSwapResponse,
-    QuoteRequest, QuoteResponse, SwapStatus as ApiSwapStatus, TokenId,
+    AssetPair, BtcToEvmSwapResponse, EvmChain, EvmToBtcSwapResponse, GetSwapResponse, QuoteRequest,
+    QuoteResponse, SwapStatus as ApiSwapStatus, TokenId,
 };
 use lendaswap_core::client::ExtendedSwapStorageData;
 use lendaswap_core::{Client, Network};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::OnceLock;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::RwLock;
 
 /// Type alias for the LendaSwap client with our storage implementations.
