@@ -7,9 +7,11 @@
 
 use crate::ark::mnemonic_file::{LENDASAT_DERIVATION_PATH, read_mnemonic_file};
 use anyhow::{Result, anyhow};
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use bitcoin::Network;
 use bitcoin::PrivateKey;
 use bitcoin::bip32::{DerivationPath, Xpriv};
+use bitcoin::consensus::encode::serialize_hex;
 use bitcoin::hashes::{Hash, sha256};
 use bitcoin::key::{Keypair, Secp256k1};
 use bitcoin::psbt::Psbt;
@@ -221,6 +223,117 @@ pub async fn sign_psbt(
     tracing::info!("PSBT signed successfully");
 
     Ok(signed_psbt_hex)
+}
+
+/// Finalize a signed PSBT and extract the raw transaction.
+///
+/// This is a CRITICAL step that the iframe does but was missing from lendamobile.
+/// After signing a PSBT, it must be finalized (scriptSigs/witnesses constructed)
+/// and the raw transaction extracted before it can be broadcast.
+///
+/// The iframe does this:
+/// ```javascript
+/// const psbtObj = bitcoin.Psbt.fromHex(signedPsbt);
+/// const finalizedPsbt = psbtObj.finalizeAllInputs();
+/// const rawTxHex = finalizedPsbt.extractTransaction().toHex();
+/// ```
+///
+/// # Arguments
+/// * `signed_psbt_hex` - The signed PSBT as hex string
+///
+/// # Returns
+/// The finalized raw transaction as hex string (ready for broadcast)
+pub fn finalize_psbt_and_extract_tx(signed_psbt_hex: &str) -> Result<String> {
+    // Parse PSBT from hex
+    let psbt_bytes =
+        hex::decode(signed_psbt_hex).map_err(|e| anyhow!("Invalid signed PSBT hex: {}", e))?;
+    let mut psbt = Psbt::deserialize(&psbt_bytes)
+        .map_err(|e| anyhow!("Failed to parse signed PSBT: {}", e))?;
+
+    tracing::debug!("Finalizing PSBT with {} inputs", psbt.inputs.len());
+
+    // Finalize all inputs
+    // This constructs the scriptSig/witness from the partial signatures
+    for (idx, input) in psbt.inputs.iter_mut().enumerate() {
+        // Check if input has a final script already
+        if input.final_script_sig.is_some() || input.final_script_witness.is_some() {
+            tracing::debug!("Input {} already finalized", idx);
+            continue;
+        }
+
+        // For P2WPKH (most common for us), we need to construct the witness
+        // from the partial signature and public key
+        if let Some((pubkey, sig)) = input.partial_sigs.iter().next() {
+            // P2WPKH witness: [signature, pubkey]
+            let mut witness = bitcoin::Witness::new();
+            witness.push(sig.to_vec());
+            witness.push(pubkey.to_bytes());
+            input.final_script_witness = Some(witness);
+
+            // Clear partial sigs after finalizing
+            input.partial_sigs.clear();
+
+            tracing::debug!("Input {} finalized as P2WPKH", idx);
+        } else if !input.partial_sigs.is_empty() {
+            // Handle other script types if needed
+            tracing::warn!(
+                "Input {} has partial sigs but couldn't finalize automatically",
+                idx
+            );
+        } else {
+            // Input may not need our signature (e.g., other party's input)
+            tracing::debug!("Input {} has no partial sigs, may not need our key", idx);
+        }
+    }
+
+    // Extract the raw transaction
+    let tx = psbt
+        .extract_tx()
+        .map_err(|e| anyhow!("Failed to extract transaction from PSBT: {:?}", e))?;
+
+    // Serialize to hex
+    let raw_tx_hex = serialize_hex(&tx);
+
+    tracing::info!(
+        "PSBT finalized, raw tx size: {} bytes",
+        raw_tx_hex.len() / 2
+    );
+
+    Ok(raw_tx_hex)
+}
+
+/// Convert a PSBT from BASE64 to HEX format.
+///
+/// The settle-ark API returns PSBTs in BASE64 format, but our signing
+/// function expects HEX. This matches the iframe's conversion:
+/// ```javascript
+/// const psbtHex = bitcoin.Psbt.fromBase64(base64Psbt).toHex();
+/// ```
+pub fn psbt_base64_to_hex(base64_psbt: &str) -> Result<String> {
+    let psbt_bytes = BASE64
+        .decode(base64_psbt)
+        .map_err(|e| anyhow!("Invalid BASE64 PSBT: {}", e))?;
+
+    // Validate it's a valid PSBT
+    let _ = Psbt::deserialize(&psbt_bytes).map_err(|e| anyhow!("Invalid PSBT data: {}", e))?;
+
+    Ok(hex::encode(psbt_bytes))
+}
+
+/// Convert a PSBT from HEX to BASE64 format.
+///
+/// After signing, we need to convert back to BASE64 for the API.
+/// This matches the iframe's conversion:
+/// ```javascript
+/// const base64Psbt = bitcoin.Psbt.fromHex(hexPsbt).toBase64();
+/// ```
+pub fn psbt_hex_to_base64(hex_psbt: &str) -> Result<String> {
+    let psbt_bytes = hex::decode(hex_psbt).map_err(|e| anyhow!("Invalid HEX PSBT: {}", e))?;
+
+    // Validate it's a valid PSBT
+    let _ = Psbt::deserialize(&psbt_bytes).map_err(|e| anyhow!("Invalid PSBT data: {}", e))?;
+
+    Ok(BASE64.encode(psbt_bytes))
 }
 
 /// Verify a signature locally (for testing).
