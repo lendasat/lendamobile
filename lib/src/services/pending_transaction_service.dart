@@ -158,9 +158,11 @@ class PendingTransactionService extends ChangeNotifier {
       return;
     }
 
+    // Use larger height for errors since they may have longer messages
+    final isSuccess = pending.status == PendingTransactionStatus.success;
     arkBottomSheet(
       context: context,
-      height: 280,
+      height: isSuccess ? 300 : 400,
       child: _SendCompletionSheet(pending: pending),
     );
   }
@@ -244,22 +246,24 @@ class _SendCompletionSheet extends StatelessWidget {
               ),
             ),
           ] else ...[
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
-              child: Text(
-                pending.errorMessage ?? 'Unknown error',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.errorColor,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.cardPadding),
+                  child: Text(
+                    _cleanErrorMessage(pending.errorMessage),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.errorColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
 
-          const Spacer(),
+          const SizedBox(height: AppTheme.elementSpacing),
 
           // Close button
           SizedBox(
@@ -288,5 +292,42 @@ class _SendCompletionSheet extends StatelessWidget {
   String _truncateAddress(String address) {
     if (address.length <= 20) return address;
     return '${address.substring(0, 8)}...${address.substring(address.length - 8)}';
+  }
+
+  /// Clean up error messages to be more user-friendly
+  String _cleanErrorMessage(String? error) {
+    if (error == null) return 'Unknown error';
+
+    // Extract the main error message from AnyhowException wrapper
+    String cleaned = error;
+    if (cleaned.contains('AnyhowException(')) {
+      cleaned = cleaned.replaceFirst('AnyhowException(', '');
+      if (cleaned.endsWith(')')) {
+        cleaned = cleaned.substring(0, cleaned.length - 1);
+      }
+    }
+
+    // Check for specific known errors and provide user-friendly messages
+    if (cleaned.contains('INVALID_PSBT_INPUT') &&
+        cleaned.contains('expires after')) {
+      return 'Your funds need to be refreshed before sending. Please wait for the next Ark round or try settling your balance first.';
+    }
+
+    if (cleaned.contains('minExpiryGap')) {
+      return 'Your funds expire too soon to be used in this transaction. Please refresh your balance.';
+    }
+
+    // Remove metadata JSON if present
+    if (cleaned.contains('metadata:')) {
+      final metadataIndex = cleaned.indexOf('metadata:');
+      cleaned = cleaned.substring(0, metadataIndex).trim();
+    }
+
+    // Trim and limit length
+    if (cleaned.length > 200) {
+      cleaned = '${cleaned.substring(0, 200)}...';
+    }
+
+    return cleaned;
   }
 }

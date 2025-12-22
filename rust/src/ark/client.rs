@@ -201,9 +201,10 @@ pub async fn send(address: String, amount: Amount) -> Result<Txid> {
                 Ok(txid)
             } else if is_btc_address(address.as_str()) {
                 let address = Address::from_str(address.as_str())?;
-                let rng = &mut StdRng::from_entropy();
+                // Use send_on_chain which handles VTXO selection better than collaborative_redeem
+                // collaborative_redeem was failing with INVALID_PSBT_INPUT when VTXOs were close to expiry
                 let txid = client
-                    .collaborative_redeem(rng, address.assume_checked(), amount)
+                    .send_on_chain(address.assume_checked(), amount)
                     .await
                     .map_err(|e| anyhow!("Failed sending onchain {e:#}"))?;
                 Ok(txid)

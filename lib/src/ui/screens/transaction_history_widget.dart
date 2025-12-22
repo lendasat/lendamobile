@@ -309,27 +309,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             horizontal: AppTheme.cardPadding,
             vertical: AppTheme.elementSpacing,
           ),
-          child: Row(
-            children: [
-              Text(
-                'Pending',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(width: AppTheme.elementSpacing / 2),
-              SizedBox(
-                width: 12,
-                height: 12,
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.7),
-                  ),
-                ),
-              ),
-            ],
+          child: Text(
+            'Pending',
+            style: Theme.of(context).textTheme.titleSmall,
           ),
         ),
       );
@@ -623,6 +605,7 @@ class _TransactionItemWidget extends StatelessWidget {
     String? transactionType,
     String? networkType,
     bool? isConfirmed,
+    bool isSettleable = false,
   }) {
     Navigator.push(
       context,
@@ -634,6 +617,7 @@ class _TransactionItemWidget extends StatelessWidget {
           transactionType: transactionType,
           networkType: networkType,
           isConfirmed: isConfirmed,
+          isSettleable: isSettleable,
         ),
       ),
     );
@@ -652,6 +636,7 @@ class _TransactionItemWidget extends StatelessWidget {
         hideAmounts,
         'Onchain',
         isConfirmed: tx.confirmedAt != null,
+        isSettleable: tx.confirmedAt != null,
       ),
       round: (tx) => _buildTransactionTile(
         context,
@@ -714,6 +699,7 @@ class _TransactionItemWidget extends StatelessWidget {
     bool hideAmounts,
     String network, {
     bool isConfirmed = true,
+    bool isSettleable = false,
   }) {
     final currencyService = context.watch<CurrencyPreferenceService>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -740,6 +726,7 @@ class _TransactionItemWidget extends StatelessWidget {
             transactionType: transactionType,
             networkType: network,
             isConfirmed: isConfirmed,
+            isSettleable: isSettleable,
           ),
           child: Container(
             padding: const EdgeInsets.symmetric(
@@ -1073,39 +1060,22 @@ class _PendingTransactionItemWidget extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Icon with loading indicator
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        RoundedButtonWidget(
-                          iconData: Icons.north_east,
-                          iconColor: isSending
+                    RoundedButtonWidget(
+                      iconData: Icons.north_east,
+                      iconColor: isSending
+                          ? AppTheme.colorBitcoin
+                          : (isSuccess
+                              ? AppTheme.successColor
+                              : AppTheme.errorColor),
+                      backgroundColor: (isSending
                               ? AppTheme.colorBitcoin
                               : (isSuccess
                                   ? AppTheme.successColor
-                                  : AppTheme.errorColor),
-                          backgroundColor: (isSending
-                                  ? AppTheme.colorBitcoin
-                                  : (isSuccess
-                                      ? AppTheme.successColor
-                                      : AppTheme.errorColor))
-                              .withValues(alpha: 0.15),
-                          buttonType: ButtonType.secondary,
-                          size: AppTheme.cardPadding * 2,
-                          iconSize: AppTheme.cardPadding * 0.9,
-                        ),
-                        if (isSending)
-                          SizedBox(
-                            width: AppTheme.cardPadding * 2.3,
-                            height: AppTheme.cardPadding * 2.3,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                AppTheme.colorBitcoin.withValues(alpha: 0.7),
-                              ),
-                            ),
-                          ),
-                      ],
+                                  : AppTheme.errorColor))
+                          .withValues(alpha: 0.15),
+                      buttonType: ButtonType.secondary,
+                      size: AppTheme.cardPadding * 2,
+                      iconSize: AppTheme.cardPadding * 0.9,
                     ),
                     const SizedBox(width: AppTheme.elementSpacing * 0.75),
                     Column(
@@ -1127,41 +1097,13 @@ class _PendingTransactionItemWidget extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: AppTheme.elementSpacing / 2),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            if (isSending)
-                              SizedBox(
-                                width: 10,
-                                height: 10,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 1.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    statusColor,
-                                  ),
-                                ),
-                              )
-                            else
-                              Icon(
-                                isSuccess
-                                    ? Icons.check_circle_rounded
-                                    : Icons.error_rounded,
-                                size: AppTheme.cardPadding * 0.6,
-                                color: statusColor,
-                              ),
-                            const SizedBox(width: AppTheme.elementSpacing / 2),
-                            Text(
-                              statusText,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall!
-                                  .copyWith(
+                        Text(
+                          statusText,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.labelSmall!.copyWith(
                                     color: statusColor,
                                   ),
-                            ),
-                          ],
                         ),
                       ],
                     ),
