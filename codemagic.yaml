@@ -13,23 +13,55 @@ workflows:
         XCODE_SCHEME: "Runner" # <-- Name of your Xcode scheme
         APP_STORE_APPLE_ID: 6756863835
     scripts:
-      # ... your dependencies installation
+      # Install Rust toolchain
+      - name: Install Rust
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env"
+          rustup target add aarch64-apple-ios
+
+      # Install flutter_rust_bridge_codegen
+      - name: Install flutter_rust_bridge_codegen
+        script: |
+          source "$HOME/.cargo/env"
+          cargo install flutter_rust_bridge_codegen
+
+      # Generate FFI bindings (equivalent to: just ffi-build)
+      - name: Generate FFI bindings
+        script: |
+          source "$HOME/.cargo/env"
+          flutter_rust_bridge_codegen generate
+
+      # Build Rust for iOS (equivalent to: just ios-build)
+      - name: Build Rust for iOS
+        script: |
+          source "$HOME/.cargo/env"
+          cd rust && cargo build --release --target aarch64-apple-ios
+
+      # Flutter dependencies
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+
       - name: Install CocoaPods dependencies
         script: |
-          pod install
+          cd ios && pod install
+
       - name: Set up provisioning profiles settings on Xcode project
         script: xcode-project use-profiles
+
       - name: Increment build number
         script: |
-          cd $CM_BUILD_DIR
+          cd $CM_BUILD_DIR/ios
           LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID")
           agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
+
       - name: Build ipa for distribution
         script: |
           xcode-project build-ipa \
-            --workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
+            --workspace "$CM_BUILD_DIR/ios/$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME"
-      # ... your build commands
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
