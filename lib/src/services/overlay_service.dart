@@ -35,7 +35,12 @@ class OverlayService {
     // Haptic feedback
     await HapticFeedback.lightImpact();
 
-    final overlayState = Overlay.of(context);
+    // Try to get the overlay state, fail gracefully if not available
+    final overlayState = Overlay.maybeOf(context);
+    if (overlayState == null) {
+      debugPrint("No Overlay widget found. Cannot display overlay.");
+      return;
+    }
 
     final animationController = AnimationController(
       duration: const Duration(milliseconds: 300),

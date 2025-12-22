@@ -1341,6 +1341,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: _isActionLoading ? 'SENDING...' : 'PAY COLLATERAL',
             buttonType: ButtonType.primary,
+            customWidth: buttonWidth,
             onTap: _isActionLoading ? null : _payCollateral,
           ),
         if (_contract!.canRepayWithLendaswap) ...[
