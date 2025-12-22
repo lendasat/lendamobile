@@ -16,6 +16,8 @@ as a reference implementation for building an Ark Wallet using Flutter and Rust.
 - Rust toolchain
 - iOS Simulator or Android Emulator
 - [flutter-rust-bridge](https://cjycode.com/flutter_rust_bridge/)
+- All Flutter commands are run using [FVM](https://fvm.app/) to ensure we are on the same version
+  - see [.fvmrc](./.fvmrc) for the used Flutter version
 
 ## Getting Started
 

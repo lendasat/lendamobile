@@ -27,7 +27,7 @@ clippy:
 ## ------------------------
 
 run:
-    flutter run
+    fvm flutter run --verbose
 
 flutter-fmt:
     dart format  --output=write .
