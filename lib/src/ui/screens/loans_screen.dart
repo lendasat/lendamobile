@@ -111,8 +111,8 @@ class _LoansScreenState extends State<LoansScreen> {
   bool _isUnauthorizedError(dynamic error) {
     final errorStr = error.toString().toLowerCase();
     return errorStr.contains('401') ||
-           errorStr.contains('unauthorized') ||
-           errorStr.contains('invalid token');
+        errorStr.contains('unauthorized') ||
+        errorStr.contains('invalid token');
   }
 
   /// Auto-authenticate with Lendasat using the wallet keypair.
@@ -201,7 +201,10 @@ class _LoansScreenState extends State<LoansScreen> {
                           ),
                           child: Text(
                             'Available Offers',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -225,7 +228,10 @@ class _LoansScreenState extends State<LoansScreen> {
                             children: [
                               Text(
                                 'My Contracts',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
                                       fontWeight: FontWeight.bold,
                                     ),
                               ),
@@ -295,28 +301,39 @@ class _LoansScreenState extends State<LoansScreen> {
             ],
           ),
           const SizedBox(height: AppTheme.elementSpacing),
-          _buildDebugRow('Derivation Path', _debugDerivationPath ?? 'Loading...'),
+          _buildDebugRow(
+              'Derivation Path', _debugDerivationPath ?? 'Loading...'),
           const SizedBox(height: 4),
-          _buildDebugRow('Public Key', _debugPubkey ?? 'Loading...', isMonospace: true),
+          _buildDebugRow('Public Key', _debugPubkey ?? 'Loading...',
+              isMonospace: true),
           const SizedBox(height: 4),
-          _buildDebugRow('Auth Status', _lendasatService.isAuthenticated ? 'Authenticated' : 'Not Authenticated'),
+          _buildDebugRow(
+              'Auth Status',
+              _lendasatService.isAuthenticated
+                  ? 'Authenticated'
+                  : 'Not Authenticated'),
           if (_lendasatService.publicKey != null) ...[
             const SizedBox(height: 4),
-            _buildDebugRow('Service PubKey', _lendasatService.publicKey!, isMonospace: true),
+            _buildDebugRow('Service PubKey', _lendasatService.publicKey!,
+                isMonospace: true),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildDebugRow(String label, String value, {bool isMonospace = false}) {
+  Widget _buildDebugRow(String label, String value,
+      {bool isMonospace = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
               ),
         ),
         const SizedBox(height: 2),
@@ -428,14 +445,20 @@ class _LoansScreenState extends State<LoansScreen> {
                 Icon(
                   Icons.local_offer_outlined,
                   size: 32,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.3),
                 ),
                 const SizedBox(width: AppTheme.elementSpacing),
                 Expanded(
                   child: Text(
                     'No Arkade offers available',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
                         ),
                   ),
                 ),
@@ -475,14 +498,20 @@ class _LoansScreenState extends State<LoansScreen> {
                 Icon(
                   Icons.lock_outline,
                   size: 32,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.3),
                 ),
                 const SizedBox(width: AppTheme.elementSpacing),
                 Expanded(
                   child: Text(
                     'Sign in to view your contracts',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
                         ),
                   ),
                 ),
@@ -517,9 +546,14 @@ class _LoansScreenState extends State<LoansScreen> {
           child: Row(
             children: [
               Icon(
-                _searchQuery.isNotEmpty ? Icons.search_off : Icons.receipt_long_outlined,
+                _searchQuery.isNotEmpty
+                    ? Icons.search_off
+                    : Icons.receipt_long_outlined,
                 size: 32,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.3),
               ),
               const SizedBox(width: AppTheme.elementSpacing),
               Expanded(
@@ -528,7 +562,10 @@ class _LoansScreenState extends State<LoansScreen> {
                       ? 'No contracts match your search'
                       : 'No contracts yet. Take an offer to get started!',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.6),
                       ),
                 ),
               ),
@@ -648,7 +685,10 @@ class _OfferCard extends StatelessWidget {
                         children: [
                           Text(
                             offer.lender.name,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -665,9 +705,13 @@ class _OfferCard extends StatelessWidget {
                     ),
                     // Interest rate highlight
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -694,7 +738,8 @@ class _OfferCard extends StatelessWidget {
                         color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                       ),
                     ),
-                    _buildAssetChip(context, offer.loanAssetDisplayName, isLoan: true),
+                    _buildAssetChip(context, offer.loanAssetDisplayName,
+                        isLoan: true),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -729,7 +774,8 @@ class _OfferCard extends StatelessWidget {
                 // Limited time offer badge
                 Container(
                   margin: const EdgeInsets.only(top: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -769,10 +815,10 @@ class _OfferCard extends StatelessWidget {
     );
   }
 
-
-  Widget _buildInfoItem(BuildContext context, String label, String value, {bool highlight = false}) {
+  Widget _buildInfoItem(BuildContext context, String label, String value,
+      {bool highlight = false}) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -797,14 +843,16 @@ class _OfferCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAssetChip(BuildContext context, String label, {bool isLoan = false}) {
+  Widget _buildAssetChip(BuildContext context, String label,
+      {bool isLoan = false}) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final color = isDarkMode ? AppTheme.white70 : AppTheme.black70;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: (isDarkMode ? Colors.white : Colors.black).withValues(alpha: 0.05),
+        color:
+            (isDarkMode ? Colors.white : Colors.black).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -868,17 +916,21 @@ class _ContractCard extends StatelessWidget {
                       children: [
                         Text(
                           '\$${contract.loanAmount.toStringAsFixed(2)}',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.5,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: -0.5,
+                                  ),
                         ),
                         Text(
                           'from ${contract.lender.name}',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: isDarkMode
+                                        ? AppTheme.white60
+                                        : AppTheme.black60,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                         ),
                       ],
                     ),
@@ -886,19 +938,21 @@ class _ContractCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: AppTheme.cardPadding),
-                
+
                 // Progress indicator or key metric
                 if (!contract.isClosed) ...[
-                   _buildProgressSection(context),
-                   const SizedBox(height: AppTheme.elementSpacing),
+                  _buildProgressSection(context),
+                  const SizedBox(height: AppTheme.elementSpacing),
                 ],
 
                 // Mini stats
                 Row(
                   children: [
-                    _buildMiniInfo(context, 'Interest', '${(contract.interestRate * 100).toStringAsFixed(1)}% APY'),
+                    _buildMiniInfo(context, 'Interest',
+                        '${(contract.interestRate * 100).toStringAsFixed(1)}% APY'),
                     const SizedBox(width: 16),
-                    _buildMiniInfo(context, 'Due', _formatDate(DateTime.parse(contract.expiry))),
+                    _buildMiniInfo(context, 'Due',
+                        _formatDate(DateTime.parse(contract.expiry))),
                     const Spacer(),
                     Icon(
                       Icons.arrow_forward_ios_rounded,
@@ -966,7 +1020,7 @@ class _ContractCard extends StatelessWidget {
     final total = expiryDate.difference(createdDate).inDays;
     final elapsed = DateTime.now().difference(createdDate).inDays;
     final progress = (elapsed / (total > 0 ? total : 1)).clamp(0.0, 1.0);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -974,8 +1028,10 @@ class _ContractCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: progress,
-            backgroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
-            valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+            backgroundColor:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).colorScheme.primary),
             minHeight: 4,
           ),
         ),

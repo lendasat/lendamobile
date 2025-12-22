@@ -6,18 +6,18 @@ pub mod storage;
 
 use crate::ark::esplora::EsploraClient;
 use crate::ark::mnemonic_file::{
-    delete_mnemonic_file, derive_master_xpriv, derive_xpriv_at_path, generate_mnemonic,
-    mnemonic_exists, parse_mnemonic, read_mnemonic_file, write_mnemonic_file,
-    ARK_BASE_DERIVATION_PATH, NOSTR_DERIVATION_PATH,
+    ARK_BASE_DERIVATION_PATH, NOSTR_DERIVATION_PATH, delete_mnemonic_file, derive_master_xpriv,
+    derive_xpriv_at_path, generate_mnemonic, mnemonic_exists, parse_mnemonic, read_mnemonic_file,
+    write_mnemonic_file,
 };
 use crate::ark::storage::InMemoryDb;
-use crate::state::{UnifiedKeyProvider, ARK_CLIENT, ESPLORA_URL};
-use anyhow::{anyhow, Result};
+use crate::state::{ARK_CLIENT, ESPLORA_URL, UnifiedKeyProvider};
+use anyhow::{Result, anyhow};
 use ark_client::{Bip32KeyProvider, OfflineClient, SqliteSwapStorage};
+use bitcoin::Network;
 use bitcoin::bip32::{DerivationPath, Xpriv};
 use bitcoin::key::{Keypair, Secp256k1};
 use bitcoin::secp256k1::All;
-use bitcoin::Network;
 use parking_lot::RwLock;
 use std::path::Path;
 use std::str::FromStr;
@@ -263,16 +263,14 @@ pub(crate) async fn wallet_exists(data_dir: String) -> Result<bool> {
 
 /// Get the stored mnemonic words (for backup display)
 pub(crate) fn get_mnemonic(data_dir: String) -> Result<String> {
-    let mnemonic = read_mnemonic_file(&data_dir)?
-        .ok_or(anyhow!("Mnemonic file does not exist"))?;
+    let mnemonic = read_mnemonic_file(&data_dir)?.ok_or(anyhow!("Mnemonic file does not exist"))?;
     Ok(mnemonic.to_string())
 }
 
 /// Get the Nostr secret key derived from the mnemonic
 /// Uses the NIP-06 Nostr derivation path: m/44'/1237'/0'/0/0
 pub(crate) async fn nsec(data_dir: String, network: Network) -> Result<nostr::SecretKey> {
-    let mnemonic = read_mnemonic_file(&data_dir)?
-        .ok_or_else(|| anyhow!("No wallet found"))?;
+    let mnemonic = read_mnemonic_file(&data_dir)?.ok_or_else(|| anyhow!("No wallet found"))?;
     let xpriv = derive_xpriv_at_path(&mnemonic, NOSTR_DERIVATION_PATH, network)?;
     let sk = nostr::SecretKey::from_slice(xpriv.private_key.secret_bytes().as_ref())?;
     Ok(sk)
@@ -321,27 +319,24 @@ pub fn delete_wallet(data_dir: String) -> Result<()> {
     // Delete LendaSwap swap storage directory
     let swaps_dir = Path::new(&data_dir).join("lendaswap_swaps");
     if swaps_dir.exists() {
-        fs::remove_dir_all(&swaps_dir).map_err(|e| {
-            anyhow!("Failed to delete lendaswap_swaps directory: {}", e)
-        })?;
+        fs::remove_dir_all(&swaps_dir)
+            .map_err(|e| anyhow!("Failed to delete lendaswap_swaps directory: {}", e))?;
         tracing::info!("Deleted lendaswap_swaps directory");
     }
 
     // Delete LendaSwap key index file
     let key_index_file = Path::new(&data_dir).join("lendaswap_key_index");
     if key_index_file.exists() {
-        fs::remove_file(&key_index_file).map_err(|e| {
-            anyhow!("Failed to delete lendaswap_key_index file: {}", e)
-        })?;
+        fs::remove_file(&key_index_file)
+            .map_err(|e| anyhow!("Failed to delete lendaswap_key_index file: {}", e))?;
         tracing::info!("Deleted lendaswap_key_index file");
     }
 
     // Delete LendaSat auth tokens
     let lendasat_auth_file = Path::new(&data_dir).join("lendasat_auth.json");
     if lendasat_auth_file.exists() {
-        fs::remove_file(&lendasat_auth_file).map_err(|e| {
-            anyhow!("Failed to delete lendasat_auth.json file: {}", e)
-        })?;
+        fs::remove_file(&lendasat_auth_file)
+            .map_err(|e| anyhow!("Failed to delete lendasat_auth.json file: {}", e))?;
         tracing::info!("Deleted lendasat_auth.json file");
     }
 

@@ -154,7 +154,9 @@ class _CurrencyPickerBodyState extends State<_CurrencyPickerBody> {
           final currencyName = _getCurrencyName(currency);
 
           if (_searchText.isNotEmpty &&
-              !currencyName.toLowerCase().startsWith(_searchText.toLowerCase())) {
+              !currencyName
+                  .toLowerCase()
+                  .startsWith(_searchText.toLowerCase())) {
             return const SizedBox.shrink();
           }
 
@@ -164,8 +166,8 @@ class _CurrencyPickerBodyState extends State<_CurrencyPickerBody> {
     );
   }
 
-  Widget _buildCurrencyTile(
-      FiatCurrency currency, String currencyName, FiatCurrency selectedCurrency) {
+  Widget _buildCurrencyTile(FiatCurrency currency, String currencyName,
+      FiatCurrency selectedCurrency) {
     final currencyService = context.read<CurrencyPreferenceService>();
     final currencySymbol = _getCurrencySymbol(currency);
 

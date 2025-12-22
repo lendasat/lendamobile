@@ -28,7 +28,6 @@ class TransactionDetailsDialog extends StatelessWidget {
   });
 
   Future<void> _handleSettlement(BuildContext context) async {
-    
     try {
       // Show loading dialog
       showDialog(
@@ -40,12 +39,14 @@ class TransactionDetailsDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
               ),
               const SizedBox(height: 16),
               Text(
                 AppLocalizations.of(context)!.settlingTransaction,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onSurface),
               ),
             ],
           ),
@@ -120,7 +121,6 @@ class TransactionDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final timezoneService = context.watch<TimezoneService>();
 
     final confirmedTime = confirmedAt != null
@@ -160,7 +160,8 @@ class TransactionDetailsDialog extends StatelessWidget {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
+                  icon: Icon(Icons.close,
+                      color: Theme.of(context).colorScheme.onSurface),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -197,13 +198,16 @@ class TransactionDetailsDialog extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.colorBitcoin.withAlpha((0.2 * 200).round()),
+                      color:
+                          AppTheme.colorBitcoin.withAlpha((0.2 * 200).round()),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       AppLocalizations.of(context)!
                           .transactionPendingFundsWillBeNonReversibleAfterSettlement,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 14),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -222,7 +226,6 @@ class TransactionDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildDetailRow(BuildContext context, String label, String value) {
-    
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Column(

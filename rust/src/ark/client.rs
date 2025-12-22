@@ -1,6 +1,6 @@
 use crate::ark::address_helper::{decode_bip21, is_ark_address, is_bip21, is_btc_address};
 use crate::ark::esplora::EsploraClient;
-use crate::state::{ArkClient, ARK_CLIENT, ESPLORA_URL};
+use crate::state::{ARK_CLIENT, ArkClient, ESPLORA_URL};
 use anyhow::Result;
 use anyhow::{anyhow, bail};
 use ark_client::Blockchain;
@@ -11,8 +11,8 @@ use ark_core::history::Transaction;
 use ark_core::server::{Info, SubscriptionResponse};
 use bitcoin::{Address, Amount, Txid};
 use futures::StreamExt;
-use rand::rngs::StdRng;
 use rand::SeedableRng;
+use rand::rngs::StdRng;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
@@ -91,10 +91,15 @@ pub async fn address(amount: Option<Amount>) -> Result<Addresses> {
             let reverse_swap_result = match amount {
                 None => None,
                 Some(amount) => {
-                    match client.get_ln_invoice(SwapAmount::Invoice(amount), Some(300)).await {
+                    match client
+                        .get_ln_invoice(SwapAmount::Invoice(amount), Some(300))
+                        .await
+                    {
                         Ok(swap) => Some(swap),
                         Err(e) => {
-                            tracing::warn!("Failed to create Lightning invoice (Boltz may be unavailable): {e:#}");
+                            tracing::warn!(
+                                "Failed to create Lightning invoice (Boltz may be unavailable): {e:#}"
+                            );
                             None
                         }
                     }
@@ -356,8 +361,8 @@ pub async fn settle_boarding() -> Result<()> {
             client
                 .settle_vtxos(
                     &mut rng,
-                    &[],                    // No VTXOs - this is the key!
-                    &boarding_outpoints,    // Only boarding UTXOs
+                    &[],                 // No VTXOs - this is the key!
+                    &boarding_outpoints, // Only boarding UTXOs
                 )
                 .await
                 .map_err(|e| anyhow!("Failed settling boarding UTXOs: {e:#}"))?;

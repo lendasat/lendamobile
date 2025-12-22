@@ -65,22 +65,22 @@ class TransactionConfirmedDetail {
       );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "height": height,
-    "version": version,
-    "timestamp": timestamp,
-    "bits": bits,
-    "nonce": nonce,
-    "difficulty": difficulty,
-    "merkle_root": merkleRoot,
-    "tx_count": txCount,
-    "size": size,
-    "weight": weight,
-    "previousblockhash": previousblockhash,
-    "mediantime": mediantime,
-    "stale": stale,
-    "extras": extras.toJson(),
-  };
+        "id": id,
+        "height": height,
+        "version": version,
+        "timestamp": timestamp,
+        "bits": bits,
+        "nonce": nonce,
+        "difficulty": difficulty,
+        "merkle_root": merkleRoot,
+        "tx_count": txCount,
+        "size": size,
+        "weight": weight,
+        "previousblockhash": previousblockhash,
+        "mediantime": mediantime,
+        "stale": stale,
+        "extras": extras.toJson(),
+      };
 }
 
 class Extras {
@@ -147,74 +147,75 @@ class Extras {
   });
 
   factory Extras.fromJson(Map<String, dynamic> json) => Extras(
-    reward: json["reward"] ?? 0,
-    coinbaseRaw: json["coinbaseRaw"] ?? "",
-    orphans: json["orphans"] != null
-        ? List<dynamic>.from(json["orphans"].map((x) => x))
-        : [],
-    medianFee: (json["medianFee"] ?? 0).toDouble(),
-    feeRange: json["feeRange"] != null
-        ? List<double>.from(json["feeRange"].map((x) => (x ?? 0).toDouble()))
-        : [],
-    totalFees: json["totalFees"] ?? 0,
-    avgFee: json["avgFee"] ?? 0,
-    avgFeeRate: json["avgFeeRate"] ?? 0,
-    utxoSetChange: json["utxoSetChange"] ?? 0,
-    avgTxSize: (json["avgTxSize"] ?? 0).toDouble(),
-    totalInputs: json["totalInputs"] ?? 0,
-    totalOutputs: json["totalOutputs"] ?? 0,
-    totalOutputAmt: json["totalOutputAmt"] ?? 0,
-    segwitTotalTxs: json["segwitTotalTxs"] ?? 0,
-    segwitTotalSize: json["segwitTotalSize"] ?? 0,
-    segwitTotalWeight: json["segwitTotalWeight"] ?? 0,
-    feePercentiles: json["feePercentiles"],
-    virtualSize: (json["virtualSize"] ?? 0).toDouble(),
-    coinbaseAddress: json["coinbaseAddress"] ?? "",
-    coinbaseSignature: json["coinbaseSignature"] ?? "",
-    coinbaseSignatureAscii: json["coinbaseSignatureAscii"] ?? "",
-    header: json["header"] ?? "",
-    utxoSetSize: json["utxoSetSize"],
-    totalInputAmt: json["totalInputAmt"],
-    pool: json["pool"] != null
-        ? Pool.fromJson(json["pool"])
-        : Pool(id: 0, name: "", slug: ""),
-    matchRate: (json["matchRate"] ?? 0).toDouble(),
-    expectedFees: json["expectedFees"] ?? 0,
-    expectedWeight: json["expectedWeight"] ?? 0,
-    similarity: (json["similarity"] ?? 0).toDouble(),
-  );
+        reward: json["reward"] ?? 0,
+        coinbaseRaw: json["coinbaseRaw"] ?? "",
+        orphans: json["orphans"] != null
+            ? List<dynamic>.from(json["orphans"].map((x) => x))
+            : [],
+        medianFee: (json["medianFee"] ?? 0).toDouble(),
+        feeRange: json["feeRange"] != null
+            ? List<double>.from(
+                json["feeRange"].map((x) => (x ?? 0).toDouble()))
+            : [],
+        totalFees: json["totalFees"] ?? 0,
+        avgFee: json["avgFee"] ?? 0,
+        avgFeeRate: json["avgFeeRate"] ?? 0,
+        utxoSetChange: json["utxoSetChange"] ?? 0,
+        avgTxSize: (json["avgTxSize"] ?? 0).toDouble(),
+        totalInputs: json["totalInputs"] ?? 0,
+        totalOutputs: json["totalOutputs"] ?? 0,
+        totalOutputAmt: json["totalOutputAmt"] ?? 0,
+        segwitTotalTxs: json["segwitTotalTxs"] ?? 0,
+        segwitTotalSize: json["segwitTotalSize"] ?? 0,
+        segwitTotalWeight: json["segwitTotalWeight"] ?? 0,
+        feePercentiles: json["feePercentiles"],
+        virtualSize: (json["virtualSize"] ?? 0).toDouble(),
+        coinbaseAddress: json["coinbaseAddress"] ?? "",
+        coinbaseSignature: json["coinbaseSignature"] ?? "",
+        coinbaseSignatureAscii: json["coinbaseSignatureAscii"] ?? "",
+        header: json["header"] ?? "",
+        utxoSetSize: json["utxoSetSize"],
+        totalInputAmt: json["totalInputAmt"],
+        pool: json["pool"] != null
+            ? Pool.fromJson(json["pool"])
+            : Pool(id: 0, name: "", slug: ""),
+        matchRate: (json["matchRate"] ?? 0).toDouble(),
+        expectedFees: json["expectedFees"] ?? 0,
+        expectedWeight: json["expectedWeight"] ?? 0,
+        similarity: (json["similarity"] ?? 0).toDouble(),
+      );
 
   Map<String, dynamic> toJson() => {
-    "reward": reward,
-    "coinbaseRaw": coinbaseRaw,
-    "orphans": List<dynamic>.from(orphans.map((x) => x)),
-    "medianFee": medianFee,
-    "feeRange": List<dynamic>.from(feeRange.map((x) => x)),
-    "totalFees": totalFees,
-    "avgFee": avgFee,
-    "avgFeeRate": avgFeeRate,
-    "utxoSetChange": utxoSetChange,
-    "avgTxSize": avgTxSize,
-    "totalInputs": totalInputs,
-    "totalOutputs": totalOutputs,
-    "totalOutputAmt": totalOutputAmt,
-    "segwitTotalTxs": segwitTotalTxs,
-    "segwitTotalSize": segwitTotalSize,
-    "segwitTotalWeight": segwitTotalWeight,
-    "feePercentiles": feePercentiles,
-    "virtualSize": virtualSize,
-    "coinbaseAddress": coinbaseAddress,
-    "coinbaseSignature": coinbaseSignature,
-    "coinbaseSignatureAscii": coinbaseSignatureAscii,
-    "header": header,
-    "utxoSetSize": utxoSetSize,
-    "totalInputAmt": totalInputAmt,
-    "pool": pool.toJson(),
-    "matchRate": matchRate,
-    "expectedFees": expectedFees,
-    "expectedWeight": expectedWeight,
-    "similarity": similarity,
-  };
+        "reward": reward,
+        "coinbaseRaw": coinbaseRaw,
+        "orphans": List<dynamic>.from(orphans.map((x) => x)),
+        "medianFee": medianFee,
+        "feeRange": List<dynamic>.from(feeRange.map((x) => x)),
+        "totalFees": totalFees,
+        "avgFee": avgFee,
+        "avgFeeRate": avgFeeRate,
+        "utxoSetChange": utxoSetChange,
+        "avgTxSize": avgTxSize,
+        "totalInputs": totalInputs,
+        "totalOutputs": totalOutputs,
+        "totalOutputAmt": totalOutputAmt,
+        "segwitTotalTxs": segwitTotalTxs,
+        "segwitTotalSize": segwitTotalSize,
+        "segwitTotalWeight": segwitTotalWeight,
+        "feePercentiles": feePercentiles,
+        "virtualSize": virtualSize,
+        "coinbaseAddress": coinbaseAddress,
+        "coinbaseSignature": coinbaseSignature,
+        "coinbaseSignatureAscii": coinbaseSignatureAscii,
+        "header": header,
+        "utxoSetSize": utxoSetSize,
+        "totalInputAmt": totalInputAmt,
+        "pool": pool.toJson(),
+        "matchRate": matchRate,
+        "expectedFees": expectedFees,
+        "expectedWeight": expectedWeight,
+        "similarity": similarity,
+      };
 }
 
 class Pool {
@@ -225,10 +226,10 @@ class Pool {
   Pool({required this.id, required this.name, required this.slug});
 
   factory Pool.fromJson(Map<String, dynamic> json) => Pool(
-    id: json["id"] ?? 0,
-    name: json["name"] ?? "",
-    slug: json["slug"] ?? "",
-  );
+        id: json["id"] ?? 0,
+        name: json["name"] ?? "",
+        slug: json["slug"] ?? "",
+      );
 
   Map<String, dynamic> toJson() => {"id": id, "name": name, "slug": slug};
 }

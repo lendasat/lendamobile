@@ -75,8 +75,7 @@ class _SettingsStyleViewState extends State<SettingsStyleView> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

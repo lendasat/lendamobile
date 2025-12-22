@@ -12,6 +12,7 @@ class EvmAddressInputSheet extends StatefulWidget {
   final String tokenSymbol;
   final String network;
   final Function(String address) onAddressConfirmed;
+
   /// If true, this is the source address (where user sends from).
   /// If false (default), this is the destination address (where user receives).
   final bool isSourceAddress;
@@ -160,7 +161,8 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
                       decoration: InputDecoration(
                         hintText: '0x...',
                         hintStyle: TextStyle(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                         border: InputBorder.none,
                         errorText: _errorText,

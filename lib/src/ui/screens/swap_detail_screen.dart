@@ -148,7 +148,8 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
         logger.i('Claiming BTC→EVM swap via Gelato');
         await _swapService.claimGelato(widget.swapId);
         if (mounted) {
-          OverlayService().showSuccess('Claim submitted! Funds will arrive shortly.');
+          OverlayService()
+              .showSuccess('Claim submitted! Funds will arrive shortly.');
         }
       } else if (_swapInfo!.canClaimVhtlc) {
         // EVM → BTC: Claim VHTLC
@@ -414,7 +415,8 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
         ? ((_swapInfo!.sourceAmountSats.toInt()) / 100000000).toStringAsFixed(8)
         : '0';
     final tokenAmount = _swapInfo?.targetAmountUsd.toStringAsFixed(
-        sourceToken.isStablecoin || targetToken.isStablecoin ? 2 : 6) ?? '0.00';
+            sourceToken.isStablecoin || targetToken.isStablecoin ? 2 : 6) ??
+        '0.00';
 
     // Format amount based on token type
     String formatTokenAmount(SwapToken token, String amount) {
@@ -659,7 +661,8 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
 
     final sourceToken = _getSourceToken();
     final targetToken = _getTargetToken();
-    final btcAmount = (_swapInfo!.sourceAmountSats.toInt() / 100000000).toStringAsFixed(8);
+    final btcAmount =
+        (_swapInfo!.sourceAmountSats.toInt() / 100000000).toStringAsFixed(8);
     final tokenAmount = _swapInfo!.targetAmountUsd.toStringAsFixed(
         sourceToken.isStablecoin || targetToken.isStablecoin ? 2 : 6);
 
@@ -678,7 +681,8 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
   }
 
   Widget _buildActionButtons(BuildContext context, SwapStatusSimple status) {
-    final canClaim = _swapInfo?.canClaimGelato == true || _swapInfo?.canClaimVhtlc == true;
+    final canClaim =
+        _swapInfo?.canClaimGelato == true || _swapInfo?.canClaimVhtlc == true;
     final canRefund = _swapInfo?.canRefund == true;
     final isWaitingForDeposit = status == SwapStatusSimple.waitingForDeposit;
     // Only show deposit button for EVM → BTC swaps (user needs to send EVM tokens)
@@ -686,7 +690,8 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
         _swapInfo?.direction == 'evm_to_btc' &&
         _swapInfo?.depositAddress != null;
 
-    if (!canClaim && !canRefund && !showDepositButton) return const SizedBox.shrink();
+    if (!canClaim && !canRefund && !showDepositButton)
+      return const SizedBox.shrink();
 
     return Column(
       children: [
@@ -729,7 +734,9 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
           ),
           const SizedBox(height: AppTheme.cardPadding),
           LongButtonWidget(
-            title: _swapInfo!.canClaimGelato ? 'Claim ${_getTargetToken().symbol}' : 'Claim BTC',
+            title: _swapInfo!.canClaimGelato
+                ? 'Claim ${_getTargetToken().symbol}'
+                : 'Claim BTC',
             customWidth: double.infinity,
             state: _isClaiming ? ButtonState.loading : ButtonState.idle,
             onTap: _isClaiming ? null : _handleClaim,
@@ -950,8 +957,9 @@ class _RefundAddressSheetState extends State<_RefundAddressSheet> {
                         decoration: InputDecoration(
                           hintText: 'ark1... or bc1...',
                           hintStyle: TextStyle(
-                            color:
-                                isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                           ),
                           border: InputBorder.none,
                           errorText: _errorText,

@@ -131,8 +131,9 @@ class _TimezoneList extends StatelessWidget {
             final matchesAbbr = timezone.currentTimeZone.abbreviation
                 .toLowerCase()
                 .startsWith(searchText.toLowerCase());
-            final matchesName =
-                timezone.name.toLowerCase().startsWith(searchText.toLowerCase());
+            final matchesName = timezone.name
+                .toLowerCase()
+                .startsWith(searchText.toLowerCase());
             if (!matchesAbbr && !matchesName) {
               return const SizedBox.shrink();
             }

@@ -16,7 +16,6 @@ class TimeChooserButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSelected = timespan == timeperiod;
-    
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -59,7 +58,10 @@ class TimeChooserButton extends StatelessWidget {
             fontWeight: FontWeight.w600,
             color: isSelected
                 ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).colorScheme.onSurface.withAlpha(153), // 0.6 opacity
+                : Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withAlpha(153), // 0.6 opacity
           ),
         ),
       ),

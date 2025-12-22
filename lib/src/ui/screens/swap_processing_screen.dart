@@ -52,7 +52,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   bool _showWalletConnectClaim = false;
 
   /// Check if this is an Ethereum swap (requires gas payment for claiming)
-  bool get _isEthereumTarget => widget.targetToken.chainId.toLowerCase() == 'ethereum';
+  bool get _isEthereumTarget =>
+      widget.targetToken.chainId.toLowerCase() == 'ethereum';
 
   @override
   void initState() {
@@ -293,10 +294,10 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
 
     // For BTC → EVM swaps, "Waiting for Deposit" should show as "Processing"
     // since Arkade handles the payment automatically
-    final effectiveStatus = status == SwapStatusSimple.waitingForDeposit &&
-            widget.sourceToken.isBtc
-        ? SwapStatusSimple.processing
-        : status;
+    final effectiveStatus =
+        status == SwapStatusSimple.waitingForDeposit && widget.sourceToken.isBtc
+            ? SwapStatusSimple.processing
+            : status;
 
     switch (effectiveStatus) {
       case SwapStatusSimple.waitingForDeposit:
@@ -408,14 +409,17 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
                       Text(
                         'From',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
                             ),
                       ),
                       Text(
                         '${widget.sourceToken.symbol} (${widget.sourceToken.network})',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ],
                   ),
@@ -430,7 +434,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
             ),
             // Divider with arrow
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppTheme.elementSpacing),
+              padding:
+                  const EdgeInsets.symmetric(vertical: AppTheme.elementSpacing),
               child: Row(
                 children: [
                   Expanded(
@@ -472,14 +477,17 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
                       Text(
                         'To',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
                             ),
                       ),
                       Text(
                         '${widget.targetToken.symbol} (${widget.targetToken.network})',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ],
                   ),
@@ -512,13 +520,17 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
             Row(
               children: [
                 Icon(
-                  isLightningInvoice ? Icons.bolt_rounded : Icons.account_balance_wallet_rounded,
+                  isLightningInvoice
+                      ? Icons.bolt_rounded
+                      : Icons.account_balance_wallet_rounded,
                   color: AppTheme.colorBitcoin,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isLightningInvoice ? 'Pay Lightning Invoice' : 'Send to Address',
+                  isLightningInvoice
+                      ? 'Pay Lightning Invoice'
+                      : 'Send to Address',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -531,7 +543,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
               child: GestureDetector(
                 onTap: () => _copyToClipboard(depositAddress),
                 child: CustomPaint(
-                  foregroundPainter: isDarkMode ? BorderPainter() : BorderPainterBlack(),
+                  foregroundPainter:
+                      isDarkMode ? BorderPainter() : BorderPainterBlack(),
                   child: Container(
                     margin: const EdgeInsets.all(AppTheme.elementSpacing),
                     decoration: BoxDecoration(
@@ -608,7 +621,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   }
 
   /// Build WalletConnect claim section for Ethereum swaps
-  Widget _buildWalletConnectClaimSection(BuildContext context, bool isDarkMode) {
+  Widget _buildWalletConnectClaimSection(
+      BuildContext context, bool isDarkMode) {
     return GlassContainer(
       borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
       child: Padding(
@@ -655,7 +669,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
               LongButtonWidget(
                 title: _isClaimingGelato ? 'Claiming...' : 'Claim Tokens',
                 customWidth: double.infinity,
-                state: _isClaimingGelato ? ButtonState.loading : ButtonState.idle,
+                state:
+                    _isClaimingGelato ? ButtonState.loading : ButtonState.idle,
                 onTap: _isClaimingGelato ? null : _claimViaWalletConnect,
               ),
             ],

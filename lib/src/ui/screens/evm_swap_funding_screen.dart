@@ -68,7 +68,8 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
   void _onWalletStateChanged() {
     if (mounted) {
       setState(() {
-        if (_walletService.isConnected && _currentStep == FundingStep.connectWallet) {
+        if (_walletService.isConnected &&
+            _currentStep == FundingStep.connectWallet) {
           _currentStep = FundingStep.createSwap;
         }
       });
@@ -84,7 +85,8 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
   }
 
   Future<void> _createSwap() async {
-    if (!_walletService.isConnected || _walletService.connectedAddress == null) {
+    if (!_walletService.isConnected ||
+        _walletService.connectedAddress == null) {
       setState(() => _error = 'Please connect your wallet first');
       return;
     }
@@ -94,13 +96,15 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
     // Validate EVM address format (should start with 0x and be 42 chars)
     if (_walletService.isSolanaAddress && !_walletService.isEvmAddress) {
       logger.w('Connected purely with Solana: $connectedAddress');
-      setState(() => _error = 'You connected with a Solana address. LendaSwap currently only supports Polygon and Ethereum for these swaps. If you are using Phantom, please make sure to select Polygon or Ethereum in the AppKit network selection.');
+      setState(() => _error =
+          'You connected with a Solana address. LendaSwap currently only supports Polygon and Ethereum for these swaps. If you are using Phantom, please make sure to select Polygon or Ethereum in the AppKit network selection.');
       return;
     }
 
     if (!connectedAddress.startsWith('0x') || connectedAddress.length != 42) {
       logger.e('Invalid EVM address format: $connectedAddress');
-      setState(() => _error = 'Invalid wallet address format. Please connect an EVM-compatible wallet (Polygon/Ethereum).');
+      setState(() => _error =
+          'Invalid wallet address format. Please connect an EVM-compatible wallet (Polygon/Ethereum).');
       return;
     }
 
@@ -137,7 +141,8 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
 
       logger.i('Swap created: ${result.swapId}');
       logger.i('HTLC address: ${result.evmHtlcAddress}');
-      logger.i('createSwapTx: ${result.createSwapTx?.substring(0, 20) ?? "null"}...');
+      logger.i(
+          'createSwapTx: ${result.createSwapTx?.substring(0, 20) ?? "null"}...');
     } catch (e) {
       logger.e('Failed to create swap: $e');
       setState(() => _error = 'Failed to create swap: ${e.toString()}');
@@ -243,7 +248,8 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
                 decoration: BoxDecoration(
                   color: AppTheme.errorColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-                  border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.3)),
+                  border: Border.all(
+                      color: AppTheme.errorColor.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -382,8 +388,12 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
       circleColor = AppTheme.colorBitcoin;
       textColor = isDark ? Colors.white : Colors.black;
     } else {
-      circleColor = isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.2);
-      textColor = isDark ? Colors.white.withValues(alpha: 0.4) : Colors.black.withValues(alpha: 0.4);
+      circleColor = isDark
+          ? Colors.white.withValues(alpha: 0.2)
+          : Colors.black.withValues(alpha: 0.2);
+      textColor = isDark
+          ? Colors.white.withValues(alpha: 0.4)
+          : Colors.black.withValues(alpha: 0.4);
     }
 
     return Row(
@@ -433,7 +443,9 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
       margin: const EdgeInsets.only(left: 13),
       height: 20,
       width: 2,
-      color: isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.2),
+      color: isDark
+          ? Colors.white.withValues(alpha: 0.2)
+          : Colors.black.withValues(alpha: 0.2),
     );
   }
 
@@ -497,7 +509,8 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
                           Text(
                             _walletService.shortAddress ?? '',
                             style: TextStyle(
-                              color: isDark ? AppTheme.white60 : AppTheme.black60,
+                              color:
+                                  isDark ? AppTheme.white60 : AppTheme.black60,
                               fontFamily: 'monospace',
                               fontSize: 12,
                             ),
@@ -515,7 +528,8 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
                         });
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                       ),
                       child: Text(
                         'Switch',
@@ -568,10 +582,16 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      _buildDetailRow('Swap ID', '${_swapResult!.swapId.substring(0, 8)}...', isDark),
-                      _buildDetailRow('HTLC', '${_swapResult!.evmHtlcAddress.substring(0, 10)}...', isDark),
-                      _buildDetailRow('You receive', '${_swapResult!.satsToReceive} sats', isDark),
-                      _buildDetailRow('Fee', '${_swapResult!.feeSats} sats', isDark),
+                      _buildDetailRow('Swap ID',
+                          '${_swapResult!.swapId.substring(0, 8)}...', isDark),
+                      _buildDetailRow(
+                          'HTLC',
+                          '${_swapResult!.evmHtlcAddress.substring(0, 10)}...',
+                          isDark),
+                      _buildDetailRow('You receive',
+                          '${_swapResult!.satsToReceive} sats', isDark),
+                      _buildDetailRow(
+                          'Fee', '${_swapResult!.feeSats} sats', isDark),
                     ],
                   ),
                 ),

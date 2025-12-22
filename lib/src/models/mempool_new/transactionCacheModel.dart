@@ -74,29 +74,29 @@ class TransactionCacheModel {
       );
 
   Map<String, dynamic> toJson() => {
-    "txid": txid,
-    "version": version,
-    "locktime": locktime,
-    "vin": List<dynamic>.from(vin.map((x) => x.toJson())),
-    "vout": List<dynamic>.from(vout.map((x) => x.toJson())),
-    "size": size,
-    "weight": weight,
-    "sigops": sigops,
-    "fee": fee,
-    "status": status.toJson(),
-    "order": order,
-    "vsize": vsize,
-    "adjustedVsize": adjustedVsize,
-    "feePerVsize": feePerVsize,
-    "adjustedFeePerVsize": adjustedFeePerVsize,
-    "effectiveFeePerVsize": effectiveFeePerVsize,
-    "firstSeen": firstSeen,
-    "uid": uid,
-    "inputs": List<dynamic>.from(inputs.map((x) => x)),
-    "position": position.toJson(),
-    "bestDescendant": bestDescendant,
-    "cpfpChecked": cpfpChecked,
-  };
+        "txid": txid,
+        "version": version,
+        "locktime": locktime,
+        "vin": List<dynamic>.from(vin.map((x) => x.toJson())),
+        "vout": List<dynamic>.from(vout.map((x) => x.toJson())),
+        "size": size,
+        "weight": weight,
+        "sigops": sigops,
+        "fee": fee,
+        "status": status.toJson(),
+        "order": order,
+        "vsize": vsize,
+        "adjustedVsize": adjustedVsize,
+        "feePerVsize": feePerVsize,
+        "adjustedFeePerVsize": adjustedFeePerVsize,
+        "effectiveFeePerVsize": effectiveFeePerVsize,
+        "firstSeen": firstSeen,
+        "uid": uid,
+        "inputs": List<dynamic>.from(inputs.map((x) => x)),
+        "position": position.toJson(),
+        "bestDescendant": bestDescendant,
+        "cpfpChecked": cpfpChecked,
+      };
 }
 
 class Position {
@@ -146,28 +146,28 @@ class Vin {
   });
 
   factory Vin.fromJson(Map<String, dynamic> json) => Vin(
-    txid: json["txid"],
-    vout: json["vout"],
-    prevout: Vout.fromJson(json["prevout"]),
-    scriptsig: json["scriptsig"],
-    scriptsigAsm: json["scriptsig_asm"],
-    witness: List<String>.from(json["witness"].map((x) => x)),
-    isCoinbase: json["is_coinbase"],
-    sequence: json["sequence"],
-    innerWitnessscriptAsm: json["inner_witnessscript_asm"],
-  );
+        txid: json["txid"],
+        vout: json["vout"],
+        prevout: Vout.fromJson(json["prevout"]),
+        scriptsig: json["scriptsig"],
+        scriptsigAsm: json["scriptsig_asm"],
+        witness: List<String>.from(json["witness"].map((x) => x)),
+        isCoinbase: json["is_coinbase"],
+        sequence: json["sequence"],
+        innerWitnessscriptAsm: json["inner_witnessscript_asm"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "txid": txid,
-    "vout": vout,
-    "prevout": prevout.toJson(),
-    "scriptsig": scriptsig,
-    "scriptsig_asm": scriptsigAsm,
-    "witness": List<dynamic>.from(witness.map((x) => x)),
-    "is_coinbase": isCoinbase,
-    "sequence": sequence,
-    "inner_witnessscript_asm": innerWitnessscriptAsm,
-  };
+        "txid": txid,
+        "vout": vout,
+        "prevout": prevout.toJson(),
+        "scriptsig": scriptsig,
+        "scriptsig_asm": scriptsigAsm,
+        "witness": List<dynamic>.from(witness.map((x) => x)),
+        "is_coinbase": isCoinbase,
+        "sequence": sequence,
+        "inner_witnessscript_asm": innerWitnessscriptAsm,
+      };
 }
 
 class Vout {
@@ -186,18 +186,18 @@ class Vout {
   });
 
   factory Vout.fromJson(Map<String, dynamic> json) => Vout(
-    scriptpubkey: json["scriptpubkey"],
-    scriptpubkeyAsm: json["scriptpubkey_asm"],
-    scriptpubkeyType: json["scriptpubkey_type"],
-    scriptpubkeyAddress: json["scriptpubkey_address"],
-    value: json["value"],
-  );
+        scriptpubkey: json["scriptpubkey"],
+        scriptpubkeyAsm: json["scriptpubkey_asm"],
+        scriptpubkeyType: json["scriptpubkey_type"],
+        scriptpubkeyAddress: json["scriptpubkey_address"],
+        value: json["value"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "scriptpubkey": scriptpubkey,
-    "scriptpubkey_asm": scriptpubkeyAsm,
-    "scriptpubkey_type": scriptpubkeyType,
-    "scriptpubkey_address": scriptpubkeyAddress,
-    "value": value,
-  };
+        "scriptpubkey": scriptpubkey,
+        "scriptpubkey_asm": scriptpubkeyAsm,
+        "scriptpubkey_type": scriptpubkeyType,
+        "scriptpubkey_address": scriptpubkeyAddress,
+        "value": value,
+      };
 }

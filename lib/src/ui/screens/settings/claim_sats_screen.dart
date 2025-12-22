@@ -143,7 +143,8 @@ class _ClaimSatsScreenState extends State<ClaimSatsScreen> {
           setState(() {
             _isCheckingEligibility = false;
             _isEligible = false;
-            _eligibilityError = 'Could not verify eligibility. Please try again.';
+            _eligibilityError =
+                'Could not verify eligibility. Please try again.';
           });
         }
       }
@@ -195,7 +196,8 @@ class _ClaimSatsScreenState extends State<ClaimSatsScreen> {
     });
 
     if (mounted) {
-      OverlayService().showSuccess('Claim submitted! 500 sats will be added soon.');
+      OverlayService()
+          .showSuccess('Claim submitted! 500 sats will be added soon.');
     }
   }
 
@@ -268,8 +270,9 @@ class _ClaimSatsScreenState extends State<ClaimSatsScreen> {
                               'You have already claimed your gift on this device.',
                               style: TextStyle(
                                 fontSize: 16,
-                                color:
-                                    isDark ? AppTheme.white90 : AppTheme.black90,
+                                color: isDark
+                                    ? AppTheme.white90
+                                    : AppTheme.black90,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -310,8 +313,8 @@ class _ClaimSatsScreenState extends State<ClaimSatsScreen> {
 
                       if (!_turnstileCompleted)
                         Padding(
-                          padding:
-                              const EdgeInsets.only(top: AppTheme.elementSpacing),
+                          padding: const EdgeInsets.only(
+                              top: AppTheme.elementSpacing),
                           child: Text(
                             'Complete the verification above to claim',
                             style: TextStyle(

@@ -22,7 +22,8 @@ class TransactionSuccessScreen extends StatefulWidget {
   });
 
   @override
-  State<TransactionSuccessScreen> createState() => _TransactionSuccessScreenState();
+  State<TransactionSuccessScreen> createState() =>
+      _TransactionSuccessScreenState();
 }
 
 class _TransactionSuccessScreenState extends State<TransactionSuccessScreen> {
@@ -42,8 +43,6 @@ class _TransactionSuccessScreenState extends State<TransactionSuccessScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: BitNetAppBar(

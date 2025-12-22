@@ -108,7 +108,8 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
                           : theme.colorScheme.primary == AppTheme.colorBitcoin
                               ? [
                                   AppTheme.colorBitcoin,
-                                  AppTheme.colorBitcoin, // Sophisticated midpoint orange
+                                  AppTheme
+                                      .colorBitcoin, // Sophisticated midpoint orange
                                   //AppTheme.colorPrimaryGradient
                                 ]
                               : [
@@ -199,7 +200,8 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
                                                         ButtonType.solid ||
                                                     widget.buttonType ==
                                                         ButtonType.primary
-                                                ? const Color(0xFF1A0A00) // Very dark brown for solid buttons
+                                                ? const Color(
+                                                    0xFF1A0A00) // Very dark brown for solid buttons
                                                 : theme.brightness ==
                                                         Brightness.light
                                                     ? AppTheme.black70

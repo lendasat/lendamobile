@@ -56,7 +56,8 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
 
   Future<void> _loadBipWords() async {
     try {
-      final String bipWordsText = await rootBundle.loadString('assets/textfiles/bip_words.txt');
+      final String bipWordsText =
+          await rootBundle.loadString('assets/textfiles/bip_words.txt');
       setState(() {
         _bipWords = bipWordsText.split(' ');
       });
@@ -68,7 +69,8 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
   void _onFocusChange(int index) {
     if (_focusNodes[index].hasFocus) {
       int pageIndex = index ~/ 4;
-      if (_pageController.hasClients && _pageController.page?.round() != pageIndex) {
+      if (_pageController.hasClients &&
+          _pageController.page?.round() != pageIndex) {
         _pageController.animateToPage(
           pageIndex,
           duration: const Duration(milliseconds: 300),
@@ -130,7 +132,8 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
 
   void _moveToNext() {
     int currentFocusIndex = _focusNodes.indexWhere((node) => node.hasFocus);
-    if (currentFocusIndex == -1 || currentFocusIndex == _focusNodes.length - 1) {
+    if (currentFocusIndex == -1 ||
+        currentFocusIndex == _focusNodes.length - 1) {
       return;
     }
 
@@ -233,10 +236,12 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
         final authResult = await _lendasatService.authenticate();
 
         if (authResult is AuthResult_Success) {
-          logger.i('[RESTORE] Lendasat: Successfully authenticated as ${authResult.userName}');
+          logger.i(
+              '[RESTORE] Lendasat: Successfully authenticated as ${authResult.userName}');
           // User's loans are now accessible
         } else if (authResult is AuthResult_NeedsRegistration) {
-          logger.i('[RESTORE] Lendasat: User not registered (pubkey: ${authResult.pubkey})');
+          logger.i(
+              '[RESTORE] Lendasat: User not registered (pubkey: ${authResult.pubkey})');
           // User wasn't registered before - that's fine, they can register later from loans screen
         }
       } catch (e) {
@@ -370,11 +375,13 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
                       duration: const Duration(milliseconds: 300),
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       width: _pageController.hasClients &&
-                             (_pageController.page?.round() ?? 0) == index ? 24 : 8,
+                              (_pageController.page?.round() ?? 0) == index
+                          ? 24
+                          : 8,
                       height: 8,
                       decoration: BoxDecoration(
                         color: _pageController.hasClients &&
-                               (_pageController.page?.round() ?? 0) == index
+                                (_pageController.page?.round() ?? 0) == index
                             ? Colors.orange
                             : Theme.of(context).hintColor.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(4),
@@ -393,7 +400,9 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
                   customWidth: double.infinity,
                   customHeight: 56,
                   isLoading: _isLoading,
-                  onTap: _isLoading ? null : (_onLastPage ? _handleRestore : _nextPage),
+                  onTap: _isLoading
+                      ? null
+                      : (_onLastPage ? _handleRestore : _nextPage),
                 ),
               ],
             ),
@@ -420,8 +429,10 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
   Widget _buildWordField(int index) {
     final controller = _textControllers[index];
     final focusNode = _focusNodes[index];
-    final bool isValid = controller.text.isNotEmpty && _isValidWord(controller.text);
-    final bool isInvalid = controller.text.isNotEmpty && !_isValidWord(controller.text);
+    final bool isValid =
+        controller.text.isNotEmpty && _isValidWord(controller.text);
+    final bool isInvalid =
+        controller.text.isNotEmpty && !_isValidWord(controller.text);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -431,7 +442,9 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
         style: TextStyle(
           color: isValid
               ? AppTheme.successColor
-              : (isInvalid ? AppTheme.errorColor : Theme.of(context).colorScheme.onSurface),
+              : (isInvalid
+                  ? AppTheme.errorColor
+                  : Theme.of(context).colorScheme.onSurface),
           fontSize: 16,
         ),
         decoration: InputDecoration(
@@ -454,7 +467,8 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
           ),
           filled: true,
           fillColor: Theme.of(context).colorScheme.surface,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
@@ -481,14 +495,19 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
             ),
           ),
         ),
-        textInputAction: index < 11 ? TextInputAction.next : TextInputAction.done,
+        textInputAction:
+            index < 11 ? TextInputAction.next : TextInputAction.done,
         onChanged: (value) {
           setState(() {});
           // Auto-advance if valid word is complete
           if (_isValidWord(value.trim().toLowerCase())) {
             // Check if this is the longest possible match
-            final matches = _bipWords.where((w) => w.startsWith(value.toLowerCase())).toList();
-            final longestMatch = matches.isEmpty ? 0 : matches.map((w) => w.length).reduce((a, b) => a > b ? a : b);
+            final matches = _bipWords
+                .where((w) => w.startsWith(value.toLowerCase()))
+                .toList();
+            final longestMatch = matches.isEmpty
+                ? 0
+                : matches.map((w) => w.length).reduce((a, b) => a > b ? a : b);
             if (value.length == longestMatch) {
               _moveToNext();
             }

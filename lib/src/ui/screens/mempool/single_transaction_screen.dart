@@ -107,7 +107,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
 
         OverlayService().showSuccess(l10n.transactionSettledSuccessfully);
 
-        Navigator.of(context).pop(true); // Return true to indicate settlement occurred
+        Navigator.of(context)
+            .pop(true); // Return true to indicate settlement occurred
       }
     } catch (e) {
       if (mounted) {
@@ -115,7 +116,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
           _isSettling = false;
         });
 
-        OverlayService().showError('${l10n.failedToSettleTransaction} ${e.toString()}');
+        OverlayService()
+            .showError('${l10n.failedToSettleTransaction} ${e.toString()}');
       }
     }
   }
@@ -178,7 +180,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
     // For main view, determine sent/received and format amount
     final isSent = _isSent(widget.amountSats);
     final displayAmountSats = widget.amountSats ?? outputTotal.toInt();
-    final (formattedAmount, unit, isSatsUnit) = _formatAmountWithUnit(displayAmountSats);
+    final (formattedAmount, unit, isSatsUnit) =
+        _formatAmountWithUnit(displayAmountSats);
 
     return ArkScaffold(
       context: context,
@@ -203,7 +206,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(AppTheme.elementSpacing),
-                      margin: const EdgeInsets.only(bottom: AppTheme.elementSpacing),
+                      margin: const EdgeInsets.only(
+                          bottom: AppTheme.elementSpacing),
                       decoration: BoxDecoration(
                         color: AppTheme.colorBitcoin.withAlpha(30),
                         borderRadius: AppTheme.cardRadiusSmall,
@@ -226,11 +230,13 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                       ),
                     ),
                     LongButtonWidget(
-                      title: _isSettling ? l10n.settlingTransaction : l10n.settle,
+                      title:
+                          _isSettling ? l10n.settlingTransaction : l10n.settle,
                       customWidth: double.infinity,
                       customHeight: 48,
                       isLoading: _isSettling,
-                      onTap: _isSettling ? null : () => _handleSettlement(context),
+                      onTap:
+                          _isSettling ? null : () => _handleSettlement(context),
                     ),
                   ],
                 ),
@@ -276,8 +282,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               children: [
                                                 Avatar(
                                                   size:
-                                                      AppTheme.cardPadding *
-                                                          4,
+                                                      AppTheme.cardPadding * 4,
                                                   onTap: () {
                                                     _showInputsBottomSheet(
                                                         context);
@@ -285,9 +290,9 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   isNft: false,
                                                 ),
                                                 const SizedBox(
-                                                  height: AppTheme
-                                                          .elementSpacing *
-                                                      0.5,
+                                                  height:
+                                                      AppTheme.elementSpacing *
+                                                          0.5,
                                                 ),
                                                 Text(
                                                   "Sender (${transactionModel?.vin.where((v) => v.prevout != null).length})",
@@ -295,13 +300,12 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               ],
                                             ),
                                             const SizedBox(
-                                              width: AppTheme.cardPadding *
-                                                  0.75,
+                                              width:
+                                                  AppTheme.cardPadding * 0.75,
                                             ),
                                             Icon(
                                               Icons.double_arrow_rounded,
-                                              size:
-                                                  AppTheme.cardPadding * 2.5,
+                                              size: AppTheme.cardPadding * 2.5,
                                               color: Theme.of(context)
                                                           .brightness ==
                                                       Brightness.dark
@@ -309,15 +313,14 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   : AppTheme.black60,
                                             ),
                                             const SizedBox(
-                                              width: AppTheme.cardPadding *
-                                                  0.75,
+                                              width:
+                                                  AppTheme.cardPadding * 0.75,
                                             ),
                                             Column(
                                               children: [
                                                 Avatar(
                                                   size:
-                                                      AppTheme.cardPadding *
-                                                          4,
+                                                      AppTheme.cardPadding * 4,
                                                   isNft: false,
                                                   onTap: () {
                                                     _showOutputsBottomSheet(
@@ -325,9 +328,9 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   },
                                                 ),
                                                 const SizedBox(
-                                                  height: AppTheme
-                                                          .elementSpacing *
-                                                      0.5,
+                                                  height:
+                                                      AppTheme.elementSpacing *
+                                                          0.5,
                                                 ),
                                                 Text(
                                                   "Receiver (${transactionModel?.vout.length})",
@@ -343,8 +346,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                   // Nested details container
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal:
-                                          AppTheme.elementSpacing * 0.5,
+                                      horizontal: AppTheme.elementSpacing * 0.5,
                                       vertical: AppTheme.elementSpacing,
                                     ),
                                     child: GlassContainer(
@@ -386,11 +388,15 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   ),
                                                   if (isSatsUnit)
                                                     Padding(
-                                                      padding: const EdgeInsets.only(left: 2),
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              left: 2),
                                                       child: Icon(
                                                         AppTheme.satoshiIcon,
                                                         size: 16,
-                                                        color: Theme.of(context).colorScheme.onSurface,
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface,
                                                       ),
                                                     )
                                                   else
@@ -418,15 +424,20 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                 ),
                                                 text: l10n.direction,
                                                 trailing: Row(
-                                                  mainAxisSize: MainAxisSize.min,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
                                                   children: [
                                                     Icon(
-                                                      isSent ? Icons.north_east : Icons.south_west,
+                                                      isSent
+                                                          ? Icons.north_east
+                                                          : Icons.south_west,
                                                       size: 18,
                                                     ),
                                                     const SizedBox(width: 6),
                                                     Text(
-                                                      isSent ? l10n.sent : l10n.received,
+                                                      isSent
+                                                          ? l10n.sent
+                                                          : l10n.received,
                                                       style: Theme.of(context)
                                                           .textTheme
                                                           .titleMedium,
@@ -452,7 +463,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   ClipboardData(text: txID!),
                                                 );
                                                 if (context.mounted) {
-                                                  OverlayService().showSuccess(l10n.copiedToClipboard);
+                                                  OverlayService().showSuccess(
+                                                      l10n.copiedToClipboard);
                                                 }
                                               },
                                               trailing: Row(
@@ -460,8 +472,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   Icon(
                                                     Icons.copy,
                                                     color: AppTheme.white60,
-                                                    size: AppTheme
-                                                            .cardPadding *
+                                                    size: AppTheme.cardPadding *
                                                         0.75,
                                                   ),
                                                   const SizedBox(
@@ -470,9 +481,9 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                         2,
                                                   ),
                                                   SizedBox(
-                                                    width: AppTheme
-                                                            .cardPadding *
-                                                        5,
+                                                    width:
+                                                        AppTheme.cardPadding *
+                                                            5,
                                                     child: Text(
                                                       txID!,
                                                       style: Theme.of(context)
@@ -533,10 +544,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                   BlinkingDot(
                                                     color: transactionModel!
                                                             .status.confirmed
-                                                        ? AppTheme
-                                                            .successColor
-                                                        : AppTheme
-                                                            .errorColor,
+                                                        ? AppTheme.successColor
+                                                        : AppTheme.errorColor,
                                                   ),
                                                   const SizedBox(width: 8),
                                                   Text(
@@ -598,12 +607,12 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                 children: [
                                                   Image.asset(
                                                     "assets/images/bitcoin.png",
-                                                    width: AppTheme
-                                                            .cardPadding *
-                                                        1,
-                                                    height: AppTheme
-                                                            .cardPadding *
-                                                        1,
+                                                    width:
+                                                        AppTheme.cardPadding *
+                                                            1,
+                                                    height:
+                                                        AppTheme.cardPadding *
+                                                            1,
                                                     errorBuilder: (context,
                                                         error, stackTrace) {
                                                       return const Icon(
@@ -619,7 +628,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                         2,
                                                   ),
                                                   Text(
-                                                    widget.networkType ?? 'Onchain',
+                                                    widget.networkType ??
+                                                        'Onchain',
                                                     style: Theme.of(context)
                                                         .textTheme
                                                         .titleMedium,
@@ -637,19 +647,18 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                               ArkListTile(
                                                 contentPadding:
                                                     const EdgeInsets.symmetric(
-                                                  horizontal: AppTheme
-                                                          .elementSpacing *
-                                                      0.75,
-                                                  vertical: AppTheme
-                                                          .elementSpacing *
-                                                      0.5,
+                                                  horizontal:
+                                                      AppTheme.elementSpacing *
+                                                          0.75,
+                                                  vertical:
+                                                      AppTheme.elementSpacing *
+                                                          0.5,
                                                 ),
                                                 text: 'Time',
                                                 leading: Icon(
                                                   Icons.access_time,
-                                                  size:
-                                                      AppTheme.cardPadding *
-                                                          0.75,
+                                                  size: AppTheme.cardPadding *
+                                                      0.75,
                                                   color: Theme.of(context)
                                                               .brightness ==
                                                           Brightness.dark
@@ -671,9 +680,9 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                             .currentTimeZone
                                                             .offset));
                                                     return SizedBox(
-                                                      width: AppTheme
-                                                              .cardPadding *
-                                                          7,
+                                                      width:
+                                                          AppTheme.cardPadding *
+                                                              7,
                                                       child: Text(
                                                         '${DateFormat('yyyy-MM-dd HH:mm').format(datetime)}'
                                                         ' (${_formatTimeAgo(datetime)})',
@@ -752,7 +761,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
   ) {
     final isSent = _isSent(widget.amountSats);
     final amountSats = widget.amountSats ?? 0;
-    final (formattedAmount, unit, isSatsUnit) = _formatAmountWithUnit(amountSats);
+    final (formattedAmount, unit, isSatsUnit) =
+        _formatAmountWithUnit(amountSats);
 
     String formattedDate = '--';
     if (widget.createdAt != null) {
@@ -875,11 +885,14 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                       ),
                                       if (isSatsUnit)
                                         Padding(
-                                          padding: const EdgeInsets.only(left: 2),
+                                          padding:
+                                              const EdgeInsets.only(left: 2),
                                           child: Icon(
                                             AppTheme.satoshiIcon,
                                             size: 16,
-                                            color: Theme.of(context).colorScheme.onSurface,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface,
                                           ),
                                         )
                                       else
@@ -897,7 +910,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                 if (widget.amountSats != null)
                                   ArkListTile(
                                     contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: AppTheme.elementSpacing * 0.75,
+                                      horizontal:
+                                          AppTheme.elementSpacing * 0.75,
                                       vertical: AppTheme.elementSpacing * 0.5,
                                     ),
                                     text: l10n.direction,
@@ -905,7 +919,9 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          isSent ? Icons.north_east : Icons.south_west,
+                                          isSent
+                                              ? Icons.north_east
+                                              : Icons.south_west,
                                           size: 18,
                                         ),
                                         const SizedBox(width: 6),
@@ -932,7 +948,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                             ClipboardData(text: txID!),
                                           );
                                           if (context.mounted) {
-                                            OverlayService().showSuccess(l10n.copiedToClipboard);
+                                            OverlayService().showSuccess(
+                                                l10n.copiedToClipboard);
                                           }
                                         }
                                       : null,
@@ -965,7 +982,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                 if (widget.transactionType != null)
                                   ArkListTile(
                                     contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: AppTheme.elementSpacing * 0.75,
+                                      horizontal:
+                                          AppTheme.elementSpacing * 0.75,
                                       vertical: AppTheme.elementSpacing * 0.5,
                                     ),
                                     text: 'Type',
@@ -1051,7 +1069,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                 if (widget.createdAt != null)
                                   ArkListTile(
                                     contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: AppTheme.elementSpacing * 0.75,
+                                      horizontal:
+                                          AppTheme.elementSpacing * 0.75,
                                       vertical: AppTheme.elementSpacing * 0.5,
                                     ),
                                     text: 'Time',
@@ -1320,9 +1339,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
           Text(
             value.toStringAsFixed(8),
             style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  color: isInput
-                      ? AppTheme.errorColor
-                      : AppTheme.successColor,
+                  color: isInput ? AppTheme.errorColor : AppTheme.successColor,
                 ),
           ),
         ],

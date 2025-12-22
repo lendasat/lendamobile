@@ -3,7 +3,8 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
-import 'package:ark_flutter/src/services/lendaswap_service.dart' show LendaSwapService;
+import 'package:ark_flutter/src/services/lendaswap_service.dart'
+    show LendaSwapService;
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
@@ -177,7 +178,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         );
 
         if (mounted) {
-          OverlayService().showSuccess('Collateral claimed! TXID: ${txid.substring(0, 16)}...');
+          OverlayService().showSuccess(
+              'Collateral claimed! TXID: ${txid.substring(0, 16)}...');
           await _refreshContract();
         }
       } else {
@@ -194,7 +196,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         );
 
         if (mounted) {
-          OverlayService().showSuccess('Collateral claimed! TXID: ${txid.substring(0, 16)}...');
+          OverlayService().showSuccess(
+              'Collateral claimed! TXID: ${txid.substring(0, 16)}...');
           await _refreshContract();
         }
       }
@@ -227,7 +230,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       );
 
       if (mounted) {
-        OverlayService().showSuccess('Collateral recovered! TXID: ${txid.substring(0, 16)}...');
+        OverlayService().showSuccess(
+            'Collateral recovered! TXID: ${txid.substring(0, 16)}...');
         await _refreshContract();
       }
     } catch (e) {
@@ -247,8 +251,10 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     if (_contract == null) return;
 
     // Verify contract is ready for collateral (use effectiveCollateralSats which has initialCollateralSats fallback)
-    if (_contract!.contractAddress == null || _contract!.effectiveCollateralSats <= 0) {
-      OverlayService().showError('Contract not ready for collateral yet. Please wait.');
+    if (_contract!.contractAddress == null ||
+        _contract!.effectiveCollateralSats <= 0) {
+      OverlayService()
+          .showError('Contract not ready for collateral yet. Please wait.');
       return;
     }
 
@@ -303,7 +309,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       );
 
       if (mounted) {
-        OverlayService().showSuccess('Collateral sent! Loan is being processed.');
+        OverlayService()
+            .showSuccess('Collateral sent! Loan is being processed.');
         await _refreshContract();
       }
     } catch (e) {
@@ -347,14 +354,20 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
               'This will swap BTC from your wallet to ${targetToken.symbol} '
               'and send it to the lender\'s repayment address.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.7),
                   ),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -406,7 +419,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       final walletBalance = await ark_api.balance();
       final availableSats = walletBalance.offchain.totalSats;
 
-      logger.i('[LoanRepay] Repaying \$${amountToRepay.toStringAsFixed(2)} to $repaymentAddress');
+      logger.i(
+          '[LoanRepay] Repaying \$${amountToRepay.toStringAsFixed(2)} to $repaymentAddress');
 
       // Create the swap - BTC to stablecoin, sent to repayment address
       // For loan repayment, amount is in USD which equals token amount for stablecoins
@@ -417,7 +431,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         targetChain: targetToken.chainId,
       );
 
-      logger.i('[LoanRepay] Swap created: ${result.swapId}, sending ${result.satsToSend} sats to ${result.arkadeHtlcAddress}');
+      logger.i(
+          '[LoanRepay] Swap created: ${result.swapId}, sending ${result.satsToSend} sats to ${result.arkadeHtlcAddress}');
 
       // Check if we have enough balance
       final satsToSend = BigInt.from(result.satsToSend);
@@ -510,16 +525,88 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              Text(
-                'Enter the transaction ID of your payment to confirm repayment.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-
-              // Installment selector (if multiple)
-              if (unpaidInstallments.length > 1) ...[
                 Text(
-                  'Select Installment',
+                  'Enter the transaction ID of your payment to confirm repayment.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+
+                // Installment selector (if multiple)
+                if (unpaidInstallments.length > 1) ...[
+                  Text(
+                    'Select Installment',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.7),
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.2),
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButton<Installment>(
+                      value: selectedInstallment,
+                      isExpanded: true,
+                      underline: const SizedBox(),
+                      items: unpaidInstallments.map((i) {
+                        return DropdownMenuItem(
+                          value: i,
+                          child: Text(
+                            '\$${i.totalPayment.toStringAsFixed(2)} - Due ${_formatDate(i.dueDate)}',
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() => selectedInstallment = value);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ] else ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.payments,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '\$${selectedInstallment.totalPayment.toStringAsFixed(2)} due ${_formatDate(selectedInstallment.dueDate)}',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Transaction ID input
+                Text(
+                  'Transaction ID',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: Theme.of(context)
                             .colorScheme
@@ -528,91 +615,19 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                       ),
                 ),
                 const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.2),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
+                TextField(
+                  controller: txidController,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter transaction ID or hash',
+                    border: OutlineInputBorder(),
                   ),
-                  child: DropdownButton<Installment>(
-                    value: selectedInstallment,
-                    isExpanded: true,
-                    underline: const SizedBox(),
-                    items: unpaidInstallments.map((i) {
-                      return DropdownMenuItem(
-                        value: i,
-                        child: Text(
-                          '\$${i.totalPayment.toStringAsFixed(2)} - Due ${_formatDate(i.dueDate)}',
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setDialogState(() => selectedInstallment = value);
-                      }
-                    },
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 12,
                   ),
+                  maxLines: 2,
                 ),
-                const SizedBox(height: 16),
-              ] else ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.payments,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '\$${selectedInstallment.totalPayment.toStringAsFixed(2)} due ${_formatDate(selectedInstallment.dueDate)}',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
               ],
-
-              // Transaction ID input
-              Text(
-                'Transaction ID',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.7),
-                    ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: txidController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter transaction ID or hash',
-                  border: OutlineInputBorder(),
-                ),
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 12,
-                ),
-                maxLines: 2,
-              ),
-            ],
             ),
           ),
           actions: [
@@ -647,7 +662,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       );
 
       if (mounted) {
-        OverlayService().showSuccess('Payment confirmed! Refreshing contract...');
+        OverlayService()
+            .showSuccess('Payment confirmed! Refreshing contract...');
         await _refreshContract();
       }
     } catch (e) {
@@ -730,11 +746,13 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   Widget _buildErrorView() {
     // Extract user-friendly error message
     String displayMessage = _errorMessage ?? 'Unknown error';
-    if (displayMessage.contains('401 Unauthorized') || displayMessage.contains('Invalid token')) {
+    if (displayMessage.contains('401 Unauthorized') ||
+        displayMessage.contains('Invalid token')) {
       displayMessage = 'Session expired. Please go back and try again.';
     } else if (displayMessage.contains('AnyhowException')) {
       // Clean up Rust error format
-      final match = RegExp(r'AnyhowException\(([^)]+)').firstMatch(displayMessage);
+      final match =
+          RegExp(r'AnyhowException\(([^)]+)').firstMatch(displayMessage);
       if (match != null) {
         displayMessage = match.group(1) ?? displayMessage;
       }
@@ -747,7 +765,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppTheme.errorColor),
+            const Icon(Icons.error_outline,
+                size: 64, color: AppTheme.errorColor),
             const SizedBox(height: AppTheme.cardPadding),
             Text(
               'Error Loading Contract',
@@ -778,7 +797,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           Icon(
             Icons.search_off,
             size: 64,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: AppTheme.cardPadding),
           Text(
@@ -813,7 +833,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             const SizedBox(height: AppTheme.cardPadding),
 
             // Repayment schedule (if active loan or has installments)
-            if (_contract!.isActiveLoan || _contract!.installments.isNotEmpty) ...[
+            if (_contract!.isActiveLoan ||
+                _contract!.installments.isNotEmpty) ...[
               _buildRepaymentSchedule(),
               const SizedBox(height: AppTheme.cardPadding),
             ],
@@ -869,7 +890,9 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                     Text(
                       'LOAN AMOUNT',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.0,
                           ),
@@ -877,10 +900,11 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                     const SizedBox(height: 4),
                     Text(
                       '\$${_contract!.loanAmount.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -1.0,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -1.0,
+                              ),
                     ),
                   ],
                 ),
@@ -892,7 +916,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                   Text(
                     'LENDER',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.0,
                         ),
@@ -937,8 +962,12 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
                 value: _contract!.repaymentProgress,
-                backgroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
-                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.successColor),
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.05),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(AppTheme.successColor),
                 minHeight: 6,
               ),
             ),
@@ -984,7 +1013,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
   Widget _buildLoanDetails() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
@@ -992,17 +1021,23 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.description_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
+              Icon(Icons.description_rounded,
+                  size: 18, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 'Loan Details',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          _buildDetailRow('PRINCIPAL', '\$${_contract!.loanAmount.toStringAsFixed(2)}'),
-          _buildDetailRow('INTEREST', '\$${_contract!.interest.toStringAsFixed(2)}'),
+          _buildDetailRow(
+              'PRINCIPAL', '\$${_contract!.loanAmount.toStringAsFixed(2)}'),
+          _buildDetailRow(
+              'INTEREST', '\$${_contract!.interest.toStringAsFixed(2)}'),
           _buildDetailRow(
             'INTEREST RATE',
             '${(_contract!.interestRate * 100).toStringAsFixed(2)}% APY',
@@ -1011,7 +1046,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           _buildDetailRow('DURATION', '${_contract!.durationDays} days'),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
+            child:
+                Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
           ),
           _buildDetailRow(
             'TOTAL REPAYMENT',
@@ -1041,11 +1077,15 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.lock_rounded, size: 18, color: AppTheme.colorBitcoin),
+              const Icon(Icons.lock_rounded,
+                  size: 18, color: AppTheme.colorBitcoin),
               const SizedBox(width: 8),
               Text(
                 'Collateral Info',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -1082,7 +1122,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                   Text(
                     'CONTRACT ADDRESS',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                           fontWeight: FontWeight.bold,
                           fontSize: 8,
                         ),
@@ -1093,15 +1134,19 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                       Expanded(
                         child: Text(
                           _contract!.contractAddress!,
-                          style: const TextStyle(fontFamily: 'monospace', fontSize: 10),
+                          style: const TextStyle(
+                              fontFamily: 'monospace', fontSize: 10),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
                       InkWell(
-                        onTap: () => _copyToClipboard(_contract!.contractAddress!, 'Address'),
-                        child: Icon(Icons.copy_rounded, size: 14, color: Theme.of(context).colorScheme.primary),
+                        onTap: () => _copyToClipboard(
+                            _contract!.contractAddress!, 'Address'),
+                        child: Icon(Icons.copy_rounded,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.primary),
                       ),
                     ],
                   ),
@@ -1116,7 +1161,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
   Widget _buildRepaymentSchedule() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
@@ -1124,62 +1169,72 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.event_note_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
+              Icon(Icons.event_note_rounded,
+                  size: 18, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 'Repayment Schedule',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 20),
-
           if (_contract!.isActiveLoan) ...[
-            _buildDetailRow('TOTAL REPAYMENT', '\$${_contract!.totalRepayment.toStringAsFixed(2)}'),
+            _buildDetailRow('TOTAL REPAYMENT',
+                '\$${_contract!.totalRepayment.toStringAsFixed(2)}'),
             _buildDetailRow(
               'REMAINING BALANCE',
               '\$${_contract!.balanceOutstanding.toStringAsFixed(2)}',
               isBold: true,
             ),
-            
             if (_contract!.btcLoanRepaymentAddress != null &&
                 _contract!.btcLoanRepaymentAddress!.isNotEmpty) ...[
               const SizedBox(height: 12),
               GestureDetector(
-                onTap: () => _copyToClipboard(_contract!.btcLoanRepaymentAddress!, 'BTC Address'),
+                onTap: () => _copyToClipboard(
+                    _contract!.btcLoanRepaymentAddress!, 'BTC Address'),
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppTheme.colorBitcoin.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppTheme.colorBitcoin.withValues(alpha: 0.1)),
+                    border: Border.all(
+                        color: AppTheme.colorBitcoin.withValues(alpha: 0.1)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.currency_bitcoin_rounded, size: 16, color: AppTheme.colorBitcoin),
+                      const Icon(Icons.currency_bitcoin_rounded,
+                          size: 16, color: AppTheme.colorBitcoin),
                       const SizedBox(width: 8),
                       Expanded(
-                         child: Column(
-                           crossAxisAlignment: CrossAxisAlignment.start,
-                           children: [
-                             Text(
-                               'BTC REPAYMENT ADDRESS',
-                               style: TextStyle(
-                                 fontSize: 8, 
-                                 fontWeight: FontWeight.bold, 
-                                 color: AppTheme.colorBitcoin.withValues(alpha: 0.7),
-                               ),
-                             ),
-                             Text(
-                               _contract!.btcLoanRepaymentAddress!,
-                               style: const TextStyle(fontSize: 10, fontFamily: 'monospace'),
-                               maxLines: 1,
-                               overflow: TextOverflow.ellipsis,
-                             ),
-                           ],
-                         ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'BTC REPAYMENT ADDRESS',
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.colorBitcoin
+                                    .withValues(alpha: 0.7),
+                              ),
+                            ),
+                            Text(
+                              _contract!.btcLoanRepaymentAddress!,
+                              style: const TextStyle(
+                                  fontSize: 10, fontFamily: 'monospace'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
-                      Icon(Icons.copy_rounded, size: 14, color: AppTheme.colorBitcoin.withValues(alpha: 0.5)),
+                      Icon(Icons.copy_rounded,
+                          size: 14,
+                          color: AppTheme.colorBitcoin.withValues(alpha: 0.5)),
                     ],
                   ),
                 ),
@@ -1189,8 +1244,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
             const SizedBox(height: 16),
           ],
-
-          ..._contract!.installments.map((installment) => _buildInstallmentRow(installment)),
+          ..._contract!.installments
+              .map((installment) => _buildInstallmentRow(installment)),
         ],
       ),
     );
@@ -1200,7 +1255,11 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     final isPaid = installment.status == InstallmentStatus.paid ||
         installment.status == InstallmentStatus.confirmed;
     final isOverdue = installment.isOverdue;
-    final color = isPaid ? AppTheme.successColor : (isOverdue ? AppTheme.errorColor : Theme.of(context).colorScheme.primary);
+    final color = isPaid
+        ? AppTheme.successColor
+        : (isOverdue
+            ? AppTheme.errorColor
+            : Theme.of(context).colorScheme.primary);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -1213,7 +1272,11 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              isPaid ? Icons.check_rounded : (isOverdue ? Icons.priority_high_rounded : Icons.pending_rounded),
+              isPaid
+                  ? Icons.check_rounded
+                  : (isOverdue
+                      ? Icons.priority_high_rounded
+                      : Icons.pending_rounded),
               size: 14,
               color: color,
             ),
@@ -1231,9 +1294,14 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                       ),
                 ),
                 Text(
-                  isPaid ? 'Paid on ${_formatDate(installment.dueDate)}' : 'Due ${_formatDate(installment.dueDate)}',
+                  isPaid
+                      ? 'Paid on ${_formatDate(installment.dueDate)}'
+                      : 'Due ${_formatDate(installment.dueDate)}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.4),
                       ),
                 ),
               ],
@@ -1247,7 +1315,11 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             ),
             child: Text(
               installment.statusText.toUpperCase(),
-              style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+              style: TextStyle(
+                  color: color,
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5),
             ),
           ),
         ],
@@ -1260,7 +1332,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     final canPayCollateral = _contract!.status == ContractStatus.approved &&
         _contract!.contractAddress != null &&
         _contract!.effectiveCollateralSats > 0;
-    final buttonWidth = MediaQuery.of(context).size.width - AppTheme.cardPadding * 2;
+    final buttonWidth =
+        MediaQuery.of(context).size.width - AppTheme.cardPadding * 2;
 
     return Column(
       children: [
@@ -1285,12 +1358,20 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.flash_on_rounded, size: 12, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
+              Icon(Icons.flash_on_rounded,
+                  size: 12,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.5)),
               const SizedBox(width: 4),
               Text(
                 'Powered by Lendaswap',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.4),
                       fontSize: 9,
                     ),
               ),
@@ -1302,7 +1383,9 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: _isMarkingPaid ? 'CONFIRMING...' : 'I ALREADY PAID',
             buttonType: ButtonType.secondary,
-            onTap: _isMarkingPaid || _isActionLoading || _isRepaying ? null : _showMarkAsPaidDialog,
+            onTap: _isMarkingPaid || _isActionLoading || _isRepaying
+                ? null
+                : _showMarkAsPaidDialog,
           ),
         ],
         if (_contract!.canClaim) ...[
@@ -1333,9 +1416,10 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, {String? subtext, bool isBold = false, bool highlight = false}) {
+  Widget _buildDetailRow(String label, String value,
+      {String? subtext, bool isBold = false, bool highlight = false}) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -1383,5 +1467,4 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       return dateStr;
     }
   }
-
 }

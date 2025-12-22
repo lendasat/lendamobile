@@ -9,7 +9,8 @@ import 'package:flutter/services.dart';
 
 /// Service to manage payment received overlays globally
 class PaymentOverlayService {
-  static final PaymentOverlayService _instance = PaymentOverlayService._internal();
+  static final PaymentOverlayService _instance =
+      PaymentOverlayService._internal();
   factory PaymentOverlayService() => _instance;
   PaymentOverlayService._internal();
 
@@ -228,7 +229,8 @@ class _PaymentReceivedOverlayWidget extends StatelessWidget {
         child: GestureDetector(
           onTap: onDismiss,
           onVerticalDragEnd: (details) {
-            if (details.primaryVelocity != null && details.primaryVelocity! < -100) {
+            if (details.primaryVelocity != null &&
+                details.primaryVelocity! < -100) {
               onDismiss();
             }
           },
@@ -270,7 +272,8 @@ class _PaymentReceivedOverlayWidget extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(AppTheme.elementSpacing / 2),
+                        padding:
+                            const EdgeInsets.all(AppTheme.elementSpacing / 2),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
@@ -285,9 +288,9 @@ class _PaymentReceivedOverlayWidget extends StatelessWidget {
                       Text(
                         l10n?.paymentReceived ?? 'Payment Received!',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                     ],
                   ),
@@ -308,17 +311,23 @@ class _PaymentReceivedOverlayWidget extends StatelessWidget {
                           children: [
                             Text(
                               '+${_formatAmount(payment.amountSats)}',
-                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineMedium
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               _truncateTxid(payment.txid),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.7),
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                  ),
                             ),
                           ],
                         ),
@@ -334,8 +343,8 @@ class _PaymentReceivedOverlayWidget extends StatelessWidget {
                   Text(
                     'Tap to dismiss',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.6),
-                    ),
+                          color: Colors.white.withValues(alpha: 0.6),
+                        ),
                   ),
                 ],
               ),
@@ -394,9 +403,9 @@ class _SimpleOverlayWidget extends StatelessWidget {
                 child: Text(
                   message,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: darken(color, 80),
-                    fontWeight: FontWeight.w600,
-                  ),
+                        color: darken(color, 80),
+                        fontWeight: FontWeight.w600,
+                      ),
                   textAlign: TextAlign.center,
                 ),
               ),
