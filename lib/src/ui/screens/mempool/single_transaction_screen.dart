@@ -458,7 +458,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                     color: transactionModel!
                                                             .status.confirmed
                                                         ? AppTheme.successColor
-                                                        : AppTheme.errorColor,
+                                                        : AppTheme.colorBitcoin,
                                                   ),
                                                   const SizedBox(width: 8),
                                                   Text(
@@ -476,7 +476,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                               ? AppTheme
                                                                   .successColor
                                                               : AppTheme
-                                                                  .errorColor,
+                                                                  .colorBitcoin,
                                                         ),
                                                   ),
                                                 ],
