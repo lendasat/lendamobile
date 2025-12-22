@@ -774,7 +774,7 @@ dependencies = [
 [[package]]
 name = "client-sdk"
 version = "0.1.0"
-source = "git+https://github.com/lendasat/lendasat.git?branch=feat%2Farkrs-update#98383cba920e9cae6c3cd40df3a98c9d11b2cfd2"
+source = "git+https://github.com/lendasat/lendasat.git?rev=98383cba920e9cae6c3cd40df3a98c9d11b2cfd2#98383cba920e9cae6c3cd40df3a98c9d11b2cfd2"
 dependencies = [
  "aes-gcm-siv",
  "anyhow",
