@@ -562,8 +562,19 @@ class LendasatService extends ChangeNotifier {
   }
 
   /// Claim Ark collateral via settlement (recoverable VTXOs).
+  ///
+  /// IMPORTANT: The settle-ark API returns PSBTs in BASE64 format,
+  /// but our signing function expects HEX. After signing, we need to
+  /// convert back to BASE64 for the finish-settle-ark API.
+  ///
+  /// This matches the iframe's behavior:
+  /// ```javascript
+  /// const intentProofHex = bitcoin.Psbt.fromBase64(settleTxs.intent_proof).toHex();
+  /// const signedHex = await client.signPsbt(intentProofHex, "", "");
+  /// const signedBase64 = bitcoin.Psbt.fromHex(signedHex).toBase64();
+  /// ```
   Future<String> _claimArkViaSettlement(String contractId) async {
-    // Get the settle Ark PSBTs
+    // Get the settle Ark PSBTs (returned in BASE64 format)
     final settleResponse = await lendasat_api.lendasatGetSettleArkPsbt(
       contractId: contractId,
     );
@@ -574,31 +585,53 @@ class LendasatService extends ChangeNotifier {
     // Get our pubkey for signing
     final ourPubkey = await lendasat_api.lendasatGetPublicKey();
 
-    // Sign the intent proof PSBT
-    final signedIntentPsbt = await lendasat_api.lendasatSignPsbt(
-      psbtHex: settleResponse.intentProof,
+    // Convert intent proof from BASE64 to HEX for signing
+    final intentProofHex = await lendasat_api.lendasatPsbtBase64ToHex(
+      base64Psbt: settleResponse.intentProof,
+    );
+
+    // Sign the intent proof PSBT (expects HEX)
+    final signedIntentHex = await lendasat_api.lendasatSignPsbt(
+      psbtHex: intentProofHex,
       collateralDescriptor: '',
       borrowerPk: ourPubkey,
     );
 
-    // Sign all forfeit PSBTs
-    final signedForfeitPsbts = <String>[];
-    for (final forfeitPsbt in settleResponse.forfeitPsbts) {
-      final signedForfeit = await lendasat_api.lendasatSignPsbt(
-        psbtHex: forfeitPsbt,
+    // Convert signed intent proof back to BASE64 for API
+    final signedIntentBase64 = await lendasat_api.lendasatPsbtHexToBase64(
+      hexPsbt: signedIntentHex,
+    );
+
+    // Sign all forfeit PSBTs (same conversion needed)
+    final signedForfeitPsbtsBase64 = <String>[];
+    for (final forfeitPsbtBase64 in settleResponse.forfeitPsbts) {
+      // Convert BASE64 to HEX
+      final forfeitHex = await lendasat_api.lendasatPsbtBase64ToHex(
+        base64Psbt: forfeitPsbtBase64,
+      );
+
+      // Sign (expects HEX)
+      final signedForfeitHex = await lendasat_api.lendasatSignPsbt(
+        psbtHex: forfeitHex,
         collateralDescriptor: '',
         borrowerPk: ourPubkey,
       );
-      signedForfeitPsbts.add(signedForfeit);
+
+      // Convert back to BASE64
+      final signedForfeitBase64 = await lendasat_api.lendasatPsbtHexToBase64(
+        hexPsbt: signedForfeitHex,
+      );
+
+      signedForfeitPsbtsBase64.add(signedForfeitBase64);
     }
 
     logger.i('Lendasat: All settlement PSBTs signed, finishing settlement...');
 
-    // Finish the settlement
+    // Finish the settlement (API expects BASE64)
     final commitmentTxid = await lendasat_api.lendasatFinishSettleArk(
       contractId: contractId,
-      signedIntentPsbt: signedIntentPsbt,
-      signedForfeitPsbts: signedForfeitPsbts,
+      signedIntentPsbt: signedIntentBase64,
+      signedForfeitPsbts: signedForfeitPsbtsBase64,
     );
 
     logger.i('Lendasat: Settlement finished, commitment txid: $commitmentTxid');
@@ -683,7 +716,8 @@ class LendasatService extends ChangeNotifier {
   /// This is a convenience method that:
   /// 1. Gets the claim PSBT from the server
   /// 2. Signs it with our keypair
-  /// 3. Broadcasts the signed transaction
+  /// 3. Finalizes the PSBT and extracts raw transaction
+  /// 4. Broadcasts the raw transaction
   ///
   /// Returns the broadcast transaction ID.
   Future<String> claimCollateral({
@@ -706,12 +740,21 @@ class LendasatService extends ChangeNotifier {
         borrowerPk: claimResponse.borrowerPk,
       );
 
-      logger.i('Lendasat: PSBT signed, broadcasting...');
+      logger.i('Lendasat: PSBT signed, finalizing...');
 
-      // Broadcast the signed transaction
+      // CRITICAL: Finalize the PSBT and extract raw transaction
+      // This step was missing and caused broadcast failures!
+      // The API expects raw tx hex, not signed PSBT hex.
+      final rawTxHex = await lendasat_api.lendasatFinalizePsbt(
+        signedPsbtHex: signedPsbt,
+      );
+
+      logger.i('Lendasat: PSBT finalized, broadcasting raw tx...');
+
+      // Broadcast the raw transaction
       final txid = await broadcastClaimTx(
         contractId: contractId,
-        signedTx: signedPsbt,
+        signedTx: rawTxHex,
       );
 
       return txid;
@@ -726,7 +769,8 @@ class LendasatService extends ChangeNotifier {
   /// This is a convenience method that:
   /// 1. Gets the recover PSBT from the server
   /// 2. Signs it with our keypair
-  /// 3. Broadcasts the signed transaction
+  /// 3. Finalizes the PSBT and extracts raw transaction
+  /// 4. Broadcasts the raw transaction
   ///
   /// Returns the broadcast transaction ID.
   Future<String> recoverCollateral({
@@ -749,12 +793,21 @@ class LendasatService extends ChangeNotifier {
         borrowerPk: recoverResponse.borrowerPk,
       );
 
-      logger.i('Lendasat: PSBT signed, broadcasting...');
+      logger.i('Lendasat: PSBT signed, finalizing...');
 
-      // Broadcast the signed transaction
+      // CRITICAL: Finalize the PSBT and extract raw transaction
+      // This step was missing and caused broadcast failures!
+      // The API expects raw tx hex, not signed PSBT hex.
+      final rawTxHex = await lendasat_api.lendasatFinalizePsbt(
+        signedPsbtHex: signedPsbt,
+      );
+
+      logger.i('Lendasat: PSBT finalized, broadcasting raw tx...');
+
+      // Broadcast the raw transaction
       final txid = await broadcastRecoverTx(
         contractId: contractId,
-        signedTx: signedPsbt,
+        signedTx: rawTxHex,
       );
 
       return txid;
