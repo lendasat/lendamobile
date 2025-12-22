@@ -785,6 +785,34 @@ pub async fn lendasat_sign_psbt(
     .await
 }
 
+/// Finalize a signed PSBT and extract the raw transaction.
+///
+/// CRITICAL: This step was missing and caused broadcast failures!
+/// After signing, the PSBT must be finalized (scriptSigs/witnesses constructed)
+/// and the raw transaction extracted before it can be broadcast.
+///
+/// The LendaSat API's broadcast-claim and broadcast-recover endpoints expect
+/// the RAW TRANSACTION hex, not the signed PSBT hex.
+pub fn lendasat_finalize_psbt(signed_psbt_hex: String) -> Result<String> {
+    auth::finalize_psbt_and_extract_tx(&signed_psbt_hex)
+}
+
+/// Convert a PSBT from BASE64 to HEX format.
+///
+/// Use this for settle-ark PSBTs which come from the API in BASE64 format
+/// but need to be in HEX format for signing.
+pub fn lendasat_psbt_base64_to_hex(base64_psbt: String) -> Result<String> {
+    auth::psbt_base64_to_hex(&base64_psbt)
+}
+
+/// Convert a PSBT from HEX to BASE64 format.
+///
+/// Use this to convert signed PSBTs back to BASE64 format
+/// for the finish-settle-ark API which expects BASE64.
+pub fn lendasat_psbt_hex_to_base64(hex_psbt: String) -> Result<String> {
+    auth::psbt_hex_to_base64(&hex_psbt)
+}
+
 /// Broadcast a signed claim transaction.
 pub async fn lendasat_broadcast_claim_tx(contract_id: String, signed_tx: String) -> Result<String> {
     let lock = get_state_lock();

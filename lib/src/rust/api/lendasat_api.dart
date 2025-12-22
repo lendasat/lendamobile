@@ -137,6 +137,34 @@ Future<String> lendasatSignPsbt(
         collateralDescriptor: collateralDescriptor,
         borrowerPk: borrowerPk);
 
+/// Finalize a signed PSBT and extract the raw transaction.
+///
+/// CRITICAL: This step was missing and caused broadcast failures!
+/// After signing, the PSBT must be finalized (scriptSigs/witnesses constructed)
+/// and the raw transaction extracted before it can be broadcast.
+///
+/// The LendaSat API's broadcast-claim and broadcast-recover endpoints expect
+/// the RAW TRANSACTION hex, not the signed PSBT hex.
+Future<String> lendasatFinalizePsbt({required String signedPsbtHex}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatFinalizePsbt(signedPsbtHex: signedPsbtHex);
+
+/// Convert a PSBT from BASE64 to HEX format.
+///
+/// Use this for settle-ark PSBTs which come from the API in BASE64 format
+/// but need to be in HEX format for signing.
+Future<String> lendasatPsbtBase64ToHex({required String base64Psbt}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatPsbtBase64ToHex(base64Psbt: base64Psbt);
+
+/// Convert a PSBT from HEX to BASE64 format.
+///
+/// Use this to convert signed PSBTs back to BASE64 format
+/// for the finish-settle-ark API which expects BASE64.
+Future<String> lendasatPsbtHexToBase64({required String hexPsbt}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatPsbtHexToBase64(hexPsbt: hexPsbt);
+
 /// Broadcast a signed claim transaction.
 Future<String> lendasatBroadcastClaimTx(
         {required String contractId, required String signedTx}) =>
