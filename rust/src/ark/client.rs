@@ -35,6 +35,20 @@ pub async fn balance() -> Result<Balance> {
                 Arc::clone(&*guard)
             };
 
+            // Auto-settle any confirmed boarding UTXOs before fetching balance
+            // This runs silently - failures are logged but don't block balance fetch
+            match auto_settle_boarding().await {
+                Ok(settled) => {
+                    if settled {
+                        tracing::info!("Auto-settled boarding UTXOs into Ark");
+                    }
+                }
+                Err(e) => {
+                    // Don't fail balance fetch if auto-settle fails
+                    tracing::debug!("Auto-settle check: {}", e);
+                }
+            }
+
             // Now we can use the cloned Arc safely across await
             let offchain_balance = client_arc
                 .offchain_balance()
@@ -295,6 +309,64 @@ pub async fn get_pending_balance() -> Result<Amount> {
     let utxos = get_boarding_utxos().await?;
     let total = utxos.iter().map(|u| u.amount).sum();
     Ok(total)
+}
+
+/// Auto-settle confirmed boarding UTXOs silently.
+/// Returns Ok(true) if settled, Ok(false) if nothing to settle.
+async fn auto_settle_boarding() -> Result<bool> {
+    let maybe_client = ARK_CLIENT.try_get();
+
+    match maybe_client {
+        None => bail!("Ark client not initialized"),
+        Some(client) => {
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+
+            let esplora_url = ESPLORA_URL
+                .try_get()
+                .ok_or_else(|| anyhow!("Esplora URL not initialized"))?
+                .read()
+                .clone();
+
+            let esplora = EsploraClient::new(&esplora_url)
+                .map_err(|e| anyhow!("Could not create esplora client: {e:#}"))?;
+
+            let boarding_addresses = client
+                .get_boarding_addresses()
+                .map_err(|e| anyhow!("Could not get boarding addresses: {e:#}"))?;
+
+            let mut boarding_outpoints = Vec::new();
+
+            for address in boarding_addresses {
+                let address_utxos = esplora
+                    .find_outpoints(&address)
+                    .await
+                    .map_err(|e| anyhow!("Could not find outpoints: {e:#}"))?;
+
+                for utxo in address_utxos {
+                    if utxo.confirmation_blocktime.is_some() {
+                        boarding_outpoints.push(utxo.outpoint);
+                    }
+                }
+            }
+
+            if boarding_outpoints.is_empty() {
+                return Ok(false);
+            }
+
+            tracing::info!("Auto-settling {} boarding UTXOs", boarding_outpoints.len());
+
+            let mut rng = StdRng::from_entropy();
+            client
+                .settle_vtxos(&mut rng, &[], &boarding_outpoints)
+                .await
+                .map_err(|e| anyhow!("Failed auto-settling: {e:#}"))?;
+
+            Ok(true)
+        }
+    }
 }
 
 /// Settle only boarding UTXOs (on-chain funds) into the Ark protocol.
