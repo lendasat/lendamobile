@@ -1,13 +1,11 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
-import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
@@ -27,7 +25,6 @@ class SingleTransactionScreen extends StatefulWidget {
   final String? transactionType;
   final String? networkType;
   final bool? isConfirmed;
-  final bool isSettleable;
 
   const SingleTransactionScreen({
     super.key,
@@ -37,7 +34,6 @@ class SingleTransactionScreen extends StatefulWidget {
     this.transactionType,
     this.networkType,
     this.isConfirmed,
-    this.isSettleable = false,
   });
 
   @override
@@ -53,7 +49,6 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
   bool isLoading = true;
   bool hasError = false;
   String? txID;
-  bool _isSettling = false;
 
   @override
   void initState() {
@@ -86,38 +81,6 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
           isLoading = false;
           hasError = true;
         });
-      }
-    }
-  }
-
-  Future<void> _handleSettlement(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
-
-    setState(() {
-      _isSettling = true;
-    });
-
-    try {
-      await ark_api.settleBoarding();
-
-      if (mounted) {
-        setState(() {
-          _isSettling = false;
-        });
-
-        OverlayService().showSuccess(l10n.transactionSettledSuccessfully);
-
-        Navigator.of(context)
-            .pop(true); // Return true to indicate settlement occurred
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isSettling = false;
-        });
-
-        OverlayService()
-            .showError('${l10n.failedToSettleTransaction} ${e.toString()}');
       }
     }
   }
@@ -193,56 +156,6 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
           Navigator.pop(context);
         },
       ),
-      bottomSheet: widget.isSettleable
-          ? Container(
-              padding: const EdgeInsets.all(AppTheme.cardPadding),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-              ),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(AppTheme.elementSpacing),
-                      margin: const EdgeInsets.only(
-                          bottom: AppTheme.elementSpacing),
-                      decoration: BoxDecoration(
-                        color: AppTheme.colorBitcoin.withAlpha(30),
-                        borderRadius: AppTheme.cardRadiusSmall,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: AppTheme.colorBitcoin,
-                            size: 20,
-                          ),
-                          const SizedBox(width: AppTheme.elementSpacing),
-                          Expanded(
-                            child: Text(
-                              l10n.transactionPendingFundsWillBeNonReversibleAfterSettlement,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    LongButtonWidget(
-                      title:
-                          _isSettling ? l10n.settlingTransaction : l10n.settle,
-                      customWidth: double.infinity,
-                      customHeight: 48,
-                      isLoading: _isSettling,
-                      onTap:
-                          _isSettling ? null : () => _handleSettlement(context),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          : null,
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : transactionModel == null
