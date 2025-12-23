@@ -96,7 +96,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get createYourOwnTheme => 'Crea tu propio tema';
 
   @override
-  String get timezoneUpdatedSuccessfully => 'Zona horaria actualizada con éxito';
+  String get timezoneUpdatedSuccessfully =>
+      'Zona horaria actualizada con éxito';
 
   @override
   String get changeTimezone => 'Cambiar zona horaria';
@@ -105,7 +106,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get searchTimezone => 'Buscar zona horaria...';
 
   @override
-  String get couldntUpdateTransactions => 'No se pudieron actualizar las transacciones:';
+  String get couldntUpdateTransactions =>
+      'No se pudieron actualizar las transacciones:';
 
   @override
   String get couldntUpdateBalance => 'No se pudo actualizar el saldo:';
@@ -171,7 +173,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get restoreExistingWallet => 'Restaurar billetera existente';
 
   @override
-  String get useYourSecretKeyToAccessYourWallet => 'Usa tu clave secreta para acceder a tu billetera';
+  String get useYourSecretKeyToAccessYourWallet =>
+      'Usa tu clave secreta para acceder a tu billetera';
 
   @override
   String get enterYourNsec => 'Introduce tu nsec:';
@@ -212,7 +215,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get requesting => 'Solicitando: ';
 
   @override
-  String get monitoringForIncomingPayment => 'Monitoring for incoming payment...';
+  String get monitoringForIncomingPayment =>
+      'Monitoring for incoming payment...';
 
   @override
   String get copyAddress => 'Copiar dirección';
@@ -224,7 +228,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get share => 'Share';
 
   @override
-  String get pleaseEnterBothAddressAndAmount => 'Por favor, ingresa tanto la dirección como el monto';
+  String get pleaseEnterBothAddressAndAmount =>
+      'Por favor, ingresa tanto la dirección como el monto';
 
   @override
   String get pleaseEnterAValidAmount => 'Por favor, ingresa un monto válido';
@@ -248,22 +253,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get available => 'available';
 
   @override
-  String get esploraUrlSavedWillOnlyTakeEffectAfterARestart => 'URL de Esplora guardada – surtirá efecto después de reiniciar';
+  String get esploraUrlSavedWillOnlyTakeEffectAfterARestart =>
+      'URL de Esplora guardada – surtirá efecto después de reiniciar';
 
   @override
   String get failedToSaveEsploraUrl => 'Error al guardar la URL de Esplora';
 
   @override
-  String get networkSavedWillOnlyTakeEffectAfterARestart => 'Red guardada – surtirá efecto después de reiniciar';
+  String get networkSavedWillOnlyTakeEffectAfterARestart =>
+      'Red guardada – surtirá efecto después de reiniciar';
 
   @override
-  String get arkServerUrlSavedWillOnlyTakeEffectAfterARestart => 'URL del servidor Ark guardada – surtirá efecto después de reiniciar';
+  String get arkServerUrlSavedWillOnlyTakeEffectAfterARestart =>
+      'URL del servidor Ark guardada – surtirá efecto después de reiniciar';
 
   @override
-  String get failedToSaveArkServerUrl => 'Error al guardar la URL del servidor Ark';
+  String get failedToSaveArkServerUrl =>
+      'Error al guardar la URL del servidor Ark';
 
   @override
-  String get boltzUrlSavedWillOnlyTakeEffectAfterARestart => 'URL de Boltz guardada – surtirá efecto después de reiniciar';
+  String get boltzUrlSavedWillOnlyTakeEffectAfterARestart =>
+      'URL de Boltz guardada – surtirá efecto después de reiniciar';
 
   @override
   String get failedToSaveBoltzUrl => 'Error al guardar la URL de Boltz';
@@ -272,10 +282,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get securityWarning => 'Advertencia de seguridad';
 
   @override
-  String get neverShareYourRecoveryKeyWithAnyone => '¡Nunca compartas tu clave de recuperación con nadie!';
+  String get neverShareYourRecoveryKeyWithAnyone =>
+      '¡Nunca compartas tu clave de recuperación con nadie!';
 
   @override
-  String get anyoneWithThisKeyCan => 'Cualquiera con esta clave puede acceder a tu billetera y robar tus fondos. Guárdala en un lugar seguro.';
+  String get anyoneWithThisKeyCan =>
+      'Cualquiera con esta clave puede acceder a tu billetera y robar tus fondos. Guárdala en un lugar seguro.';
 
   @override
   String get iUnderstand => 'ENTIENDO';
@@ -284,7 +296,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get yourRecoveryPhrase => 'Tu frase de recuperación';
 
   @override
-  String get recoveryPhraseCopiedToClipboard => 'Frase de recuperación copiada al portapapeles';
+  String get recoveryPhraseCopiedToClipboard =>
+      'Frase de recuperación copiada al portapapeles';
 
   @override
   String get copyToClipboard => 'COPIAR AL PORTAPAPELES';
@@ -296,13 +309,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get resetWallet => 'Restablecer billetera';
 
   @override
-  String get thisWillDeleteAllWalletData => 'Esto eliminará todos los datos de la billetera de este dispositivo. Asegúrate de haber hecho una copia de seguridad de tu frase de recuperación antes de continuar. Esta acción no se puede deshacer.';
+  String get thisWillDeleteAllWalletData =>
+      'Esto eliminará todos los datos de la billetera de este dispositivo. Asegúrate de haber hecho una copia de seguridad de tu frase de recuperación antes de continuar. Esta acción no se puede deshacer.';
 
   @override
   String get restartingApp => 'Reiniciando aplicación';
 
   @override
-  String get pleaseTapHereToOpenTheAppAgain => 'Toca aquí para abrir la aplicación nuevamente.';
+  String get pleaseTapHereToOpenTheAppAgain =>
+      'Toca aquí para abrir la aplicación nuevamente.';
 
   @override
   String get reset => 'RESTABLECER';
@@ -314,7 +329,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get viewRecoveryKey => 'Ver clave de recuperación';
 
   @override
-  String get backupYourWalletWithTheseKey => 'Haz una copia de seguridad de tu billetera con esta clave';
+  String get backupYourWalletWithTheseKey =>
+      'Haz una copia de seguridad de tu billetera con esta clave';
 
   @override
   String get appearancePreferences => 'Apariencia y preferencias';
@@ -323,7 +339,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get theme => 'Tema';
 
   @override
-  String get customizeAppAppearance => 'Personaliza la apariencia de la aplicación';
+  String get customizeAppAppearance =>
+      'Personaliza la apariencia de la aplicación';
 
   @override
   String get language => 'Idioma';
@@ -368,7 +385,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dangerZone => 'Zona de peligro';
 
   @override
-  String get deleteAllWalletDataFromThisDevice => 'Eliminar todos los datos de la billetera de este dispositivo';
+  String get deleteAllWalletDataFromThisDevice =>
+      'Eliminar todos los datos de la billetera de este dispositivo';
 
   @override
   String get transactionFailed => 'Transacción fallida:';
@@ -392,7 +410,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get success => 'Éxito';
 
   @override
-  String get transactionSettledSuccessfully => '¡Transacción liquidada con éxito!';
+  String get transactionSettledSuccessfully =>
+      '¡Transacción liquidada con éxito!';
 
   @override
   String get goToHome => 'Ir al inicio';
@@ -425,7 +444,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get confirmedAt => 'Confirmado en';
 
   @override
-  String get transactionPendingFundsWillBeNonReversibleAfterSettlement => 'Transacción pendiente. Los fondos no serán reversibles después de la liquidación.';
+  String get transactionPendingFundsWillBeNonReversibleAfterSettlement =>
+      'Transacción pendiente. Los fondos no serán reversibles después de la liquidación.';
 
   @override
   String get settle => 'LIQUIDAR';
@@ -464,7 +484,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sentSuccessfully => 'enviado con éxito';
 
   @override
-  String get returningToWalletAfterSuccessfulTransaction => 'Volviendo a la billetera después de una transacción exitosa';
+  String get returningToWalletAfterSuccessfulTransaction =>
+      'Volviendo a la billetera después de una transacción exitosa';
 
   @override
   String get backToWallet => 'VOLVER A LA BILLETERA';
@@ -755,13 +776,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aboutBitcoin => 'About Bitcoin';
 
   @override
-  String get bitcoinDescription => 'Bitcoin is the world\'s first decentralized digital currency. It was created in 2009 by an unknown person or group of people using the name Satoshi Nakamoto. Bitcoin is a distributed, peer-to-peer network that keeps a record of all transactions in a public ledger called the blockchain.';
+  String get bitcoinDescription =>
+      'Bitcoin is the world\'s first decentralized digital currency. It was created in 2009 by an unknown person or group of people using the name Satoshi Nakamoto. Bitcoin is a distributed, peer-to-peer network that keeps a record of all transactions in a public ledger called the blockchain.';
 
   @override
   String get aboutBitcoinPriceData => 'About Bitcoin Price Data';
 
   @override
-  String get thePriceDataShown => 'The price data shown is sourced from our backend service and updated in real-time. Select different time ranges to view historical price trends.';
+  String get thePriceDataShown =>
+      'The price data shown is sourced from our backend service and updated in real-time. Select different time ranges to view historical price trends.';
 
   @override
   String get dataSource => 'Data Source';
@@ -830,7 +853,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get securityStatus => 'Security Status';
 
   @override
-  String get setupRecoveryWarning => 'For your security, please set up as many recovery options as possible.';
+  String get setupRecoveryWarning =>
+      'For your security, please set up as many recovery options as possible.';
 
   @override
   String get recoveryFullySetup => 'Your wallet recovery is fully configured!';
@@ -848,7 +872,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get emailRecovery => 'Email Recovery';
 
   @override
-  String get emailRecoveryDescription => 'Recover wallet via email and password';
+  String get emailRecoveryDescription =>
+      'Recover wallet via email and password';
 
   @override
   String get enabled => 'Enabled';
@@ -860,19 +885,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get comingSoon => 'Coming Soon';
 
   @override
-  String get emailRecoveryComingSoon => 'Email recovery will be available in a future update. For now, please make sure to backup your recovery phrase.';
+  String get emailRecoveryComingSoon =>
+      'Email recovery will be available in a future update. For now, please make sure to backup your recovery phrase.';
 
   @override
   String get recoverWithEmail => 'Recover with Email';
 
   @override
-  String get recoverWithEmailSubtitle => 'Use email and password to restore your wallet';
+  String get recoverWithEmailSubtitle =>
+      'Use email and password to restore your wallet';
 
   @override
   String get emailRecoverySetup => 'Email Recovery Setup';
 
   @override
-  String get emailRecoveryWarningMessage => 'Your password encrypts your recovery phrase locally. The server only stores the encrypted version and cannot access your funds. If you forget your password, your backup cannot be recovered.';
+  String get emailRecoveryWarningMessage =>
+      'Your password encrypts your recovery phrase locally. The server only stores the encrypted version and cannot access your funds. If you forget your password, your backup cannot be recovered.';
 
   @override
   String get email => 'Email';
@@ -908,7 +936,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get setupRecovery => 'Setup Recovery';
 
   @override
-  String get emailRecoverySetupSuccess => 'Email recovery has been set up successfully! You can now recover your wallet using your email and password.';
+  String get emailRecoverySetupSuccess =>
+      'Email recovery has been set up successfully! You can now recover your wallet using your email and password.';
 
   @override
   String get sendCode => 'Send Code';
@@ -938,10 +967,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get wrongPassword => 'Wrong password. Please try again.';
 
   @override
-  String get emailRecoveryLoginInfo => 'Enter the email and password you used when setting up email recovery. Your wallet will be restored securely.';
+  String get emailRecoveryLoginInfo =>
+      'Enter the email and password you used when setting up email recovery. Your wallet will be restored securely.';
 
   @override
-  String get authenticateToViewRecoveryPhrase => 'Authenticate to view your recovery phrase';
+  String get authenticateToViewRecoveryPhrase =>
+      'Authenticate to view your recovery phrase';
 
   @override
   String get authenticationFailed => 'Authentication failed. Please try again.';
@@ -956,7 +987,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get writeDownYourRecoveryPhrase => 'Write down your recovery phrase';
 
   @override
-  String get youWillNeedToConfirmIt => 'You will need to confirm it in the next step';
+  String get youWillNeedToConfirmIt =>
+      'You will need to confirm it in the next step';
 
   @override
   String get continueToVerify => 'Continue to Verify';
@@ -965,7 +997,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get verifyYourRecoveryPhrase => 'Verify your recovery phrase';
 
   @override
-  String get enterTheFollowingWords => 'Enter the following words from your phrase';
+  String get enterTheFollowingWords =>
+      'Enter the following words from your phrase';
 
   @override
   String get enterWord => 'Enter word';
@@ -974,13 +1007,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get verify => 'Verify';
 
   @override
-  String get incorrectWordsPleaseTryAgain => 'Incorrect words. Please try again.';
+  String get incorrectWordsPleaseTryAgain =>
+      'Incorrect words. Please try again.';
 
   @override
   String get skipVerification => 'Skip Verification?';
 
   @override
-  String get skipVerificationWarning => 'Skipping verification means you haven\'t confirmed that you wrote down your recovery phrase correctly. If you lose access to your wallet, you may not be able to recover it.';
+  String get skipVerificationWarning =>
+      'Skipping verification means you haven\'t confirmed that you wrote down your recovery phrase correctly. If you lose access to your wallet, you may not be able to recover it.';
 
   @override
   String get skipAtOwnRisk => 'Skip at own risk';
@@ -989,16 +1024,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recoveryPhraseConfirmed => 'Recovery Phrase Confirmed!';
 
   @override
-  String get yourRecoveryPhraseIsSecured => 'Your recovery phrase has been verified and secured. Keep it safe!';
+  String get yourRecoveryPhraseIsSecured =>
+      'Your recovery phrase has been verified and secured. Keep it safe!';
 
   @override
   String get enterYourEmail => 'Enter Your Email';
 
   @override
-  String get emailSignupDescription => 'Your email is used to create your Lendasat account for loans and other services.';
+  String get emailSignupDescription =>
+      'Your email is used to create your Lendasat account for loans and other services.';
 
   @override
-  String get emailUsageInfo => 'We\'ll use this email for account verification and important updates. Your wallet remains secured by your recovery phrase.';
+  String get emailUsageInfo =>
+      'We\'ll use this email for account verification and important updates. Your wallet remains secured by your recovery phrase.';
 
   @override
   String get createWallet => 'Create Wallet';
@@ -1010,7 +1048,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get invalidEmail => 'Please enter a valid email address';
 
   @override
-  String get registrationWarning => 'Account registration had an issue. You can still use your wallet.';
+  String get registrationWarning =>
+      'Account registration had an issue. You can still use your wallet.';
 
   @override
   String get legalInformation => 'Legal Information';
@@ -1028,49 +1067,57 @@ class AppLocalizationsEs extends AppLocalizations {
   String get alphaVersion => 'Alpha Version';
 
   @override
-  String get alphaVersionWarning => 'This app is under development. Use at your own risk.';
+  String get alphaVersionWarning =>
+      'This app is under development. Use at your own risk.';
 
   @override
   String get agbScopeTitle => 'Scope of Application';
 
   @override
-  String get agbScopeContent => 'These terms and conditions govern the use of the Bitcoin wallet app (hereinafter Lenda), provided by COBLOX PTY LTD. By using the app, you agree to these terms and conditions.';
+  String get agbScopeContent =>
+      'These terms and conditions govern the use of the Bitcoin wallet app (hereinafter Lenda), provided by COBLOX PTY LTD. By using the app, you agree to these terms and conditions.';
 
   @override
   String get agbFunctionalityTitle => 'Functionality';
 
   @override
-  String get agbFunctionalityContent => 'The app allows users to receive, send, and manage Bitcoin. The app is not a bank and does not provide banking services. Additionally, Taproot Assets, also known as digital assets, are offered and sold as a service platform.';
+  String get agbFunctionalityContent =>
+      'The app allows users to receive, send, and manage Bitcoin. The app is not a bank and does not provide banking services. Additionally, Taproot Assets, also known as digital assets, are offered and sold as a service platform.';
 
   @override
   String get agbUserResponsibilityTitle => 'User Responsibility';
 
   @override
-  String get agbUserResponsibilityContent => 'The user is solely responsible for the security of their Bitcoin. The app provides security features such as password protection and two-factor authentication, but it is the user\'s responsibility to use these features carefully. COBLOX PTY LTD is not liable for losses resulting from carelessness, loss of devices, or user credentials.';
+  String get agbUserResponsibilityContent =>
+      'The user is solely responsible for the security of their Bitcoin. The app provides security features such as password protection and two-factor authentication, but it is the user\'s responsibility to use these features carefully. COBLOX PTY LTD is not liable for losses resulting from carelessness, loss of devices, or user credentials.';
 
   @override
   String get agbFeesTitle => 'Fees';
 
   @override
-  String get agbFeesContent => 'Certain functions of the app may incur fees. These fees will be communicated to the user in advance and are visible in the app.';
+  String get agbFeesContent =>
+      'Certain functions of the app may incur fees. These fees will be communicated to the user in advance and are visible in the app.';
 
   @override
   String get agbLiabilityTitle => 'Limitation of Liability';
 
   @override
-  String get agbLiabilityContent => 'COBLOX PTY LTD is only liable for damages caused by intentional or grossly negligent actions by COBLOX PTY LTD. COBLOX PTY LTD is not liable for damages resulting from the use of the app or the loss of Bitcoin.';
+  String get agbLiabilityContent =>
+      'COBLOX PTY LTD is only liable for damages caused by intentional or grossly negligent actions by COBLOX PTY LTD. COBLOX PTY LTD is not liable for damages resulting from the use of the app or the loss of Bitcoin.';
 
   @override
   String get agbChangesTitle => 'Changes';
 
   @override
-  String get agbChangesContent => 'COBLOX PTY LTD reserves the right to change these terms and conditions at any time. The user will be informed of such changes and must agree to them in order to continue using the app.';
+  String get agbChangesContent =>
+      'COBLOX PTY LTD reserves the right to change these terms and conditions at any time. The user will be informed of such changes and must agree to them in order to continue using the app.';
 
   @override
   String get agbFinalProvisionsTitle => 'Final Provisions';
 
   @override
-  String get agbFinalProvisionsContent => 'These terms and conditions represent the entire agreement between the user and COBLOX PTY LTD. Should any provision be invalid, the remaining provisions shall remain in effect.';
+  String get agbFinalProvisionsContent =>
+      'These terms and conditions represent the entire agreement between the user and COBLOX PTY LTD. Should any provision be invalid, the remaining provisions shall remain in effect.';
 
   @override
   String get contact => 'Contact';
@@ -1082,7 +1129,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get disclaimer => 'Disclaimer';
 
   @override
-  String get disclaimerContent => 'The provider assumes no liability for the accuracy, correctness, completeness, or quality of the information provided. Liability claims against the provider are generally excluded unless there is proven intentional or grossly negligent fault.';
+  String get disclaimerContent =>
+      'The provider assumes no liability for the accuracy, correctness, completeness, or quality of the information provided. Liability claims against the provider are generally excluded unless there is proven intentional or grossly negligent fault.';
 
   @override
   String get allRightsReserved => 'All rights reserved';
