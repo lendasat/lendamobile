@@ -545,7 +545,11 @@ class WalletScreenState extends State<WalletScreen> {
       height: MediaQuery.of(context).size.height * 0.7,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Settings(aspId: widget.aspId),
-    );
+    ).then((_) {
+      // Refresh recovery status when settings is closed
+      // (user may have set up recovery while in settings)
+      _loadRecoveryStatus();
+    });
   }
 
   /// Builds the settings button with a recovery status indicator dot
