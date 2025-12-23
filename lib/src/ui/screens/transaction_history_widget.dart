@@ -256,6 +256,12 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             tx.confirmedAt == null, // Unconfirmed offboard = pending send
       );
     }
+    if (item is SwapActivityItem) {
+      // Swaps are pending if they're waiting for deposit or still processing
+      final status = item.displayStatus;
+      return status == SwapDisplayStatus.pending ||
+          status == SwapDisplayStatus.processing;
+    }
     return false;
   }
 
@@ -889,6 +895,12 @@ class _SwapItemWidget extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final amountSats = swapItem.amountSats;
     final usdAmount = swapItem.usdAmount;
+    final isExpired = swapItem.displayStatus == SwapDisplayStatus.expired;
+
+    // Use grey color for expired swaps, bitcoin color otherwise
+    final iconColor = isExpired
+        ? (isDark ? AppTheme.white60 : AppTheme.black60)
+        : AppTheme.colorBitcoin;
 
     return RepaintBoundary(
       child: Material(
@@ -912,14 +924,13 @@ class _SwapItemWidget extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Swap icon
+                      // Swap icon - greyed out for expired swaps
                       RoundedButtonWidget(
                         iconData: swapItem.isBtcToEvm
                             ? Icons.north_east
                             : Icons.south_west,
-                        iconColor: AppTheme.colorBitcoin,
-                        backgroundColor:
-                            AppTheme.colorBitcoin.withValues(alpha: 0.15),
+                        iconColor: iconColor,
+                        backgroundColor: iconColor.withValues(alpha: 0.15),
                         buttonType: ButtonType.secondary,
                         size: AppTheme.cardPadding * 2,
                         iconSize: AppTheme.cardPadding * 0.9,
@@ -948,10 +959,10 @@ class _SwapItemWidget extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.swap_horiz_rounded,
                                 size: AppTheme.cardPadding * 0.6,
-                                color: AppTheme.colorBitcoin,
+                                color: iconColor,
                               ),
                               const SizedBox(
                                   width: AppTheme.elementSpacing / 2),
@@ -966,31 +977,41 @@ class _SwapItemWidget extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // RIGHT SIDE
+                  // RIGHT SIDE - Show "Expired" for expired swaps instead of amount
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      hideAmounts
-                          ? Text(
-                              '*****',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            )
-                          : Row(
-                              children: [
-                                Text(
-                                  showBtcAsMain
-                                      ? '${amountSats.isNegative ? "" : "+"}${amountSats.abs()}'
-                                      : '${amountSats.isNegative ? "-" : "+"}\$${usdAmount.toStringAsFixed(2)}',
-                                  overflow: TextOverflow.ellipsis,
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium,
-                                ),
-                                if (showBtcAsMain)
-                                  Icon(
-                                    AppTheme.satoshiIcon,
+                      if (isExpired)
+                        Text(
+                          'Expired',
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: isDark
+                                        ? AppTheme.white60
+                                        : AppTheme.black60,
                                   ),
-                              ],
+                        )
+                      else if (hideAmounts)
+                        Text(
+                          '*****',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        )
+                      else
+                        Row(
+                          children: [
+                            Text(
+                              showBtcAsMain
+                                  ? '${amountSats.isNegative ? "" : "+"}${amountSats.abs()}'
+                                  : '${amountSats.isNegative ? "-" : "+"}\$${usdAmount.toStringAsFixed(2)}',
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleMedium,
                             ),
+                            if (showBtcAsMain)
+                              Icon(
+                                AppTheme.satoshiIcon,
+                              ),
+                          ],
+                        ),
                     ],
                   ),
                 ],
