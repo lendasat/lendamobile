@@ -2107,6 +2107,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account registration had an issue. You can still use your wallet.'**
   String get registrationWarning;
+
+  /// Legal information menu item in settings
+  ///
+  /// In en, this message translates to:
+  /// **'Legal Information'**
+  String get legalInformation;
+
+  /// No description provided for @termsAndConditionsTitle1.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms and'**
+  String get termsAndConditionsTitle1;
+
+  /// No description provided for @termsAndConditionsTitle2.
+  ///
+  /// In en, this message translates to:
+  /// **'Conditions'**
+  String get termsAndConditionsTitle2;
+
+  /// No description provided for @lastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Updated: December 2025'**
+  String get lastUpdated;
+
+  /// No description provided for @alphaVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Alpha Version'**
+  String get alphaVersion;
+
+  /// No description provided for @alphaVersionWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This app is under development. Use at your own risk.'**
+  String get alphaVersionWarning;
+
+  /// No description provided for @agbScopeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scope of Application'**
+  String get agbScopeTitle;
+
+  /// No description provided for @agbScopeContent.
+  ///
+  /// In en, this message translates to:
+  /// **'These terms and conditions govern the use of the Bitcoin wallet app (hereinafter Lenda), provided by Lendasat Inc. By using the app, you agree to these terms and conditions.'**
+  String get agbScopeContent;
+
+  /// No description provided for @agbFunctionalityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Functionality'**
+  String get agbFunctionalityTitle;
+
+  /// No description provided for @agbFunctionalityContent.
+  ///
+  /// In en, this message translates to:
+  /// **'The app allows users to receive, send, and manage Bitcoin. The app is not a bank and does not provide banking services. Additionally, Taproot Assets, also known as digital assets, are offered and sold as a service platform.'**
+  String get agbFunctionalityContent;
+
+  /// No description provided for @agbUserResponsibilityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'User Responsibility'**
+  String get agbUserResponsibilityTitle;
+
+  /// No description provided for @agbUserResponsibilityContent.
+  ///
+  /// In en, this message translates to:
+  /// **'The user is solely responsible for the security of their Bitcoin. The app provides security features such as password protection and two-factor authentication, but it is the user\'s responsibility to use these features carefully. Lendasat Inc. is not liable for losses resulting from carelessness, loss of devices, or user credentials.'**
+  String get agbUserResponsibilityContent;
+
+  /// No description provided for @agbFeesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fees'**
+  String get agbFeesTitle;
+
+  /// No description provided for @agbFeesContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Certain functions of the app may incur fees. These fees will be communicated to the user in advance and are visible in the app.'**
+  String get agbFeesContent;
+
+  /// No description provided for @agbLiabilityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Limitation of Liability'**
+  String get agbLiabilityTitle;
+
+  /// No description provided for @agbLiabilityContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Lendasat Inc. is only liable for damages caused by intentional or grossly negligent actions by Lendasat Inc. Lendasat Inc. is not liable for damages resulting from the use of the app or the loss of Bitcoin.'**
+  String get agbLiabilityContent;
+
+  /// No description provided for @agbChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes'**
+  String get agbChangesTitle;
+
+  /// No description provided for @agbChangesContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Lendasat Inc. reserves the right to change these terms and conditions at any time. The user will be informed of such changes and must agree to them in order to continue using the app.'**
+  String get agbChangesContent;
+
+  /// No description provided for @agbFinalProvisionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Final Provisions'**
+  String get agbFinalProvisionsTitle;
+
+  /// No description provided for @agbFinalProvisionsContent.
+  ///
+  /// In en, this message translates to:
+  /// **'These terms and conditions represent the entire agreement between the user and Lendasat Inc. Should any provision be invalid, the remaining provisions shall remain in effect.'**
+  String get agbFinalProvisionsContent;
+
+  /// No description provided for @contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get contact;
+
+  /// No description provided for @responsibleForContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Responsible for Content'**
+  String get responsibleForContent;
+
+  /// No description provided for @disclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Disclaimer'**
+  String get disclaimer;
+
+  /// No description provided for @disclaimerContent.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider assumes no liability for the accuracy, correctness, completeness, or quality of the information provided. Liability claims against the provider are generally excluded unless there is proven intentional or grossly negligent fault.'**
+  String get disclaimerContent;
+
+  /// No description provided for @allRightsReserved.
+  ///
+  /// In en, this message translates to:
+  /// **'All rights reserved'**
+  String get allRightsReserved;
 }
 
 class _AppLocalizationsDelegate

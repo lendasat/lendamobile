@@ -10,6 +10,7 @@ import 'package:ark_flutter/src/ui/screens/settings/feedback_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/emergency_recovery_view.dart';
 import 'package:ark_flutter/src/ui/screens/settings/claim_sats_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/chart_time_range_screen.dart';
+import 'package:ark_flutter/src/ui/screens/settings/agbs_and_impressum_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -61,6 +62,8 @@ class Settings extends StatelessWidget {
         return const ClaimSatsScreen();
       case 'chart_time_range':
         return const ChartTimeRangeScreen();
+      case 'agbs':
+        return const AgbsAndImpressumScreen();
       case 'main':
       default:
         return SettingsView(aspId: aspId);

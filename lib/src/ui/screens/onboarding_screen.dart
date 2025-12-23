@@ -2,6 +2,7 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
 import 'package:ark_flutter/src/ui/screens/email_signup_screen.dart';
 import 'package:ark_flutter/src/ui/screens/mnemonic_input_screen.dart';
+import 'package:ark_flutter/src/ui/screens/settings/agbs_and_impressum_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
@@ -151,11 +152,15 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      // TODO: Navigate to AGBS/Terms page when available
-                      logger.i('AGBS tapped');
+                      logger.i('AGBS tapped - navigating to legal screen');
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AgbsAndImpressumScreen(),
+                        ),
+                      );
                     },
                     child: Text(
-                      "Terms & Privacy",
+                      AppLocalizations.of(context)!.legalInformation,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
