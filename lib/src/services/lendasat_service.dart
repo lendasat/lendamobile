@@ -1,5 +1,7 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
+import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/api/lendasat_api.dart' as lendasat_api;
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
@@ -345,6 +347,11 @@ class LendasatService extends ChangeNotifier {
 
   /// Create a new loan contract by taking an offer.
   /// Automatically re-authenticates if token is expired.
+  ///
+  /// IMPORTANT: The Rust backend now uses the Ark identity public key as
+  /// `borrower_pk` (not the Lendasat derivation path key). This is critical
+  /// for claim operations to work correctly, as the collateral VTXO is locked
+  /// to the Ark identity key.
   Future<Contract> createContract({
     required String offerId,
     required double loanAmount,
@@ -352,6 +359,12 @@ class LendasatService extends ChangeNotifier {
     String? borrowerLoanAddress,
   }) async {
     try {
+      logger.i('Lendasat: Creating contract for offer $offerId...');
+      logger.i(
+          'Lendasat: Loan amount: \$$loanAmount, Duration: $durationDays days');
+      logger.d(
+          'Lendasat: Note - borrower_pk will use Ark identity (not Lendasat derivation path)');
+
       final contract =
           await _withAutoReauth(() => lendasat_api.lendasatCreateContract(
                 offerId: offerId,
@@ -360,7 +373,12 @@ class LendasatService extends ChangeNotifier {
                 borrowerLoanAddress: borrowerLoanAddress,
               ));
 
-      logger.i('Lendasat: Created contract ${contract.id}');
+      logger.i('Lendasat: Contract created successfully!');
+      logger.i('Lendasat: Contract ID: ${contract.id}');
+      logger.d(
+          'Lendasat: Contract borrower_pk: ${contract.borrowerPk?.substring(0, 16) ?? "N/A"}...');
+      logger.d(
+          'Lendasat: Contract collateral address: ${contract.borrowerBtcAddress?.substring(0, 20) ?? "N/A"}...');
 
       // Refresh contracts list
       await refreshContracts();
@@ -413,46 +431,8 @@ class LendasatService extends ChangeNotifier {
   }
 
   // =====================
-  // Collateral Claim
+  // Ark Collateral Claim
   // =====================
-
-  /// Get the PSBT for claiming collateral (standard Bitcoin).
-  Future<ClaimPsbtResponse> getClaimPsbt({
-    required String contractId,
-    required int feeRate,
-  }) async {
-    try {
-      return await lendasat_api.lendasatGetClaimPsbt(
-        contractId: contractId,
-        feeRate: feeRate,
-      );
-    } catch (e) {
-      logger.e('Error getting claim PSBT: $e');
-      rethrow;
-    }
-  }
-
-  /// Broadcast a signed claim transaction.
-  Future<String> broadcastClaimTx({
-    required String contractId,
-    required String signedTx,
-  }) async {
-    try {
-      final txid = await lendasat_api.lendasatBroadcastClaimTx(
-        contractId: contractId,
-        signedTx: signedTx,
-      );
-      logger.i('Lendasat: Broadcast claim tx $txid');
-
-      // Refresh the contract
-      await getContract(contractId);
-
-      return txid;
-    } catch (e) {
-      logger.e('Error broadcasting claim tx: $e');
-      rethrow;
-    }
-  }
 
   /// Get the PSBTs for claiming Ark collateral.
   Future<ArkClaimPsbtResponse> getClaimArkPsbt(String contractId) async {
@@ -522,43 +502,67 @@ class LendasatService extends ChangeNotifier {
   }
 
   /// Claim Ark collateral via offchain spend (non-recoverable VTXOs).
+  ///
+  /// IMPORTANT: This flow requires that the contract was created with the Ark
+  /// identity public key as `borrower_pk`. If a different key was used (e.g.,
+  /// the Lendasat derivation path key), signing will fail because the PSBT's
+  /// tap_internal_key won't match our Ark identity.
   Future<String> _claimArkViaOffchain(String contractId) async {
+    logger.i('Lendasat: Starting offchain claim for contract $contractId');
+
     // Get the Ark claim PSBTs
     final arkResponse = await getClaimArkPsbt(contractId);
 
-    logger.i('Lendasat: Got Ark claim PSBTs (offchain), signing...');
+    logger.i(
+        'Lendasat: Got Ark claim PSBTs - main PSBT length: ${arkResponse.arkPsbt.length}, checkpoint PSBTs: ${arkResponse.checkpointPsbts.length}');
+    logger.d(
+        'Lendasat: Main Ark PSBT (first 100 chars): ${arkResponse.arkPsbt.substring(0, arkResponse.arkPsbt.length > 100 ? 100 : arkResponse.arkPsbt.length)}...');
 
-    // Get our pubkey for signing
-    final ourPubkey = await lendasat_api.lendasatGetPublicKey();
+    logger.i('Lendasat: Signing main Ark PSBT with Ark identity...');
 
-    // Sign the main Ark PSBT
-    final signedArkPsbt = await lendasat_api.lendasatSignPsbt(
+    // Sign the main Ark PSBT using the Ark identity (NOT the Lendasat keypair!)
+    // The collateral VTXO is locked to the Ark identity, so we must use that key.
+    // If this fails with "No tap_internal_key found", it means the contract was
+    // created with a different borrower_pk than our Ark identity.
+    final signedArkPsbt = await ark_api.signPsbtWithArkIdentity(
       psbtHex: arkResponse.arkPsbt,
-      collateralDescriptor: '', // Not used for Ark
-      borrowerPk: ourPubkey,
     );
 
-    // Sign all checkpoint PSBTs
+    logger.i(
+        'Lendasat: Main Ark PSBT signed, now signing ${arkResponse.checkpointPsbts.length} checkpoint PSBTs...');
+
+    // Sign all checkpoint PSBTs with Ark identity
     final signedCheckpointPsbts = <String>[];
-    for (final checkpointPsbt in arkResponse.checkpointPsbts) {
-      final signedCheckpoint = await lendasat_api.lendasatSignPsbt(
+    for (int i = 0; i < arkResponse.checkpointPsbts.length; i++) {
+      final checkpointPsbt = arkResponse.checkpointPsbts[i];
+      logger.d(
+          'Lendasat: Signing checkpoint PSBT ${i + 1}/${arkResponse.checkpointPsbts.length}...');
+
+      final signedCheckpoint = await ark_api.signPsbtWithArkIdentity(
         psbtHex: checkpointPsbt,
-        collateralDescriptor: '',
-        borrowerPk: ourPubkey,
       );
       signedCheckpointPsbts.add(signedCheckpoint);
     }
 
-    logger.i('Lendasat: All PSBTs signed, broadcasting...');
+    logger.i(
+        'Lendasat: All ${signedCheckpointPsbts.length + 1} PSBTs signed with Ark identity, broadcasting...');
 
     // Broadcast the signed transactions
-    final txid = await broadcastClaimArkTx(
-      contractId: contractId,
-      signedArkPsbt: signedArkPsbt,
-      signedCheckpointPsbts: signedCheckpointPsbts,
-    );
+    try {
+      final txid = await broadcastClaimArkTx(
+        contractId: contractId,
+        signedArkPsbt: signedArkPsbt,
+        signedCheckpointPsbts: signedCheckpointPsbts,
+      );
 
-    return txid;
+      logger.i('Lendasat: Claim broadcast successful! TXID: $txid');
+      return txid;
+    } catch (e) {
+      logger.e('Lendasat: Failed to broadcast Ark claim tx: $e');
+      logger.e(
+          'Lendasat: This may indicate the signing failed (wrong key) or network issues');
+      rethrow;
+    }
   }
 
   /// Claim Ark collateral via settlement (recoverable VTXOs).
@@ -567,34 +571,29 @@ class LendasatService extends ChangeNotifier {
   /// but our signing function expects HEX. After signing, we need to
   /// convert back to BASE64 for the finish-settle-ark API.
   ///
-  /// This matches the iframe's behavior:
-  /// ```javascript
-  /// const intentProofHex = bitcoin.Psbt.fromBase64(settleTxs.intent_proof).toHex();
-  /// const signedHex = await client.signPsbt(intentProofHex, "", "");
-  /// const signedBase64 = bitcoin.Psbt.fromHex(signedHex).toBase64();
-  /// ```
+  /// NOTE: We use the Ark identity key for signing (not the Lendasat key),
+  /// because the collateral VTXOs are locked to the Ark identity.
+  /// This matches the offchain claim flow.
   Future<String> _claimArkViaSettlement(String contractId) async {
+    logger.i('Lendasat: Starting settlement claim for contract $contractId');
+
     // Get the settle Ark PSBTs (returned in BASE64 format)
     final settleResponse = await lendasat_api.lendasatGetSettleArkPsbt(
       contractId: contractId,
     );
 
     logger.i(
-        'Lendasat: Got settle Ark PSBTs (${settleResponse.forfeitPsbts.length} forfeits), signing...');
-
-    // Get our pubkey for signing
-    final ourPubkey = await lendasat_api.lendasatGetPublicKey();
+        'Lendasat: Got settle Ark PSBTs (${settleResponse.forfeitPsbts.length} forfeits), signing with Ark identity...');
 
     // Convert intent proof from BASE64 to HEX for signing
     final intentProofHex = await lendasat_api.lendasatPsbtBase64ToHex(
       base64Psbt: settleResponse.intentProof,
     );
 
-    // Sign the intent proof PSBT (expects HEX)
-    final signedIntentHex = await lendasat_api.lendasatSignPsbt(
+    // Sign the intent proof PSBT using Ark identity (NOT Lendasat key!)
+    // The collateral VTXOs are locked to the Ark identity, so we must use that key.
+    final signedIntentHex = await ark_api.signPsbtWithArkIdentity(
       psbtHex: intentProofHex,
-      collateralDescriptor: '',
-      borrowerPk: ourPubkey,
     );
 
     // Convert signed intent proof back to BASE64 for API
@@ -602,19 +601,24 @@ class LendasatService extends ChangeNotifier {
       hexPsbt: signedIntentHex,
     );
 
-    // Sign all forfeit PSBTs (same conversion needed)
+    logger.i(
+        'Lendasat: Intent proof signed, now signing ${settleResponse.forfeitPsbts.length} forfeit PSBTs...');
+
+    // Sign all forfeit PSBTs with Ark identity (same key needed)
     final signedForfeitPsbtsBase64 = <String>[];
-    for (final forfeitPsbtBase64 in settleResponse.forfeitPsbts) {
+    for (int i = 0; i < settleResponse.forfeitPsbts.length; i++) {
+      final forfeitPsbtBase64 = settleResponse.forfeitPsbts[i];
+
       // Convert BASE64 to HEX
       final forfeitHex = await lendasat_api.lendasatPsbtBase64ToHex(
         base64Psbt: forfeitPsbtBase64,
       );
 
-      // Sign (expects HEX)
-      final signedForfeitHex = await lendasat_api.lendasatSignPsbt(
+      // Sign with Ark identity (NOT Lendasat key!)
+      logger.d(
+          'Lendasat: Signing forfeit PSBT ${i + 1}/${settleResponse.forfeitPsbts.length}...');
+      final signedForfeitHex = await ark_api.signPsbtWithArkIdentity(
         psbtHex: forfeitHex,
-        collateralDescriptor: '',
-        borrowerPk: ourPubkey,
       );
 
       // Convert back to BASE64
@@ -637,184 +641,6 @@ class LendasatService extends ChangeNotifier {
     logger.i('Lendasat: Settlement finished, commitment txid: $commitmentTxid');
 
     return commitmentTxid;
-  }
-
-  // =====================
-  // Collateral Recovery
-  // =====================
-
-  /// Get the PSBT for recovering collateral from an expired contract.
-  Future<ClaimPsbtResponse> getRecoverPsbt({
-    required String contractId,
-    required int feeRate,
-  }) async {
-    try {
-      return await lendasat_api.lendasatGetRecoverPsbt(
-        contractId: contractId,
-        feeRate: feeRate,
-      );
-    } catch (e) {
-      logger.e('Error getting recover PSBT: $e');
-      rethrow;
-    }
-  }
-
-  /// Broadcast a signed recovery transaction.
-  Future<String> broadcastRecoverTx({
-    required String contractId,
-    required String signedTx,
-  }) async {
-    try {
-      final txid = await lendasat_api.lendasatBroadcastRecoverTx(
-        contractId: contractId,
-        signedTx: signedTx,
-      );
-      logger.i('Lendasat: Broadcast recover tx $txid');
-
-      // Refresh the contract
-      await getContract(contractId);
-
-      return txid;
-    } catch (e) {
-      logger.e('Error broadcasting recover tx: $e');
-      rethrow;
-    }
-  }
-
-  // =====================
-  // PSBT Signing
-  // =====================
-
-  /// Sign a PSBT using the Lendasat wallet keypair.
-  ///
-  /// This mirrors the iframe wallet-bridge `signPsbt` behavior:
-  /// - Takes PSBT hex, collateral descriptor, and borrower public key
-  /// - Verifies borrower_pk matches our wallet's key (warns if mismatch)
-  /// - Signs all inputs with our keypair
-  /// - Returns the signed PSBT hex
-  Future<String> signPsbt({
-    required String psbtHex,
-    required String collateralDescriptor,
-    required String borrowerPk,
-  }) async {
-    try {
-      final signedPsbt = await lendasat_api.lendasatSignPsbt(
-        psbtHex: psbtHex,
-        collateralDescriptor: collateralDescriptor,
-        borrowerPk: borrowerPk,
-      );
-      logger.i('Lendasat: Signed PSBT successfully');
-      return signedPsbt;
-    } catch (e) {
-      logger.e('Error signing PSBT: $e');
-      rethrow;
-    }
-  }
-
-  /// Claim collateral with automatic PSBT signing.
-  ///
-  /// This is a convenience method that:
-  /// 1. Gets the claim PSBT from the server
-  /// 2. Signs it with our keypair
-  /// 3. Finalizes the PSBT and extracts raw transaction
-  /// 4. Broadcasts the raw transaction
-  ///
-  /// Returns the broadcast transaction ID.
-  Future<String> claimCollateral({
-    required String contractId,
-    required int feeRate,
-  }) async {
-    try {
-      // Get the claim PSBT
-      final claimResponse = await getClaimPsbt(
-        contractId: contractId,
-        feeRate: feeRate,
-      );
-
-      logger.i('Lendasat: Got claim PSBT, signing...');
-
-      // Sign the PSBT
-      final signedPsbt = await signPsbt(
-        psbtHex: claimResponse.psbt,
-        collateralDescriptor: claimResponse.collateralDescriptor,
-        borrowerPk: claimResponse.borrowerPk,
-      );
-
-      logger.i('Lendasat: PSBT signed, finalizing...');
-
-      // CRITICAL: Finalize the PSBT and extract raw transaction
-      // This step was missing and caused broadcast failures!
-      // The API expects raw tx hex, not signed PSBT hex.
-      final rawTxHex = await lendasat_api.lendasatFinalizePsbt(
-        signedPsbtHex: signedPsbt,
-      );
-
-      logger.i('Lendasat: PSBT finalized, broadcasting raw tx...');
-
-      // Broadcast the raw transaction
-      final txid = await broadcastClaimTx(
-        contractId: contractId,
-        signedTx: rawTxHex,
-      );
-
-      return txid;
-    } catch (e) {
-      logger.e('Error claiming collateral: $e');
-      rethrow;
-    }
-  }
-
-  /// Recover collateral with automatic PSBT signing.
-  ///
-  /// This is a convenience method that:
-  /// 1. Gets the recover PSBT from the server
-  /// 2. Signs it with our keypair
-  /// 3. Finalizes the PSBT and extracts raw transaction
-  /// 4. Broadcasts the raw transaction
-  ///
-  /// Returns the broadcast transaction ID.
-  Future<String> recoverCollateral({
-    required String contractId,
-    required int feeRate,
-  }) async {
-    try {
-      // Get the recover PSBT
-      final recoverResponse = await getRecoverPsbt(
-        contractId: contractId,
-        feeRate: feeRate,
-      );
-
-      logger.i('Lendasat: Got recover PSBT, signing...');
-
-      // Sign the PSBT
-      final signedPsbt = await signPsbt(
-        psbtHex: recoverResponse.psbt,
-        collateralDescriptor: recoverResponse.collateralDescriptor,
-        borrowerPk: recoverResponse.borrowerPk,
-      );
-
-      logger.i('Lendasat: PSBT signed, finalizing...');
-
-      // CRITICAL: Finalize the PSBT and extract raw transaction
-      // This step was missing and caused broadcast failures!
-      // The API expects raw tx hex, not signed PSBT hex.
-      final rawTxHex = await lendasat_api.lendasatFinalizePsbt(
-        signedPsbtHex: signedPsbt,
-      );
-
-      logger.i('Lendasat: PSBT finalized, broadcasting raw tx...');
-
-      // Broadcast the raw transaction
-      final txid = await broadcastRecoverTx(
-        contractId: contractId,
-        signedTx: rawTxHex,
-      );
-
-      return txid;
-    } catch (e) {
-      logger.e('Error recovering collateral: $e');
-      rethrow;
-    }
   }
 
   // =====================
@@ -899,14 +725,16 @@ extension ContractExtension on Contract {
       status == ContractStatus.closingByDefaulting;
 
   /// Get collateral in BTC (not sats).
-  double get collateralBtc => collateralSats.toInt() / 100000000.0;
+  double get collateralBtc =>
+      collateralSats.toInt() / BitcoinConstants.satsPerBtc;
 
   /// Get deposited amount in BTC.
-  double get depositedBtc => depositedSats.toInt() / 100000000.0;
+  double get depositedBtc =>
+      depositedSats.toInt() / BitcoinConstants.satsPerBtc;
 
   /// Get initial collateral in BTC.
   double get initialCollateralBtc =>
-      initialCollateralSats.toInt() / 100000000.0;
+      initialCollateralSats.toInt() / BitcoinConstants.satsPerBtc;
 
   /// Get effective collateral in sats (uses initialCollateralSats as fallback).
   /// This is needed because the backend may populate initial_collateral_sats
@@ -918,10 +746,12 @@ extension ContractExtension on Contract {
   }
 
   /// Get effective collateral in BTC.
-  double get effectiveCollateralBtc => effectiveCollateralSats / 100000000.0;
+  double get effectiveCollateralBtc =>
+      effectiveCollateralSats / BitcoinConstants.satsPerBtc;
 
   /// Get origination fee in BTC.
-  double get originationFeeBtc => originationFeeSats.toInt() / 100000000.0;
+  double get originationFeeBtc =>
+      originationFeeSats.toInt() / BitcoinConstants.satsPerBtc;
 
   /// Get total amount to repay (principal + interest).
   double get totalRepayment => loanAmount + interest;

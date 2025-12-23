@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
@@ -267,12 +268,10 @@ class _SendCompletionSheet extends StatelessWidget {
           const SizedBox(height: AppTheme.elementSpacing),
 
           // Close button
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Done'),
-            ),
+          LongButtonWidget(
+            title: 'Done',
+            customWidth: double.infinity,
+            onTap: () => Navigator.of(context).pop(),
           ),
         ],
       ),

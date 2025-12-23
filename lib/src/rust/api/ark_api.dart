@@ -114,6 +114,17 @@ Future<String> getMnemonic({required String dataDir}) =>
 Future<void> resetWallet({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiResetWallet(dataDir: dataDir);
 
+/// Sign a PSBT using the Ark client's identity (key provider).
+///
+/// This is used for signing Ark VTXO claims where the collateral is locked
+/// to the Ark identity, not the Lendasat keypair.
+///
+/// The function extracts the required public key from the PSBT's taproot
+/// internal key and uses the Ark key provider to find the matching keypair.
+Future<String> signPsbtWithArkIdentity({required String psbtHex}) =>
+    RustLib.instance.api
+        .crateApiArkApiSignPsbtWithArkIdentity(psbtHex: psbtHex);
+
 Future<Info> information() => RustLib.instance.api.crateApiArkApiInformation();
 
 Future<PaymentReceived> waitForPayment(
