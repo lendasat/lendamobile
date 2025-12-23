@@ -181,35 +181,15 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     setState(() => _isActionLoading = true);
 
     try {
-      if (_contract!.isArkCollateral) {
-        // Ark collateral claim - no fee rate needed (offchain)
-        final txid = await _lendasatService.claimArkCollateral(
-          contractId: widget.contractId,
-        );
+      // All collateral is Ark-based (offchain) - no fee rate needed
+      final txid = await _lendasatService.claimArkCollateral(
+        contractId: widget.contractId,
+      );
 
-        if (mounted) {
-          OverlayService().showSuccess(
-              'Collateral claimed! TXID: ${txid.substring(0, 16)}...');
-          await _refreshContract();
-        }
-      } else {
-        // Standard Bitcoin claim - need fee rate for on-chain tx
-        final feeRate = await _showFeeRateDialog();
-        if (feeRate == null) {
-          setState(() => _isActionLoading = false);
-          return;
-        }
-
-        final txid = await _lendasatService.claimCollateral(
-          contractId: widget.contractId,
-          feeRate: feeRate,
-        );
-
-        if (mounted) {
-          OverlayService().showSuccess(
-              'Collateral claimed! TXID: ${txid.substring(0, 16)}...');
-          await _refreshContract();
-        }
+      if (mounted) {
+        OverlayService().showSuccess(
+            'Collateral claimed! TXID: ${txid.substring(0, 16)}...');
+        await _refreshContract();
       }
     } catch (e) {
       logger.e('Error claiming collateral: $e');
@@ -226,17 +206,13 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   Future<void> _showRecoverSheet() async {
     if (_contract == null) return;
 
-    // Get fee rate first
-    final feeRate = await _showFeeRateDialog();
-    if (feeRate == null) return;
-
     setState(() => _isActionLoading = true);
 
     try {
-      // Use automatic signing and broadcasting
-      final txid = await _lendasatService.recoverCollateral(
+      // All collateral is Ark-based (offchain) - uses same claim flow
+      // claimArkCollateral handles both regular claims and recovery via settlement
+      final txid = await _lendasatService.claimArkCollateral(
         contractId: widget.contractId,
-        feeRate: feeRate,
       );
 
       if (mounted) {
@@ -401,7 +377,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             if (mounted) {
               // Calculate BTC amount from sats for display
               final btcAmount =
-                  (result.satsToSend / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
+                  (result.satsToSend / BitcoinConstants.satsPerBtc)
+                      .toStringAsFixed(8);
 
               // Get the first unpaid installment for marking as paid after swap
               final unpaidInstallments = _contract!.installments
@@ -501,22 +478,6 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         },
       ),
     );
-  }
-
-  Future<int?> _showFeeRateDialog() async {
-    int? selectedRate;
-
-    await arkBottomSheet(
-      context: context,
-      child: _FeeRateSheet(
-        onConfirm: (rate) {
-          selectedRate = rate;
-          Navigator.pop(context);
-        },
-      ),
-    );
-
-    return selectedRate;
   }
 
   @override
@@ -660,19 +621,36 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           // Contract ID row
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'ID: ${_contract!.id.substring(0, 8).toUpperCase()}',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontFamily: 'monospace',
-                        fontWeight: FontWeight.bold,
+              GestureDetector(
+                onTap: () => _copyToClipboard(_contract!.id, 'Contract ID'),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'ID: ${_contract!.id.substring(0, 8).toUpperCase()}',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              fontFamily: 'monospace',
+                              fontWeight: FontWeight.bold,
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
+                            ),
+                      ),
+                      const SizedBox(width: 6),
+                      Icon(
+                        Icons.copy,
+                        size: 14,
                         color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                       ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -1222,8 +1200,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(AppTheme.successColor),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            AppTheme.successColor),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1789,129 +1767,3 @@ class _RepayConfirmationSheet extends StatelessWidget {
     );
   }
 }
-
-/// Bottom sheet for selecting fee rate.
-class _FeeRateSheet extends StatefulWidget {
-  final void Function(int rate) onConfirm;
-
-  const _FeeRateSheet({required this.onConfirm});
-
-  @override
-  State<_FeeRateSheet> createState() => _FeeRateSheetState();
-}
-
-class _FeeRateSheetState extends State<_FeeRateSheet> {
-  final TextEditingController _controller = TextEditingController(text: '10');
-  bool _isValid = true;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onChanged(String value) {
-    final rate = int.tryParse(value);
-    setState(() {
-      _isValid = rate != null && rate > 0;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.cardPadding),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title
-          Text(
-            'Select Fee Rate',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-          // Info text
-          Text(
-            'Enter the fee rate for this on-chain transaction.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                ),
-          ),
-          const SizedBox(height: AppTheme.cardPadding),
-          // Fee rate input
-          Text(
-            'FEE RATE',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-          ),
-          const SizedBox(height: 8),
-          GlassContainer(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.cardPadding,
-                vertical: AppTheme.elementSpacing * 0.5,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      onChanged: _onChanged,
-                      keyboardType: TextInputType.number,
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: '10',
-                        hintStyle: TextStyle(
-                          color:
-                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'sat/vB',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color:
-                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: AppTheme.cardPadding * 1.5),
-          // Confirm button
-          LongButtonWidget(
-            title: 'Continue',
-            customWidth: double.infinity,
-            state: _isValid ? ButtonState.idle : ButtonState.disabled,
-            onTap: _isValid
-                ? () {
-                    final rate = int.tryParse(_controller.text);
-                    if (rate != null && rate > 0) {
-                      widget.onConfirm(rate);
-                    }
-                  }
-                : null,
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-        ],
-      ),
-    );
-  }
-}
-
