@@ -266,7 +266,7 @@ async fn select_vtxos_for_amount(client: &ArkClient, amount: Amount) -> Result<V
     const MIN_EXPIRY_GAP_SECONDS: i64 = 30 * 24 * 60 * 60; // 30 days in seconds
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
+        .map_err(|e| anyhow!("System time is before Unix epoch: {e}"))?
         .as_secs() as i64;
     let min_expiry_time = now + MIN_EXPIRY_GAP_SECONDS;
 

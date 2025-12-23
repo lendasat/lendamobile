@@ -566,6 +566,16 @@ pub async fn lendasat_get_contract(contract_id: String) -> Result<Contract> {
 }
 
 /// Create a new loan contract by taking an offer.
+///
+/// IMPORTANT: This function uses the Ark identity public key as `borrower_pk`.
+/// This is critical because:
+/// 1. The collateral is sent to an Ark offchain address (VTXO)
+/// 2. VTXOs are locked to the Ark identity key
+/// 3. Claim PSBTs must be signed with the Ark identity key
+/// 4. Using the wrong key (e.g., Lendasat derivation path) causes claim failures
+///
+/// The Lendasat derivation path key is still used for authentication (sign_message),
+/// but collateral operations MUST use the Ark identity key.
 pub async fn lendasat_create_contract(
     offer_id: String,
     loan_amount: f64,
@@ -574,17 +584,28 @@ pub async fn lendasat_create_contract(
 ) -> Result<Contract> {
     let lock = get_state_lock();
 
-    let pubkey = {
-        let guard = lock.read().await;
-        let state = guard
-            .as_ref()
-            .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
-        auth::get_public_key(&state.data_dir, state.network).await?
-    };
+    // CRITICAL: Use Ark identity pubkey for borrower_pk, NOT the Lendasat derivation path key!
+    // The collateral VTXO is locked to the Ark identity, so claim PSBTs expect this key.
+    let ark_identity_pubkey = get_ark_identity_pubkey().await?;
+
+    // Get the Lendasat derivation path for reference (authentication uses this path)
     let derivation_path = auth::get_derivation_path();
 
-    // Get Ark address for collateral
+    // Get Ark offchain address for collateral deposit
     let borrower_btc_address = get_ark_address().await?;
+
+    // Also get Lendasat pubkey for comparison logging
+    let lendasat_pubkey = lendasat_get_public_key()
+        .await
+        .unwrap_or_else(|_| "unknown".to_string());
+
+    // Clear logging to verify correct key is being used
+    tracing::info!("=== CONTRACT CREATION - KEY VERIFICATION ===");
+    tracing::info!("ARK IDENTITY PUBKEY (USING THIS): {}", &ark_identity_pubkey);
+    tracing::info!("LENDASAT PUBKEY (NOT using this): {}", &lendasat_pubkey);
+    tracing::info!("Ark collateral address: {}", &borrower_btc_address);
+    tracing::info!("Derivation path (for auth only): {}", derivation_path);
+    tracing::info!("============================================");
 
     let guard = lock.read().await;
     let state = guard
@@ -597,8 +618,8 @@ pub async fn lendasat_create_contract(
 
     let request = CreateContractRequest {
         id: offer_id,
-        borrower_btc_address,
-        borrower_pk: pubkey,
+        borrower_btc_address: borrower_btc_address.clone(),
+        borrower_pk: ark_identity_pubkey.clone(), // Use Ark identity, NOT Lendasat key!
         borrower_derivation_path: derivation_path,
         loan_amount,
         duration_days,
@@ -607,6 +628,12 @@ pub async fn lendasat_create_contract(
         borrower_npub: None, // TODO: Add nostr pubkey support
         client_contract_id: None,
     };
+
+    tracing::debug!(
+        "Contract request - borrower_pk: {}..., borrower_btc_address: {}...",
+        &request.borrower_pk[..16],
+        &request.borrower_btc_address[..20]
+    );
 
     let response = state
         .http_client
@@ -628,7 +655,11 @@ pub async fn lendasat_create_contract(
         .await
         .map_err(|e| anyhow!("Failed to parse contract: {}", e))?;
 
-    tracing::info!("Created contract: {}", contract.id);
+    tracing::info!("=== CONTRACT CREATED SUCCESSFULLY ===");
+    tracing::info!("Contract ID: {}", contract.id);
+    tracing::info!("borrower_pk used: {} (Ark identity)", &ark_identity_pubkey);
+    tracing::info!("This contract WILL be claimable with Ark identity key");
+    tracing::info!("======================================");
 
     Ok(contract)
 }
@@ -1151,6 +1182,69 @@ async fn get_ark_address() -> Result<String> {
             Ok(offchain_address.encode())
         }
     }
+}
+
+/// Get the Ark identity public key (compressed, 33 bytes as hex).
+///
+/// This is the public key used for:
+/// - Ark offchain address derivation
+/// - VTXO ownership (collateral)
+/// - Signing claim PSBTs
+///
+/// IMPORTANT: This key MUST be used as `borrower_pk` when creating LendaSat contracts
+/// because the collateral is locked to this key, not the Lendasat derivation path key.
+///
+/// The Arkade wallet uses `svcWallet.identity.compressedPublicKey()` which returns
+/// this same key - derived at path m/83696968'/11811'/0/0.
+///
+/// We derive this key from the mnemonic using the same path that Ark uses:
+/// ARK_BASE_DERIVATION_PATH + "/0" = "m/83696968'/11811'/0/0"
+pub async fn get_ark_identity_pubkey() -> Result<String> {
+    use crate::ark::mnemonic_file::{ARK_BASE_DERIVATION_PATH, read_mnemonic_file};
+    use bitcoin::bip32::DerivationPath;
+    use bitcoin::key::{Keypair, Secp256k1};
+    use std::str::FromStr;
+
+    let lock = get_state_lock();
+    let guard = lock.read().await;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+
+    // Read mnemonic from file
+    let mnemonic = read_mnemonic_file(&state.data_dir)?
+        .ok_or_else(|| anyhow!("No mnemonic file found - wallet not initialized"))?;
+
+    let secp = Secp256k1::new();
+
+    // Derive master key
+    let seed = mnemonic.to_seed("");
+    let master = bitcoin::bip32::Xpriv::new_master(state.network, &seed)
+        .map_err(|e| anyhow!("Failed to derive master key: {}", e))?;
+
+    // Derive at Ark identity path: m/83696968'/11811'/0/0
+    // This matches Arkade's identity key derivation
+    let path = format!("{}/0", ARK_BASE_DERIVATION_PATH);
+    let derivation_path =
+        DerivationPath::from_str(&path).map_err(|e| anyhow!("Invalid derivation path: {}", e))?;
+
+    let derived = master
+        .derive_priv(&secp, &derivation_path)
+        .map_err(|e| anyhow!("Failed to derive Ark identity key: {}", e))?;
+
+    let keypair = Keypair::from_secret_key(&secp, &derived.private_key);
+
+    // Return the compressed public key as hex (33 bytes = 66 hex chars)
+    let pubkey_bytes = keypair.public_key().serialize();
+    let pubkey_hex = hex::encode(pubkey_bytes);
+
+    tracing::info!(
+        "Ark identity pubkey derived at {}: {}...",
+        path,
+        &pubkey_hex[..16]
+    );
+
+    Ok(pubkey_hex)
 }
 
 // ============================================================================
