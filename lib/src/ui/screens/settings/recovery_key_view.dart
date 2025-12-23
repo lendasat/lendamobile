@@ -3,8 +3,10 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
@@ -249,25 +251,50 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   }
 
   Future<void> _skipVerification() async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
+    // Show confirmation bottomsheet
+    final confirmed = await arkBottomSheet<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.skipVerification),
-        content: Text(AppLocalizations.of(context)!.skipVerificationWarning),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.errorColor,
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: AppTheme.errorColor,
+              size: 48,
             ),
-            child: Text(AppLocalizations.of(context)!.skipAtOwnRisk),
-          ),
-        ],
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              AppLocalizations.of(context)!.skipVerification,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              AppLocalizations.of(context)!.skipVerificationWarning,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+            LongButtonWidget(
+              buttonType: ButtonType.transparent,
+              title: AppLocalizations.of(context)!.cancel,
+              onTap: () => Navigator.pop(context, false),
+              customWidth: double.infinity,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            LongButtonWidget(
+              buttonType: ButtonType.solid,
+              title: AppLocalizations.of(context)!.skipAtOwnRisk,
+              onTap: () => Navigator.pop(context, true),
+              customWidth: double.infinity,
+              backgroundColor: AppTheme.errorColor,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+          ],
+        ),
       ),
     );
 
