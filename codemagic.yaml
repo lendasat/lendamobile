@@ -4,6 +4,8 @@ workflows:
     integrations:
       app_store_connect: lendamobile-22.12.2025
     environment:
+      groups:
+        - production
       ios_signing:
         distribution_type: app_store # or: ad_hoc | development | enterprise
         bundle_identifier: com.lendasat.lendamobile
@@ -47,6 +49,26 @@ workflows:
       - name: Get Flutter packages
         script: |
           flutter pub get
+
+      # Create .env file from Codemagic environment variables
+      - name: Create .env file
+        script: |
+          cat > .env << EOF
+          BACKEND_URL=$BACKEND_URL
+          WEBSITE_URL=$WEBSITE_URL
+          LENDASAT_API_KEY_SIGNET=$LENDASAT_API_KEY_SIGNET
+          LENDASAT_API_KEY_MAINNET=$LENDASAT_API_KEY_MAINNET
+          POSTHOG_API_KEY=$POSTHOG_API_KEY
+          POSTHOG_HOST=$POSTHOG_HOST
+          TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY
+          TURNSTILE_SECRET_KEY=$TURNSTILE_SECRET_KEY
+          TURNSTILE_BASE_URL=$TURNSTILE_BASE_URL
+          RAPIDAPI_KEY=$RAPIDAPI_KEY
+          ARK_SERVER_URL=$ARK_SERVER_URL
+          ESPLORA_URL=$ESPLORA_URL
+          ARK_NETWORK=$ARK_NETWORK
+          BOLTZ_URL=$BOLTZ_URL
+          EOF
 
       - name: Install CocoaPods dependencies
         script: |
