@@ -28,8 +28,20 @@ pub async fn lendaswap_init(
     api_url: String,
     arkade_url: String,
 ) -> Result<()> {
+    tracing::info!(
+        "[LendaSwap API] init called - data_dir: {}, network: {}, api_url: {}, arkade_url: {}",
+        data_dir,
+        network,
+        api_url,
+        arkade_url
+    );
     let network = lendaswap::parse_network(&network)?;
-    lendaswap::init_client(data_dir, network, api_url, arkade_url).await
+    let result = lendaswap::init_client(data_dir, network, api_url, arkade_url).await;
+    match &result {
+        Ok(_) => tracing::info!("[LendaSwap API] init SUCCESS"),
+        Err(e) => tracing::error!("[LendaSwap API] init FAILED: {:?}", e),
+    }
+    result
 }
 
 /// Check if LendaSwap is initialized.
@@ -162,23 +174,74 @@ pub async fn lendaswap_create_btc_to_evm_swap(
     target_chain: String,
     referral_code: Option<String>,
 ) -> Result<BtcToEvmSwapResult> {
+    tracing::info!(
+        "[LendaSwap API] create_btc_to_evm_swap called - target_evm_address: {}, target_amount_usd: {}, target_token: {}, target_chain: {}, referral_code: {:?}",
+        target_evm_address,
+        target_amount_usd,
+        target_token,
+        target_chain,
+        referral_code
+    );
+
     let token = lendaswap::parse_token_id(&target_token)?;
+    tracing::debug!("[LendaSwap API] parsed token: {:?}", token);
+
     let chain = lendaswap::parse_evm_chain(&target_chain)?;
+    tracing::debug!("[LendaSwap API] parsed chain: {:?}", chain);
+
     let amount = Decimal::from_str(&target_amount_usd.to_string())
         .map_err(|e| anyhow::anyhow!("Invalid amount: {}", e))?;
+    tracing::debug!("[LendaSwap API] parsed amount: {}", amount);
 
-    let response =
-        lendaswap::create_btc_to_evm_swap(target_evm_address, amount, token, chain, referral_code)
-            .await?;
+    tracing::info!("[LendaSwap API] calling lendaswap::create_btc_to_evm_swap...");
+    let response = match lendaswap::create_btc_to_evm_swap(
+        target_evm_address.clone(),
+        amount,
+        token,
+        chain,
+        referral_code,
+    )
+    .await
+    {
+        Ok(r) => {
+            tracing::info!("[LendaSwap API] create_btc_to_evm_swap SDK call SUCCESS");
+            tracing::info!("[LendaSwap API] swap_id: {}", r.common.id);
+            tracing::info!("[LendaSwap API] status: {:?}", r.common.status);
+            tracing::info!(
+                "[LendaSwap API] ln_invoice: {}...",
+                &r.ln_invoice[..50.min(r.ln_invoice.len())]
+            );
+            tracing::info!(
+                "[LendaSwap API] htlc_address_arkade: {}",
+                r.htlc_address_arkade
+            );
+            tracing::info!("[LendaSwap API] sats_receive: {}", r.sats_receive);
+            tracing::info!("[LendaSwap API] asset_amount: {}", r.common.asset_amount);
+            tracing::info!("[LendaSwap API] fee_sats: {}", r.common.fee_sats);
+            r
+        }
+        Err(e) => {
+            tracing::error!(
+                "[LendaSwap API] create_btc_to_evm_swap SDK call FAILED: {:?}",
+                e
+            );
+            return Err(e);
+        }
+    };
 
-    Ok(BtcToEvmSwapResult {
+    let result = BtcToEvmSwapResult {
         swap_id: response.common.id.to_string(),
         ln_invoice: response.ln_invoice,
         arkade_htlc_address: response.htlc_address_arkade,
         sats_to_send: response.sats_receive,
         target_amount_usd: response.common.asset_amount,
         fee_sats: response.common.fee_sats,
-    })
+    };
+    tracing::info!(
+        "[LendaSwap API] returning BtcToEvmSwapResult for swap_id: {}",
+        result.swap_id
+    );
+    Ok(result)
 }
 
 /// Response when creating an EVM to BTC swap.
@@ -303,26 +366,116 @@ pub async fn lendaswap_create_evm_to_lightning_swap(
 
 /// Get swap details by ID.
 pub async fn lendaswap_get_swap(swap_id: String) -> Result<SwapInfo> {
-    let data = lendaswap::get_swap(&swap_id).await?;
-    Ok(SwapInfo::from_extended_data(&data))
+    tracing::info!("[LendaSwap API] get_swap called - swap_id: {}", swap_id);
+    let data = match lendaswap::get_swap(&swap_id).await {
+        Ok(d) => {
+            tracing::info!("[LendaSwap API] get_swap SUCCESS for {}", swap_id);
+            d
+        }
+        Err(e) => {
+            tracing::error!("[LendaSwap API] get_swap FAILED for {}: {:?}", swap_id, e);
+            return Err(e);
+        }
+    };
+    let info = SwapInfo::from_extended_data(&data);
+    tracing::info!(
+        "[LendaSwap API] get_swap result - id: {}, status: {:?}, detailed_status: {}, can_claim_gelato: {}, can_claim_vhtlc: {}, can_refund: {}",
+        info.id,
+        info.status,
+        info.detailed_status,
+        info.can_claim_gelato,
+        info.can_claim_vhtlc,
+        info.can_refund
+    );
+    Ok(info)
 }
 
 /// List all swaps.
 pub async fn lendaswap_list_swaps() -> Result<Vec<SwapInfo>> {
-    let swaps = lendaswap::list_swaps().await?;
-    Ok(swaps.iter().map(SwapInfo::from_extended_data).collect())
+    tracing::info!("[LendaSwap API] list_swaps called");
+    let swaps = match lendaswap::list_swaps().await {
+        Ok(s) => {
+            tracing::info!(
+                "[LendaSwap API] list_swaps SUCCESS - found {} swaps from storage",
+                s.len()
+            );
+            s
+        }
+        Err(e) => {
+            tracing::error!("[LendaSwap API] list_swaps FAILED: {:?}", e);
+            return Err(e);
+        }
+    };
+
+    // Convert each swap with detailed logging
+    let mut result = Vec::new();
+    for (idx, swap_data) in swaps.iter().enumerate() {
+        tracing::debug!(
+            "[LendaSwap API] Converting swap {} of {}",
+            idx + 1,
+            swaps.len()
+        );
+        let info = SwapInfo::from_extended_data(swap_data);
+        tracing::debug!(
+            "[LendaSwap API] swap {} - id: {}, status: {:?}, detailed: {}, created_at: {}",
+            idx + 1,
+            info.id,
+            info.status,
+            info.detailed_status,
+            info.created_at
+        );
+        result.push(info);
+    }
+
+    tracing::info!(
+        "[LendaSwap API] list_swaps returning {} SwapInfo objects",
+        result.len()
+    );
+    Ok(result)
 }
 
 /// Claim a swap via Gelato (gasless).
 pub async fn lendaswap_claim_gelato(swap_id: String) -> Result<()> {
-    lendaswap::claim_gelato(&swap_id, None).await
+    tracing::info!("[LendaSwap API] claim_gelato called - swap_id: {}", swap_id);
+    match lendaswap::claim_gelato(&swap_id, None).await {
+        Ok(_) => {
+            tracing::info!("[LendaSwap API] claim_gelato SUCCESS for {}", swap_id);
+            Ok(())
+        }
+        Err(e) => {
+            tracing::error!(
+                "[LendaSwap API] claim_gelato FAILED for {}: {:?}",
+                swap_id,
+                e
+            );
+            Err(e)
+        }
+    }
 }
 
 /// Claim VHTLC for an EVM to BTC swap.
 ///
 /// Returns the transaction ID.
 pub async fn lendaswap_claim_vhtlc(swap_id: String) -> Result<String> {
-    lendaswap::claim_vhtlc(&swap_id).await
+    tracing::info!("[LendaSwap API] claim_vhtlc called - swap_id: {}", swap_id);
+    match lendaswap::claim_vhtlc(&swap_id).await {
+        Ok(txid) => {
+            tracing::info!(
+                "[LendaSwap API] claim_vhtlc SUCCESS for {} - txid: {}",
+                swap_id,
+                txid
+            );
+            Ok(txid)
+        }
+        Err(e) => {
+            tracing::error!(
+                "[LendaSwap API] claim_vhtlc FAILED for {}: {:?}",
+                swap_id,
+                e
+            );
+            Err(e)
+        }
+    }
 }
 
 /// Refund VHTLC for a failed BTC to EVM swap.
@@ -334,13 +487,58 @@ pub async fn lendaswap_refund_vhtlc(swap_id: String, refund_address: String) -> 
 
 /// Recover swaps from server (after mnemonic restore).
 pub async fn lendaswap_recover_swaps() -> Result<Vec<SwapInfo>> {
-    let swaps = lendaswap::recover_swaps().await?;
-    Ok(swaps.iter().map(SwapInfo::from_extended_data).collect())
+    tracing::info!("[LendaSwap API] recover_swaps called");
+    let swaps = match lendaswap::recover_swaps().await {
+        Ok(s) => {
+            tracing::info!(
+                "[LendaSwap API] recover_swaps SDK SUCCESS - found {} swaps",
+                s.len()
+            );
+            s
+        }
+        Err(e) => {
+            tracing::error!("[LendaSwap API] recover_swaps SDK FAILED: {:?}", e);
+            return Err(e);
+        }
+    };
+
+    // Convert each swap with detailed logging to help debug serialization issues
+    let mut result = Vec::new();
+    for (idx, swap_data) in swaps.iter().enumerate() {
+        tracing::debug!(
+            "[LendaSwap API] Converting swap {} of {}",
+            idx + 1,
+            swaps.len()
+        );
+        let info = SwapInfo::from_extended_data(swap_data);
+        tracing::debug!(
+            "[LendaSwap API] Converted swap - id: {}, status: {:?}, direction: {}, created_at: {}",
+            info.id,
+            info.status,
+            info.direction,
+            info.created_at
+        );
+        result.push(info);
+    }
+
+    tracing::info!(
+        "[LendaSwap API] recover_swaps returning {} SwapInfo objects",
+        result.len()
+    );
+    Ok(result)
 }
 
 /// Delete a swap from local storage.
 pub async fn lendaswap_delete_swap(swap_id: String) -> Result<()> {
     lendaswap::delete_swap(&swap_id).await
+}
+
+/// Clear all local swap storage and recover from server.
+/// Use this when local storage is corrupted.
+pub async fn lendaswap_clear_and_recover() -> Result<Vec<SwapInfo>> {
+    lendaswap::clear_local_storage().await?;
+    let swaps = lendaswap::recover_swaps().await?;
+    Ok(swaps.iter().map(SwapInfo::from_extended_data).collect())
 }
 
 // ============================================================================
