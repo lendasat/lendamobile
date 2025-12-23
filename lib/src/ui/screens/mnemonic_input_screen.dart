@@ -5,7 +5,9 @@ import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -273,25 +275,42 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
   }
 
   void _showErrorDialog(String title, String message) {
-    showDialog(
+    arkBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text(
-          title,
-          style: const TextStyle(color: Colors.red),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: AppTheme.errorColor,
+              size: 48,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: AppTheme.errorColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+            LongButtonWidget(
+              buttonType: ButtonType.solid,
+              title: AppLocalizations.of(context)!.ok,
+              onTap: () => Navigator.pop(context),
+              customWidth: double.infinity,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+          ],
         ),
-        content: Text(
-          message,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: Text(AppLocalizations.of(context)!.ok),
-          ),
-        ],
       ),
     );
   }
