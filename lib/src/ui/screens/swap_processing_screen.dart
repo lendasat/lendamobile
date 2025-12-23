@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
+import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
@@ -206,7 +207,40 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     }
   }
 
-  void _navigateToSuccess() {
+  Future<void> _navigateToSuccess() async {
+    // If this is a loan repayment swap, automatically mark the installment as paid
+    if (widget.loanContractId != null &&
+        widget.loanInstallmentId != null &&
+        _swapInfo?.evmHtlcClaimTxid != null) {
+      logger.i(
+          '[SwapProcessing] Loan repayment swap completed! Auto-marking installment as paid');
+      logger.i('[SwapProcessing] - Contract ID: ${widget.loanContractId}');
+      logger.i('[SwapProcessing] - Installment ID: ${widget.loanInstallmentId}');
+      logger.i('[SwapProcessing] - Payment TXID: ${_swapInfo!.evmHtlcClaimTxid}');
+
+      try {
+        final lendasatService = LendasatService();
+        await lendasatService.markInstallmentPaid(
+          contractId: widget.loanContractId!,
+          installmentId: widget.loanInstallmentId!,
+          paymentTxid: _swapInfo!.evmHtlcClaimTxid!,
+        );
+        logger.i('[SwapProcessing] Successfully marked installment as paid!');
+        if (mounted) {
+          OverlayService().showSuccess('Loan repayment confirmed!');
+        }
+      } catch (e) {
+        logger.e('[SwapProcessing] Failed to auto-mark installment as paid: $e');
+        // Don't block navigation - user can still manually confirm later
+        if (mounted) {
+          OverlayService().showError(
+              'Swap completed but failed to auto-confirm repayment. Please use "I Already Paid" to confirm manually.');
+        }
+      }
+    }
+
+    if (!mounted) return;
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
