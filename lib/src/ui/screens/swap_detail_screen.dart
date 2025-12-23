@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
@@ -412,7 +413,7 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
   Widget _buildSwapSummary(BuildContext context, SwapToken sourceToken,
       SwapToken targetToken, bool isDarkMode) {
     final btcAmount = _swapInfo != null
-        ? ((_swapInfo!.sourceAmountSats.toInt()) / 100000000).toStringAsFixed(8)
+        ? ((_swapInfo!.sourceAmountSats.toInt()) / BitcoinConstants.satsPerBtc).toStringAsFixed(8)
         : '0';
     final tokenAmount = _swapInfo?.targetAmountUsd.toStringAsFixed(
             sourceToken.isStablecoin || targetToken.isStablecoin ? 2 : 6) ??
@@ -603,6 +604,18 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
                 onTap: () => _copyToClipboard(_swapInfo!.arkadeHtlcAddress!),
               ),
             ],
+            // Show claim transaction hash for BTC→EVM swaps
+            if (_swapInfo!.evmHtlcClaimTxid != null &&
+                _swapInfo!.direction == 'btc_to_evm') ...[
+              const SizedBox(height: AppTheme.elementSpacing),
+              _buildDetailRow(
+                context,
+                'Transaction',
+                _truncateId(_swapInfo!.evmHtlcClaimTxid!),
+                isDarkMode,
+                onTap: () => _copyToClipboard(_swapInfo!.evmHtlcClaimTxid!),
+              ),
+            ],
           ],
         ),
       ),
@@ -662,7 +675,7 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
     final sourceToken = _getSourceToken();
     final targetToken = _getTargetToken();
     final btcAmount =
-        (_swapInfo!.sourceAmountSats.toInt() / 100000000).toStringAsFixed(8);
+        (_swapInfo!.sourceAmountSats.toInt() / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
     final tokenAmount = _swapInfo!.targetAmountUsd.toStringAsFixed(
         sourceToken.isStablecoin || targetToken.isStablecoin ? 2 : 6);
 
