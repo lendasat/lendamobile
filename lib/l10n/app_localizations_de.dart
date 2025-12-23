@@ -1052,4 +1052,88 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get registrationWarning =>
       'Account registration had an issue. You can still use your wallet.';
+
+  @override
+  String get legalInformation => 'Rechtliches';
+
+  @override
+  String get termsAndConditionsTitle1 => 'Allgemeine';
+
+  @override
+  String get termsAndConditionsTitle2 => 'Geschäftsbedingungen';
+
+  @override
+  String get lastUpdated => 'Stand: Dezember 2025';
+
+  @override
+  String get alphaVersion => 'Alpha-Version';
+
+  @override
+  String get alphaVersionWarning =>
+      'Diese App befindet sich in der Entwicklung. Nutzung auf eigenes Risiko.';
+
+  @override
+  String get agbScopeTitle => 'Anwendungsbereich';
+
+  @override
+  String get agbScopeContent =>
+      'Diese Geschäftsbedingungen regeln die Nutzung der Bitcoin-Wallet-App (im Folgenden Lenda), die von Lendasat Inc. bereitgestellt wird. Durch die Nutzung der App erklären Sie sich mit diesen Geschäftsbedingungen einverstanden.';
+
+  @override
+  String get agbFunctionalityTitle => 'Funktionalität';
+
+  @override
+  String get agbFunctionalityContent =>
+      'Die App ermöglicht es Benutzern, Bitcoins zu empfangen, zu senden und zu verwalten. Die App ist keine Bank und bietet keine Bankdienstleistungen an. Zusätzlich werden Taproot Assets, auch bekannt als digitale Assets, als Dienstleistungsplattform angeboten und verkauft.';
+
+  @override
+  String get agbUserResponsibilityTitle => 'Verantwortung des Benutzers';
+
+  @override
+  String get agbUserResponsibilityContent =>
+      'Der Benutzer ist allein für die Sicherheit seiner Bitcoins verantwortlich. Die App bietet Schutzfunktionen wie Passwortschutz und Zwei-Faktor-Authentifizierung, aber es liegt in der Verantwortung des Benutzers, diese Funktionen sorgfältig zu verwenden. Lendasat Inc. haftet nicht für Verluste, die aufgrund von Unachtsamkeit, Verlust von Geräten oder Zugangsdaten des Benutzers entstehen.';
+
+  @override
+  String get agbFeesTitle => 'Gebühren';
+
+  @override
+  String get agbFeesContent =>
+      'Für bestimmte Funktionen der App können Gebühren anfallen. Diese Gebühren werden dem Benutzer im Vorfeld mitgeteilt und sind in der App ersichtlich.';
+
+  @override
+  String get agbLiabilityTitle => 'Haftungsbeschränkung';
+
+  @override
+  String get agbLiabilityContent =>
+      'Lendasat Inc. haftet nur für Schäden, die durch vorsätzliches oder grob fahrlässiges Handeln von Lendasat Inc. verursacht werden. Lendasat Inc. haftet nicht für Schäden, die aus der Nutzung der App oder dem Verlust von Bitcoins resultieren.';
+
+  @override
+  String get agbChangesTitle => 'Änderungen';
+
+  @override
+  String get agbChangesContent =>
+      'Lendasat Inc. behält sich das Recht vor, diese Geschäftsbedingungen jederzeit zu ändern. Der Benutzer wird über solche Änderungen informiert und muss diesen zustimmen, um die App weiterhin nutzen zu können.';
+
+  @override
+  String get agbFinalProvisionsTitle => 'Schlussbestimmungen';
+
+  @override
+  String get agbFinalProvisionsContent =>
+      'Diese Geschäftsbedingungen stellen die gesamte Vereinbarung zwischen dem Benutzer und Lendasat Inc. dar. Sollte eine Bestimmung unwirksam sein, bleiben die übrigen Bestimmungen in Kraft.';
+
+  @override
+  String get contact => 'Kontakt';
+
+  @override
+  String get responsibleForContent => 'Verantwortlich für den Inhalt';
+
+  @override
+  String get disclaimer => 'Haftungsausschluss';
+
+  @override
+  String get disclaimerContent =>
+      'Der Anbieter übernimmt keinerlei Gewähr für die Aktualität, Korrektheit, Vollständigkeit oder Qualität der bereitgestellten Informationen. Haftungsansprüche gegen den Anbieter sind grundsätzlich ausgeschlossen, sofern kein nachweislich vorsätzliches oder grob fahrlässiges Verschulden vorliegt.';
+
+  @override
+  String get allRightsReserved => 'Alle Rechte vorbehalten';
 }

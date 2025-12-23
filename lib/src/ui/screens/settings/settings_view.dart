@@ -286,6 +286,25 @@ class SettingsViewState extends State<SettingsView> {
                 ),
               ),
 
+              // Legal / AGB & Impressum
+              ArkListTile(
+                leading: RoundedButtonWidget(
+                  iconData: Icons.info_outline,
+                  onTap: () => controller.switchTab('agbs'),
+                  size: AppTheme.iconSize * 1.5,
+                  buttonType: ButtonType.transparent,
+                ),
+                text: AppLocalizations.of(context)!.legalInformation,
+                trailing: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: AppTheme.iconSize * 0.75,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.white60
+                      : AppTheme.black60,
+                ),
+                onTap: () => controller.switchTab('agbs'),
+              ),
+
               // Recovery Key - temporarily disabled (already included in Recovery Options)
               // ArkListTile(
               //   leading: RoundedButtonWidget(
