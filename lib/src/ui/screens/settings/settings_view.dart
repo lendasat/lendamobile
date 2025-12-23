@@ -8,7 +8,9 @@ import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
@@ -48,65 +50,68 @@ class SettingsViewState extends State<SettingsView> {
   }
 
   void _showResetWalletDialog() {
-    showDialog(
+    arkBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? AppTheme.black90
-            : Colors.white,
-        title: Text(
-          AppLocalizations.of(context)!.resetWallet,
-          style: const TextStyle(color: Colors.red),
-        ),
-        content: Text(
-          AppLocalizations.of(context)!.thisWillDeleteAllWalletData,
-          style: TextStyle(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? AppTheme.white60
-                : AppTheme.black60,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              AppLocalizations.of(context)!.cancel,
-              style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppTheme.white90
-                    : AppTheme.black90,
-              ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: AppTheme.errorColor,
+              size: 48,
             ),
-          ),
-          TextButton(
-            onPressed: () async {
-              var dataDir = await getApplicationSupportDirectory();
-              await resetWallet(dataDir: dataDir.path);
-              await _settingsService.resetToDefaults();
-
-              // Reset service singletons so they re-initialize with new wallet
-              LendaSwapService().reset();
-              LendasatService().reset();
-
-              if (context.mounted) {
-                // Navigate to OnboardingScreen and remove all previous routes
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (context) => const OnboardingScreen(),
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              AppLocalizations.of(context)!.resetWallet,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: AppTheme.errorColor,
+                    fontWeight: FontWeight.bold,
                   ),
-                  (route) => false,
-                );
-              }
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
             ),
-            child: Text(
-              AppLocalizations.of(context)!.reset,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              AppLocalizations.of(context)!.thisWillDeleteAllWalletData,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
             ),
-          ),
-        ],
+            const SizedBox(height: AppTheme.cardPadding),
+            LongButtonWidget(
+              buttonType: ButtonType.transparent,
+              title: AppLocalizations.of(context)!.cancel,
+              onTap: () => Navigator.pop(context),
+              customWidth: double.infinity,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            LongButtonWidget(
+              buttonType: ButtonType.solid,
+              title: AppLocalizations.of(context)!.reset,
+              onTap: () async {
+                var dataDir = await getApplicationSupportDirectory();
+                await resetWallet(dataDir: dataDir.path);
+                await _settingsService.resetToDefaults();
+
+                // Reset service singletons so they re-initialize with new wallet
+                LendaSwapService().reset();
+                LendasatService().reset();
+
+                if (context.mounted) {
+                  // Navigate to OnboardingScreen and remove all previous routes
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (context) => const OnboardingScreen(),
+                    ),
+                    (route) => false,
+                  );
+                }
+              },
+              customWidth: double.infinity,
+              backgroundColor: AppTheme.errorColor,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+          ],
+        ),
       ),
     );
   }

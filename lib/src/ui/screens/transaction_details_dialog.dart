@@ -3,7 +3,9 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -30,25 +32,25 @@ class TransactionDetailsDialog extends StatelessWidget {
 
   Future<void> _handleSettlement(BuildContext context) async {
     try {
-      // Show loading dialog
-      showDialog(
+      // Show loading bottomsheet
+      arkBottomSheet(
         context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          content: Column(
+        isDismissible: false,
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.cardPadding),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               CircularProgressIndicator(
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.elementSpacing),
               Text(
                 AppLocalizations.of(context)!.settlingTransaction,
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
+              const SizedBox(height: AppTheme.elementSpacing),
             ],
           ),
         ),
@@ -58,61 +60,90 @@ class TransactionDetailsDialog extends StatelessWidget {
       await settle();
       logger.i("Transaction settled successfully");
 
-      // Close loading dialog and show success
+      // Close loading bottomsheet and show success
       if (context.mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
-        showDialog(
+        Navigator.of(context).pop(); // Close loading bottomsheet
+        arkBottomSheet(
           context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            title: Text(
-              AppLocalizations.of(context)!.success,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-            ),
-            content: Text(
-              AppLocalizations.of(context)!.transactionSettledSuccessfully,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close success dialog
-                  Navigator.of(context).pop(); // Close transaction details
-                },
-                child: Text(
-                  AppLocalizations.of(context)!.goToHome,
-                  style: TextStyle(color: AppTheme.colorBitcoin),
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.cardPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 48,
                 ),
-              ),
-            ],
+                const SizedBox(height: AppTheme.elementSpacing),
+                Text(
+                  AppLocalizations.of(context)!.success,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: AppTheme.elementSpacing),
+                Text(
+                  AppLocalizations.of(context)!.transactionSettledSuccessfully,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppTheme.cardPadding),
+                LongButtonWidget(
+                  buttonType: ButtonType.solid,
+                  title: AppLocalizations.of(context)!.goToHome,
+                  onTap: () {
+                    Navigator.of(context).pop(); // Close success bottomsheet
+                    Navigator.of(context).pop(); // Close transaction details
+                  },
+                  customWidth: double.infinity,
+                ),
+                const SizedBox(height: AppTheme.elementSpacing),
+              ],
+            ),
           ),
         );
       }
     } catch (e) {
-      // Close loading dialog and show error
+      // Close loading bottomsheet and show error
       if (context.mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
-        showDialog(
+        Navigator.of(context).pop(); // Close loading bottomsheet
+        arkBottomSheet(
           context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            title: Text(
-              AppLocalizations.of(context)!.error,
-              style: const TextStyle(color: Colors.red),
-            ),
-            content: Text(
-              '${AppLocalizations.of(context)!.failedToSettleTransaction} ${e.toString()}',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  AppLocalizations.of(context)!.ok,
-                  style: TextStyle(color: AppTheme.colorBitcoin),
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.cardPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppTheme.errorColor,
+                  size: 48,
                 ),
-              ),
-            ],
+                const SizedBox(height: AppTheme.elementSpacing),
+                Text(
+                  AppLocalizations.of(context)!.error,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppTheme.errorColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: AppTheme.elementSpacing),
+                Text(
+                  '${AppLocalizations.of(context)!.failedToSettleTransaction} ${e.toString()}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppTheme.cardPadding),
+                LongButtonWidget(
+                  buttonType: ButtonType.solid,
+                  title: AppLocalizations.of(context)!.ok,
+                  onTap: () => Navigator.of(context).pop(),
+                  customWidth: double.infinity,
+                ),
+                const SizedBox(height: AppTheme.elementSpacing),
+              ],
+            ),
           ),
         );
       }
