@@ -27,6 +27,12 @@ class SwapProcessingScreen extends StatefulWidget {
   final String sourceAmount;
   final String targetAmount;
 
+  /// Optional loan contract ID for loan repayment swaps
+  final String? loanContractId;
+
+  /// Optional loan installment ID for loan repayment swaps
+  final String? loanInstallmentId;
+
   const SwapProcessingScreen({
     super.key,
     required this.swapId,
@@ -34,6 +40,8 @@ class SwapProcessingScreen extends StatefulWidget {
     required this.targetToken,
     required this.sourceAmount,
     required this.targetAmount,
+    this.loanContractId,
+    this.loanInstallmentId,
   });
 
   @override
@@ -75,29 +83,42 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   }
 
   Future<void> _loadSwapInfo() async {
+    logger.d('[SwapProcessing] _loadSwapInfo called for swap ${widget.swapId}');
     try {
       final swap = await _swapService.getSwap(widget.swapId);
+      logger.i('[SwapProcessing] Got swap info:');
+      logger.i('[SwapProcessing] - id: ${swap.id}');
+      logger.i('[SwapProcessing] - status: ${swap.status}');
+      logger.i('[SwapProcessing] - detailedStatus: ${swap.detailedStatus}');
+      logger.i('[SwapProcessing] - direction: ${swap.direction}');
+      logger.i('[SwapProcessing] - canClaimGelato: ${swap.canClaimGelato}');
+      logger.i('[SwapProcessing] - canClaimVhtlc: ${swap.canClaimVhtlc}');
+      logger.i('[SwapProcessing] - canRefund: ${swap.canRefund}');
+      logger.i('[SwapProcessing] - isCompleted: ${swap.isCompleted}');
+
       if (mounted) {
         setState(() {
           _swapInfo = swap;
           _isLoading = false;
         });
 
-        logger.d('Swap ${widget.swapId} status: ${swap.detailedStatus}');
-
         // Check if completed or failed
         if (swap.isCompleted) {
+          logger.i('[SwapProcessing] Swap is COMPLETED! Stopping polling and navigating to success');
           _pollTimer?.cancel();
           _navigateToSuccess();
         } else if (swap.status == SwapStatusSimple.failed ||
             swap.status == SwapStatusSimple.expired) {
+          logger.w('[SwapProcessing] Swap is FAILED or EXPIRED. Stopping polling.');
           _pollTimer?.cancel();
         } else {
+          logger.d('[SwapProcessing] Swap still in progress, attempting auto-claim...');
           // Auto-claim if ready
           await _attemptAutoClaim(swap);
         }
       }
     } catch (e) {
+      logger.e('[SwapProcessing] _loadSwapInfo FAILED: $e');
       if (mounted) {
         setState(() {
           _errorMessage = e.toString();
@@ -109,60 +130,79 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
 
   /// Attempt to auto-claim the swap if it's ready.
   Future<void> _attemptAutoClaim(SwapInfo swap) async {
+    logger.d('[SwapProcessing] _attemptAutoClaim called');
+    logger.d('[SwapProcessing] - _isClaimingGelato: $_isClaimingGelato');
+    logger.d('[SwapProcessing] - _hasAttemptedClaim: $_hasAttemptedClaim');
+    logger.d('[SwapProcessing] - swap.canClaimGelato: ${swap.canClaimGelato}');
+    logger.d('[SwapProcessing] - swap.canClaimVhtlc: ${swap.canClaimVhtlc}');
+    logger.d('[SwapProcessing] - _isEthereumTarget: $_isEthereumTarget');
+
     // Don't attempt if already claiming
-    if (_isClaimingGelato) return;
+    if (_isClaimingGelato) {
+      logger.d('[SwapProcessing] Already claiming, skipping');
+      return;
+    }
 
     // BTC → EVM swaps: claim when server has funded
     if (swap.canClaimGelato && !_hasAttemptedClaim) {
+      logger.i('[SwapProcessing] canClaimGelato=true, proceeding with claim');
       // For Ethereum targets, show WalletConnect claim UI instead of auto-claiming
       // because Gelato gasless claiming is not supported on Ethereum mainnet
       if (_isEthereumTarget) {
-        logger.i('Ethereum target - showing WalletConnect claim UI');
+        logger.i('[SwapProcessing] Ethereum target - showing WalletConnect claim UI');
         setState(() => _showWalletConnectClaim = true);
         return;
       }
 
       // For Polygon targets, use Gelato gasless claiming
-      logger.i('Auto-claiming BTC→EVM swap ${swap.id} via Gelato');
+      logger.i('[SwapProcessing] Auto-claiming BTC→EVM swap ${swap.id} via Gelato');
       setState(() {
         _isClaimingGelato = true;
       });
 
       try {
         await _swapService.claimGelato(swap.id);
-        logger.i('Gelato claim submitted for swap ${swap.id}');
+        logger.i('[SwapProcessing] Gelato claim submitted for swap ${swap.id}');
         // Only mark as attempted on success - polling will detect completion
         setState(() => _hasAttemptedClaim = true);
       } catch (e) {
-        logger.e('Failed to auto-claim via Gelato: $e');
+        logger.e('[SwapProcessing] Failed to auto-claim via Gelato: $e');
         // Don't mark as attempted on failure - allow retry on next poll
       } finally {
         if (mounted) {
           setState(() => _isClaimingGelato = false);
         }
       }
+    } else if (swap.canClaimGelato) {
+      logger.d('[SwapProcessing] canClaimGelato=true but already attempted');
     }
 
     // EVM → BTC swaps: claim VHTLC when server has funded
     if (swap.canClaimVhtlc && !_hasAttemptedClaim) {
-      logger.i('Auto-claiming EVM→BTC swap ${swap.id} via VHTLC');
+      logger.i('[SwapProcessing] canClaimVhtlc=true, Auto-claiming EVM→BTC swap ${swap.id} via VHTLC');
       setState(() {
         _isClaimingGelato = true; // reuse flag
       });
 
       try {
         final txid = await _swapService.claimVhtlc(swap.id);
-        logger.i('VHTLC claimed for swap ${swap.id}, txid: $txid');
+        logger.i('[SwapProcessing] VHTLC claimed for swap ${swap.id}, txid: $txid');
         // Only mark as attempted on success - polling will detect completion
         setState(() => _hasAttemptedClaim = true);
       } catch (e) {
-        logger.e('Failed to auto-claim VHTLC: $e');
+        logger.e('[SwapProcessing] Failed to auto-claim VHTLC: $e');
         // Don't mark as attempted on failure - allow retry on next poll
       } finally {
         if (mounted) {
           setState(() => _isClaimingGelato = false);
         }
       }
+    } else if (swap.canClaimVhtlc) {
+      logger.d('[SwapProcessing] canClaimVhtlc=true but already attempted');
+    }
+
+    if (!swap.canClaimGelato && !swap.canClaimVhtlc) {
+      logger.d('[SwapProcessing] Neither canClaimGelato nor canClaimVhtlc is true - waiting for server to fund');
     }
   }
 
