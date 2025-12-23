@@ -1,6 +1,7 @@
 set dotenv-load := true
 
-mod flutter
+mod ios
+mod android
 
 ## ------------------------
 ## rust helper functions
