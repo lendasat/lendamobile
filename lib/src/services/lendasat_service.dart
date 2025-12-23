@@ -982,14 +982,21 @@ extension ContractExtension on Contract {
   }
 
   /// Check if this contract can be repaid via Lendaswap.
-  /// Requires: active loan, supported stablecoin, and repayment address.
+  /// Requires: active loan (not already sent repayment), supported stablecoin, and repayment address.
   bool get canRepayWithLendaswap {
+    // Don't show repay if repayment already sent (waiting for lender confirmation)
+    if (status == ContractStatus.repaymentProvided) return false;
+
     return isActiveLoan &&
         repaymentSwapToken != null &&
         loanRepaymentAddress != null &&
         loanRepaymentAddress!.isNotEmpty &&
         balanceOutstanding > 0;
   }
+
+  /// Check if contract is awaiting repayment confirmation from lender.
+  bool get isAwaitingRepaymentConfirmation =>
+      status == ContractStatus.repaymentProvided;
 
   /// Get repayment progress (0.0 to 1.0).
   double get repaymentProgress {
