@@ -262,7 +262,7 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
                     ),
                     const SizedBox(height: AppTheme.elementSpacing),
                     Text(
-                      "Lendasat Inc.",
+                      "COBLOX PTY LTD",
                       style:
                           Theme.of(context).textTheme.headlineLarge?.copyWith(
                                 color: Colors.white,
@@ -270,7 +270,7 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
                               ),
                     ),
                     Text(
-                      "Delaware C Corporation",
+                      "ABN 86 624 756 467",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Colors.white.withOpacity(0.9),
                           ),
@@ -286,10 +286,10 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
                 icon: Icons.location_on_outlined,
                 title: AppLocalizations.of(context)!.address,
                 content: const [
-                  "Lendasat Inc.",
-                  "1111B S Governors Ave STE 48557",
-                  "Dover, DE 19904",
-                  "USA",
+                  "COBLOX PTY LTD",
+                  "ABN 86 624 756 467",
+                  "NSW 2487",
+                  "Australia",
                 ],
               ),
               _buildContactCard(
@@ -303,11 +303,11 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
               ),
               _buildContactCard(
                 context,
-                icon: Icons.person_outline,
+                icon: Icons.business_outlined,
                 title: AppLocalizations.of(context)!.responsibleForContent,
                 content: const [
-                  "Philipp Hoenisch",
-                  "Representative",
+                  "COBLOX PTY LTD",
+                  "Australian Private Company",
                 ],
               ),
 
@@ -367,7 +367,7 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "\u00a9 ${DateTime.now().year} Lendasat Inc.",
+                      "\u00a9 ${DateTime.now().year} COBLOX PTY LTD",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
