@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
@@ -45,9 +46,9 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
     int amountSats = 0;
     try {
       if (widget.sourceToken.isBtc) {
-        amountSats = (double.parse(widget.sourceAmount) * 100000000).toInt();
+        amountSats = (double.parse(widget.sourceAmount) * BitcoinConstants.satsPerBtc).toInt();
       } else if (widget.targetToken.isBtc) {
-        amountSats = (double.parse(widget.targetAmount) * 100000000).toInt();
+        amountSats = (double.parse(widget.targetAmount) * BitcoinConstants.satsPerBtc).toInt();
       }
     } catch (e) {
       logger.w('Failed to parse swap amount for analytics: $e');

@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
@@ -146,8 +147,8 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
   (String, String, bool) _formatAmountWithUnit(int amountSats) {
     final absAmount = amountSats.abs();
     // Threshold: >= 100,000,000 sats (1 BTC) show as BTC
-    if (absAmount >= 100000000) {
-      final btc = absAmount / 100000000;
+    if (absAmount >= BitcoinConstants.satsPerBtc) {
+      final btc = absAmount / BitcoinConstants.satsPerBtc;
       return (btc.toStringAsFixed(8), 'BTC', false);
     } else {
       final formatter = NumberFormat('#,###');
@@ -1132,7 +1133,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                     .where((v) => v.prevout != null)
                                     .toList()[index];
                                 final value =
-                                    (vin.prevout!.value.toDouble()) / 100000000;
+                                    (vin.prevout!.value.toDouble()) / BitcoinConstants.satsPerBtc;
                                 final address =
                                     vin.prevout?.scriptpubkeyAddress ?? '';
 
@@ -1211,7 +1212,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                               itemCount: transactionModel?.vout.length ?? 0,
                               itemBuilder: (context, index) {
                                 final vout = transactionModel!.vout[index];
-                                final value = vout.value.toDouble() / 100000000;
+                                final value = vout.value.toDouble() / BitcoinConstants.satsPerBtc;
                                 final address = vout.scriptpubkeyAddress ?? '';
 
                                 if (!address.contains(outputCtrl.text)) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
@@ -169,8 +170,8 @@ class PendingTransactionService extends ChangeNotifier {
 
   /// Format satoshis for display
   String _formatSats(int sats) {
-    if (sats >= 100000000) {
-      return '${(sats / 100000000).toStringAsFixed(8)} BTC';
+    if (sats >= BitcoinConstants.satsPerBtc) {
+      return '${(sats / BitcoinConstants.satsPerBtc).toStringAsFixed(8)} BTC';
     } else if (sats >= 1000000) {
       return '${(sats / 1000000).toStringAsFixed(2)}M sats';
     } else if (sats >= 1000) {
@@ -279,8 +280,8 @@ class _SendCompletionSheet extends StatelessWidget {
   }
 
   String _formatSats(int sats) {
-    if (sats >= 100000000) {
-      return '${(sats / 100000000).toStringAsFixed(8)} BTC';
+    if (sats >= BitcoinConstants.satsPerBtc) {
+      return '${(sats / BitcoinConstants.satsPerBtc).toStringAsFixed(8)} BTC';
     } else if (sats >= 1000000) {
       return '${(sats / 1000000).toStringAsFixed(2)}M sats';
     } else if (sats >= 1000) {
