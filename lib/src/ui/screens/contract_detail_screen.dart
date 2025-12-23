@@ -13,6 +13,7 @@ import 'package:ark_flutter/src/ui/screens/swap_processing_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
@@ -120,49 +121,38 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   }
 
   Future<void> _cancelContract() async {
-    final confirmed = await showDialog<bool>(
+    await arkBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel Contract'),
-        content: const Text(
-          'Are you sure you want to cancel this loan request? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppTheme.errorColor),
-            ),
-          ),
-        ],
+      child: _ConfirmationSheet(
+        title: 'Cancel Contract',
+        message:
+            'Are you sure you want to cancel this loan request? This action cannot be undone.',
+        confirmText: 'Cancel Request',
+        confirmColor: AppTheme.errorColor,
+        cancelText: 'Keep',
+        onConfirm: () async {
+          Navigator.pop(context);
+          setState(() => _isActionLoading = true);
+
+          try {
+            await _lendasatService.cancelContract(widget.contractId);
+            if (mounted) {
+              OverlayService().showSuccess('Contract cancelled');
+              Navigator.pop(context);
+            }
+          } catch (e) {
+            logger.e('Error cancelling contract: $e');
+            if (mounted) {
+              OverlayService().showError('Failed to cancel: ${e.toString()}');
+            }
+          } finally {
+            if (mounted) {
+              setState(() => _isActionLoading = false);
+            }
+          }
+        },
       ),
     );
-
-    if (confirmed != true) return;
-
-    setState(() => _isActionLoading = true);
-
-    try {
-      await _lendasatService.cancelContract(widget.contractId);
-      if (mounted) {
-        OverlayService().showSuccess('Contract cancelled');
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      logger.e('Error cancelling contract: $e');
-      if (mounted) {
-        OverlayService().showError('Failed to cancel: ${e.toString()}');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isActionLoading = false);
-      }
-    }
   }
 
   Future<void> _showClaimSheet() async {
@@ -258,74 +248,66 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       return;
     }
 
-    // Confirm with user
-    final confirmed = await showDialog<bool>(
+    await arkBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Pay Collateral'),
-        content: Text(
-          'Send ${_contract!.effectiveCollateralBtc.toStringAsFixed(6)} BTC as collateral for this loan?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Pay'),
-          ),
-        ],
+      child: _ConfirmationSheet(
+        title: 'Pay Collateral',
+        message:
+            'Send ${_contract!.effectiveCollateralBtc.toStringAsFixed(6)} BTC as collateral for this loan?',
+        confirmText: 'Pay',
+        cancelText: 'Cancel',
+        onConfirm: () async {
+          Navigator.pop(context);
+          setState(() => _isActionLoading = true);
+
+          // Suppress payment notifications during collateral send
+          PaymentOverlayService().startSuppression();
+
+          try {
+            final collateralSats =
+                BigInt.from(_contract!.effectiveCollateralSats);
+            final collateralAddress = _contract!.contractAddress!;
+
+            logger
+                .i('[Loan] Sending $collateralSats sats to $collateralAddress');
+
+            final txid = await ark_api.send(
+              address: collateralAddress,
+              amountSats: collateralSats,
+            );
+
+            logger.i('[Loan] Collateral sent! TXID: $txid');
+
+            // Track analytics
+            await AnalyticsService().trackLoanTransaction(
+              amountSats: _contract!.effectiveCollateralSats,
+              type: 'borrow',
+              loanId: _contract!.id,
+              interestRate: _contract!.interestRate,
+              durationDays: _contract!.durationDays,
+            );
+
+            if (mounted) {
+              OverlayService()
+                  .showSuccess('Collateral sent! Loan is being processed.');
+              await _refreshContract();
+            }
+          } catch (e) {
+            logger.e('[Loan] Error sending collateral: $e');
+            if (mounted) {
+              OverlayService().showError('Failed: ${e.toString()}');
+            }
+          } finally {
+            if (mounted) {
+              setState(() => _isActionLoading = false);
+            }
+            Future.delayed(const Duration(seconds: 5), () {
+              PaymentOverlayService().stopSuppression();
+            });
+          }
+        },
       ),
     );
-
-    if (confirmed != true) return;
-
-    setState(() => _isActionLoading = true);
-
-    // Suppress payment notifications during collateral send
-    PaymentOverlayService().startSuppression();
-
-    try {
-      final collateralSats = BigInt.from(_contract!.effectiveCollateralSats);
-      final collateralAddress = _contract!.contractAddress!;
-
-      logger.i('[Loan] Sending $collateralSats sats to $collateralAddress');
-
-      final txid = await ark_api.send(
-        address: collateralAddress,
-        amountSats: collateralSats,
-      );
-
-      logger.i('[Loan] Collateral sent! TXID: $txid');
-
-      // Track analytics
-      await AnalyticsService().trackLoanTransaction(
-        amountSats: _contract!.effectiveCollateralSats,
-        type: 'borrow',
-        loanId: _contract!.id,
-        interestRate: _contract!.interestRate,
-        durationDays: _contract!.durationDays,
-      );
-
-      if (mounted) {
-        OverlayService()
-            .showSuccess('Collateral sent! Loan is being processed.');
-        await _refreshContract();
-      }
-    } catch (e) {
-      logger.e('[Loan] Error sending collateral: $e');
-      if (mounted) {
-        OverlayService().showError('Failed: ${e.toString()}');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isActionLoading = false);
-      }
-      Future.delayed(const Duration(seconds: 5), () {
-        PaymentOverlayService().stopSuppression();
-      });
-    }
   }
 
   /// Repay the loan using Lendaswap - swaps BTC to stablecoin and sends to repayment address.
@@ -336,178 +318,120 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     final repaymentAddress = _contract!.loanRepaymentAddress!;
     final amountToRepay = _contract!.balanceOutstanding;
 
-    // Confirm with user
-    final confirmed = await showDialog<bool>(
+    await arkBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Repay with Lendaswap'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Repay \$${amountToRepay.toStringAsFixed(2)} using Lendaswap?',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'This will swap BTC from your wallet to ${targetToken.symbol} '
-              'and send it to the lender\'s repayment address.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.7),
+      child: _RepayConfirmationSheet(
+        amountToRepay: amountToRepay,
+        targetTokenSymbol: targetToken.symbol,
+        onConfirm: () async {
+          Navigator.pop(context);
+          setState(() => _isRepaying = true);
+          PaymentOverlayService().startSuppression();
+
+          try {
+            // Initialize swap service if needed
+            if (!_swapService.isInitialized) {
+              await _swapService.initialize();
+            }
+
+            // Check wallet balance
+            final walletBalance = await ark_api.balance();
+            final availableSats = walletBalance.offchain.totalSats;
+
+            logger.i(
+                '[LoanRepay] Repaying \$${amountToRepay.toStringAsFixed(2)} to $repaymentAddress');
+
+            // Create the swap - BTC to stablecoin, sent to repayment address
+            // For loan repayment, amount is in USD which equals token amount for stablecoins
+            final result = await _swapService.createSellBtcSwap(
+              targetEvmAddress: repaymentAddress,
+              targetAmount: amountToRepay,
+              targetToken: targetToken.tokenId,
+              targetChain: targetToken.chainId,
+            );
+
+            logger.i(
+                '[LoanRepay] Swap created: ${result.swapId}, sending ${result.satsToSend} sats to ${result.arkadeHtlcAddress}');
+
+            // Check if we have enough balance
+            final satsToSend = BigInt.from(result.satsToSend);
+            if (availableSats < satsToSend) {
+              throw Exception(
+                'Insufficient balance. Available: $availableSats sats, Required: ${result.satsToSend} sats',
+              );
+            }
+
+            // Fund the swap by sending BTC to the HTLC address
+            final fundingTxid = await ark_api.send(
+              address: result.arkadeHtlcAddress,
+              amountSats: satsToSend,
+            );
+
+            logger.i('[LoanRepay] Swap funded! TXID: $fundingTxid');
+
+            // Track analytics - using loan transaction with repay type
+            await AnalyticsService().trackLoanTransaction(
+              amountSats: result.satsToSend,
+              type: 'repay',
+              loanId: _contract!.id,
+              interestRate: _contract!.interestRate,
+              durationDays: _contract!.durationDays,
+            );
+
+            if (mounted) {
+              // Calculate BTC amount from sats for display
+              final btcAmount =
+                  (result.satsToSend / 100000000).toStringAsFixed(8);
+
+              // Get the first unpaid installment for marking as paid after swap
+              final unpaidInstallments = _contract!.installments
+                  .where((i) =>
+                      i.status != InstallmentStatus.paid &&
+                      i.status != InstallmentStatus.confirmed)
+                  .toList();
+              final installmentId = unpaidInstallments.isNotEmpty
+                  ? unpaidInstallments.first.id
+                  : null;
+
+              // Navigate to swap processing screen to monitor the swap
+              // Pass loan info so it can automatically mark payment when swap completes
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SwapProcessingScreen(
+                    swapId: result.swapId,
+                    sourceToken: SwapToken.bitcoin,
+                    targetToken: targetToken,
+                    sourceAmount: btcAmount,
+                    targetAmount: amountToRepay.toStringAsFixed(2),
+                    loanContractId: _contract!.id,
+                    loanInstallmentId: installmentId,
                   ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Powered by Lendaswap',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Repay'),
-          ),
-        ],
+                ),
+              ).then((_) {
+                // Refresh contract status when returning
+                _refreshContract();
+              });
+            }
+          } catch (e) {
+            logger.e('[LoanRepay] Error: $e');
+            if (mounted) {
+              OverlayService().showError('Repayment failed: ${e.toString()}');
+            }
+          } finally {
+            if (mounted) {
+              setState(() => _isRepaying = false);
+            }
+            Future.delayed(const Duration(seconds: 5), () {
+              PaymentOverlayService().stopSuppression();
+            });
+          }
+        },
       ),
     );
-
-    if (confirmed != true) return;
-
-    setState(() => _isRepaying = true);
-    PaymentOverlayService().startSuppression();
-
-    try {
-      // Initialize swap service if needed
-      if (!_swapService.isInitialized) {
-        await _swapService.initialize();
-      }
-
-      // Check wallet balance
-      final walletBalance = await ark_api.balance();
-      final availableSats = walletBalance.offchain.totalSats;
-
-      logger.i(
-          '[LoanRepay] Repaying \$${amountToRepay.toStringAsFixed(2)} to $repaymentAddress');
-
-      // Create the swap - BTC to stablecoin, sent to repayment address
-      // For loan repayment, amount is in USD which equals token amount for stablecoins
-      final result = await _swapService.createSellBtcSwap(
-        targetEvmAddress: repaymentAddress,
-        targetAmount: amountToRepay,
-        targetToken: targetToken.tokenId,
-        targetChain: targetToken.chainId,
-      );
-
-      logger.i(
-          '[LoanRepay] Swap created: ${result.swapId}, sending ${result.satsToSend} sats to ${result.arkadeHtlcAddress}');
-
-      // Check if we have enough balance
-      final satsToSend = BigInt.from(result.satsToSend);
-      if (availableSats < satsToSend) {
-        throw Exception(
-          'Insufficient balance. Available: $availableSats sats, Required: ${result.satsToSend} sats',
-        );
-      }
-
-      // Fund the swap by sending BTC to the HTLC address
-      final fundingTxid = await ark_api.send(
-        address: result.arkadeHtlcAddress,
-        amountSats: satsToSend,
-      );
-
-      logger.i('[LoanRepay] Swap funded! TXID: $fundingTxid');
-
-      // Track analytics - using loan transaction with repay type
-      await AnalyticsService().trackLoanTransaction(
-        amountSats: result.satsToSend,
-        type: 'repay',
-        loanId: _contract!.id,
-        interestRate: _contract!.interestRate,
-        durationDays: _contract!.durationDays,
-      );
-
-      if (mounted) {
-        // Calculate BTC amount from sats for display
-        final btcAmount = (result.satsToSend / 100000000).toStringAsFixed(8);
-
-        // Get the first unpaid installment for marking as paid after swap
-        final unpaidInstallments = _contract!.installments
-            .where((i) =>
-                i.status != InstallmentStatus.paid &&
-                i.status != InstallmentStatus.confirmed)
-            .toList();
-        final installmentId =
-            unpaidInstallments.isNotEmpty ? unpaidInstallments.first.id : null;
-
-        // Navigate to swap processing screen to monitor the swap
-        // Pass loan info so it can automatically mark payment when swap completes
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SwapProcessingScreen(
-              swapId: result.swapId,
-              sourceToken: SwapToken.bitcoin,
-              targetToken: targetToken,
-              sourceAmount: btcAmount,
-              targetAmount: amountToRepay.toStringAsFixed(2),
-              loanContractId: _contract!.id,
-              loanInstallmentId: installmentId,
-            ),
-          ),
-        ).then((_) {
-          // Refresh contract status when returning
-          _refreshContract();
-        });
-      }
-    } catch (e) {
-      logger.e('[LoanRepay] Error: $e');
-      if (mounted) {
-        OverlayService().showError('Repayment failed: ${e.toString()}');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isRepaying = false);
-      }
-      Future.delayed(const Duration(seconds: 5), () {
-        PaymentOverlayService().stopSuppression();
-      });
-    }
   }
 
-  /// Show dialog to mark an installment as already paid with transaction ID.
+  /// Show bottom sheet to mark an installment as already paid with transaction ID.
   Future<void> _showMarkAsPaidDialog() async {
     if (_contract == null) return;
 
@@ -523,211 +447,56 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       return;
     }
 
-    // Default to first unpaid installment
-    Installment selectedInstallment = unpaidInstallments.first;
-    final txidController = TextEditingController();
-
-    final confirmed = await showDialog<bool>(
+    await arkBottomSheet(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Confirm Payment'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Enter the transaction ID of your payment to confirm repayment.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 16),
+      child: _MarkAsPaidSheet(
+        unpaidInstallments: unpaidInstallments,
+        formatDate: _formatDate,
+        onConfirm: (installment, txid) async {
+          Navigator.pop(context);
+          setState(() => _isMarkingPaid = true);
 
-                // Installment selector (if multiple)
-                if (unpaidInstallments.length > 1) ...[
-                  Text(
-                    'Select Installment',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.7),
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.2),
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButton<Installment>(
-                      value: selectedInstallment,
-                      isExpanded: true,
-                      underline: const SizedBox(),
-                      items: unpaidInstallments.map((i) {
-                        return DropdownMenuItem(
-                          value: i,
-                          child: Text(
-                            '\$${i.totalPayment.toStringAsFixed(2)} - Due ${_formatDate(i.dueDate)}',
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setDialogState(() => selectedInstallment = value);
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ] else ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.payments,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '\$${selectedInstallment.totalPayment.toStringAsFixed(2)} due ${_formatDate(selectedInstallment.dueDate)}',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+          try {
+            await _lendasatService.markInstallmentPaid(
+              contractId: _contract!.id,
+              installmentId: installment.id,
+              paymentTxid: txid,
+            );
 
-                // Transaction ID input
-                Text(
-                  'Transaction ID',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.7),
-                      ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: txidController,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter transaction ID or hash',
-                    border: OutlineInputBorder(),
-                  ),
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                  ),
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (txidController.text.trim().isEmpty) {
-                  OverlayService().showError('Please enter a transaction ID');
-                  return;
-                }
-                Navigator.pop(context, true);
-              },
-              child: const Text('Confirm'),
-            ),
-          ],
-        ),
+            if (mounted) {
+              OverlayService()
+                  .showSuccess('Payment confirmed! Refreshing contract...');
+              await _refreshContract();
+            }
+          } catch (e) {
+            logger.e('Error marking installment paid: $e');
+            if (mounted) {
+              OverlayService().showError('Failed: ${e.toString()}');
+            }
+          } finally {
+            if (mounted) {
+              setState(() => _isMarkingPaid = false);
+            }
+          }
+        },
       ),
     );
-
-    if (confirmed != true) return;
-
-    setState(() => _isMarkingPaid = true);
-
-    try {
-      await _lendasatService.markInstallmentPaid(
-        contractId: _contract!.id,
-        installmentId: selectedInstallment.id,
-        paymentTxid: txidController.text.trim(),
-      );
-
-      if (mounted) {
-        OverlayService()
-            .showSuccess('Payment confirmed! Refreshing contract...');
-        await _refreshContract();
-      }
-    } catch (e) {
-      logger.e('Error marking installment paid: $e');
-      if (mounted) {
-        OverlayService().showError('Failed: ${e.toString()}');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isMarkingPaid = false);
-      }
-    }
   }
 
   Future<int?> _showFeeRateDialog() async {
-    final controller = TextEditingController(text: '10');
+    int? selectedRate;
 
-    return showDialog<int>(
+    await arkBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Fee Rate'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Enter fee rate in sat/vB:'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                suffix: Text('sat/vB'),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              final rate = int.tryParse(controller.text);
-              if (rate != null && rate > 0) {
-                Navigator.pop(context, rate);
-              }
-            },
-            child: const Text('Continue'),
-          ),
-        ],
+      child: _FeeRateSheet(
+        onConfirm: (rate) {
+          selectedRate = rate;
+          Navigator.pop(context);
+        },
       ),
     );
+
+    return selectedRate;
   }
 
   @override
@@ -1391,7 +1160,10 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             ],
           ),
         ],
-        if (_contract!.isActiveLoan && _contract!.balanceOutstanding > 0) ...[
+        // Show "I already paid" only if loan is active AND repayment not already sent
+        if (_contract!.isActiveLoan &&
+            _contract!.balanceOutstanding > 0 &&
+            !_contract!.isAwaitingRepaymentConfirmation) ...[
           const SizedBox(height: 12),
           LongButtonWidget(
             title: _isMarkingPaid ? 'CONFIRMING...' : 'I ALREADY PAID',
@@ -1400,6 +1172,45 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             onTap: _isMarkingPaid || _isActionLoading || _isRepaying
                 ? null
                 : _showMarkAsPaidDialog,
+          ),
+        ],
+        // Show waiting message when repayment is sent but not yet confirmed
+        if (_contract!.isAwaitingRepaymentConfirmation) ...[
+          const SizedBox(height: 12),
+          Container(
+            width: buttonWidth,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.successColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.successColor.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppTheme.successColor),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    'Repayment sent! Waiting for lender confirmation...',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.successColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
         if (_contract!.canClaim) ...[
@@ -1480,5 +1291,576 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     } catch (_) {
       return dateStr;
     }
+  }
+}
+
+/// Bottom sheet for marking an installment as paid with transaction ID.
+class _MarkAsPaidSheet extends StatefulWidget {
+  final List<Installment> unpaidInstallments;
+  final String Function(String) formatDate;
+  final Future<void> Function(Installment installment, String txid) onConfirm;
+
+  const _MarkAsPaidSheet({
+    required this.unpaidInstallments,
+    required this.formatDate,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_MarkAsPaidSheet> createState() => _MarkAsPaidSheetState();
+}
+
+class _MarkAsPaidSheetState extends State<_MarkAsPaidSheet> {
+  late Installment _selectedInstallment;
+  final TextEditingController _txidController = TextEditingController();
+  bool _isValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedInstallment = widget.unpaidInstallments.first;
+  }
+
+  @override
+  void dispose() {
+    _txidController.dispose();
+    super.dispose();
+  }
+
+  void _onTxidChanged(String value) {
+    setState(() {
+      _isValid = value.trim().isNotEmpty;
+    });
+  }
+
+  Future<void> _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data?.text != null) {
+      _txidController.text = data!.text!.trim();
+      _onTxidChanged(_txidController.text);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.cardPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          Text(
+            'Confirm Payment',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+          // Info text
+          Text(
+            'Enter the transaction ID of your payment to confirm repayment.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+
+          // Installment selector (if multiple)
+          if (widget.unpaidInstallments.length > 1) ...[
+            Text(
+              'SELECT INSTALLMENT',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            GlassContainer(
+              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: DropdownButton<Installment>(
+                  value: _selectedInstallment,
+                  isExpanded: true,
+                  underline: const SizedBox(),
+                  dropdownColor: Theme.of(context).colorScheme.surface,
+                  items: widget.unpaidInstallments.map((i) {
+                    return DropdownMenuItem(
+                      value: i,
+                      child: Text(
+                        '\$${i.totalPayment.toStringAsFixed(2)} - Due ${widget.formatDate(i.dueDate)}',
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _selectedInstallment = value);
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+          ] else ...[
+            GlassContainer(
+              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+              child: Padding(
+                padding: const EdgeInsets.all(AppTheme.cardPadding),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.payments,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '\$${_selectedInstallment.totalPayment.toStringAsFixed(2)}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Due ${widget.formatDate(_selectedInstallment.dueDate)}',
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: isDarkMode
+                                          ? AppTheme.white60
+                                          : AppTheme.black60,
+                                    ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+          ],
+
+          // Transaction ID input
+          Text(
+            'TRANSACTION ID',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+          ),
+          const SizedBox(height: 8),
+          GlassContainer(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.cardPadding,
+                vertical: AppTheme.elementSpacing * 0.5,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _txidController,
+                      onChanged: _onTxidChanged,
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                        fontSize: 14,
+                        fontFamily: 'monospace',
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Enter transaction ID or hash',
+                        hintStyle: TextStyle(
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
+                        border: InputBorder.none,
+                      ),
+                      maxLines: 2,
+                    ),
+                  ),
+                  // Paste button
+                  IconButton(
+                    onPressed: _pasteFromClipboard,
+                    icon: Icon(
+                      Icons.paste_rounded,
+                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                      size: 20,
+                    ),
+                    tooltip: 'Paste',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+
+          // Confirm button
+          LongButtonWidget(
+            title: 'Confirm Payment',
+            customWidth: double.infinity,
+            state: _isValid ? ButtonState.idle : ButtonState.disabled,
+            onTap: _isValid
+                ? () => widget.onConfirm(
+                      _selectedInstallment,
+                      _txidController.text.trim(),
+                    )
+                : null,
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+        ],
+      ),
+    );
+  }
+}
+
+/// Generic confirmation bottom sheet for simple yes/no actions.
+class _ConfirmationSheet extends StatelessWidget {
+  final String title;
+  final String message;
+  final String confirmText;
+  final String cancelText;
+  final Color? confirmColor;
+  final VoidCallback onConfirm;
+
+  const _ConfirmationSheet({
+    required this.title,
+    required this.message,
+    required this.confirmText,
+    required this.cancelText,
+    this.confirmColor,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.cardPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+          // Message
+          Text(
+            message,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding * 1.5),
+          // Buttons
+          Row(
+            children: [
+              Expanded(
+                child: LongButtonWidget(
+                  title: cancelText,
+                  buttonType: ButtonType.secondary,
+                  customWidth: double.infinity,
+                  onTap: () => Navigator.pop(context),
+                ),
+              ),
+              const SizedBox(width: AppTheme.elementSpacing),
+              Expanded(
+                child: LongButtonWidget(
+                  title: confirmText,
+                  buttonType: ButtonType.primary,
+                  customWidth: double.infinity,
+                  buttonGradient: confirmColor != null
+                      ? LinearGradient(colors: [confirmColor!, confirmColor!])
+                      : null,
+                  onTap: onConfirm,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+        ],
+      ),
+    );
+  }
+}
+
+/// Confirmation sheet for loan repayment with Lendaswap.
+class _RepayConfirmationSheet extends StatelessWidget {
+  final double amountToRepay;
+  final String targetTokenSymbol;
+  final VoidCallback onConfirm;
+
+  const _RepayConfirmationSheet({
+    required this.amountToRepay,
+    required this.targetTokenSymbol,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.cardPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          Text(
+            'Repay with Lendaswap',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          // Amount card
+          GlassContainer(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.cardPadding),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.payments_rounded,
+                    size: 32,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Amount to repay',
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: isDarkMode
+                                        ? AppTheme.white60
+                                        : AppTheme.black60,
+                                  ),
+                        ),
+                        Text(
+                          '\$${amountToRepay.toStringAsFixed(2)}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          // Info text
+          Text(
+            'This will swap BTC from your wallet to $targetTokenSymbol '
+            'and send it to the lender\'s repayment address.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                ),
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+          // Lendaswap badge
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.flash_on_rounded,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Powered by Lendaswap',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding * 1.5),
+          // Buttons
+          Row(
+            children: [
+              Expanded(
+                child: LongButtonWidget(
+                  title: 'Cancel',
+                  buttonType: ButtonType.secondary,
+                  customWidth: double.infinity,
+                  onTap: () => Navigator.pop(context),
+                ),
+              ),
+              const SizedBox(width: AppTheme.elementSpacing),
+              Expanded(
+                child: LongButtonWidget(
+                  title: 'Repay',
+                  buttonType: ButtonType.primary,
+                  customWidth: double.infinity,
+                  buttonGradient: const LinearGradient(
+                    colors: [Color(0xFF8247E5), Color(0xFF6C3DC1)],
+                  ),
+                  onTap: onConfirm,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom sheet for selecting fee rate.
+class _FeeRateSheet extends StatefulWidget {
+  final void Function(int rate) onConfirm;
+
+  const _FeeRateSheet({required this.onConfirm});
+
+  @override
+  State<_FeeRateSheet> createState() => _FeeRateSheetState();
+}
+
+class _FeeRateSheetState extends State<_FeeRateSheet> {
+  final TextEditingController _controller = TextEditingController(text: '10');
+  bool _isValid = true;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    final rate = int.tryParse(value);
+    setState(() {
+      _isValid = rate != null && rate > 0;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.cardPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          Text(
+            'Select Fee Rate',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+          // Info text
+          Text(
+            'Enter the fee rate for this on-chain transaction.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          // Fee rate input
+          Text(
+            'FEE RATE',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+          ),
+          const SizedBox(height: 8),
+          GlassContainer(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.cardPadding,
+                vertical: AppTheme.elementSpacing * 0.5,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      onChanged: _onChanged,
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: '10',
+                        hintStyle: TextStyle(
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    'sat/vB',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding * 1.5),
+          // Confirm button
+          LongButtonWidget(
+            title: 'Continue',
+            customWidth: double.infinity,
+            state: _isValid ? ButtonState.idle : ButtonState.disabled,
+            onTap: _isValid
+                ? () {
+                    final rate = int.tryParse(_controller.text);
+                    if (rate != null && rate > 0) {
+                      widget.onConfirm(rate);
+                    }
+                  }
+                : null,
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+        ],
+      ),
+    );
   }
 }
