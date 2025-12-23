@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/lendaswap_api.dart' as lendaswap_api;
 import 'package:ark_flutter/src/rust/lendaswap.dart';
@@ -505,7 +506,8 @@ extension SwapInfoExtension on SwapInfo {
   }
 
   /// Get BTC amount in standard units (not sats).
-  double get btcAmount => sourceAmountSats.toInt() / 100000000.0;
+  double get btcAmount =>
+      sourceAmountSats.toInt() / BitcoinConstants.satsPerBtc;
 }
 
 /// Extension for TradingPair to provide convenient helper methods.

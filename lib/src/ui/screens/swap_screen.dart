@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart'
@@ -123,7 +124,7 @@ class SwapScreenState extends State<SwapScreen> {
   /// Fetch quote from LendaSwap API with debouncing
   void _fetchQuoteDebounced() {
     _quoteDebounceTimer?.cancel();
-    _quoteDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+    _quoteDebounceTimer = Timer(AppTimeouts.quoteDebounce, () {
       _fetchQuote();
     });
   }
@@ -143,7 +144,7 @@ class SwapScreenState extends State<SwapScreen> {
     setState(() => _isLoadingQuote = true);
 
     try {
-      final sats = (btc * 100000000).round();
+      final sats = (btc * BitcoinConstants.satsPerBtc).round();
       final quote = await lendaswap_api.lendaswapGetQuote(
         fromToken: sourceToken.tokenId,
         toToken: targetToken.tokenId,
@@ -204,14 +205,14 @@ class SwapScreenState extends State<SwapScreen> {
       double amount, CurrencyType currentUnit) {
     if (currentUnit == CurrencyType.sats) {
       // If sats >= 1 BTC (100,000,000), switch to BTC
-      if (amount >= 100000000) {
-        return (CurrencyType.bitcoin, formatBtc(amount / 100000000));
+      if (amount >= BitcoinConstants.satsPerBtc) {
+        return (CurrencyType.bitcoin, formatBtc(amount / BitcoinConstants.satsPerBtc));
       }
       return (CurrencyType.sats, amount.toInt().toString());
     } else {
       // If BTC < 0.001 (100,000 sats), switch to sats
       if (amount < 0.001 && amount > 0) {
-        return (CurrencyType.sats, (amount * 100000000).round().toString());
+        return (CurrencyType.sats, (amount * BitcoinConstants.satsPerBtc).round().toString());
       }
       return (CurrencyType.bitcoin, formatBtc(amount));
     }
@@ -226,14 +227,14 @@ class SwapScreenState extends State<SwapScreen> {
           final usd = double.tryParse(value) ?? 0;
           final btc = usd > 0 ? usdToBtc(usd) : 0.0;
           btcAmount = btc > 0 ? formatBtc(btc) : '';
-          satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
+          satsAmount = btc > 0 ? (btc * BitcoinConstants.satsPerBtc).round().toString() : '';
         } else {
           // User entering sats or BTC based on current unit
           if (_sourceBtcUnit == CurrencyType.sats) {
             // User entering sats (integers)
             satsAmount = value;
             final sats = double.tryParse(value) ?? 0;
-            final btc = sats / 100000000;
+            final btc = sats / BitcoinConstants.satsPerBtc;
             btcAmount = sats > 0 ? btc.toString() : '';
             usdAmount = sats > 0 ? formatUsd(btcToUsd(btc)) : '';
 
@@ -253,7 +254,7 @@ class SwapScreenState extends State<SwapScreen> {
             // User entering BTC (decimals)
             btcAmount = value;
             final btc = double.tryParse(value) ?? 0;
-            satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
+            satsAmount = btc > 0 ? (btc * BitcoinConstants.satsPerBtc).round().toString() : '';
             usdAmount = btc > 0 ? formatUsd(btcToUsd(btc)) : '';
 
             // Check for auto-switch to sats
@@ -277,7 +278,7 @@ class SwapScreenState extends State<SwapScreen> {
         final usd = double.tryParse(value) ?? 0;
         final btc = usd > 0 ? usdToBtc(usd) : 0.0;
         btcAmount = btc > 0 ? formatBtc(btc) : '';
-        satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
+        satsAmount = btc > 0 ? (btc * BitcoinConstants.satsPerBtc).round().toString() : '';
       } else {
         // Source is non-stablecoin (e.g., XAUT)
         // User enters token amount, we convert to USD
@@ -287,7 +288,7 @@ class SwapScreenState extends State<SwapScreen> {
         final btc = usd > 0 ? usdToBtc(usd) : 0.0;
         usdAmount = usd > 0 ? formatUsd(usd) : '';
         btcAmount = btc > 0 ? formatBtc(btc) : '';
-        satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
+        satsAmount = btc > 0 ? (btc * BitcoinConstants.satsPerBtc).round().toString() : '';
       }
 
       // Update target amount
@@ -307,14 +308,14 @@ class SwapScreenState extends State<SwapScreen> {
           final usd = double.tryParse(value) ?? 0;
           final btc = usd > 0 ? usdToBtc(usd) : 0.0;
           btcAmount = btc > 0 ? formatBtc(btc) : '';
-          satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
+          satsAmount = btc > 0 ? (btc * BitcoinConstants.satsPerBtc).round().toString() : '';
         } else {
           // User entering sats or BTC based on current unit
           if (_targetBtcUnit == CurrencyType.sats) {
             // User entering sats (integers)
             satsAmount = value;
             final sats = double.tryParse(value) ?? 0;
-            final btc = sats / 100000000;
+            final btc = sats / BitcoinConstants.satsPerBtc;
             btcAmount = sats > 0 ? btc.toString() : '';
             usdAmount = sats > 0 ? formatUsd(btcToUsd(btc)) : '';
 
@@ -333,7 +334,7 @@ class SwapScreenState extends State<SwapScreen> {
             // User entering BTC (decimals)
             btcAmount = value;
             final btc = double.tryParse(value) ?? 0;
-            satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
+            satsAmount = btc > 0 ? (btc * BitcoinConstants.satsPerBtc).round().toString() : '';
             usdAmount = btc > 0 ? formatUsd(btcToUsd(btc)) : '';
 
             // Check for auto-switch to sats
@@ -356,7 +357,7 @@ class SwapScreenState extends State<SwapScreen> {
         final usd = double.tryParse(value) ?? 0;
         final btc = usd > 0 ? usdToBtc(usd) : 0.0;
         btcAmount = btc > 0 ? formatBtc(btc) : '';
-        satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
+        satsAmount = btc > 0 ? (btc * BitcoinConstants.satsPerBtc).round().toString() : '';
       } else {
         // Target is non-stablecoin (e.g., XAUT)
         // User enters token amount, we convert to USD
@@ -366,7 +367,7 @@ class SwapScreenState extends State<SwapScreen> {
         final btc = usd > 0 ? usdToBtc(usd) : 0.0;
         usdAmount = usd > 0 ? formatUsd(usd) : '';
         btcAmount = btc > 0 ? formatBtc(btc) : '';
-        satsAmount = btc > 0 ? (btc * 100000000).round().toString() : '';
+        satsAmount = btc > 0 ? (btc * BitcoinConstants.satsPerBtc).round().toString() : '';
       }
 
       // Update source amount
@@ -531,14 +532,14 @@ class SwapScreenState extends State<SwapScreen> {
   /// Check if current amount is below minimum
   bool get _isAmountTooSmall {
     final btc = double.tryParse(btcAmount) ?? 0;
-    final sats = (btc * 100000000).round();
+    final sats = (btc * BitcoinConstants.satsPerBtc).round();
     return sats > 0 && sats < _minSwapSats;
   }
 
   /// Check if amount is valid for swap
   bool get _isAmountValid {
     final btc = double.tryParse(btcAmount) ?? 0;
-    final sats = (btc * 100000000).round();
+    final sats = (btc * BitcoinConstants.satsPerBtc).round();
     return sats >= _minSwapSats;
   }
 
@@ -721,7 +722,7 @@ class SwapScreenState extends State<SwapScreen> {
 
         // Parse BTC amount to sats for balance check
         final btcValue = double.tryParse(btcAmount) ?? 0;
-        final estimatedSats = (btcValue * 100000000).toInt();
+        final estimatedSats = (btcValue * BitcoinConstants.satsPerBtc).toInt();
 
         if (availableSats < BigInt.from(estimatedSats)) {
           throw Exception(
@@ -873,7 +874,7 @@ class SwapScreenState extends State<SwapScreen> {
       }
       // Stop suppression after a delay to allow change transaction to settle
       // without showing a "payment received" notification
-      Future.delayed(const Duration(seconds: 5), () {
+      Future.delayed(AppTimeouts.mediumDelay, () {
         PaymentOverlayService().stopSuppression();
       });
     }
@@ -1132,8 +1133,8 @@ class SwapScreenState extends State<SwapScreen> {
     final protocolFeePercent = _quote?.protocolFeePercent ?? 0.0;
     final totalFeeSats = networkFeeSats + protocolFeeSats;
 
-    final networkFeeUsd = btcToUsd(networkFeeSats / 100000000);
-    final protocolFeeUsd = btcToUsd(protocolFeeSats / 100000000);
+    final networkFeeUsd = btcToUsd(networkFeeSats / BitcoinConstants.satsPerBtc);
+    final protocolFeeUsd = btcToUsd(protocolFeeSats / BitcoinConstants.satsPerBtc);
     final totalFeeUsd = networkFeeUsd + protocolFeeUsd;
 
     arkBottomSheet(
