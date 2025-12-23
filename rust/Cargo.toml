@@ -10,51 +10,47 @@ crate-type = ["cdylib", "staticlib"]
 anyhow = "1"
 base64 = "0.22"
 
-# Lendasat SDK for wallet encryption (email recovery)
-lendasat-sdk = { git = "https://github.com/lendasat/lendasat.git", rev = "98383cba920e9cae6c3cd40df3a98c9d11b2cfd2", package = "client-sdk" }
 # SRP authentication
+# Using local fork with collaborative_redeem_with_vtxos for proper VTXO selection
+ark-bdk-wallet = { path = "/home/weltitob/lendasat/rust-sdk/ark-bdk-wallet" }
+ark-client = { path = "/home/weltitob/lendasat/rust-sdk/ark-client", default-features = false, features = ["tls-webpki-roots", "sqlite"] }
+ark-core = { path = "/home/weltitob/lendasat/rust-sdk/ark-core" }
 srp = "0.6.0"
-ark-bdk-wallet = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "af09db750130b6982e88875e65685427d171228f" }
-ark-client = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "af09db750130b6982e88875e65685427d171228f", default-features = false, features = ["tls-webpki-roots", "sqlite"] }
-ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "af09db750130b6982e88875e65685427d171228f" }
 
 # LendaSwap SDK from GitHub (tag 0.0.61)
-lendaswap-core = { git = "https://github.com/lendasat/lendaswap.git", tag = "0.0.61", package = "lendaswap-core" }
-rust_decimal = { version = "1", features = ["serde-with-float"] }
-time = { version = "0.3", features = ["serde", "formatting", "parsing", "macros"] }
-uuid = { version = "1.0", features = ["v4", "serde"] }
-sha2 = "0.10"
-bip39 = { version = "2.1.0", features = ["rand_core"] }
 async-trait = "0.1"
+bip39 = { version = "2.1.0", features = ["rand_core"] }
 bitcoin = { version = "0.32.4", features = ["rand"] }
 esplora-client = { version = "0.11.0", features = ["async-https-native"] }
 flutter_rust_bridge = { version = "=2.11.1", features = ["anyhow"] }
 futures = "0.3.31"
 futures-util = "0.3"
 hex = "0.4"
+lendaswap-core = { git = "https://github.com/lendasat/lendaswap.git", tag = "0.0.61", package = "lendaswap-core" }
 nostr = { version = "0.40.0", default-features = false, features = ["std"] }
 openssl = { version = "0.10", features = ["vendored"] }
 parking_lot = { version = "0.12.1" }
 rand = "0.8.5"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "native-tls-vendored"] }
+rust_decimal = { version = "1", features = ["serde-with-float"] }
 rustls = { version = "0.23", default-features = false, features = ["ring"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.145"
+sha2 = "0.10"
 state = "0.6.0"
+time = { version = "0.3", features = ["serde", "formatting", "parsing", "macros"] }
 tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
 tracing = "0.1.37"
 tracing-log = "0.2.0"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter", "time", "json"] }
 url = "2.5.4"
+uuid = { version = "1.0", features = ["v4", "serde"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
-# Patch to resolve dependency conflict between arkade-os/rust-sdk and ArkLabsHQ/ark-rs
-# Both repos use the same rev but different URLs - redirect to use a single source
+# Patch arkade-os secp256k1 to use our local version to avoid native library linking conflicts
+# Only patching secp256k1 - NOT patching ark-core/ark-rs/ark-rest so lendaswap keeps its own APIs
 [patch."https://github.com/arkade-os/rust-sdk"]
-ark-core = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "af09db750130b6982e88875e65685427d171228f" }
-ark-rest = { git = "https://github.com/ArkLabsHQ/ark-rs.git", package = "ark-rest", rev = "af09db750130b6982e88875e65685427d171228f" }
-ark-rs = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "af09db750130b6982e88875e65685427d171228f" }
-ark-secp256k1 = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "af09db750130b6982e88875e65685427d171228f" }
+ark-secp256k1 = { path = "/home/weltitob/lendasat/rust-sdk/ark-rust-secp256k1" }
