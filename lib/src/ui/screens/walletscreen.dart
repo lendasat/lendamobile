@@ -782,12 +782,13 @@ class WalletScreenState extends State<WalletScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Avatar - larger size
-          Avatar(
-            onTap: () {},
-            size: AppTheme.cardPadding * 2.25,
-            type: ProfilePictureType.lightning,
-          ),
+          // TODO: Avatar temporarily commented out - will be reintroduced later
+          // Avatar(
+          //   onTap: () {},
+          //   size: AppTheme.cardPadding * 2.25,
+          //   type: ProfilePictureType.lightning,
+          // ),
+          const Spacer(), // Keep buttons right-aligned while Avatar is commented out
 
           // Action buttons
           Row(
