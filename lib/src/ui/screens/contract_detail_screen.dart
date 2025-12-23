@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
@@ -20,6 +21,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Screen to view contract details and perform actions.
 class ContractDetailScreen extends StatefulWidget {
@@ -117,6 +119,24 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
       OverlayService().showOverlay('$label copied to clipboard');
+    }
+  }
+
+  Future<void> _openSupportDiscord() async {
+    final uri = Uri.parse('https://discord.com/invite/a5MP7yZDpQ');
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          OverlayService().showError('Could not open Discord');
+        }
+      }
+    } catch (e) {
+      logger.e('Error opening Discord: $e');
+      if (mounted) {
+        OverlayService().showError('Could not open Discord');
+      }
     }
   }
 
@@ -381,7 +401,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             if (mounted) {
               // Calculate BTC amount from sats for display
               final btcAmount =
-                  (result.satsToSend / 100000000).toStringAsFixed(8);
+                  (result.satsToSend / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
 
               // Get the first unpaid installment for marking as paid after swap
               final unpaidInstallments = _contract!.installments
@@ -655,8 +675,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                       ),
                 ),
               ),
-              const Spacer(),
-              _buildStatusBadge(statusColor),
+              const SizedBox(width: 8),
+              Flexible(child: _buildStatusBadge(statusColor)),
             ],
           ),
           const SizedBox(height: 20),
@@ -759,20 +779,25 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   }
 
   Widget _buildStatusBadge(Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
-      ),
-      child: Text(
-        _contract!.statusText.toUpperCase(),
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 10,
-          letterSpacing: 0.5,
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
+        ),
+        child: Text(
+          _contract!.statusText.toUpperCase(),
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+            letterSpacing: 0.5,
+          ),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
       ),
     );
@@ -849,7 +874,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     final collateralBtc = _contract!.depositedBtc > 0
         ? _contract!.depositedBtc
         : _contract!.effectiveCollateralBtc;
-    final collateralSats = collateralBtc * 100000000;
+    final collateralSats = collateralBtc * BitcoinConstants.satsPerBtc;
 
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
@@ -1187,30 +1212,52 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                 color: AppTheme.successColor.withValues(alpha: 0.2),
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Column(
               children: [
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(AppTheme.successColor),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppTheme.successColor),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        'Repayment sent! Waiting for lender confirmation...',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppTheme.successColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Text(
-                    'Repayment sent! Waiting for lender confirmation...',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.successColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
+                const SizedBox(height: 12),
+                Text(
+                  'If you entered the wrong transaction ID, contact support to update it.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.5),
+                      ),
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 12),
+          LongButtonWidget(
+            title: 'CONTACT SUPPORT',
+            buttonType: ButtonType.secondary,
+            customWidth: buttonWidth,
+            onTap: _openSupportDiscord,
           ),
         ],
         if (_contract!.canClaim) ...[
@@ -1218,6 +1265,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: 'CLAIM COLLATERAL',
             buttonType: ButtonType.primary,
+            customWidth: buttonWidth,
             onTap: _isActionLoading ? null : _showClaimSheet,
           ),
         ],
@@ -1226,6 +1274,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: 'RECOVER COLLATERAL',
             buttonType: ButtonType.primary,
+            customWidth: buttonWidth,
             onTap: _isActionLoading ? null : _showRecoverSheet,
           ),
         ],
@@ -1234,6 +1283,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: 'CANCEL REQUEST',
             buttonType: ButtonType.secondary,
+            customWidth: buttonWidth,
             onTap: _isActionLoading ? null : _cancelContract,
           ),
         ],
@@ -1864,3 +1914,4 @@ class _FeeRateSheetState extends State<_FeeRateSheet> {
     );
   }
 }
+
