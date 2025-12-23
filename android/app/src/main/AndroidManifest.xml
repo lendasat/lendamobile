@@ -46,6 +46,7 @@
         <meta-data android:name="com.posthog.posthog.DEBUG" android:value="false" />
         <meta-data android:name="com.posthog.posthog.AUTO_INIT" android:value="false" />
     </application>
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

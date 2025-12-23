@@ -1,5 +1,8 @@
 set dotenv-load := true
 
+mod ios
+mod android
+
 ## ------------------------
 ## rust helper functions
 ## ------------------------
