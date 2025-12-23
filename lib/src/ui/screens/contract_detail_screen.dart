@@ -463,7 +463,17 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         // Calculate BTC amount from sats for display
         final btcAmount = (result.satsToSend / 100000000).toStringAsFixed(8);
 
+        // Get the first unpaid installment for marking as paid after swap
+        final unpaidInstallments = _contract!.installments
+            .where((i) =>
+                i.status != InstallmentStatus.paid &&
+                i.status != InstallmentStatus.confirmed)
+            .toList();
+        final installmentId =
+            unpaidInstallments.isNotEmpty ? unpaidInstallments.first.id : null;
+
         // Navigate to swap processing screen to monitor the swap
+        // Pass loan info so it can automatically mark payment when swap completes
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -473,6 +483,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
               targetToken: targetToken,
               sourceAmount: btcAmount,
               targetAmount: amountToRepay.toStringAsFixed(2),
+              loanContractId: _contract!.id,
+              loanInstallmentId: installmentId,
             ),
           ),
         ).then((_) {
@@ -1347,7 +1359,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         if (_contract!.canRepayWithLendaswap) ...[
           if (canPayCollateral) const SizedBox(height: 12),
           LongButtonWidget(
-            title: _isRepaying ? 'SWAPPING...' : 'REPAY WITH LENDASWAP',
+            title: _isRepaying ? 'SWAPPING...' : 'REPAY',
             buttonType: ButtonType.primary,
             customWidth: buttonWidth,
             buttonGradient: const LinearGradient(
@@ -1384,6 +1396,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: _isMarkingPaid ? 'CONFIRMING...' : 'I ALREADY PAID',
             buttonType: ButtonType.secondary,
+            customWidth: buttonWidth,
             onTap: _isMarkingPaid || _isActionLoading || _isRepaying
                 ? null
                 : _showMarkAsPaidDialog,

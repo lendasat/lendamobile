@@ -9,7 +9,7 @@ use ark_client::{OffChainBalance, SwapAmount};
 use ark_core::ArkAddress;
 use ark_core::history::Transaction;
 use ark_core::server::{Info, SubscriptionResponse};
-use bitcoin::{Address, Amount, Txid};
+use bitcoin::{Address, Amount, OutPoint, Txid};
 use futures::StreamExt;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
@@ -201,10 +201,20 @@ pub async fn send(address: String, amount: Amount) -> Result<Txid> {
                 Ok(txid)
             } else if is_btc_address(address.as_str()) {
                 let address = Address::from_str(address.as_str())?;
-                // Use send_on_chain which handles VTXO selection better than collaborative_redeem
-                // collaborative_redeem was failing with INVALID_PSBT_INPUT when VTXOs were close to expiry
+                let rng = &mut StdRng::from_entropy();
+
+                // Select VTXOs like Arkade wallet does - sorted by expiry (soonest first)
+                // This ensures we use VTXOs that expire soonest, leaving fresh ones available
+                let vtxo_outpoints = select_vtxos_for_amount(&client, amount).await?;
+
+                // Use the new method with specific VTXOs
                 let txid = client
-                    .send_on_chain(address.assume_checked(), amount)
+                    .collaborative_redeem_with_vtxos(
+                        rng,
+                        &vtxo_outpoints,
+                        address.assume_checked(),
+                        amount,
+                    )
                     .await
                     .map_err(|e| anyhow!("Failed sending onchain {e:#}"))?;
                 Ok(txid)
@@ -236,6 +246,89 @@ pub async fn settle() -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Select VTXOs for an onchain send, sorted by expiry (soonest first).
+/// This matches Arkade wallet behavior and ensures we use VTXOs expiring soonest first.
+///
+/// The ASP requires VTXOs to have a minimum expiry gap (typically ~30 days / 696 hours).
+/// We filter out VTXOs that don't meet this requirement, then sort by expiry ascending
+/// to use up VTXOs expiring soonest first (leaving fresher ones for later).
+async fn select_vtxos_for_amount(client: &ArkClient, amount: Amount) -> Result<Vec<OutPoint>> {
+    // Get all VTXOs
+    let (vtxo_list, _) = client
+        .list_vtxos()
+        .await
+        .map_err(|e| anyhow!("Failed to list VTXOs: {e}"))?;
+
+    // ASP's minExpiryGap is ~696 hours (~29 days). Add a small buffer.
+    // VTXOs must have at least this much time remaining to be accepted.
+    const MIN_EXPIRY_GAP_SECONDS: i64 = 30 * 24 * 60 * 60; // 30 days in seconds
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+    let min_expiry_time = now + MIN_EXPIRY_GAP_SECONDS;
+
+    // Get spendable VTXOs and filter to only those with enough remaining time
+    let mut vtxos: Vec<_> = vtxo_list
+        .spendable_offchain()
+        .filter(|v| v.expires_at > min_expiry_time)
+        .collect();
+
+    let total_eligible: Amount = vtxos.iter().map(|v| v.amount).sum();
+
+    if total_eligible < amount {
+        // Not enough eligible VTXOs - check if settling would help
+        let total_all: Amount = vtxo_list.spendable_offchain().map(|v| v.amount).sum();
+        if total_all >= amount {
+            bail!(
+                "VTXOs are too close to expiry for onchain send. Please settle your balance first to refresh them. \
+                 (Need {} sats, have {} eligible, {} total)",
+                amount.to_sat(),
+                total_eligible.to_sat(),
+                total_all.to_sat()
+            );
+        } else {
+            bail!(
+                "Insufficient VTXOs for onchain send: need {}, have {}",
+                amount,
+                total_all
+            );
+        }
+    }
+
+    // Sort by expiry ascending (soonest first) - like Arkade wallet
+    // This uses up older VTXOs first, preserving fresher ones
+    vtxos.sort_by_key(|v| v.expires_at);
+
+    // Select VTXOs to cover the amount
+    let mut selected = Vec::new();
+    let mut selected_amount = Amount::ZERO;
+
+    for vtxo in vtxos {
+        if selected_amount >= amount {
+            break;
+        }
+        selected.push(vtxo.outpoint);
+        selected_amount += vtxo.amount;
+
+        tracing::debug!(
+            outpoint = %vtxo.outpoint,
+            amount = %vtxo.amount,
+            expires_at = vtxo.expires_at,
+            "Selected VTXO for onchain send"
+        );
+    }
+
+    tracing::info!(
+        vtxos_selected = selected.len(),
+        total_selected = %selected_amount,
+        requested = %amount,
+        "Selected VTXOs for onchain send"
+    );
+
+    Ok(selected)
 }
 
 /// Represents a pending boarding UTXO (on-chain funds waiting to be settled)
