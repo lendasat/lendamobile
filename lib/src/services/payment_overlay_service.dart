@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/theme.dart';
@@ -199,8 +200,8 @@ class _PaymentReceivedOverlayWidget extends StatelessWidget {
 
   String _formatAmount(BigInt sats) {
     final amount = sats.toInt();
-    if (amount >= 100000000) {
-      return '${(amount / 100000000).toStringAsFixed(8)} BTC';
+    if (amount >= BitcoinConstants.satsPerBtc) {
+      return '${(amount / BitcoinConstants.satsPerBtc).toStringAsFixed(8)} BTC';
     } else if (amount >= 1000000) {
       return '${(amount / 1000000).toStringAsFixed(2)}M sats';
     } else if (amount >= 1000) {

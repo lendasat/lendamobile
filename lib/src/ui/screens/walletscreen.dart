@@ -1,4 +1,5 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
@@ -378,10 +379,10 @@ class WalletScreenState extends State<WalletScreen> {
 
       setState(() {
         _pendingBalance =
-            balanceResult.offchain.pendingSats.toDouble() / 100000000;
+            balanceResult.offchain.pendingSats.toDouble() / BitcoinConstants.satsPerBtc;
         _confirmedBalance =
-            balanceResult.offchain.confirmedSats.toDouble() / 100000000;
-        _totalBalance = balanceResult.offchain.totalSats.toDouble() / 100000000;
+            balanceResult.offchain.confirmedSats.toDouble() / BitcoinConstants.satsPerBtc;
+        _totalBalance = balanceResult.offchain.totalSats.toDouble() / BitcoinConstants.satsPerBtc;
         _isBalanceLoading = false;
       });
 
@@ -456,7 +457,7 @@ class WalletScreenState extends State<WalletScreen> {
       MaterialPageRoute(
         builder: (context) => SendScreen(
           aspId: widget.aspId,
-          availableSats: _getSelectedBalance() * 100000000,
+          availableSats: _getSelectedBalance() * BitcoinConstants.satsPerBtc,
         ),
       ),
     );
@@ -515,7 +516,7 @@ class WalletScreenState extends State<WalletScreen> {
         MaterialPageRoute(
           builder: (context) => SendScreen(
             aspId: widget.aspId,
-            availableSats: _getSelectedBalance() * 100000000,
+            availableSats: _getSelectedBalance() * BitcoinConstants.satsPerBtc,
             initialAddress: result,
           ),
         ),
@@ -728,7 +729,7 @@ class WalletScreenState extends State<WalletScreen> {
               : t.amountSats as int,
           offboard: (t) => t.amountSats.toInt(),
         );
-        amountAfterTimestamp += amountSats / 100000000.0;
+        amountAfterTimestamp += amountSats / BitcoinConstants.satsPerBtc;
       }
     }
 
@@ -821,7 +822,7 @@ class WalletScreenState extends State<WalletScreen> {
     final userPrefs = context.watch<UserPreferencesService>();
 
     // Convert BTC to satoshis for display
-    final balanceInSats = (_getSelectedBalance() * 100000000).round();
+    final balanceInSats = (_getSelectedBalance() * BitcoinConstants.satsPerBtc).round();
     final formattedSats = _formatSatsAmount(balanceInSats);
 
     return Padding(
@@ -889,7 +890,7 @@ class WalletScreenState extends State<WalletScreen> {
     final userPrefs = context.watch<UserPreferencesService>();
 
     final formattedSats = _formatSatsAmount(_lockedCollateralSats);
-    final lockedBtc = _lockedCollateralSats / 100000000.0;
+    final lockedBtc = _lockedCollateralSats / BitcoinConstants.satsPerBtc;
     final lockedFiat = lockedBtc * _getCurrentBtcPrice();
 
     return Padding(
@@ -946,7 +947,7 @@ class WalletScreenState extends State<WalletScreen> {
     final userPrefs = context.watch<UserPreferencesService>();
 
     final formattedSats = _formatSatsAmount(_boardingBalanceSats);
-    final boardingBtc = _boardingBalanceSats / 100000000.0;
+    final boardingBtc = _boardingBalanceSats / BitcoinConstants.satsPerBtc;
     final boardingFiat = boardingBtc * _getCurrentBtcPrice();
 
     return Padding(
@@ -1069,7 +1070,7 @@ class WalletScreenState extends State<WalletScreen> {
     }
 
     // Convert balance change to sats
-    final balanceChangeInSats = (balanceChange.abs() * 100000000).round();
+    final balanceChangeInSats = (balanceChange.abs() * BitcoinConstants.satsPerBtc).round();
 
     return GestureDetector(
       onTap: _toggleDisplayUnit,
@@ -1194,7 +1195,7 @@ class WalletScreenState extends State<WalletScreen> {
 
   Widget _buildCryptosSection() {
     // Convert total balance to sats for display
-    final balanceInSats = (_totalBalance * 100000000).toInt();
+    final balanceInSats = (_totalBalance * BitcoinConstants.satsPerBtc).toInt();
 
     return Padding(
       padding: const EdgeInsets.symmetric(

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
@@ -710,7 +711,7 @@ class _TransactionItemWidget extends StatelessWidget {
     final currencyService = context.watch<CurrencyPreferenceService>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final amountBtc = amountSats / 100000000;
+    final amountBtc = amountSats / BitcoinConstants.satsPerBtc;
 
     // Use actual BTC price, with fallback only if not available
     final btcPriceUsd = bitcoinPrice ?? 0;

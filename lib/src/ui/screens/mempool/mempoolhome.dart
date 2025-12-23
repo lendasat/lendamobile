@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
@@ -713,7 +714,7 @@ class _MempoolHomeState extends State<MempoolHome> {
                     ),
                 poolName: block.extras?.pool?.name ?? 'Unknown',
                 rewardAmount: (block.extras?.reward?.toDouble() ?? 0) /
-                    100000000 *
+                    BitcoinConstants.satsPerBtc *
                     _currentUSD,
               ),
 

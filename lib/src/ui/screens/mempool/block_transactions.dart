@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
@@ -302,7 +303,7 @@ class _BlockTransactionsState extends State<BlockTransactions> {
                                   ],
                                 ),
                                 Text(
-                                  '${(volume.toDouble() / 100000000).toStringAsFixed(8)} BTC',
+                                  '${(volume.toDouble() / BitcoinConstants.satsPerBtc).toStringAsFixed(8)} BTC',
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ],
@@ -337,7 +338,7 @@ class _BlockTransactionsState extends State<BlockTransactions> {
         // Format: [txid, value, vsize, feerate]
         final txid = txData[0] as String;
         final value = (txData[1] as num).toDouble();
-        final btcValue = value / 100000000;
+        final btcValue = value / BitcoinConstants.satsPerBtc;
 
         return Padding(
           padding: const EdgeInsets.symmetric(

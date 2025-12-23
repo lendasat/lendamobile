@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
@@ -137,7 +138,7 @@ class TransactionDetailsDialog extends StatelessWidget {
     final createdTime = timezoneService.toSelectedTimezone(createdTimeUtc);
     final formattedCreatedAtDate =
         DateFormat('MMMM d, y - h:mm a').format(createdTime);
-    final amountBtc = amountSats.toDouble() / 100000000;
+    final amountBtc = amountSats.toDouble() / BitcoinConstants.satsPerBtc;
 
     return Dialog(
       backgroundColor: Theme.of(context).colorScheme.surface,

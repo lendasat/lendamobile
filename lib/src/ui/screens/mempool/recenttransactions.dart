@@ -2,6 +2,7 @@
 /// Displays recent mempool transactions with optional filtering for owned transactions
 library;
 
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/rust/models/mempool.dart';
@@ -75,7 +76,7 @@ class _RecentTransactionsState extends State<RecentTransactions> {
                 itemCount: widget.transactions.length,
                 itemBuilder: (context, index) {
                   final tx = widget.transactions[index];
-                  double btcValue = tx.value / 100000000;
+                  double btcValue = tx.value / BitcoinConstants.satsPerBtc;
                   bool isOwned = widget.ownedTxids.contains(tx.txid);
 
                   return Padding(

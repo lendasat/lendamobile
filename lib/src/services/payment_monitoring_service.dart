@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
@@ -208,7 +209,7 @@ class PaymentMonitoringService extends ChangeNotifier
         );
       }
     } else {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(AppTimeouts.quoteDebounce);
       _startPaymentMonitoring();
     }
   }
@@ -245,7 +246,7 @@ class PaymentMonitoringService extends ChangeNotifier
         onWalletRefreshNeeded?.call();
 
         // Small delay before restarting monitoring
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(AppTimeouts.shortDelay);
       } catch (e) {
         final errorStr = e.toString().toLowerCase();
 
@@ -265,7 +266,7 @@ class PaymentMonitoringService extends ChangeNotifier
         }
 
         // Small delay before retrying
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(AppTimeouts.shortDelay);
       }
     }
   }

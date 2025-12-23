@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -162,7 +163,7 @@ class TransactionFeeCard extends StatelessWidget {
 
   // Helper function to convert fee to dollar amount
   double _dollarConversion(num fee) {
-    return currentUSD * ((fee * (560 / 4) / 100000000));
+    return currentUSD * ((fee * (560 / 4) / BitcoinConstants.satsPerBtc));
   }
 
   // Widget to display fee column with icon, title, and amount
