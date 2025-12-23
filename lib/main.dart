@@ -9,6 +9,7 @@ import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/services/transaction_filter_service.dart';
+import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
 import 'package:flutter/material.dart';
@@ -170,6 +171,9 @@ class MyApp extends StatelessWidget {
           ),
           ChangeNotifierProvider(
             create: (context) => UserPreferencesService()..loadPreferences(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => PaymentMonitoringService(),
           ),
         ],
         child: Consumer2<ThemeProvider, LanguageService>(
