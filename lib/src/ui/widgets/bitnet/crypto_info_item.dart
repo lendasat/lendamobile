@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -55,7 +56,7 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
     final double balanceValue = double.tryParse(widget.balance) ?? 0.0;
     final bitcoinPrice = widget.bitcoinPrice ?? 0;
     final currencyEquivalent =
-        (balanceValue / 100000000 * bitcoinPrice).toStringAsFixed(2);
+        (balanceValue / BitcoinConstants.satsPerBtc * bitcoinPrice).toStringAsFixed(2);
 
     return GlassContainer(
       height: AppTheme.cardPadding * 2.75,

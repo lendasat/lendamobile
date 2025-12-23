@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -49,7 +50,7 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
 
   /// Calculate network fee in USD
   double get _networkFeeUsd {
-    return (widget.networkFeeSats / 100000000) * widget.exchangeRate;
+    return (widget.networkFeeSats / BitcoinConstants.satsPerBtc) * widget.exchangeRate;
   }
 
   /// Calculate protocol fee in USD
