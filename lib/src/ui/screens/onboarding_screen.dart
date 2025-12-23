@@ -109,15 +109,21 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               // Bani mascot image
               Flexible(
                 flex: 3,
-                child: Container(
-                  constraints: const BoxConstraints(
-                    maxHeight: AppTheme.cardPadding * 10,
-                    maxWidth: AppTheme.cardPadding * 10,
-                  ),
-                  child: Image.asset(
-                    'assets/images/bani/bani_register.png',
-                    fit: BoxFit.contain,
-                  ),
+                child: Builder(
+                  builder: (context) {
+                    final screenHeight = MediaQuery.of(context).size.height;
+                    final baniSize = screenHeight * 0.25;
+                    return Container(
+                      constraints: BoxConstraints(
+                        maxHeight: baniSize,
+                        maxWidth: baniSize,
+                      ),
+                      child: Image.asset(
+                        'assets/images/bani/bani_register.png',
+                        fit: BoxFit.contain,
+                      ),
+                    );
+                  },
                 ),
               ),
               // Spacer between image and buttons
