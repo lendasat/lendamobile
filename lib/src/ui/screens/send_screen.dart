@@ -1,4 +1,5 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
@@ -214,7 +215,7 @@ class SendScreenState extends State<SendScreen>
           if (_satController.text.isEmpty || _satController.text == '0') {
             _satController.text = params.minSats.toString();
             _btcController.text =
-                (params.minSats / 100000000).toStringAsFixed(8);
+                (params.minSats / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
           }
           // Set description from LNURL metadata if available
           if (params.description != null && _description == null) {
@@ -278,7 +279,7 @@ class SendScreenState extends State<SendScreen>
           final btcAmount =
               double.tryParse(uri.queryParameters['amount'] ?? '');
           if (btcAmount != null) {
-            amount = (btcAmount * 100000000).round();
+            amount = (btcAmount * BitcoinConstants.satsPerBtc).round();
           }
         }
       }
@@ -290,7 +291,7 @@ class SendScreenState extends State<SendScreen>
         final invoice = Bolt11PaymentRequest(address);
         final btcAmount = invoice.amount.toDouble();
         if (btcAmount > 0) {
-          amount = (btcAmount * 100000000).round();
+          amount = (btcAmount * BitcoinConstants.satsPerBtc).round();
           logger.i("Extracted amount from pasted invoice: $amount sats");
         }
       } catch (e) {
@@ -306,7 +307,7 @@ class SendScreenState extends State<SendScreen>
     // Update amount fields if we extracted an amount
     if (amount != null && amount > 0) {
       _satController.text = amount.toString();
-      _btcController.text = (amount / 100000000).toStringAsFixed(8);
+      _btcController.text = (amount / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
     }
   }
 
@@ -586,7 +587,7 @@ class SendScreenState extends State<SendScreen>
           final btcAmount =
               double.tryParse(uri.queryParameters['amount'] ?? '');
           if (btcAmount != null) {
-            amount = (btcAmount * 100000000).round();
+            amount = (btcAmount * BitcoinConstants.satsPerBtc).round();
           }
         }
         if (uri.queryParameters.containsKey('message')) {
@@ -605,7 +606,7 @@ class SendScreenState extends State<SendScreen>
         // Amount is in BTC, convert to sats
         final btcAmount = invoice.amount.toDouble();
         if (btcAmount > 0) {
-          amount = (btcAmount * 100000000).round();
+          amount = (btcAmount * BitcoinConstants.satsPerBtc).round();
           logger.i("Extracted amount from Lightning invoice: $amount sats");
         }
         // Try to get description from invoice tags
@@ -622,7 +623,7 @@ class SendScreenState extends State<SendScreen>
       _hasValidAddress = _isValidAddress(address);
       if (amount != null && amount > 0) {
         _satController.text = amount.toString();
-        _btcController.text = (amount / 100000000).toStringAsFixed(8);
+        _btcController.text = (amount / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
       }
       if (description != null) {
         _description = description;
@@ -1076,7 +1077,7 @@ class SendScreenState extends State<SendScreen>
     final satsAvailable = widget.availableSats.toStringAsFixed(0);
     final fiatAvailable = _bitcoinPrice != null
         ? currencyService
-            .formatAmount((widget.availableSats / 100000000) * _bitcoinPrice!)
+            .formatAmount((widget.availableSats / BitcoinConstants.satsPerBtc) * _bitcoinPrice!)
         : '\$0.00';
 
     return Padding(
