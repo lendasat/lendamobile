@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -17,14 +17,11 @@ class AmountWidgetService extends ChangeNotifier {
   VoidCallback? _btcListener;
   VoidCallback? _satListener;
   VoidCallback? _currListener;
-  StreamSubscription? _priceStreamSubscription;
 
   bool _swapped = false;
   bool _preventConversion = false;
   bool _enabled = true;
   CurrencyType _currentUnit = CurrencyType.sats;
-
-  final double? _bitcoinPrice;
 
   Function(String)? _onInputStateChange;
 
@@ -32,8 +29,6 @@ class AmountWidgetService extends ChangeNotifier {
   bool get preventConversion => _preventConversion;
   bool get enabled => _enabled;
   CurrencyType get currentUnit => _currentUnit;
-
-  AmountWidgetService({double? bitcoinPrice}) : _bitcoinPrice = bitcoinPrice;
 
   void initialize({
     required TextEditingController btcController,
@@ -63,14 +58,6 @@ class AmountWidgetService extends ChangeNotifier {
     btcController.addListener(_btcListener!);
     satController.addListener(_satListener!);
     currController.addListener(_currListener!);
-
-    // Listen to price updates if price is provided
-    if (_bitcoinPrice != null) {
-      _priceStreamSubscription = Stream.periodic(
-        const Duration(milliseconds: 500),
-        (_) => _bitcoinPrice,
-      ).listen((_) => notifyListeners());
-    }
   }
 
   /// Toggle between currency and bitcoin unit input
@@ -167,10 +154,10 @@ class AmountWidgetService extends ChangeNotifier {
   ) {
     if (currentUnit == CurrencyType.sats) {
       // If sats, check if amount is large enough to display as BTC
-      if (amount >= 100000000) {
+      if (amount >= BitcoinConstants.satsPerBtc) {
         return BitcoinUnitModel(
           bitcoinUnit: CurrencyType.bitcoin,
-          amount: amount / 100000000,
+          amount: amount / BitcoinConstants.satsPerBtc,
         );
       }
       return BitcoinUnitModel(bitcoinUnit: CurrencyType.sats, amount: amount);
@@ -179,7 +166,7 @@ class AmountWidgetService extends ChangeNotifier {
       if (amount < 0.001) {
         return BitcoinUnitModel(
           bitcoinUnit: CurrencyType.sats,
-          amount: (amount * 100000000).round().toDouble(),
+          amount: (amount * BitcoinConstants.satsPerBtc).round().toDouble(),
         );
       }
       return BitcoinUnitModel(
@@ -206,7 +193,7 @@ class AmountWidgetService extends ChangeNotifier {
         btcAmount = amount;
         break;
       case CurrencyType.sats:
-        btcAmount = amount / 100000000;
+        btcAmount = amount / BitcoinConstants.satsPerBtc;
         break;
       case CurrencyType.usd:
         btcAmount = amount / bitcoinPrice;
@@ -220,7 +207,7 @@ class AmountWidgetService extends ChangeNotifier {
         result = btcAmount;
         break;
       case CurrencyType.sats:
-        result = btcAmount * 100000000;
+        result = btcAmount * BitcoinConstants.satsPerBtc;
         break;
       case CurrencyType.usd:
         result = btcAmount * bitcoinPrice;
@@ -294,7 +281,6 @@ class AmountWidgetService extends ChangeNotifier {
     if (_currController != null && _currListener != null) {
       _currController!.removeListener(_currListener!);
     }
-    _priceStreamSubscription?.cancel();
     super.dispose();
   }
 }
@@ -333,9 +319,11 @@ class BoundInputFormatter extends TextInputFormatter {
     if (!swapped) {
       if (valueType != boundType) {
         if (valueType == CurrencyType.sats) {
-          convertedNewValue = convertedNewValue / 100000000; // Convert to BTC
+          convertedNewValue =
+              convertedNewValue / BitcoinConstants.satsPerBtc; // Convert to BTC
         } else {
-          convertedNewValue = convertedNewValue * 100000000; // Convert to sats
+          convertedNewValue =
+              convertedNewValue * BitcoinConstants.satsPerBtc; // Convert to sats
         }
       }
 
@@ -349,7 +337,7 @@ class BoundInputFormatter extends TextInputFormatter {
     } else {
       // Convert USD to bound type for comparison
       convertedNewValue = (convertedNewValue / bitcoinPrice) *
-          (boundType == CurrencyType.sats ? 100000000 : 1);
+          (boundType == CurrencyType.sats ? BitcoinConstants.satsPerBtc : 1);
 
       if (convertedNewValue < lowerBound) {
         underBound?.call(convertedNewValue);
