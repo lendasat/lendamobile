@@ -378,11 +378,12 @@ class WalletScreenState extends State<WalletScreen> {
       final balanceResult = await balance();
 
       setState(() {
-        _pendingBalance =
-            balanceResult.offchain.pendingSats.toDouble() / BitcoinConstants.satsPerBtc;
-        _confirmedBalance =
-            balanceResult.offchain.confirmedSats.toDouble() / BitcoinConstants.satsPerBtc;
-        _totalBalance = balanceResult.offchain.totalSats.toDouble() / BitcoinConstants.satsPerBtc;
+        _pendingBalance = balanceResult.offchain.pendingSats.toDouble() /
+            BitcoinConstants.satsPerBtc;
+        _confirmedBalance = balanceResult.offchain.confirmedSats.toDouble() /
+            BitcoinConstants.satsPerBtc;
+        _totalBalance = balanceResult.offchain.totalSats.toDouble() /
+            BitcoinConstants.satsPerBtc;
         _isBalanceLoading = false;
       });
 
@@ -744,7 +745,7 @@ class WalletScreenState extends State<WalletScreen> {
 
   Widget _buildChartWidget() {
     if (_bitcoinPriceData.isEmpty || _isBalanceLoading) {
-      return SizedBox(height: AppTheme.cardPadding * 16);
+      return SizedBox(height: AppTheme.cardPadding * 10);
     }
 
     // Transform price data to historical balance value (balance at time × price)
@@ -765,7 +766,7 @@ class WalletScreenState extends State<WalletScreen> {
     ));
 
     return SizedBox(
-      height: AppTheme.cardPadding * 11,
+      height: AppTheme.cardPadding * 10,
       child: BitcoinPriceChart(
         data: balanceChartData,
         alpha: 255,
@@ -822,7 +823,8 @@ class WalletScreenState extends State<WalletScreen> {
     final userPrefs = context.watch<UserPreferencesService>();
 
     // Convert BTC to satoshis for display
-    final balanceInSats = (_getSelectedBalance() * BitcoinConstants.satsPerBtc).round();
+    final balanceInSats =
+        (_getSelectedBalance() * BitcoinConstants.satsPerBtc).round();
     final formattedSats = _formatSatsAmount(balanceInSats);
 
     return Padding(
@@ -1070,7 +1072,8 @@ class WalletScreenState extends State<WalletScreen> {
     }
 
     // Convert balance change to sats
-    final balanceChangeInSats = (balanceChange.abs() * BitcoinConstants.satsPerBtc).round();
+    final balanceChangeInSats =
+        (balanceChange.abs() * BitcoinConstants.satsPerBtc).round();
 
     return GestureDetector(
       onTap: _toggleDisplayUnit,
