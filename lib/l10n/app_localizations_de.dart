@@ -1077,7 +1077,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get agbScopeContent =>
-      'Diese Geschäftsbedingungen regeln die Nutzung der Bitcoin-Wallet-App (im Folgenden Lenda), die von Lendasat Inc. bereitgestellt wird. Durch die Nutzung der App erklären Sie sich mit diesen Geschäftsbedingungen einverstanden.';
+      'Diese Geschäftsbedingungen regeln die Nutzung der Bitcoin-Wallet-App (im Folgenden Lenda), die von COBLOX PTY LTD bereitgestellt wird. Durch die Nutzung der App erklären Sie sich mit diesen Geschäftsbedingungen einverstanden.';
 
   @override
   String get agbFunctionalityTitle => 'Funktionalität';
@@ -1091,7 +1091,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get agbUserResponsibilityContent =>
-      'Der Benutzer ist allein für die Sicherheit seiner Bitcoins verantwortlich. Die App bietet Schutzfunktionen wie Passwortschutz und Zwei-Faktor-Authentifizierung, aber es liegt in der Verantwortung des Benutzers, diese Funktionen sorgfältig zu verwenden. Lendasat Inc. haftet nicht für Verluste, die aufgrund von Unachtsamkeit, Verlust von Geräten oder Zugangsdaten des Benutzers entstehen.';
+      'Der Benutzer ist allein für die Sicherheit seiner Bitcoins verantwortlich. Die App bietet Schutzfunktionen wie Passwortschutz und Zwei-Faktor-Authentifizierung, aber es liegt in der Verantwortung des Benutzers, diese Funktionen sorgfältig zu verwenden. COBLOX PTY LTD haftet nicht für Verluste, die aufgrund von Unachtsamkeit, Verlust von Geräten oder Zugangsdaten des Benutzers entstehen.';
 
   @override
   String get agbFeesTitle => 'Gebühren';
@@ -1105,21 +1105,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get agbLiabilityContent =>
-      'Lendasat Inc. haftet nur für Schäden, die durch vorsätzliches oder grob fahrlässiges Handeln von Lendasat Inc. verursacht werden. Lendasat Inc. haftet nicht für Schäden, die aus der Nutzung der App oder dem Verlust von Bitcoins resultieren.';
+      'COBLOX PTY LTD haftet nur für Schäden, die durch vorsätzliches oder grob fahrlässiges Handeln von COBLOX PTY LTD verursacht werden. COBLOX PTY LTD haftet nicht für Schäden, die aus der Nutzung der App oder dem Verlust von Bitcoins resultieren.';
 
   @override
   String get agbChangesTitle => 'Änderungen';
 
   @override
   String get agbChangesContent =>
-      'Lendasat Inc. behält sich das Recht vor, diese Geschäftsbedingungen jederzeit zu ändern. Der Benutzer wird über solche Änderungen informiert und muss diesen zustimmen, um die App weiterhin nutzen zu können.';
+      'COBLOX PTY LTD behält sich das Recht vor, diese Geschäftsbedingungen jederzeit zu ändern. Der Benutzer wird über solche Änderungen informiert und muss diesen zustimmen, um die App weiterhin nutzen zu können.';
 
   @override
   String get agbFinalProvisionsTitle => 'Schlussbestimmungen';
 
   @override
   String get agbFinalProvisionsContent =>
-      'Diese Geschäftsbedingungen stellen die gesamte Vereinbarung zwischen dem Benutzer und Lendasat Inc. dar. Sollte eine Bestimmung unwirksam sein, bleiben die übrigen Bestimmungen in Kraft.';
+      'Diese Geschäftsbedingungen stellen die gesamte Vereinbarung zwischen dem Benutzer und COBLOX PTY LTD dar. Sollte eine Bestimmung unwirksam sein, bleiben die übrigen Bestimmungen in Kraft.';
 
   @override
   String get contact => 'Kontakt';

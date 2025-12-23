@@ -2153,7 +2153,7 @@ abstract class AppLocalizations {
   /// No description provided for @agbScopeContent.
   ///
   /// In en, this message translates to:
-  /// **'These terms and conditions govern the use of the Bitcoin wallet app (hereinafter Lenda), provided by Lendasat Inc. By using the app, you agree to these terms and conditions.'**
+  /// **'These terms and conditions govern the use of the Bitcoin wallet app (hereinafter Lenda), provided by COBLOX PTY LTD. By using the app, you agree to these terms and conditions.'**
   String get agbScopeContent;
 
   /// No description provided for @agbFunctionalityTitle.
@@ -2177,7 +2177,7 @@ abstract class AppLocalizations {
   /// No description provided for @agbUserResponsibilityContent.
   ///
   /// In en, this message translates to:
-  /// **'The user is solely responsible for the security of their Bitcoin. The app provides security features such as password protection and two-factor authentication, but it is the user\'s responsibility to use these features carefully. Lendasat Inc. is not liable for losses resulting from carelessness, loss of devices, or user credentials.'**
+  /// **'The user is solely responsible for the security of their Bitcoin. The app provides security features such as password protection and two-factor authentication, but it is the user\'s responsibility to use these features carefully. COBLOX PTY LTD is not liable for losses resulting from carelessness, loss of devices, or user credentials.'**
   String get agbUserResponsibilityContent;
 
   /// No description provided for @agbFeesTitle.
@@ -2201,7 +2201,7 @@ abstract class AppLocalizations {
   /// No description provided for @agbLiabilityContent.
   ///
   /// In en, this message translates to:
-  /// **'Lendasat Inc. is only liable for damages caused by intentional or grossly negligent actions by Lendasat Inc. Lendasat Inc. is not liable for damages resulting from the use of the app or the loss of Bitcoin.'**
+  /// **'COBLOX PTY LTD is only liable for damages caused by intentional or grossly negligent actions by COBLOX PTY LTD. COBLOX PTY LTD is not liable for damages resulting from the use of the app or the loss of Bitcoin.'**
   String get agbLiabilityContent;
 
   /// No description provided for @agbChangesTitle.
@@ -2213,7 +2213,7 @@ abstract class AppLocalizations {
   /// No description provided for @agbChangesContent.
   ///
   /// In en, this message translates to:
-  /// **'Lendasat Inc. reserves the right to change these terms and conditions at any time. The user will be informed of such changes and must agree to them in order to continue using the app.'**
+  /// **'COBLOX PTY LTD reserves the right to change these terms and conditions at any time. The user will be informed of such changes and must agree to them in order to continue using the app.'**
   String get agbChangesContent;
 
   /// No description provided for @agbFinalProvisionsTitle.
@@ -2225,7 +2225,7 @@ abstract class AppLocalizations {
   /// No description provided for @agbFinalProvisionsContent.
   ///
   /// In en, this message translates to:
-  /// **'These terms and conditions represent the entire agreement between the user and Lendasat Inc. Should any provision be invalid, the remaining provisions shall remain in effect.'**
+  /// **'These terms and conditions represent the entire agreement between the user and COBLOX PTY LTD. Should any provision be invalid, the remaining provisions shall remain in effect.'**
   String get agbFinalProvisionsContent;
 
   /// No description provided for @contact.

@@ -1083,7 +1083,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get agbScopeContent =>
-      'These terms and conditions govern the use of the Bitcoin wallet app (hereinafter Lenda), provided by Lendasat Inc. By using the app, you agree to these terms and conditions.';
+      'These terms and conditions govern the use of the Bitcoin wallet app (hereinafter Lenda), provided by COBLOX PTY LTD. By using the app, you agree to these terms and conditions.';
 
   @override
   String get agbFunctionalityTitle => 'Functionality';
@@ -1097,7 +1097,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get agbUserResponsibilityContent =>
-      'The user is solely responsible for the security of their Bitcoin. The app provides security features such as password protection and two-factor authentication, but it is the user\'s responsibility to use these features carefully. Lendasat Inc. is not liable for losses resulting from carelessness, loss of devices, or user credentials.';
+      'The user is solely responsible for the security of their Bitcoin. The app provides security features such as password protection and two-factor authentication, but it is the user\'s responsibility to use these features carefully. COBLOX PTY LTD is not liable for losses resulting from carelessness, loss of devices, or user credentials.';
 
   @override
   String get agbFeesTitle => 'Fees';
@@ -1111,21 +1111,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get agbLiabilityContent =>
-      'Lendasat Inc. is only liable for damages caused by intentional or grossly negligent actions by Lendasat Inc. Lendasat Inc. is not liable for damages resulting from the use of the app or the loss of Bitcoin.';
+      'COBLOX PTY LTD is only liable for damages caused by intentional or grossly negligent actions by COBLOX PTY LTD. COBLOX PTY LTD is not liable for damages resulting from the use of the app or the loss of Bitcoin.';
 
   @override
   String get agbChangesTitle => 'Changes';
 
   @override
   String get agbChangesContent =>
-      'Lendasat Inc. reserves the right to change these terms and conditions at any time. The user will be informed of such changes and must agree to them in order to continue using the app.';
+      'COBLOX PTY LTD reserves the right to change these terms and conditions at any time. The user will be informed of such changes and must agree to them in order to continue using the app.';
 
   @override
   String get agbFinalProvisionsTitle => 'Final Provisions';
 
   @override
   String get agbFinalProvisionsContent =>
-      'These terms and conditions represent the entire agreement between the user and Lendasat Inc. Should any provision be invalid, the remaining provisions shall remain in effect.';
+      'These terms and conditions represent the entire agreement between the user and COBLOX PTY LTD. Should any provision be invalid, the remaining provisions shall remain in effect.';
 
   @override
   String get contact => 'Contact';
