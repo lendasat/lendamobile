@@ -1,4 +1,4 @@
-import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
@@ -60,7 +60,7 @@ class _AmountWidgetState extends State<AmountWidget> {
     super.initState();
     widget.init?.call();
 
-    _service = AmountWidgetService(bitcoinPrice: widget.bitcoinPrice);
+    _service = AmountWidgetService();
 
     _service.initialize(
       btcController: widget.btcController,
@@ -139,13 +139,13 @@ class _AmountWidgetState extends State<AmountWidget> {
                           widget.btcController.text = (double.tryParse(
                                     widget.satController.text,
                                   ) ??
-                                  0 / 100000000)
+                                  0 / BitcoinConstants.satsPerBtc)
                               .toStringAsFixed(8);
                         } else {
                           widget.satController.text =
                               ((double.tryParse(widget.btcController.text) ??
                                           0) *
-                                      100000000)
+                                      BitcoinConstants.satsPerBtc)
                                   .toInt()
                                   .toString();
                         }
@@ -260,7 +260,7 @@ class _AmountWidgetState extends State<AmountWidget> {
             0.0;
 
     double btcAmount =
-        _service.currentUnit == CurrencyType.sats ? amount / 100000000 : amount;
+        _service.currentUnit == CurrencyType.sats ? amount / BitcoinConstants.satsPerBtc : amount;
     double usdAmount = btcAmount * bitcoinPrice;
 
     if (!_service.preventConversion) {
@@ -315,7 +315,7 @@ class _AmountWidgetState extends State<AmountWidget> {
         ) ??
         0.0;
     final btcAmount = currAmount / bitcoinPrice;
-    final satAmount = (btcAmount * 100000000).round();
+    final satAmount = (btcAmount * BitcoinConstants.satsPerBtc).round();
 
     if (!_service.preventConversion) {
       widget.btcController.text = btcAmount.toString();
