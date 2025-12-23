@@ -153,6 +153,11 @@ Future<void> lendaswapDeleteSwap({required String swapId}) =>
     RustLib.instance.api
         .crateApiLendaswapApiLendaswapDeleteSwap(swapId: swapId);
 
+/// Clear all local swap storage and recover from server.
+/// Use this when local storage is corrupted.
+Future<List<SwapInfo>> lendaswapClearAndRecover() =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapClearAndRecover();
+
 /// Information about a tradeable asset.
 class AssetInfo {
   final String tokenId;

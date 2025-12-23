@@ -41,6 +41,11 @@ class SwapInfo {
   /// Detailed status string for debugging
   final String detailedStatus;
 
+  /// EVM HTLC claim transaction ID (Polygon/Ethereum tx hash)
+  /// This is set when the swap completes and the EVM side is claimed.
+  /// Used for loan repayment verification.
+  final String? evmHtlcClaimTxid;
+
   const SwapInfo({
     required this.id,
     required this.status,
@@ -58,6 +63,7 @@ class SwapInfo {
     required this.canClaimVhtlc,
     required this.canRefund,
     required this.detailedStatus,
+    this.evmHtlcClaimTxid,
   });
 
   @override
@@ -77,7 +83,8 @@ class SwapInfo {
       canClaimGelato.hashCode ^
       canClaimVhtlc.hashCode ^
       canRefund.hashCode ^
-      detailedStatus.hashCode;
+      detailedStatus.hashCode ^
+      evmHtlcClaimTxid.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -99,7 +106,8 @@ class SwapInfo {
           canClaimGelato == other.canClaimGelato &&
           canClaimVhtlc == other.canClaimVhtlc &&
           canRefund == other.canRefund &&
-          detailedStatus == other.detailedStatus;
+          detailedStatus == other.detailedStatus &&
+          evmHtlcClaimTxid == other.evmHtlcClaimTxid;
 }
 
 /// Simplified swap status for Flutter UI.

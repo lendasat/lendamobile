@@ -32,8 +32,24 @@ static LENDASWAP_INITIALIZED: AtomicBool = AtomicBool::new(false);
 /// Global LendaSwap client state
 static LENDASWAP_CLIENT: OnceLock<RwLock<Option<LendaSwapClient>>> = OnceLock::new();
 
+/// Stored initialization parameters for re-initialization after clearing storage.
+#[derive(Clone)]
+struct InitParams {
+    data_dir: String,
+    network: Network,
+    api_url: String,
+    arkade_url: String,
+}
+
+/// Global storage for init params
+static INIT_PARAMS: OnceLock<RwLock<Option<InitParams>>> = OnceLock::new();
+
 fn get_client_lock() -> &'static RwLock<Option<LendaSwapClient>> {
     LENDASWAP_CLIENT.get_or_init(|| RwLock::new(None))
+}
+
+fn get_init_params_lock() -> &'static RwLock<Option<InitParams>> {
+    INIT_PARAMS.get_or_init(|| RwLock::new(None))
 }
 
 /// Reset the LendaSwap client.
@@ -56,6 +72,18 @@ pub async fn init_client(
     api_url: String,
     arkade_url: String,
 ) -> Result<()> {
+    // Store init params for potential re-initialization
+    {
+        let params_lock = get_init_params_lock();
+        let mut params_guard = params_lock.write().await;
+        *params_guard = Some(InitParams {
+            data_dir: data_dir.clone(),
+            network,
+            api_url: api_url.clone(),
+            arkade_url: arkade_url.clone(),
+        });
+    }
+
     let wallet_storage = FileWalletStorage::new(data_dir.clone());
     let swap_storage = FileSwapStorage::new(data_dir)?;
 
@@ -129,22 +157,56 @@ pub async fn create_btc_to_evm_swap(
     target_chain: EvmChain,
     referral_code: Option<String>,
 ) -> Result<BtcToEvmSwapResponse> {
-    let lock = get_client_lock();
-    let guard = lock.read().await;
-    let client = guard
-        .as_ref()
-        .ok_or_else(|| anyhow!("LendaSwap client not initialized"))?;
+    tracing::info!(
+        "[LendaSwap] create_btc_to_evm_swap - target_address: {}, amount: {}, token: {:?}, chain: {:?}",
+        target_address,
+        target_amount,
+        target_token,
+        target_chain
+    );
 
-    client
+    let lock = get_client_lock();
+    tracing::debug!("[LendaSwap] acquired client lock");
+    let guard = lock.read().await;
+    let client = guard.as_ref().ok_or_else(|| {
+        tracing::error!("[LendaSwap] client not initialized!");
+        anyhow!("LendaSwap client not initialized")
+    })?;
+
+    tracing::info!("[LendaSwap] calling SDK create_arkade_to_evm_swap...");
+    let result = client
         .create_arkade_to_evm_swap(
-            target_address,
+            target_address.clone(),
             target_amount,
-            target_token,
+            target_token.clone(),
             target_chain,
             referral_code,
         )
-        .await
-        .map_err(|e| anyhow!("Failed to create BTC to EVM swap: {}", e))
+        .await;
+
+    match &result {
+        Ok(response) => {
+            tracing::info!("[LendaSwap] SDK create_arkade_to_evm_swap SUCCESS");
+            tracing::info!("[LendaSwap] response.common.id: {}", response.common.id);
+            tracing::info!(
+                "[LendaSwap] response.common.status: {:?}",
+                response.common.status
+            );
+            tracing::info!(
+                "[LendaSwap] response.ln_invoice length: {}",
+                response.ln_invoice.len()
+            );
+            tracing::info!(
+                "[LendaSwap] response.htlc_address_arkade: {}",
+                response.htlc_address_arkade
+            );
+        }
+        Err(e) => {
+            tracing::error!("[LendaSwap] SDK create_arkade_to_evm_swap FAILED: {:?}", e);
+        }
+    }
+
+    result.map_err(|e| anyhow!("Failed to create BTC to EVM swap: {}", e))
 }
 
 /// Create an EVM to BTC swap (buy BTC with stablecoins).
@@ -203,58 +265,135 @@ pub async fn create_evm_to_lightning_swap(
 
 /// Get swap details by ID.
 pub async fn get_swap(swap_id: &str) -> Result<ExtendedSwapStorageData> {
+    tracing::info!("[LendaSwap] get_swap called - swap_id: {}", swap_id);
+
     let lock = get_client_lock();
     let guard = lock.read().await;
-    let client = guard
-        .as_ref()
-        .ok_or_else(|| anyhow!("LendaSwap client not initialized"))?;
+    let client = guard.as_ref().ok_or_else(|| {
+        tracing::error!("[LendaSwap] get_swap - client not initialized!");
+        anyhow!("LendaSwap client not initialized")
+    })?;
 
-    client
-        .get_swap(swap_id)
-        .await
-        .map_err(|e| anyhow!("Failed to get swap: {}", e))
+    tracing::debug!("[LendaSwap] calling SDK get_swap...");
+    let result = client.get_swap(swap_id).await;
+
+    match &result {
+        Ok(data) => {
+            let status = match &data.response {
+                GetSwapResponse::BtcToEvm(r) => format!("{:?}", r.common.status),
+                GetSwapResponse::EvmToBtc(r) => format!("{:?}", r.common.status),
+            };
+            tracing::info!(
+                "[LendaSwap] get_swap SUCCESS - swap_id: {}, status: {}",
+                swap_id,
+                status
+            );
+        }
+        Err(e) => {
+            tracing::error!("[LendaSwap] get_swap FAILED: {:?}", e);
+        }
+    }
+
+    result.map_err(|e| anyhow!("Failed to get swap: {}", e))
 }
 
 /// List all swaps.
 pub async fn list_swaps() -> Result<Vec<ExtendedSwapStorageData>> {
+    tracing::info!("[LendaSwap] list_swaps called");
+
     let lock = get_client_lock();
     let guard = lock.read().await;
-    let client = guard
-        .as_ref()
-        .ok_or_else(|| anyhow!("LendaSwap client not initialized"))?;
+    let client = guard.as_ref().ok_or_else(|| {
+        tracing::error!("[LendaSwap] list_swaps - client not initialized!");
+        anyhow!("LendaSwap client not initialized")
+    })?;
 
-    client
-        .list_all()
-        .await
-        .map_err(|e| anyhow!("Failed to list swaps: {}", e))
+    let result = client.list_all().await;
+
+    match &result {
+        Ok(swaps) => {
+            tracing::info!(
+                "[LendaSwap] list_swaps SUCCESS - found {} swaps",
+                swaps.len()
+            );
+            for s in swaps.iter() {
+                let (id, status) = match &s.response {
+                    GetSwapResponse::BtcToEvm(r) => {
+                        (r.common.id.to_string(), format!("{:?}", r.common.status))
+                    }
+                    GetSwapResponse::EvmToBtc(r) => {
+                        (r.common.id.to_string(), format!("{:?}", r.common.status))
+                    }
+                };
+                tracing::debug!("[LendaSwap] - swap {} status: {}", id, status);
+            }
+        }
+        Err(e) => {
+            tracing::error!("[LendaSwap] list_swaps FAILED: {:?}", e);
+        }
+    }
+
+    result.map_err(|e| anyhow!("Failed to list swaps: {}", e))
 }
 
 /// Claim a swap via Gelato (gasless).
 pub async fn claim_gelato(swap_id: &str, secret: Option<String>) -> Result<()> {
+    tracing::info!(
+        "[LendaSwap] claim_gelato called - swap_id: {}, has_secret: {}",
+        swap_id,
+        secret.is_some()
+    );
+
     let lock = get_client_lock();
     let guard = lock.read().await;
-    let client = guard
-        .as_ref()
-        .ok_or_else(|| anyhow!("LendaSwap client not initialized"))?;
+    let client = guard.as_ref().ok_or_else(|| {
+        tracing::error!("[LendaSwap] claim_gelato - client not initialized!");
+        anyhow!("LendaSwap client not initialized")
+    })?;
 
-    client
-        .claim_gelato(swap_id, secret)
-        .await
-        .map_err(|e| anyhow!("Failed to claim via Gelato: {}", e))
+    tracing::info!("[LendaSwap] calling SDK claim_gelato...");
+    let result = client.claim_gelato(swap_id, secret).await;
+
+    match &result {
+        Ok(_) => {
+            tracing::info!("[LendaSwap] claim_gelato SUCCESS for {}", swap_id);
+        }
+        Err(e) => {
+            tracing::error!("[LendaSwap] claim_gelato FAILED for {}: {:?}", swap_id, e);
+        }
+    }
+
+    result.map_err(|e| anyhow!("Failed to claim via Gelato: {}", e))
 }
 
 /// Claim VHTLC for an EVM to BTC swap.
 pub async fn claim_vhtlc(swap_id: &str) -> Result<String> {
+    tracing::info!("[LendaSwap] claim_vhtlc called - swap_id: {}", swap_id);
+
     let lock = get_client_lock();
     let guard = lock.read().await;
-    let client = guard
-        .as_ref()
-        .ok_or_else(|| anyhow!("LendaSwap client not initialized"))?;
+    let client = guard.as_ref().ok_or_else(|| {
+        tracing::error!("[LendaSwap] claim_vhtlc - client not initialized!");
+        anyhow!("LendaSwap client not initialized")
+    })?;
 
-    client
-        .claim_vhtlc(swap_id)
-        .await
-        .map_err(|e| anyhow!("Failed to claim VHTLC: {}", e))
+    tracing::info!("[LendaSwap] calling SDK claim_vhtlc...");
+    let result = client.claim_vhtlc(swap_id).await;
+
+    match &result {
+        Ok(txid) => {
+            tracing::info!(
+                "[LendaSwap] claim_vhtlc SUCCESS for {} - txid: {}",
+                swap_id,
+                txid
+            );
+        }
+        Err(e) => {
+            tracing::error!("[LendaSwap] claim_vhtlc FAILED for {}: {:?}", swap_id, e);
+        }
+    }
+
+    result.map_err(|e| anyhow!("Failed to claim VHTLC: {}", e))
 }
 
 /// Refund VHTLC for a failed BTC to EVM swap.
@@ -297,6 +436,46 @@ pub async fn delete_swap(swap_id: &str) -> Result<()> {
         .delete_swap(swap_id.to_string())
         .await
         .map_err(|e| anyhow!("Failed to delete swap: {}", e))
+}
+
+/// Clear all local swap storage.
+/// This deletes all locally stored swaps and resets the client.
+/// Call recover_swaps() after this to fetch swaps from the server.
+pub async fn clear_local_storage() -> Result<()> {
+    use std::fs;
+    use std::path::Path;
+
+    // Get the stored initialization parameters
+    let params = {
+        let params_lock = get_init_params_lock();
+        let params_guard = params_lock.read().await;
+        params_guard
+            .clone()
+            .ok_or_else(|| anyhow!("LendaSwap was never initialized - no init params stored"))?
+    };
+
+    // Reset the client first to release any file handles
+    reset_client().await;
+
+    // Delete the swaps directory
+    let swaps_dir = Path::new(&params.data_dir).join("lendaswap_swaps");
+    if swaps_dir.exists() {
+        fs::remove_dir_all(&swaps_dir)
+            .map_err(|e| anyhow!("Failed to delete lendaswap_swaps directory: {}", e))?;
+        tracing::info!("Cleared lendaswap_swaps directory");
+    }
+
+    // Re-initialize the client with stored parameters
+    init_client(
+        params.data_dir,
+        params.network,
+        params.api_url,
+        params.arkade_url,
+    )
+    .await?;
+
+    tracing::info!("LendaSwap local storage cleared and client re-initialized");
+    Ok(())
 }
 
 /// Get the user's mnemonic.
@@ -400,6 +579,10 @@ pub struct SwapInfo {
     pub can_refund: bool,
     /// Detailed status string for debugging
     pub detailed_status: String,
+    /// EVM HTLC claim transaction ID (Polygon/Ethereum tx hash)
+    /// This is set when the swap completes and the EVM side is claimed.
+    /// Used for loan repayment verification.
+    pub evm_htlc_claim_txid: Option<String>,
 }
 
 impl SwapInfo {
@@ -434,6 +617,7 @@ impl SwapInfo {
                     can_claim_vhtlc: false,
                     can_refund,
                     detailed_status: format!("{:?}", r.common.status),
+                    evm_htlc_claim_txid: r.evm_htlc_claim_txid.clone(),
                 }
             }
             GetSwapResponse::EvmToBtc(r) => {
@@ -464,6 +648,7 @@ impl SwapInfo {
                     can_claim_vhtlc: can_claim,
                     can_refund,
                     detailed_status: format!("{:?}", r.common.status),
+                    evm_htlc_claim_txid: r.evm_htlc_claim_txid.clone(),
                 }
             }
         }
