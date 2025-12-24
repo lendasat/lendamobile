@@ -33,7 +33,8 @@
       "Bash(lib/src/ui/widgets/mempool/fee_distribution_widget.dart )",
       "Bash(lib/src/ui/widgets/mempool/transaction_fee_card.dart )",
       "Bash(lib/src/ui/widgets/swap/swap_confirmation_sheet.dart)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

@@ -20,18 +20,18 @@ use tokio::sync::RwLock;
 
 static LENDASAT_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
-struct LendasatState {
+pub(crate) struct LendasatState {
     http_client: reqwest::Client,
     base_url: String,
-    data_dir: String,
-    network: Network,
+    pub(crate) data_dir: String,
+    pub(crate) network: Network,
     jwt_token: Option<String>,
     api_key: Option<String>,
 }
 
 static LENDASAT_STATE: OnceLock<RwLock<Option<LendasatState>>> = OnceLock::new();
 
-fn get_state_lock() -> &'static RwLock<Option<LendasatState>> {
+pub(crate) fn get_state_lock() -> &'static RwLock<Option<LendasatState>> {
     LENDASAT_STATE.get_or_init(|| RwLock::new(None))
 }
 
