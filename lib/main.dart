@@ -178,6 +178,7 @@ class MyApp extends StatelessWidget {
         ],
         child: Consumer2<ThemeProvider, LanguageService>(
           builder: (context, themeProvider, languageService, _) => MaterialApp(
+            debugShowCheckedModeBanner: false,
             title: 'Ark - Flutter - Sample',
             theme: themeProvider.getMaterialTheme(),
             locale: languageService.currentLocale,
