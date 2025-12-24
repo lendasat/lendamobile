@@ -76,6 +76,9 @@ class SendScreenState extends State<SendScreen>
   // Estimated transaction size in vBytes (typical P2WPKH: 1 input, 2 outputs)
   static const int _estimatedTxVbytes = 140;
 
+  // Boltz submarine swap fee percentage (0.1% for paying Lightning invoices)
+  static const double _boltzFeePercent = 0.1;
+
   // LNURL state
   LnurlPayParams? _lnurlParams;
   bool _isFetchingLnurl = false;
@@ -471,6 +474,19 @@ class SendScreenState extends State<SendScreen>
     // Use halfHourFee (standard) fee rate
     final feeRate = _recommendedFees!.halfHourFee;
     return (feeRate * _estimatedTxVbytes).round();
+  }
+
+  /// Check if this is a Lightning payment (invoice or LNURL/Lightning Address)
+  bool get _isLightningPayment {
+    final address = _addressController.text.trim();
+    return _isLightningInvoice(address) || _isLnurlOrLightningAddress(address);
+  }
+
+  /// Calculate Boltz submarine swap fee for Lightning payments
+  int _calculateBoltzFee(double amountSats) {
+    if (!_isLightningPayment) return 0;
+    // Boltz charges 0.1% for submarine swaps (paying LN invoices)
+    return (amountSats * _boltzFeePercent / 100).round();
   }
 
   void _toggleAddressExpanded() {
@@ -1113,7 +1129,14 @@ class SendScreenState extends State<SendScreen>
     }
 
     // Calculate network fees based on address type
-    final networkFees = _isOnChainAddress ? _estimatedNetworkFeeSats : 0;
+    int networkFees;
+    if (_isOnChainAddress) {
+      networkFees = _estimatedNetworkFeeSats;
+    } else if (_isLightningPayment) {
+      networkFees = _calculateBoltzFee(amountSats);
+    } else {
+      networkFees = 0; // Ark payments have no fees
+    }
     final total = amountSats.toInt() + networkFees;
 
     // Fee display text
@@ -1126,6 +1149,8 @@ class SendScreenState extends State<SendScreen>
       } else {
         feeText = '? SATS';
       }
+    } else if (_isLightningPayment) {
+      feeText = '~$networkFees SATS (${_boltzFeePercent}%)';
     } else {
       feeText = '0 SATS';
     }
