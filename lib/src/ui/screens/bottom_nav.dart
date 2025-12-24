@@ -1,6 +1,6 @@
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
-import 'package:ark_flutter/src/ui/screens/loans_screen.dart';
+// import 'package:ark_flutter/src/ui/screens/loans_screen.dart'; // TODO: Re-enable loans screen
 import 'package:ark_flutter/src/ui/screens/swap_screen.dart';
 import 'package:ark_flutter/src/ui/screens/walletscreen.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/bottom_nav_gradient.dart';
@@ -35,7 +35,7 @@ class _BottomNavState extends State<BottomNav> {
     _screens = [
       WalletScreen(key: _walletKey, aspId: widget.aspId),
       SwapScreen(key: _swapKey),
-      LoansScreen(aspId: widget.aspId),
+      // LoansScreen(aspId: widget.aspId), // TODO: Re-enable loans screen
     ];
 
     // Initialize payment monitoring after first frame
@@ -108,8 +108,9 @@ class _BottomNavState extends State<BottomNav> {
                     _buildNavItem(0, FontAwesomeIcons.wallet, isLight),
                     _buildNavItem(
                         1, FontAwesomeIcons.arrowRightArrowLeft, isLight),
-                    _buildNavItem(
-                        2, FontAwesomeIcons.handHoldingDollar, isLight),
+                    // TODO: Re-enable loans screen
+                    // _buildNavItem(
+                    //     2, FontAwesomeIcons.handHoldingDollar, isLight),
                   ],
                 ),
               ),
