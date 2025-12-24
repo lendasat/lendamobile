@@ -114,13 +114,17 @@ Future<String> getMnemonic({required String dataDir}) =>
 Future<void> resetWallet({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiResetWallet(dataDir: dataDir);
 
-/// Sign a PSBT using the Ark client's identity (key provider).
+/// Sign an Ark PSBT using the Ark SDK's script-path signing.
 ///
-/// This is used for signing Ark VTXO claims where the collateral is locked
-/// to the Ark identity, not the Lendasat keypair.
+/// This uses ark_core::send::sign_ark_transaction which handles:
+/// - Script-path Taproot signing (extracts script from tap_scripts)
+/// - Proper sighash computation using taproot_script_spend_signature_hash
+/// - Storing signatures in tap_script_sigs
 ///
-/// The function extracts the required public key from the PSBT's taproot
-/// internal key and uses the Ark key provider to find the matching keypair.
+/// This matches exactly how Arkade wallet and LendaSat server sign PSBTs.
+///
+/// IMPORTANT: The contract's borrower_pk must match the Ark identity pubkey
+/// derived at m/83696968'/11811'/0/0.
 Future<String> signPsbtWithArkIdentity({required String psbtHex}) =>
     RustLib.instance.api
         .crateApiArkApiSignPsbtWithArkIdentity(psbtHex: psbtHex);

@@ -327,24 +327,19 @@ pub struct Info {
     pub network: String,
 }
 
-/// Sign a PSBT using the Ark client's identity (key provider).
+/// Sign an Ark PSBT using the Ark SDK's key provider and signing functions.
 ///
-/// This is used for signing Ark VTXO claims where the collateral is locked
-/// to the Ark identity, not the Lendasat keypair.
+/// This uses:
+/// - The SDK's key provider to get the keypair (not manual derivation)
+/// - ark_core::send::sign_ark_transaction for proper script-path signing
 ///
-/// The function extracts the required public key from the PSBT's taproot
-/// internal key and uses the Ark key provider to find the matching keypair.
-///
-/// IMPORTANT: For this to work, the LendaSat contract must have been created
-/// with the Ark identity public key as `borrower_pk`. If a different key was used
-/// (e.g., Lendasat derivation path key), the tap_internal_key won't match and
-/// signing will fail with "No tap_internal_key found" or "Could not find keypair".
+/// This matches exactly how Arkade wallet signs PSBTs - using the SDK's
+/// identity.sign() equivalent functionality.
 pub async fn sign_psbt_with_ark_identity(psbt_hex: String) -> Result<String> {
     use crate::state::ARK_CLIENT;
+    use ark_core::send::sign_ark_transaction;
     use bitcoin::psbt::Psbt;
     use bitcoin::secp256k1::Secp256k1;
-    use bitcoin::sighash::{Prevouts, SighashCache, TapSighashType};
-    use bitcoin::taproot::Signature as TapSignature;
     use std::sync::Arc;
 
     // Parse PSBT from hex
@@ -353,193 +348,82 @@ pub async fn sign_psbt_with_ark_identity(psbt_hex: String) -> Result<String> {
     let mut psbt = Psbt::deserialize(&psbt_bytes)
         .map_err(|e| anyhow::anyhow!("Failed to parse PSBT: {}", e))?;
 
-    tracing::info!(
-        "Signing Ark PSBT with {} inputs using Ark identity",
-        psbt.inputs.len()
-    );
+    let num_inputs = psbt.inputs.len();
+    tracing::info!("Signing Ark PSBT with {} inputs using Ark SDK", num_inputs);
 
-    // Get the Ark client
-    let maybe_client = ARK_CLIENT.try_get();
-    let client_arc = match maybe_client {
-        None => anyhow::bail!("Ark client not initialized"),
-        Some(client) => {
-            let guard = client.read();
-            Arc::clone(&*guard)
+    // Log PSBT details for debugging
+    for (idx, input) in psbt.inputs.iter().enumerate() {
+        tracing::debug!(
+            "Input {}: tap_scripts={} entries, tap_internal_key={:?}",
+            idx,
+            input.tap_scripts.len(),
+            input.tap_internal_key.map(|k| k.to_string())
+        );
+    }
+
+    // Get the Ark client - this has our key provider with cached keys
+    let client_arc = {
+        let maybe_client = ARK_CLIENT.try_get();
+        match maybe_client {
+            None => anyhow::bail!("Ark client not initialized"),
+            Some(client) => {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            }
         }
     };
 
+    // Get our identity keypair from the SDK's key provider
+    // We use get_offchain_address() which returns the identity address/vtxo,
+    // then extract the owner pubkey and look up the keypair
+    let (_ark_address, vtxo) = client_arc
+        .get_offchain_address()
+        .map_err(|e| anyhow::anyhow!("Failed to get offchain address: {}", e))?;
+
+    let identity_pk = vtxo.owner_pk();
+    let ark_keypair = client_arc
+        .get_keypair_for_pk(&identity_pk)
+        .map_err(|e| anyhow::anyhow!("Failed to get keypair from SDK: {}", e))?;
+
+    let ark_pubkey = ark_keypair.x_only_public_key().0;
+    tracing::info!("Ark identity pubkey (from SDK): {}", ark_pubkey);
+
     let secp = Secp256k1::new();
 
-    // Log our available keys for debugging
-    // This helps identify if the contract was created with the right key
-    if let Ok(ark_identity_pk) = crate::api::lendasat_api::get_ark_identity_pubkey().await {
-        tracing::info!(
-            "OUR ARK IDENTITY PUBKEY (should match contract's borrower_pk): {}",
-            ark_identity_pk
-        );
-    }
-    // Also log the Lendasat key for comparison
-    if let Ok(lendasat_pk) = crate::api::lendasat_api::lendasat_get_public_key().await {
-        tracing::info!(
-            "OUR LENDASAT PUBKEY (old/wrong key - should NOT match): {}",
-            lendasat_pk
-        );
-    }
+    // Sign each input using the SDK's sign_ark_transaction
+    // This handles script-path signing correctly
+    for input_idx in 0..num_inputs {
+        let kp = ark_keypair;
+        let sign_fn = |_input: &mut bitcoin::psbt::Input,
+                       msg: bitcoin::secp256k1::Message|
+         -> std::result::Result<
+            Vec<(
+                bitcoin::secp256k1::schnorr::Signature,
+                bitcoin::XOnlyPublicKey,
+            )>,
+            ark_core::Error,
+        > {
+            let sig = secp.sign_schnorr_no_aux_rand(&msg, &kp);
+            let pk = kp.x_only_public_key().0;
+            tracing::debug!("Signed with pubkey: {}", pk);
+            Ok(vec![(sig, pk)])
+        };
 
-    // Collect all witness UTXOs for prevouts calculation
-    let prevouts: Vec<_> = psbt
-        .inputs
-        .iter()
-        .map(|i| {
-            i.witness_utxo
-                .clone()
-                .ok_or_else(|| anyhow::anyhow!("Missing witness UTXO"))
-        })
-        .collect::<Result<Vec<_>>>()?;
+        sign_ark_transaction(sign_fn, &mut psbt, input_idx)
+            .map_err(|e| anyhow::anyhow!("Failed to sign input {}: {}", input_idx, e))?;
 
-    let mut signed_count = 0;
-    let mut failed_count = 0;
-
-    // Sign each input using the Ark key provider
-    for (idx, input) in psbt.inputs.iter_mut().enumerate() {
-        // Debug: Log all available PSBT input info
-        tracing::debug!(
-            "Input {}: tap_internal_key={:?}, tap_key_origins={} entries, partial_sigs={} entries",
-            idx,
-            input.tap_internal_key,
-            input.tap_key_origins.len(),
-            input.partial_sigs.len()
-        );
-
-        // Log tap_key_origins for debugging (may contain the key if tap_internal_key is missing)
-        if !input.tap_key_origins.is_empty() {
-            for (pk, (_, derivation)) in &input.tap_key_origins {
-                tracing::debug!(
-                    "Input {}: tap_key_origins entry: pk={}, path={:?}",
-                    idx,
-                    pk,
-                    derivation
-                );
-            }
-        }
-
-        // Try to find the taproot internal key from the PSBT input
-        // First try tap_internal_key, then fall back to tap_key_origins
-        let tap_key_to_use = input.tap_internal_key.or_else(|| {
-            // Fallback: try to get key from tap_key_origins (first entry)
-            if let Some(pk) = input.tap_key_origins.keys().next() {
-                tracing::info!(
-                    "Input {}: No tap_internal_key, using first tap_key_origins entry: {}",
-                    idx,
-                    pk
-                );
-                Some(*pk)
-            } else {
-                None
-            }
-        });
-
-        if let Some(tap_internal_key) = tap_key_to_use {
-            tracing::info!("Input {}: PSBT tap_internal_key: {}", idx, tap_internal_key);
-
-            // Use the Ark key provider to get the keypair for this public key
-            // The key provider will find the keypair if it was derived from our HD wallet
-            match client_arc.get_keypair_for_pk(&tap_internal_key) {
-                Ok(keypair) => {
-                    tracing::info!("Input {}: Found matching keypair in Ark key provider", idx);
-
-                    // Get sighash type
-                    let sighash_type = input
-                        .sighash_type
-                        .map(|t| t.taproot_hash_ty())
-                        .transpose()
-                        .map_err(|e| anyhow::anyhow!("Invalid sighash type: {}", e))?
-                        .unwrap_or(TapSighashType::Default);
-
-                    // Calculate sighash
-                    let mut sighash_cache = SighashCache::new(&psbt.unsigned_tx);
-                    let sighash = sighash_cache
-                        .taproot_key_spend_signature_hash(
-                            idx,
-                            &Prevouts::All(&prevouts),
-                            sighash_type,
-                        )
-                        .map_err(|e| anyhow::anyhow!("Failed to compute sighash: {}", e))?;
-
-                    // Sign with schnorr
-                    let msg = bitcoin::secp256k1::Message::from_digest_slice(&sighash[..])
-                        .map_err(|e| anyhow::anyhow!("Failed to create message: {}", e))?;
-                    let signature = secp.sign_schnorr_no_aux_rand(&msg, &keypair);
-
-                    // Store the taproot key signature
-                    input.tap_key_sig = Some(TapSignature {
-                        signature,
-                        sighash_type,
-                    });
-
-                    tracing::info!("Input {}: Successfully signed with Ark identity", idx);
-                    signed_count += 1;
-                }
-                Err(e) => {
-                    tracing::error!(
-                        "Input {}: FAILED - Could not find keypair for tap_internal_key {}: {}",
-                        idx,
-                        tap_internal_key,
-                        e
-                    );
-                    tracing::error!(
-                        "Input {}: This likely means the contract was created with a different borrower_pk than our Ark identity",
-                        idx
-                    );
-                    failed_count += 1;
-                }
-            }
-        } else {
-            tracing::warn!(
-                "Input {}: No tap_internal_key found in PSBT. Cannot sign this input.",
-                idx
-            );
-            tracing::warn!(
-                "Input {}: This may indicate the PSBT was created for a different key type or the server didn't set tap_internal_key",
-                idx
-            );
-            failed_count += 1;
-        }
+        tracing::info!("Input {}: Signed successfully via SDK", input_idx);
     }
 
-    // Summary logging
     tracing::info!(
-        "Ark PSBT signing complete: {} inputs signed, {} inputs failed",
-        signed_count,
-        failed_count
+        "Ark PSBT signing complete: {}/{} inputs signed via Ark SDK",
+        num_inputs,
+        num_inputs
     );
-
-    if signed_count == 0 && !psbt.inputs.is_empty() {
-        tracing::error!("FATAL: No inputs were signed! The claim transaction cannot be broadcast.");
-        tracing::error!(
-            "This usually means the contract's borrower_pk doesn't match our Ark identity."
-        );
-        tracing::error!(
-            "If this is an old contract created before the key fix, it cannot be claimed from this wallet."
-        );
-        tracing::error!("Contact LendaSat support for assistance with old contracts.");
-        anyhow::bail!(
-            "Failed to sign PSBT: No inputs could be signed. \
-            This contract may have been created with a different key. \
-            Old contracts created before the key fix cannot be claimed. \
-            Please contact LendaSat support."
-        );
-    }
 
     // Serialize the signed PSBT back to hex
     let signed_psbt_bytes = psbt.serialize();
     let signed_psbt_hex = hex::encode(signed_psbt_bytes);
-
-    tracing::info!(
-        "Ark PSBT signed successfully (signed {}/{} inputs)",
-        signed_count,
-        psbt.inputs.len()
-    );
 
     Ok(signed_psbt_hex)
 }

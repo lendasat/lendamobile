@@ -203,11 +203,11 @@ pub async fn send(address: String, amount: Amount) -> Result<Txid> {
                 let address = Address::from_str(address.as_str())?;
                 let rng = &mut StdRng::from_entropy();
 
-                // Select VTXOs like Arkade wallet does - sorted by expiry (soonest first)
-                // This ensures we use VTXOs that expire soonest, leaving fresh ones available
+                // Select VTXOs sorted by expiry (soonest first) like Arkade wallet
+                // This uses up older VTXOs first, leaving fresher ones available
                 let vtxo_outpoints = select_vtxos_for_amount(&client, amount).await?;
 
-                // Use the new method with specific VTXOs
+                // Use collaborative_redeem_with_vtxos to send with ordered VTXOs
                 let txid = client
                     .collaborative_redeem_with_vtxos(
                         rng,
@@ -249,11 +249,8 @@ pub async fn settle() -> Result<()> {
 }
 
 /// Select VTXOs for an onchain send, sorted by expiry (soonest first).
-/// This matches Arkade wallet behavior and ensures we use VTXOs expiring soonest first.
-///
-/// The ASP requires VTXOs to have a minimum expiry gap (typically ~30 days / 696 hours).
-/// We filter out VTXOs that don't meet this requirement, then sort by expiry ascending
-/// to use up VTXOs expiring soonest first (leaving fresher ones for later).
+/// This matches Arkade wallet behavior - uses VTXOs expiring soonest first,
+/// leaving fresher ones available for later use.
 async fn select_vtxos_for_amount(client: &ArkClient, amount: Amount) -> Result<Vec<OutPoint>> {
     // Get all VTXOs
     let (vtxo_list, _) = client
@@ -261,41 +258,17 @@ async fn select_vtxos_for_amount(client: &ArkClient, amount: Amount) -> Result<V
         .await
         .map_err(|e| anyhow!("Failed to list VTXOs: {e}"))?;
 
-    // ASP's minExpiryGap is ~696 hours (~29 days). Add a small buffer.
-    // VTXOs must have at least this much time remaining to be accepted.
-    const MIN_EXPIRY_GAP_SECONDS: i64 = 30 * 24 * 60 * 60; // 30 days in seconds
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_err(|e| anyhow!("System time is before Unix epoch: {e}"))?
-        .as_secs() as i64;
-    let min_expiry_time = now + MIN_EXPIRY_GAP_SECONDS;
+    // Get all spendable VTXOs (no expiry filtering - let the server validate)
+    let mut vtxos: Vec<_> = vtxo_list.spendable_offchain().collect();
 
-    // Get spendable VTXOs and filter to only those with enough remaining time
-    let mut vtxos: Vec<_> = vtxo_list
-        .spendable_offchain()
-        .filter(|v| v.expires_at > min_expiry_time)
-        .collect();
+    let total_available: Amount = vtxos.iter().map(|v| v.amount).sum();
 
-    let total_eligible: Amount = vtxos.iter().map(|v| v.amount).sum();
-
-    if total_eligible < amount {
-        // Not enough eligible VTXOs - check if settling would help
-        let total_all: Amount = vtxo_list.spendable_offchain().map(|v| v.amount).sum();
-        if total_all >= amount {
-            bail!(
-                "VTXOs are too close to expiry for onchain send. Please settle your balance first to refresh them. \
-                 (Need {} sats, have {} eligible, {} total)",
-                amount.to_sat(),
-                total_eligible.to_sat(),
-                total_all.to_sat()
-            );
-        } else {
-            bail!(
-                "Insufficient VTXOs for onchain send: need {}, have {}",
-                amount,
-                total_all
-            );
-        }
+    if total_available < amount {
+        bail!(
+            "Insufficient balance for onchain send: need {}, have {}",
+            amount,
+            total_available
+        );
     }
 
     // Sort by expiry ascending (soonest first) - like Arkade wallet

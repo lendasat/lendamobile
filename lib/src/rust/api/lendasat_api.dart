@@ -89,6 +89,16 @@ Future<Contract> lendasatGetContract({required String contractId}) =>
         .crateApiLendasatApiLendasatGetContract(contractId: contractId);
 
 /// Create a new loan contract by taking an offer.
+///
+/// IMPORTANT: This function uses the Ark identity public key as `borrower_pk`.
+/// This is critical because:
+/// 1. The collateral is sent to an Ark offchain address (VTXO)
+/// 2. VTXOs are locked to the Ark identity key
+/// 3. Claim PSBTs must be signed with the Ark identity key
+/// 4. Using the wrong key (e.g., Lendasat derivation path) causes claim failures
+///
+/// The Lendasat derivation path key is still used for authentication (sign_message),
+/// but collateral operations MUST use the Ark identity key.
 Future<Contract> lendasatCreateContract(
         {required String offerId,
         required double loanAmount,
@@ -215,6 +225,24 @@ Future<String> lendasatBroadcastRecoverTx(
         {required String contractId, required String signedTx}) =>
     RustLib.instance.api.crateApiLendasatApiLendasatBroadcastRecoverTx(
         contractId: contractId, signedTx: signedTx);
+
+/// Get the Ark identity public key (compressed, 33 bytes as hex).
+///
+/// This is the public key used for:
+/// - Ark offchain address derivation
+/// - VTXO ownership (collateral)
+/// - Signing claim PSBTs
+///
+/// IMPORTANT: This key MUST be used as `borrower_pk` when creating LendaSat contracts
+/// because the collateral is locked to this key, not the Lendasat derivation path key.
+///
+/// The Arkade wallet uses `svcWallet.identity.compressedPublicKey()` which returns
+/// this same key - derived at path m/83696968'/11811'/0/0.
+///
+/// We derive this key from the mnemonic using the same path that Ark uses:
+/// ARK_BASE_DERIVATION_PATH + "/0" = "m/83696968'/11811'/0/0"
+Future<String> getArkIdentityPubkey() =>
+    RustLib.instance.api.crateApiLendasatApiGetArkIdentityPubkey();
 
 @freezed
 sealed class AuthResult with _$AuthResult {

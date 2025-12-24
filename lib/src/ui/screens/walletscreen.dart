@@ -102,10 +102,91 @@ class WalletScreenState extends State<WalletScreen> {
     _loadBitcoinPriceData();
     _loadRecoveryStatus();
 
-    // Fetch exchange rates
+    // Fetch exchange rates and check for alpha warning
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CurrencyPreferenceService>().fetchExchangeRates();
+      _checkAndShowAlphaWarning();
     });
+  }
+
+  /// Check if alpha warning needs to be shown and display it
+  Future<void> _checkAndShowAlphaWarning() async {
+    final hasBeenShown = await SettingsService().hasAlphaWarningBeenShown();
+    if (!hasBeenShown && mounted) {
+      _showAlphaWarningSheet();
+    }
+  }
+
+  /// Show the alpha warning bottom sheet
+  void _showAlphaWarningSheet() {
+    arkBottomSheet(
+      context: context,
+      isDismissible: false,
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.amber.shade700,
+              size: 56,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              "Early Alpha Version",
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              "This wallet is in early alpha. Please only use amounts you can afford to lose.\n\n"
+              "This is not a stable wallet - we are actively experimenting and improving. "
+              "Features may change, and there may be bugs.\n\n"
+              "We accept no liability for any loss of funds or damages that may occur while using this application.",
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.8),
+                    height: 1.5,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  await SettingsService().setAlphaWarningShown();
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppTheme.cardRadiusMid,
+                  ),
+                ),
+                child: const Text(
+                  "I Understand",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
