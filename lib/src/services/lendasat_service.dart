@@ -520,10 +520,8 @@ class LendasatService extends ChangeNotifier {
 
     logger.i('Lendasat: Signing main Ark PSBT with Ark identity...');
 
-    // Sign the main Ark PSBT using the Ark identity (NOT the Lendasat keypair!)
-    // The collateral VTXO is locked to the Ark identity, so we must use that key.
-    // If this fails with "No tap_internal_key found", it means the contract was
-    // created with a different borrower_pk than our Ark identity.
+    // Sign using the Ark SDK's script-path signing (not key-path).
+    // The collateral VTXO is locked to the Ark identity at m/83696968'/11811'/0/0.
     final signedArkPsbt = await ark_api.signPsbtWithArkIdentity(
       psbtHex: arkResponse.arkPsbt,
     );

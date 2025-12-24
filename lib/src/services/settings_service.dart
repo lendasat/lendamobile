@@ -9,6 +9,7 @@ class SettingsService {
   static const String _boltzUrlKey = 'boltz_url';
   static const String _wordRecoverySetKey = 'word_recovery_set';
   static const String _userEmailKey = 'user_email';
+  static const String _alphaWarningShownKey = 'alpha_warning_shown';
 
   // Default values from environment variables
   static String get defaultEsploraUrl =>
@@ -143,5 +144,17 @@ class SettingsService {
   Future<bool> clearUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.remove(_userEmailKey);
+  }
+
+  // Check if alpha warning has been shown
+  Future<bool> hasAlphaWarningBeenShown() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_alphaWarningShownKey) ?? false;
+  }
+
+  // Mark alpha warning as shown
+  Future<bool> setAlphaWarningShown() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_alphaWarningShownKey, true);
   }
 }
