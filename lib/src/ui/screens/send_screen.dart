@@ -76,8 +76,8 @@ class SendScreenState extends State<SendScreen>
   // Estimated transaction size in vBytes (typical P2WPKH: 1 input, 2 outputs)
   static const int _estimatedTxVbytes = 140;
 
-  // Boltz submarine swap fee percentage (0.1% for paying Lightning invoices)
-  static const double _boltzFeePercent = 0.1;
+  // Boltz submarine swap fee percentage (0.25% for paying Lightning invoices)
+  static const double _boltzFeePercent = 0.25;
 
   // LNURL state
   LnurlPayParams? _lnurlParams;
@@ -217,8 +217,8 @@ class SendScreenState extends State<SendScreen>
           // Set default amount to minimum if no amount entered
           if (_satController.text.isEmpty || _satController.text == '0') {
             _satController.text = params.minSats.toString();
-            _btcController.text =
-                (params.minSats / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
+            _btcController.text = (params.minSats / BitcoinConstants.satsPerBtc)
+                .toStringAsFixed(8);
           }
           // Set description from LNURL metadata if available
           if (params.description != null && _description == null) {
@@ -310,7 +310,8 @@ class SendScreenState extends State<SendScreen>
     // Update amount fields if we extracted an amount
     if (amount != null && amount > 0) {
       _satController.text = amount.toString();
-      _btcController.text = (amount / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
+      _btcController.text =
+          (amount / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
     }
   }
 
@@ -485,7 +486,7 @@ class SendScreenState extends State<SendScreen>
   /// Calculate Boltz submarine swap fee for Lightning payments
   int _calculateBoltzFee(double amountSats) {
     if (!_isLightningPayment) return 0;
-    // Boltz charges 0.1% for submarine swaps (paying LN invoices)
+    // Boltz charges 0.25% for submarine swaps (paying LN invoices)
     return (amountSats * _boltzFeePercent / 100).round();
   }
 
@@ -639,7 +640,8 @@ class SendScreenState extends State<SendScreen>
       _hasValidAddress = _isValidAddress(address);
       if (amount != null && amount > 0) {
         _satController.text = amount.toString();
-        _btcController.text = (amount / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
+        _btcController.text =
+            (amount / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
       }
       if (description != null) {
         _description = description;
@@ -1092,8 +1094,9 @@ class SendScreenState extends State<SendScreen>
     final currencyService = context.watch<CurrencyPreferenceService>();
     final satsAvailable = widget.availableSats.toStringAsFixed(0);
     final fiatAvailable = _bitcoinPrice != null
-        ? currencyService
-            .formatAmount((widget.availableSats / BitcoinConstants.satsPerBtc) * _bitcoinPrice!)
+        ? currencyService.formatAmount(
+            (widget.availableSats / BitcoinConstants.satsPerBtc) *
+                _bitcoinPrice!)
         : '\$0.00';
 
     return Padding(
