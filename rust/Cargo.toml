@@ -11,10 +11,10 @@ anyhow = "1"
 base64 = "0.22"
 
 # SRP authentication
-# Using local fork with collaborative_redeem_with_vtxos for proper VTXO selection
-ark-bdk-wallet = { path = "/home/weltitob/lendasat/rust-sdk/ark-bdk-wallet" }
-ark-client = { path = "/home/weltitob/lendasat/rust-sdk/ark-client", default-features = false, features = ["tls-webpki-roots", "sqlite"] }
-ark-core = { path = "/home/weltitob/lendasat/rust-sdk/ark-core" }
+# Using lendasat fork with collaborative_redeem_with_vtxos for proper VTXO selection
+ark-bdk-wallet = { git = "https://github.com/lendasat/arkade-rust-sdk.git", branch = "feat/collaborative_redeem_with_vtxos" }
+ark-client = { git = "https://github.com/lendasat/arkade-rust-sdk.git", branch = "feat/collaborative_redeem_with_vtxos", default-features = false, features = ["tls-webpki-roots", "sqlite"] }
+ark-core = { git = "https://github.com/lendasat/arkade-rust-sdk.git", branch = "feat/collaborative_redeem_with_vtxos" }
 srp = "0.6.0"
 
 # LendaSwap SDK from GitHub (tag 0.0.61)
@@ -50,7 +50,7 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
-# Patch arkade-os secp256k1 to use our local version to avoid native library linking conflicts
+# Patch arkade-os secp256k1 to use our fork to avoid native library linking conflicts
 # Only patching secp256k1 - NOT patching ark-core/ark-rs/ark-rest so lendaswap keeps its own APIs
 [patch."https://github.com/arkade-os/rust-sdk"]
-ark-secp256k1 = { path = "/home/weltitob/lendasat/rust-sdk/ark-rust-secp256k1" }
+ark-secp256k1 = { git = "https://github.com/lendasat/arkade-rust-sdk.git", branch = "feat/collaborative_redeem_with_vtxos" }
