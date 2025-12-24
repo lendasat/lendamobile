@@ -231,56 +231,7 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Company Header
-              Container(
-                padding: const EdgeInsets.all(AppTheme.cardPadding),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      AppTheme.colorPrimaryGradient,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: AppTheme.cardRadiusBig,
-                  boxShadow: [AppTheme.boxShadowSmall],
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.business,
-                        size: 48,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.elementSpacing),
-                    Text(
-                      "COBLOX PTY LTD",
-                      style:
-                          Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                    ),
-                    Text(
-                      "ABN 86 624 756 467",
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppTheme.cardPadding),
-
-              // Contact Cards
+                // Contact Cards
               _buildContactCard(
                 context,
                 icon: Icons.location_on_outlined,
