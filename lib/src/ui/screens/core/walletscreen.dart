@@ -25,6 +25,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_image_text_button.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/crypto_info_item.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/price_widgets.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
@@ -156,31 +157,16 @@ class WalletScreenState extends State<WalletScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppTheme.cardPadding),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  await SettingsService().setAlphaWarningShown();
-                  if (mounted) {
-                    Navigator.of(context).pop();
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppTheme.cardRadiusMid,
-                  ),
-                ),
-                child: const Text(
-                  "I Understand",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
+            LongButtonWidget(
+              title: "I Understand",
+              customWidth: double.infinity,
+              customHeight: 56,
+              onTap: () async {
+                await SettingsService().setAlphaWarningShown();
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
             ),
             const SizedBox(height: AppTheme.elementSpacing),
           ],
