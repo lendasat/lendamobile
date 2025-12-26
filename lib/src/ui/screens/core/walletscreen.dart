@@ -20,7 +20,9 @@ import 'package:ark_flutter/src/ui/screens/transactions/send/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/settings.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/history/transaction_history_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
-import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart';
+import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart'
+    show PriceData; // Only import the data type, not the chart widget
+import 'package:ark_flutter/src/ui/widgets/wallet/wallet_mini_chart.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_image_text_button.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -35,7 +37,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
 
 /// Enum for balance type display
 enum BalanceType { pending, confirmed, total }
@@ -818,30 +819,26 @@ class WalletScreenState extends State<WalletScreen> {
     // Transform price data to historical balance value (balance at time × price)
     final balanceChartData = _bitcoinPriceData.map((priceData) {
       final balanceAtTime = _getBalanceAtTimestamp(priceData.time);
-      return PriceData(
-        time: priceData.time,
-        price: priceData.price * balanceAtTime,
+      return WalletChartData(
+        time: priceData.time.toDouble(),
+        value: priceData.price * balanceAtTime,
       );
     }).toList();
 
     // Append current state as the final point to ensure immediate visual updates for new transactions
     final currentBalance = _getSelectedBalance();
     final currentPrice = _getCurrentBtcPrice();
-    balanceChartData.add(PriceData(
-      time: DateTime.now().millisecondsSinceEpoch,
-      price: currentPrice * currentBalance,
+    balanceChartData.add(WalletChartData(
+      time: DateTime.now().millisecondsSinceEpoch.toDouble(),
+      value: currentPrice * currentBalance,
     ));
 
-    return SizedBox(
+    return WalletMiniChart(
+      data: balanceChartData,
+      lineColor: _isPriceChangePositive()
+          ? AppTheme.successColor
+          : AppTheme.errorColor,
       height: AppTheme.cardPadding * 10,
-      child: BitcoinPriceChart(
-        data: balanceChartData,
-        alpha: 255,
-        trackballActivationMode: null,
-        lineColor: _isPriceChangePositive()
-            ? AppTheme.successColor
-            : AppTheme.errorColor,
-      ),
     );
   }
 
@@ -1313,59 +1310,6 @@ class WalletScreenState extends State<WalletScreen> {
       hideAmounts: !userPrefs.balancesVisible,
       showBtcAsMain: currencyService.showCoinBalance,
       bitcoinPrice: _getCurrentBtcPrice(),
-    );
-  }
-}
-
-/// Widget for displaying the price chart in the wallet
-/// Extracted to reduce rebuild scope and improve performance
-class WalletChartWidget extends StatelessWidget {
-  final List<PriceData> priceData;
-  final bool isPositive;
-
-  const WalletChartWidget({
-    super.key,
-    required this.priceData,
-    required this.isPositive,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (priceData.isEmpty) {
-      return const SizedBox(height: 220);
-    }
-
-    return SizedBox(
-      height: 220,
-      child: SfCartesianChart(
-        enableAxisAnimation: false,
-        plotAreaBorderWidth: 0,
-        primaryXAxis: const CategoryAxis(
-          labelPlacement: LabelPlacement.onTicks,
-          edgeLabelPlacement: EdgeLabelPlacement.none,
-          isVisible: false,
-          majorGridLines: MajorGridLines(width: 0),
-          majorTickLines: MajorTickLines(width: 0),
-        ),
-        primaryYAxis: const NumericAxis(
-          plotOffset: 0,
-          edgeLabelPlacement: EdgeLabelPlacement.none,
-          isVisible: false,
-          majorGridLines: MajorGridLines(width: 0),
-          majorTickLines: MajorTickLines(width: 0),
-        ),
-        series: <CartesianSeries>[
-          SplineSeries<PriceData, double>(
-            dataSource: priceData,
-            animationDuration: 0,
-            xValueMapper: (PriceData data, _) => data.time.toDouble(),
-            yValueMapper: (PriceData data, _) => data.price,
-            color: isPositive ? AppTheme.successColor : AppTheme.errorColor,
-            width: 3,
-            splineType: SplineType.natural,
-          ),
-        ],
-      ),
     );
   }
 }
