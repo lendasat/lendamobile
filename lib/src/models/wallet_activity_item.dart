@@ -86,7 +86,7 @@ class SwapActivityItem implements WalletActivityItem {
   @override
   int get timestamp {
     try {
-      // Handle format like "2025-12-21 19:04:15.0 +00:00:00"
+      // Handle format like "2025-12-21 19:04:15.0 +00:00:00" or "2025-12-24 3:24:25.0 +00:00:00"
       String dateStr = swap.createdAt;
 
       // Remove the unusual timezone format (+00:00:00 or -00:00:00)
@@ -95,6 +95,22 @@ class SwapActivityItem implements WalletActivityItem {
         if (parts.isNotEmpty) {
           dateStr = parts[0].trim();
         }
+      }
+
+      // Split into date and time parts
+      final dateTimeParts = dateStr.split(' ');
+      if (dateTimeParts.length == 2) {
+        final datePart = dateTimeParts[0];
+        var timePart = dateTimeParts[1];
+
+        // Pad single-digit hour (e.g., "3:24:25" -> "03:24:25")
+        final timeComponents = timePart.split(':');
+        if (timeComponents.isNotEmpty && timeComponents[0].length == 1) {
+          timeComponents[0] = '0${timeComponents[0]}';
+          timePart = timeComponents.join(':');
+        }
+
+        dateStr = '$datePart $timePart';
       }
 
       // Replace space between date and time with 'T' for ISO format
