@@ -338,22 +338,17 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
                           style: TextStyle(color: Theme.of(context).hintColor),
                         ),
                       )
-                    : ValueListenableBuilder<PriceData?>(
-                        valueListenable: _trackballDataNotifier,
-                        builder: (context, trackballData, child) {
-                          final isPositive =
-                              _isPriceChangePositive(cachedData, trackballData);
-                          return BitcoinPriceChart(
-                            data: cachedData ?? [],
-                            trackballDataNotifier: _trackballDataNotifier,
-                            onChartTouchEnd: () =>
-                                _trackballDataNotifier.value = null,
-                            lineColor: isPositive ? Colors.green : Colors.red,
-                            // Key for forcing rebuild on time range change
-                            chartKey:
-                                'btc-chart-${_getTimeRangeKey(_selectedTimeRange)}',
-                          );
-                        },
+                    : BitcoinPriceChart(
+                        data: cachedData ?? [],
+                        trackballDataNotifier: _trackballDataNotifier,
+                        onChartTouchEnd: () =>
+                            _trackballDataNotifier.value = null,
+                        lineColor: _isPriceChangePositive(cachedData, null)
+                            ? Colors.green
+                            : Colors.red,
+                        // Key for forcing rebuild on time range change
+                        chartKey:
+                            'btc-chart-${_getTimeRangeKey(_selectedTimeRange)}',
                       ),
           ),
 
