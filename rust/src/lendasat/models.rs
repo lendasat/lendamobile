@@ -482,6 +482,11 @@ pub struct ClaimPsbtResponse {
 pub struct ArkClaimPsbtResponse {
     pub ark_psbt: String,
     pub checkpoint_psbts: Vec<String>,
+    /// The borrower public key that was used when creating the contract.
+    /// This MUST match the Ark identity key for signing to work.
+    pub borrower_pk: String,
+    /// The derivation path used for the borrower key (for reference).
+    pub derivation_path: Option<String>,
 }
 
 /// Response from Ark settle request

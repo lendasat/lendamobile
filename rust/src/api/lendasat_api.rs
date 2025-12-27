@@ -902,10 +902,12 @@ pub async fn lendasat_get_claim_ark_psbt(contract_id: String) -> Result<ArkClaim
 
     let url = format!("{}/api/contracts/{}/claim-ark", state.base_url, contract_id);
 
+    // Use a longer timeout - this involves communication with Ark server
     let response = state
         .http_client
         .get(&url)
         .headers(headers)
+        .timeout(std::time::Duration::from_secs(120)) // 2 minutes for Ark operations
         .send()
         .await
         .map_err(|e| anyhow!("Failed to get Ark claim PSBTs: {}", e))?;
@@ -948,11 +950,13 @@ pub async fn lendasat_broadcast_claim_ark_tx(
         checkpoint_psbts: signed_checkpoint_psbts,
     };
 
+    // Use a longer timeout for Ark broadcast - involves Ark server communication
     let response = state
         .http_client
         .post(&url)
         .headers(headers)
         .json(&request)
+        .timeout(std::time::Duration::from_secs(120)) // 2 minutes for Ark operations
         .send()
         .await
         .map_err(|e| anyhow!("Failed to broadcast Ark claim tx: {}", e))?;
@@ -993,10 +997,12 @@ pub async fn lendasat_get_settle_ark_psbt(contract_id: String) -> Result<SettleA
         state.base_url, contract_id
     );
 
+    // Use a longer timeout - this involves communication with Ark server
     let response = state
         .http_client
         .get(&url)
         .headers(headers)
+        .timeout(std::time::Duration::from_secs(120)) // 2 minutes for Ark operations
         .send()
         .await
         .map_err(|e| anyhow!("Failed to get settle Ark PSBTs: {}", e))?;
@@ -1039,11 +1045,13 @@ pub async fn lendasat_finish_settle_ark(
         forfeit_psbts: signed_forfeit_psbts,
     };
 
+    // Use a longer timeout for settlement - the Ark batch protocol can take time
     let response = state
         .http_client
         .post(&url)
         .headers(headers)
         .json(&request)
+        .timeout(std::time::Duration::from_secs(120)) // 2 minutes for Ark settlement
         .send()
         .await
         .map_err(|e| anyhow!("Failed to finish settle Ark: {}", e))?;

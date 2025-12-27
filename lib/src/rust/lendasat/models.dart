@@ -11,13 +11,26 @@ class ArkClaimPsbtResponse {
   final String arkPsbt;
   final List<String> checkpointPsbts;
 
+  /// The borrower public key that was used when creating the contract.
+  /// This MUST match the Ark identity key for signing to work.
+  final String borrowerPk;
+
+  /// The derivation path used for the borrower key (for reference).
+  final String? derivationPath;
+
   const ArkClaimPsbtResponse({
     required this.arkPsbt,
     required this.checkpointPsbts,
+    required this.borrowerPk,
+    this.derivationPath,
   });
 
   @override
-  int get hashCode => arkPsbt.hashCode ^ checkpointPsbts.hashCode;
+  int get hashCode =>
+      arkPsbt.hashCode ^
+      checkpointPsbts.hashCode ^
+      borrowerPk.hashCode ^
+      derivationPath.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -25,7 +38,9 @@ class ArkClaimPsbtResponse {
       other is ArkClaimPsbtResponse &&
           runtimeType == other.runtimeType &&
           arkPsbt == other.arkPsbt &&
-          checkpointPsbts == other.checkpointPsbts;
+          checkpointPsbts == other.checkpointPsbts &&
+          borrowerPk == other.borrowerPk &&
+          derivationPath == other.derivationPath;
 }
 
 /// Response from claim PSBT request
