@@ -100,7 +100,7 @@ class WalletScreenState extends State<WalletScreen> {
   void initState() {
     super.initState();
     logger.i("WalletScreen initialized with ASP ID: ${widget.aspId}");
-    fetchWalletData();
+    _initializeWalletData();
     _loadBitcoinPriceData();
     _loadRecoveryStatus();
 
@@ -109,6 +109,23 @@ class WalletScreenState extends State<WalletScreen> {
       context.read<CurrencyPreferenceService>().fetchExchangeRates();
       _checkAndShowAlphaWarning();
     });
+  }
+
+  /// Initialize wallet data with retry to ensure fresh data is loaded
+  /// The Ark SDK may need time to sync after connection, so we fetch twice
+  Future<void> _initializeWalletData() async {
+    // First fetch attempt
+    await fetchWalletData();
+
+    // If balance is still zero after initial fetch, the SDK might not be synced yet
+    // Retry after a short delay to ensure we get fresh data from the server
+    if (_totalBalance == 0 && _transactions.isEmpty && mounted) {
+      logger.i("Initial data appears empty, retrying after delay...");
+      await Future.delayed(const Duration(milliseconds: 1500));
+      if (mounted) {
+        await fetchWalletData();
+      }
+    }
   }
 
   /// Check if alpha warning needs to be shown and display it
