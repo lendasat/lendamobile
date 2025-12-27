@@ -834,8 +834,22 @@ extension ContractExtension on Contract {
 
   /// Get repayment progress (0.0 to 1.0).
   double get repaymentProgress {
+    // If loan is fully repaid, return 100%
+    if (status == ContractStatus.repaymentConfirmed ||
+        status == ContractStatus.closingByClaim) {
+      return 1.0;
+    }
+
+    // For closed contracts that were successfully repaid
+    if (status == ContractStatus.closed && balanceOutstanding <= 0) {
+      return 1.0;
+    }
+
     if (totalRepayment <= 0) return 0;
-    return totalPaid / totalRepayment;
+
+    // Calculate from installments, clamped to handle floating point issues
+    final progress = totalPaid / totalRepayment;
+    return progress.clamp(0.0, 1.0);
   }
 
   /// Get status display text.

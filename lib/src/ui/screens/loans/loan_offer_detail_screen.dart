@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'package:ark_flutter/theme.dart';
-import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
-import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
@@ -134,42 +132,16 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
         contract = await _waitForContractApproval(contract.id);
       }
 
-      // Now we have an approved contract with collateral info
+      // Navigate to contract detail screen with auto-pay enabled
+      // The contract detail screen will show a loader and send collateral automatically
       if (mounted) {
-        setState(() => _processingStep = 'Sending collateral...');
-      }
-
-      // Send collateral using effectiveCollateralSats (has initialCollateralSats fallback)
-      final collateralSats = BigInt.from(contract.effectiveCollateralSats);
-      final collateralAddress = contract.contractAddress!;
-
-      logger.i('[Loan] Sending $collateralSats sats to $collateralAddress');
-
-      final txid = await ark_api.send(
-        address: collateralAddress,
-        amountSats: collateralSats,
-      );
-
-      logger.i('[Loan] Collateral sent! TXID: $txid');
-
-      // Track analytics
-      await AnalyticsService().trackLoanTransaction(
-        amountSats: contract.effectiveCollateralSats,
-        type: 'borrow',
-        loanId: contract.id,
-        interestRate: widget.offer.interestRate,
-        durationDays: duration,
-      );
-
-      if (mounted) {
-        OverlayService()
-            .showSuccess('Collateral sent! Loan is being processed.');
-
-        // Navigate to contract detail - it will show live status updates
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => ContractDetailScreen(contractId: contract.id),
+            builder: (_) => ContractDetailScreen(
+              contractId: contract.id,
+              autoPayCollateral: true,
+            ),
           ),
         );
       }
