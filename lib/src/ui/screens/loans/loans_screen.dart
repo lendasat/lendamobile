@@ -939,9 +939,9 @@ class _ContractCard extends StatelessWidget {
                 ),
                 const SizedBox(height: AppTheme.cardPadding),
 
-                // Progress indicator or key metric
+                // Time remaining indicator
                 if (!contract.isClosed) ...[
-                  _buildProgressSection(context),
+                  _buildTimeRemaining(context),
                   const SizedBox(height: AppTheme.elementSpacing),
                 ],
 
@@ -971,6 +971,7 @@ class _ContractCard extends StatelessWidget {
 
   Widget _buildStatusBadge(BuildContext context, Color color) {
     return Container(
+      constraints: const BoxConstraints(maxWidth: 140),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
@@ -985,6 +986,8 @@ class _ContractCard extends StatelessWidget {
           fontSize: 10,
           letterSpacing: 0.5,
         ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
       ),
     );
   }
@@ -1013,27 +1016,47 @@ class _ContractCard extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressSection(BuildContext context) {
-    // Show a small progress bar for the loan duration
+  Widget _buildTimeRemaining(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final expiryDate = DateTime.parse(contract.expiry);
-    final createdDate = DateTime.parse(contract.createdAt);
-    final total = expiryDate.difference(createdDate).inDays;
-    final elapsed = DateTime.now().difference(createdDate).inDays;
-    final progress = (elapsed / (total > 0 ? total : 1)).clamp(0.0, 1.0);
+    final now = DateTime.now();
+    final remaining = expiryDate.difference(now);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    String timeText;
+    Color timeColor;
+
+    if (remaining.isNegative) {
+      timeText = 'Overdue';
+      timeColor = AppTheme.errorColor;
+    } else if (remaining.inDays > 0) {
+      timeText =
+          '${remaining.inDays} day${remaining.inDays == 1 ? '' : 's'} left';
+      timeColor = remaining.inDays <= 3
+          ? Colors.orange
+          : (isDarkMode ? AppTheme.white70 : AppTheme.black70);
+    } else if (remaining.inHours > 0) {
+      timeText =
+          '${remaining.inHours} hour${remaining.inHours == 1 ? '' : 's'} left';
+      timeColor = Colors.orange;
+    } else {
+      timeText = '${remaining.inMinutes} min left';
+      timeColor = AppTheme.errorColor;
+    }
+
+    return Row(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: progress,
-            backgroundColor:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
-            valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).colorScheme.primary),
-            minHeight: 4,
-          ),
+        Icon(
+          Icons.schedule_rounded,
+          size: 14,
+          color: timeColor,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          timeText,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: timeColor,
+                fontWeight: FontWeight.w600,
+              ),
         ),
       ],
     );

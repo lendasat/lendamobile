@@ -57,8 +57,8 @@ class WalletScreen extends StatefulWidget {
 }
 
 class WalletScreenState extends State<WalletScreen> {
-  // Loading states
-  bool _isBalanceLoading = false;
+  // Loading states - start as true since we fetch data in initState
+  bool _isBalanceLoading = true;
   bool _isTransactionFetching = true;
   List<Transaction> _transactions = [];
 
@@ -115,7 +115,11 @@ class WalletScreenState extends State<WalletScreen> {
   Future<void> _checkAndShowAlphaWarning() async {
     final hasBeenShown = await SettingsService().hasAlphaWarningBeenShown();
     if (!hasBeenShown && mounted) {
-      _showAlphaWarningSheet();
+      // Mark as shown immediately to prevent race conditions
+      await SettingsService().setAlphaWarningShown();
+      if (mounted) {
+        _showAlphaWarningSheet();
+      }
     }
   }
 
@@ -162,11 +166,8 @@ class WalletScreenState extends State<WalletScreen> {
               title: "I Understand",
               customWidth: double.infinity,
               customHeight: 56,
-              onTap: () async {
-                await SettingsService().setAlphaWarningShown();
-                if (mounted) {
-                  Navigator.of(context).pop();
-                }
+              onTap: () {
+                Navigator.of(context).pop();
               },
             ),
             const SizedBox(height: AppTheme.elementSpacing),
