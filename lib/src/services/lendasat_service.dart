@@ -518,6 +518,12 @@ class LendasatService extends ChangeNotifier {
     logger.d(
         'Lendasat: Main Ark PSBT (first 100 chars): ${arkResponse.arkPsbt.substring(0, arkResponse.arkPsbt.length > 100 ? 100 : arkResponse.arkPsbt.length)}...');
 
+    // Log the borrower_pk from contract for debugging key mismatch issues
+    logger.w(
+        'Lendasat: Contract borrower_pk (expected signer): ${arkResponse.borrowerPk}');
+    logger.i(
+        'Lendasat: Contract derivation_path: ${arkResponse.derivationPath ?? "not set"}');
+
     logger.i('Lendasat: Signing main Ark PSBT with Ark identity...');
 
     // Sign using the Ark SDK's script-path signing (not key-path).
