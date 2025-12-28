@@ -56,7 +56,8 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
     final double balanceValue = double.tryParse(widget.balance) ?? 0.0;
     final bitcoinPrice = widget.bitcoinPrice ?? 0;
     final currencyEquivalent =
-        (balanceValue / BitcoinConstants.satsPerBtc * bitcoinPrice).toStringAsFixed(2);
+        (balanceValue / BitcoinConstants.satsPerBtc * bitcoinPrice)
+            .toStringAsFixed(2);
 
     return GlassContainer(
       height: AppTheme.cardPadding * 2.75,
@@ -135,7 +136,11 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
           // Tap Interaction
           Material(
             color: Colors.transparent,
-            child: InkWell(onTap: widget.onTap),
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius:
+                  BorderRadius.circular(AppTheme.cardPadding * 2.75 / 3),
+            ),
           ),
         ],
       ),
