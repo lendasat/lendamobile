@@ -787,35 +787,6 @@ pub async fn lendasat_get_claim_psbt(
 
     Ok(claim_response)
 }
-
-/// Sign a PSBT using the Lendasat wallet keypair.
-///
-/// This mirrors the iframe wallet-bridge `signPsbt` behavior:
-/// - Takes PSBT hex, collateral descriptor, and borrower public key
-/// - Verifies borrower_pk matches our wallet's key (warns if mismatch)
-/// - Signs all inputs with our keypair
-/// - Returns the signed PSBT hex
-pub async fn lendasat_sign_psbt(
-    psbt_hex: String,
-    collateral_descriptor: String,
-    borrower_pk: String,
-) -> Result<String> {
-    let lock = get_state_lock();
-    let guard = lock.read().await;
-    let state = guard
-        .as_ref()
-        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
-
-    auth::sign_psbt(
-        &psbt_hex,
-        &collateral_descriptor,
-        &borrower_pk,
-        &state.data_dir,
-        state.network,
-    )
-    .await
-}
-
 /// Finalize a signed PSBT and extract the raw transaction.
 ///
 /// CRITICAL: This step was missing and caused broadcast failures!
@@ -1209,7 +1180,7 @@ pub async fn get_ark_identity_pubkey() -> Result<String> {
     use std::sync::Arc;
 
     // Get the Ark client
-    let client_arc: Arc<ark_client::Client<crate::state::UnifiedKeyProvider>> = {
+    let client_arc: Arc<crate::state::ArkClient> = {
         let client_lock = ARK_CLIENT
             .try_get()
             .ok_or_else(|| anyhow!("Ark client not initialized"))?;

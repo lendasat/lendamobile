@@ -65,11 +65,13 @@ class GlassContainer extends StatelessWidget {
         width: width,
         padding: padding,
         decoration: BoxDecoration(
-          // Solid colors for better performance and cleaner look
+          // Semi-transparent colors - nested containers will appear darker
           color: customColor ??
               (Theme.of(context).brightness == Brightness.light
                   ? Colors.white.withValues(alpha: 0.9)
-                  : const Color(0xFF2A2A2A)), // Solid dark grey for dark mode
+                  : const Color(0xFF2A2A2A).withValues(
+                      alpha:
+                          0.7)), // Semi-transparent dark grey - nested containers get darker
           borderRadius: radius,
           // Performance optimization: only apply shadows when needed
           boxShadow: customShadow != null
