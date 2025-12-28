@@ -518,15 +518,14 @@ class LendasatService extends ChangeNotifier {
     logger.d(
         'Lendasat: Main Ark PSBT (first 100 chars): ${arkResponse.arkPsbt.substring(0, arkResponse.arkPsbt.length > 100 ? 100 : arkResponse.arkPsbt.length)}...');
 
-    // Log the borrower_pk from contract for debugging key mismatch issues
-    logger.w(
-        'Lendasat: Contract borrower_pk (expected signer): ${arkResponse.borrowerPk}');
+    // Log contract info for debugging
+    logger.i('Lendasat: Contract borrower_pk: ${arkResponse.borrowerPk}');
     logger.i(
         'Lendasat: Contract derivation_path: ${arkResponse.derivationPath ?? "not set"}');
 
     logger.i('Lendasat: Signing main Ark PSBT with Ark identity...');
 
-    // Sign using the Ark SDK's script-path signing (not key-path).
+    // Sign using the Ark SDK's identity (same as Arkade wallet's identity.sign())
     // The collateral VTXO is locked to the Ark identity at m/83696968'/11811'/0/0.
     final signedArkPsbt = await ark_api.signPsbtWithArkIdentity(
       psbtHex: arkResponse.arkPsbt,
@@ -587,15 +586,15 @@ class LendasatService extends ChangeNotifier {
     );
 
     logger.i(
-        'Lendasat: Got settle Ark PSBTs (${settleResponse.forfeitPsbts.length} forfeits), signing with Ark identity...');
+        'Lendasat: Got settle Ark PSBTs (${settleResponse.forfeitPsbts.length} forfeits)');
+    logger.i('Lendasat: Contract userPk: ${settleResponse.userPk}');
 
     // Convert intent proof from BASE64 to HEX for signing
     final intentProofHex = await lendasat_api.lendasatPsbtBase64ToHex(
       base64Psbt: settleResponse.intentProof,
     );
 
-    // Sign the intent proof PSBT using Ark identity (NOT Lendasat key!)
-    // The collateral VTXOs are locked to the Ark identity, so we must use that key.
+    // Sign the intent proof PSBT using Ark identity (same as Arkade wallet)
     final signedIntentHex = await ark_api.signPsbtWithArkIdentity(
       psbtHex: intentProofHex,
     );
@@ -608,7 +607,7 @@ class LendasatService extends ChangeNotifier {
     logger.i(
         'Lendasat: Intent proof signed, now signing ${settleResponse.forfeitPsbts.length} forfeit PSBTs...');
 
-    // Sign all forfeit PSBTs with Ark identity (same key needed)
+    // Sign all forfeit PSBTs with Ark identity
     final signedForfeitPsbtsBase64 = <String>[];
     for (int i = 0; i < settleResponse.forfeitPsbts.length; i++) {
       final forfeitPsbtBase64 = settleResponse.forfeitPsbts[i];
@@ -618,7 +617,7 @@ class LendasatService extends ChangeNotifier {
         base64Psbt: forfeitPsbtBase64,
       );
 
-      // Sign with Ark identity (NOT Lendasat key!)
+      // Sign with Ark identity (same as Arkade wallet)
       logger.d(
           'Lendasat: Signing forfeit PSBT ${i + 1}/${settleResponse.forfeitPsbts.length}...');
       final signedForfeitHex = await ark_api.signPsbtWithArkIdentity(

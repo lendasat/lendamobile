@@ -9,7 +9,6 @@ use crate::ark::mnemonic_file::{LENDASAT_DERIVATION_PATH, read_mnemonic_file};
 use anyhow::{Result, anyhow};
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use bitcoin::Network;
-use bitcoin::PrivateKey;
 use bitcoin::bip32::{DerivationPath, Xpriv};
 use bitcoin::consensus::encode::serialize_hex;
 use bitcoin::hashes::{Hash, sha256};
@@ -17,7 +16,6 @@ use bitcoin::key::{Keypair, Secp256k1};
 use bitcoin::psbt::Psbt;
 use bitcoin::secp256k1::Message;
 use bitcoin::secp256k1::ecdsa::Signature;
-use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::OnceLock;
 use tokio::sync::RwLock;
@@ -138,91 +136,6 @@ pub async fn clear_cached_keypair() {
     let lock = get_keypair_lock();
     let mut guard = lock.write().await;
     *guard = None;
-}
-
-/// Sign a PSBT using the Lendasat private key.
-///
-/// This function mirrors the iframe wallet-bridge `signPsbt` behavior:
-/// 1. Parse the PSBT from hex
-/// 2. Verify the borrower_pk matches our public key (warning if not)
-/// 3. Sign all inputs with our keypair
-/// 4. Return the signed PSBT as hex
-///
-/// # Arguments
-/// * `psbt_hex` - The PSBT encoded as hex string
-/// * `collateral_descriptor` - The collateral descriptor (for context/logging)
-/// * `borrower_pk` - The borrower public key (for verification)
-/// * `data_dir` - Path to the app's data directory
-/// * `network` - Bitcoin network
-///
-/// # Returns
-/// The signed PSBT as hex string
-pub async fn sign_psbt(
-    psbt_hex: &str,
-    _collateral_descriptor: &str,
-    borrower_pk: &str,
-    data_dir: &str,
-    network: Network,
-) -> Result<String> {
-    // Get our keypair
-    let keypair = get_or_derive_keypair(data_dir, network).await?;
-    let secp = Secp256k1::new();
-
-    // Get our public key as hex for comparison
-    let our_pk_bytes = keypair.public_key().serialize();
-    let our_pk_hex = hex::encode(our_pk_bytes);
-
-    // Verify borrower_pk matches our key (warn if not, but don't fail)
-    // This mirrors the iframe behavior which logs a warning
-    if borrower_pk != our_pk_hex {
-        tracing::warn!(
-            "Warning: Borrower PK {} doesn't match wallet PK {}",
-            &borrower_pk[..std::cmp::min(16, borrower_pk.len())],
-            &our_pk_hex[..16]
-        );
-    }
-
-    // Parse PSBT from hex
-    let psbt_bytes = hex::decode(psbt_hex).map_err(|e| anyhow!("Invalid PSBT hex: {}", e))?;
-    let mut psbt =
-        Psbt::deserialize(&psbt_bytes).map_err(|e| anyhow!("Failed to parse PSBT: {}", e))?;
-
-    tracing::debug!("Signing PSBT with {} inputs", psbt.inputs.len());
-
-    // Create a key map for signing
-    // The PSBT sign method requires a type that implements GetKey
-    // We use a HashMap<PublicKey, PrivateKey>
-    let private_key = PrivateKey::new(keypair.secret_key(), network);
-    let public_key = bitcoin::PublicKey::new(keypair.public_key());
-
-    let mut key_map: HashMap<bitcoin::PublicKey, PrivateKey> = HashMap::new();
-    key_map.insert(public_key, private_key);
-
-    // Sign all inputs that match our key
-    match psbt.sign(&key_map, &secp) {
-        Ok(signed_inputs) => {
-            tracing::debug!("Signed {} inputs", signed_inputs.len());
-        }
-        Err((signed_inputs, errors)) => {
-            // Partial success - some inputs may not need our key
-            tracing::debug!(
-                "Signed {} inputs, {} could not be signed (may not need our key)",
-                signed_inputs.len(),
-                errors.len()
-            );
-            for (idx, err) in &errors {
-                tracing::debug!("Input {} signing note: {:?}", idx, err);
-            }
-        }
-    }
-
-    // Serialize the signed PSBT back to hex
-    let signed_psbt_bytes = psbt.serialize();
-    let signed_psbt_hex = hex::encode(signed_psbt_bytes);
-
-    tracing::info!("PSBT signed successfully");
-
-    Ok(signed_psbt_hex)
 }
 
 /// Finalize a signed PSBT and extract the raw transaction.

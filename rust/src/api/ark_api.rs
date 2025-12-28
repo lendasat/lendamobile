@@ -373,7 +373,7 @@ pub async fn sign_psbt_with_ark_identity(psbt_hex: String) -> Result<String> {
         }
     };
 
-    // Get our identity keypair from the SDK's key provider
+    // Get our identity keypair from the SDK's key provider (same as Arkade's identity.sign())
     // We use get_offchain_address() which returns the identity address/vtxo,
     // then extract the owner pubkey and look up the keypair
     let (_ark_address, vtxo) = client_arc

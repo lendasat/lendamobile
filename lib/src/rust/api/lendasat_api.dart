@@ -131,22 +131,6 @@ Future<ClaimPsbtResponse> lendasatGetClaimPsbt(
     RustLib.instance.api.crateApiLendasatApiLendasatGetClaimPsbt(
         contractId: contractId, feeRate: feeRate);
 
-/// Sign a PSBT using the Lendasat wallet keypair.
-///
-/// This mirrors the iframe wallet-bridge `signPsbt` behavior:
-/// - Takes PSBT hex, collateral descriptor, and borrower public key
-/// - Verifies borrower_pk matches our wallet's key (warns if mismatch)
-/// - Signs all inputs with our keypair
-/// - Returns the signed PSBT hex
-Future<String> lendasatSignPsbt(
-        {required String psbtHex,
-        required String collateralDescriptor,
-        required String borrowerPk}) =>
-    RustLib.instance.api.crateApiLendasatApiLendasatSignPsbt(
-        psbtHex: psbtHex,
-        collateralDescriptor: collateralDescriptor,
-        borrowerPk: borrowerPk);
-
 /// Finalize a signed PSBT and extract the raw transaction.
 ///
 /// CRITICAL: This step was missing and caused broadcast failures!
@@ -236,11 +220,8 @@ Future<String> lendasatBroadcastRecoverTx(
 /// IMPORTANT: This key MUST be used as `borrower_pk` when creating LendaSat contracts
 /// because the collateral is locked to this key, not the Lendasat derivation path key.
 ///
-/// The Arkade wallet uses `svcWallet.identity.compressedPublicKey()` which returns
-/// this same key - derived at path m/83696968'/11811'/0/0.
-///
-/// We derive this key from the mnemonic using the same path that Ark uses:
-/// ARK_BASE_DERIVATION_PATH + "/0" = "m/83696968'/11811'/0/0"
+/// This function gets the pubkey directly from the Ark SDK to ensure it matches
+/// the key used for signing. The SDK manages which key index is currently active.
 Future<String> getArkIdentityPubkey() =>
     RustLib.instance.api.crateApiLendasatApiGetArkIdentityPubkey();
 
