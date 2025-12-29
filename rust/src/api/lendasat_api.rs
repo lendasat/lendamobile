@@ -1173,31 +1173,39 @@ async fn get_ark_address() -> Result<String> {
 /// IMPORTANT: This key MUST be used as `borrower_pk` when creating LendaSat contracts
 /// because the collateral is locked to this key, not the Lendasat derivation path key.
 ///
-/// This function gets the pubkey directly from the Ark SDK to ensure it matches
-/// the key used for signing. The SDK manages which key index is currently active.
+/// Derives the STABLE identity key at path m/83696968'/11811'/0/0 from the mnemonic.
+/// This is equivalent to Arkade wallet's `SingleKey.fromHex(privateKey)` - always
+/// the same key, unlike vtxo.owner_pk() which changes when VTXOs are spent/created.
 pub async fn get_ark_identity_pubkey() -> Result<String> {
-    use crate::state::ARK_CLIENT;
-    use std::sync::Arc;
+    use crate::ark::mnemonic_file::{ARK_BASE_DERIVATION_PATH, read_mnemonic_file};
+    use bitcoin::key::Keypair;
+    use bitcoin::secp256k1::Secp256k1;
 
-    // Get the Ark client
-    let client_arc: Arc<crate::state::ArkClient> = {
-        let client_lock = ARK_CLIENT
-            .try_get()
-            .ok_or_else(|| anyhow!("Ark client not initialized"))?;
-        let guard = client_lock.read();
-        Arc::clone(&*guard)
+    // Get the data_dir and network from Lendasat state
+    let (data_dir, network) = {
+        let lock = get_state_lock();
+        let guard = lock.read().await;
+        let state = guard
+            .as_ref()
+            .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+        (state.data_dir.clone(), state.network)
     };
 
-    // Get the current offchain address from the SDK - this gives us the identity key
-    let (_ark_address, vtxo) = client_arc
-        .get_offchain_address()
-        .map_err(|e| anyhow!("Failed to get offchain address from SDK: {}", e))?;
+    // Read mnemonic and derive the identity key at index 0
+    let mnemonic = read_mnemonic_file(&data_dir)?
+        .ok_or_else(|| anyhow!("No wallet found - mnemonic file missing"))?;
 
-    // Get the owner pubkey (x-only, 32 bytes)
-    let identity_pk = vtxo.owner_pk();
+    // Derive at path m/83696968'/11811'/0/0 (Ark base path + index 0)
+    let identity_path = format!("{}/0", ARK_BASE_DERIVATION_PATH);
+    let xpriv =
+        crate::ark::mnemonic_file::derive_xpriv_at_path(&mnemonic, &identity_path, network)?;
+
+    // Create keypair from the derived key
+    let secp = Secp256k1::new();
+    let keypair = Keypair::from_secret_key(&secp, &xpriv.private_key);
+    let identity_pk = keypair.x_only_public_key().0;
 
     // Convert x-only pubkey to compressed pubkey (add 02 prefix for even y)
-    // The x-only pubkey from Ark is the x-coordinate only, we need to add the prefix
     let x_only_bytes = identity_pk.serialize();
     let mut compressed_bytes = [0u8; 33];
     compressed_bytes[0] = 0x02; // Even y-coordinate prefix (standard for Taproot x-only keys)
@@ -1205,7 +1213,8 @@ pub async fn get_ark_identity_pubkey() -> Result<String> {
     let pubkey_hex = hex::encode(compressed_bytes);
 
     tracing::info!(
-        "Ark identity pubkey from SDK: {} (x-only: {})",
+        "Ark STABLE identity pubkey (path {}): {} (x-only: {})",
+        identity_path,
         &pubkey_hex[..16],
         identity_pk
     );

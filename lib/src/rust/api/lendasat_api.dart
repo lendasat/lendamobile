@@ -220,8 +220,9 @@ Future<String> lendasatBroadcastRecoverTx(
 /// IMPORTANT: This key MUST be used as `borrower_pk` when creating LendaSat contracts
 /// because the collateral is locked to this key, not the Lendasat derivation path key.
 ///
-/// This function gets the pubkey directly from the Ark SDK to ensure it matches
-/// the key used for signing. The SDK manages which key index is currently active.
+/// Derives the STABLE identity key at path m/83696968'/11811'/0/0 from the mnemonic.
+/// This is equivalent to Arkade wallet's `SingleKey.fromHex(privateKey)` - always
+/// the same key, unlike vtxo.owner_pk() which changes when VTXOs are spent/created.
 Future<String> getArkIdentityPubkey() =>
     RustLib.instance.api.crateApiLendasatApiGetArkIdentityPubkey();
 

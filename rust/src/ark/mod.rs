@@ -13,7 +13,7 @@ use crate::ark::mnemonic_file::{
 use crate::ark::storage::InMemoryDb;
 use crate::state::{ARK_CLIENT, ESPLORA_URL, UnifiedKeyProvider};
 use anyhow::{Result, anyhow};
-use ark_client::{Bip32KeyProvider, OfflineClient, SqliteSwapStorage};
+use ark_client::{Bip32KeyProvider, DEFAULT_GAP_LIMIT, OfflineClient, SqliteSwapStorage};
 use bitcoin::Network;
 use bitcoin::bip32::{DerivationPath, Xpriv};
 use bitcoin::key::{Keypair, Secp256k1};
@@ -229,6 +229,12 @@ pub async fn setup_client_hd(
     .connect()
     .await
     .map_err(|err| anyhow!("Failed to connect to Ark server at '{}': {}", server, err))?;
+
+    // Discover existing keys/VTXOs using BIP44-style gap limit scan
+    // This is critical for restoring balance after app restart
+    if let Err(error) = client.discover_keys(DEFAULT_GAP_LIMIT).await {
+        tracing::warn!(?error, "Failed during key discovery");
+    }
 
     let info = client.server_info.clone();
 

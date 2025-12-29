@@ -1,5 +1,6 @@
 use anyhow::Result;
 use bitcoin::Network;
+use bitcoin::key::Keypair;
 use nostr::ToBech32;
 use std::str::FromStr;
 
@@ -336,11 +337,9 @@ pub struct Info {
 /// This matches exactly how Arkade wallet signs PSBTs - using the SDK's
 /// identity.sign() equivalent functionality.
 pub async fn sign_psbt_with_ark_identity(psbt_hex: String) -> Result<String> {
-    use crate::state::ARK_CLIENT;
     use ark_core::send::sign_ark_transaction;
     use bitcoin::psbt::Psbt;
     use bitcoin::secp256k1::Secp256k1;
-    use std::sync::Arc;
 
     // Parse PSBT from hex
     let psbt_bytes =
@@ -349,7 +348,10 @@ pub async fn sign_psbt_with_ark_identity(psbt_hex: String) -> Result<String> {
         .map_err(|e| anyhow::anyhow!("Failed to parse PSBT: {}", e))?;
 
     let num_inputs = psbt.inputs.len();
-    tracing::info!("Signing Ark PSBT with {} inputs using Ark SDK", num_inputs);
+    tracing::info!(
+        "Signing Ark PSBT with {} inputs using stable identity key",
+        num_inputs
+    );
 
     // Log PSBT details for debugging
     for (idx, input) in psbt.inputs.iter().enumerate() {
@@ -361,32 +363,41 @@ pub async fn sign_psbt_with_ark_identity(psbt_hex: String) -> Result<String> {
         );
     }
 
-    // Get the Ark client - this has our key provider with cached keys
-    let client_arc = {
-        let maybe_client = ARK_CLIENT.try_get();
-        match maybe_client {
-            None => anyhow::bail!("Ark client not initialized"),
-            Some(client) => {
-                let guard = client.read();
-                Arc::clone(&*guard)
-            }
-        }
+    // Get our STABLE identity keypair at path m/83696968'/11811'/0/0 (equivalent to Arkade's SingleKey)
+    // This key NEVER changes, unlike vtxo.owner_pk() which changes with each VTXO
+    // This ensures the signing key matches the borrower_pk used in contract creation
+    let ark_keypair = {
+        use crate::ark::mnemonic_file::{ARK_BASE_DERIVATION_PATH, read_mnemonic_file};
+
+        // Get data_dir from Lendasat state (which must be initialized for LendaSat operations)
+        let (data_dir, network) = {
+            let lock = crate::api::lendasat_api::get_state_lock();
+            let guard = lock.blocking_read();
+            let state = guard.as_ref().ok_or_else(|| {
+                anyhow::anyhow!("Lendasat not initialized - cannot get identity key")
+            })?;
+            (state.data_dir.clone(), state.network)
+        };
+
+        // Read mnemonic and derive the identity key at index 0
+        let mnemonic = read_mnemonic_file(&data_dir)?
+            .ok_or_else(|| anyhow::anyhow!("No wallet found - mnemonic file missing"))?;
+
+        // Derive at path m/83696968'/11811'/0/0 (Ark base path + index 0)
+        let identity_path = format!("{}/0", ARK_BASE_DERIVATION_PATH);
+        let xpriv =
+            crate::ark::mnemonic_file::derive_xpriv_at_path(&mnemonic, &identity_path, network)?;
+
+        // Create keypair from the derived key
+        let secp = Secp256k1::new();
+        Keypair::from_secret_key(&secp, &xpriv.private_key)
     };
 
-    // Get our identity keypair from the SDK's key provider (same as Arkade's identity.sign())
-    // We use get_offchain_address() which returns the identity address/vtxo,
-    // then extract the owner pubkey and look up the keypair
-    let (_ark_address, vtxo) = client_arc
-        .get_offchain_address()
-        .map_err(|e| anyhow::anyhow!("Failed to get offchain address: {}", e))?;
-
-    let identity_pk = vtxo.owner_pk();
-    let ark_keypair = client_arc
-        .get_keypair_for_pk(&identity_pk)
-        .map_err(|e| anyhow::anyhow!("Failed to get keypair from SDK: {}", e))?;
-
     let ark_pubkey = ark_keypair.x_only_public_key().0;
-    tracing::info!("Ark identity pubkey (from SDK): {}", ark_pubkey);
+    tracing::info!(
+        "Ark STABLE identity pubkey (path m/83696968'/11811'/0/0): {}",
+        ark_pubkey
+    );
 
     let secp = Secp256k1::new();
 

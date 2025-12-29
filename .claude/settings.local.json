@@ -36,7 +36,14 @@
       "Bash(git commit:*)",
       "Bash(find:*)",
       "Bash(dart run:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(export JAVA_HOME=\"/mnt/c/Program Files/Android/Android Studio/jbr\")",
+      "Bash(echo:*)",
+      "Bash(update-alternatives:*)",
+      "Bash(dpkg:*)",
+      "Bash(sudo apt install:*)",
+      "Bash(\"/mnt/c/Program Files/Android/Android Studio/jbr/bin/java.exe\" -version)",
+      "Bash(powershell.exe -Command \"cd ''''C:\\\\Users\\\\tobia\\\\StudioProjects\\\\lendamobile''''; flutter build apk --debug\")"
     ],
     "deny": [],
     "ask": []

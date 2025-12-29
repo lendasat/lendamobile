@@ -1,4 +1,5 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/logger/hybrid_logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
@@ -17,6 +18,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class SettingsView extends StatefulWidget {
   final String aspId;
@@ -33,11 +35,46 @@ class SettingsView extends StatefulWidget {
 class SettingsViewState extends State<SettingsView> {
   final SettingsService _settingsService = SettingsService();
   bool _wordRecoverySet = false;
+  bool _showDeveloperOptions = false;
+  bool _isExportingLogs = false;
 
   @override
   void initState() {
     super.initState();
     _loadRecoveryStatus();
+  }
+
+  Future<void> _exportLogs() async {
+    setState(() => _isExportingLogs = true);
+    try {
+      final logFile = await HybridOutput.logFilePath();
+      if (await logFile.exists()) {
+        final fileSize = await logFile.length();
+        final fileSizeKb = (fileSize / 1024).toStringAsFixed(1);
+
+        await Share.shareXFiles(
+          [XFile(logFile.path)],
+          subject: 'Lenda App Logs',
+          text: 'App logs (${fileSizeKb}KB) - Please attach to bug report',
+        );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No log file found')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to export logs: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isExportingLogs = false);
+      }
+    }
   }
 
   Future<void> _loadRecoveryStatus() async {
@@ -385,6 +422,71 @@ class SettingsViewState extends State<SettingsView> {
                 ),
                 onTap: _showResetWalletDialog,
               ),
+
+              const SizedBox(height: AppTheme.cardPadding),
+
+              // Developer Options
+              ArkListTile(
+                leading: RoundedButtonWidget(
+                  iconData: Icons.code_rounded,
+                  onTap: () => setState(
+                      () => _showDeveloperOptions = !_showDeveloperOptions),
+                  size: AppTheme.iconSize * 1.5,
+                  buttonType: ButtonType.transparent,
+                ),
+                text: 'Developer Options',
+                trailing: Icon(
+                  _showDeveloperOptions
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: AppTheme.iconSize,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.white60
+                      : AppTheme.black60,
+                ),
+                onTap: () => setState(
+                    () => _showDeveloperOptions = !_showDeveloperOptions),
+              ),
+
+              // Developer Options Content
+              if (_showDeveloperOptions) ...[
+                Padding(
+                  padding: const EdgeInsets.only(left: AppTheme.cardPadding),
+                  child: Column(
+                    children: [
+                      // Export Logs
+                      ArkListTile(
+                        leading: _isExportingLogs
+                            ? const SizedBox(
+                                width: AppTheme.iconSize * 1.5,
+                                height: AppTheme.iconSize * 1.5,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              )
+                            : RoundedButtonWidget(
+                                iconData: Icons.description_outlined,
+                                onTap: _exportLogs,
+                                size: AppTheme.iconSize * 1.5,
+                                buttonType: ButtonType.transparent,
+                              ),
+                        text: 'Export Logs',
+                        trailing: Icon(
+                          Icons.share_rounded,
+                          size: AppTheme.iconSize * 0.75,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppTheme.white60
+                              : AppTheme.black60,
+                        ),
+                        onTap: _isExportingLogs ? null : _exportLogs,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               const SizedBox(height: AppTheme.cardPadding * 2),
             ],
