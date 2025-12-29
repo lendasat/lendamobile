@@ -132,15 +132,14 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
         contract = await _waitForContractApproval(contract.id);
       }
 
-      // Navigate to contract detail screen with auto-pay enabled
-      // The contract detail screen will show a loader and send collateral automatically
+      // Navigate to contract detail screen
+      // User will manually click "Pay Collateral" button to send funds
       if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => ContractDetailScreen(
               contractId: contract.id,
-              autoPayCollateral: true,
             ),
           ),
         );

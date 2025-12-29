@@ -27,14 +27,9 @@ import 'package:url_launcher/url_launcher.dart';
 class ContractDetailScreen extends StatefulWidget {
   final String contractId;
 
-  /// If true, automatically send collateral when contract is in approved state.
-  /// Used when coming from the loan taking flow to provide seamless UX.
-  final bool autoPayCollateral;
-
   const ContractDetailScreen({
     super.key,
     required this.contractId,
-    this.autoPayCollateral = false,
   });
 
   @override
@@ -53,18 +48,9 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   String? _errorMessage;
   Timer? _pollTimer;
 
-  // Auto-pay collateral state
-  bool _isAutoPayingCollateral = false;
-  String _autoPayStep = 'Loading contract...';
-  bool _autoPayTriggered = false; // Prevent multiple triggers
-
   @override
   void initState() {
     super.initState();
-    // Show loading overlay immediately if coming from loan flow
-    if (widget.autoPayCollateral) {
-      _isAutoPayingCollateral = true;
-    }
     _loadContract();
   }
 
@@ -90,9 +76,6 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
         // Start polling if contract is in a pending state
         _startPollingIfNeeded();
-
-        // Auto-pay collateral if conditions are met
-        _tryAutoPayCollateral();
       }
     } catch (e) {
       logger.e('Error loading contract: $e');
@@ -100,88 +83,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         setState(() {
           _errorMessage = e.toString();
           _isLoading = false;
-          _isAutoPayingCollateral = false; // Dismiss overlay on error
         });
       }
-    }
-  }
-
-  /// Automatically pay collateral if coming from loan flow and contract is ready.
-  void _tryAutoPayCollateral() {
-    if (_autoPayTriggered) return; // Already triggered
-    if (!widget.autoPayCollateral) return; // Not in auto-pay mode
-    if (_contract == null) {
-      // Contract failed to load, dismiss overlay
-      setState(() => _isAutoPayingCollateral = false);
-      return;
-    }
-
-    // Check if contract is ready for collateral payment
-    final canPayCollateral = _contract!.status == ContractStatus.approved &&
-        _contract!.contractAddress != null &&
-        _contract!.effectiveCollateralSats > 0;
-
-    if (canPayCollateral) {
-      _autoPayTriggered = true;
-      _executeAutoPayCollateral();
-    } else {
-      // Contract not ready for auto-pay, dismiss overlay
-      setState(() => _isAutoPayingCollateral = false);
-    }
-  }
-
-  /// Execute automatic collateral payment without confirmation dialog.
-  Future<void> _executeAutoPayCollateral() async {
-    if (_contract == null) return;
-
-    setState(() {
-      _isAutoPayingCollateral = true;
-      _autoPayStep = 'Adding collateral...';
-    });
-
-    // Suppress payment notifications during collateral send
-    PaymentOverlayService().startSuppression();
-
-    try {
-      final collateralSats = BigInt.from(_contract!.effectiveCollateralSats);
-      final collateralAddress = _contract!.contractAddress!;
-
-      logger
-          .i('[Loan] Auto-sending $collateralSats sats to $collateralAddress');
-
-      final txid = await ark_api.send(
-        address: collateralAddress,
-        amountSats: collateralSats,
-      );
-
-      logger.i('[Loan] Collateral sent! TXID: $txid');
-
-      // Track analytics
-      await AnalyticsService().trackLoanTransaction(
-        amountSats: _contract!.effectiveCollateralSats,
-        type: 'borrow',
-        loanId: _contract!.id,
-        interestRate: _contract!.interestRate,
-        durationDays: _contract!.durationDays,
-      );
-
-      if (mounted) {
-        OverlayService()
-            .showSuccess('Collateral sent! Loan is being processed.');
-        await _refreshContract();
-      }
-    } catch (e) {
-      logger.e('[Loan] Error auto-sending collateral: $e');
-      if (mounted) {
-        OverlayService().showError('Failed to add collateral: ${e.toString()}');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isAutoPayingCollateral = false);
-      }
-      Future.delayed(const Duration(seconds: 5), () {
-        PaymentOverlayService().stopSuppression();
-      });
     }
   }
 
@@ -584,31 +487,16 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       appBar: BitNetAppBar(
         context: context,
         text: 'Contract Details',
-        onTap: _isAutoPayingCollateral ? null : () => Navigator.pop(context),
+        onTap: () => Navigator.pop(context),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed:
-                _isLoading || _isAutoPayingCollateral ? null : _loadContract,
+            onPressed: _isLoading ? null : _loadContract,
           ),
         ],
       ),
-      body: _isLoading || _isAutoPayingCollateral
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  if (_isAutoPayingCollateral) ...[
-                    const SizedBox(height: AppTheme.cardPadding),
-                    Text(
-                      _autoPayStep,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ],
-                ],
-              ),
-            )
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
               ? _buildErrorView()
               : _contract == null
@@ -1234,7 +1122,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         _contract!.effectiveCollateralSats > 0;
     final buttonWidth =
         MediaQuery.of(context).size.width - AppTheme.cardPadding * 2;
-    final isPayingCollateral = _isActionLoading || _isAutoPayingCollateral;
+    final isPayingCollateral = _isActionLoading;
 
     return Column(
       children: [
