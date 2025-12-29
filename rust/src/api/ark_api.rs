@@ -366,32 +366,30 @@ pub async fn sign_psbt_with_ark_identity(psbt_hex: String) -> Result<String> {
     // Get our STABLE identity keypair at path m/83696968'/11811'/0/0 (equivalent to Arkade's SingleKey)
     // This key NEVER changes, unlike vtxo.owner_pk() which changes with each VTXO
     // This ensures the signing key matches the borrower_pk used in contract creation
-    let ark_keypair = {
-        use crate::ark::mnemonic_file::{ARK_BASE_DERIVATION_PATH, read_mnemonic_file};
+    use crate::ark::mnemonic_file::{ARK_BASE_DERIVATION_PATH, read_mnemonic_file};
 
-        // Get data_dir from Lendasat state (which must be initialized for LendaSat operations)
-        let (data_dir, network) = {
-            let lock = crate::api::lendasat_api::get_state_lock();
-            let guard = lock.blocking_read();
-            let state = guard.as_ref().ok_or_else(|| {
-                anyhow::anyhow!("Lendasat not initialized - cannot get identity key")
-            })?;
-            (state.data_dir.clone(), state.network)
-        };
-
-        // Read mnemonic and derive the identity key at index 0
-        let mnemonic = read_mnemonic_file(&data_dir)?
-            .ok_or_else(|| anyhow::anyhow!("No wallet found - mnemonic file missing"))?;
-
-        // Derive at path m/83696968'/11811'/0/0 (Ark base path + index 0)
-        let identity_path = format!("{}/0", ARK_BASE_DERIVATION_PATH);
-        let xpriv =
-            crate::ark::mnemonic_file::derive_xpriv_at_path(&mnemonic, &identity_path, network)?;
-
-        // Create keypair from the derived key
-        let secp = Secp256k1::new();
-        Keypair::from_secret_key(&secp, &xpriv.private_key)
+    // Get data_dir from Lendasat state (which must be initialized for LendaSat operations)
+    let (data_dir, network) = {
+        let lock = crate::api::lendasat_api::get_state_lock();
+        let guard = lock.read().await;
+        let state = guard
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Lendasat not initialized - cannot get identity key"))?;
+        (state.data_dir.clone(), state.network)
     };
+
+    // Read mnemonic and derive the identity key at index 0
+    let mnemonic = read_mnemonic_file(&data_dir)?
+        .ok_or_else(|| anyhow::anyhow!("No wallet found - mnemonic file missing"))?;
+
+    // Derive at path m/83696968'/11811'/0/0 (Ark base path + index 0)
+    let identity_path = format!("{}/0", ARK_BASE_DERIVATION_PATH);
+    let xpriv =
+        crate::ark::mnemonic_file::derive_xpriv_at_path(&mnemonic, &identity_path, network)?;
+
+    // Create keypair from the derived key
+    let secp_for_key = Secp256k1::new();
+    let ark_keypair = Keypair::from_secret_key(&secp_for_key, &xpriv.private_key);
 
     let ark_pubkey = ark_keypair.x_only_public_key().0;
     tracing::info!(
