@@ -55,12 +55,16 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
   // Auto-pay collateral state
   bool _isAutoPayingCollateral = false;
-  String _autoPayStep = 'Adding collateral...';
+  String _autoPayStep = 'Loading contract...';
   bool _autoPayTriggered = false; // Prevent multiple triggers
 
   @override
   void initState() {
     super.initState();
+    // Show loading overlay immediately if coming from loan flow
+    if (widget.autoPayCollateral) {
+      _isAutoPayingCollateral = true;
+    }
     _loadContract();
   }
 
@@ -96,6 +100,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         setState(() {
           _errorMessage = e.toString();
           _isLoading = false;
+          _isAutoPayingCollateral = false; // Dismiss overlay on error
         });
       }
     }
@@ -105,7 +110,11 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   void _tryAutoPayCollateral() {
     if (_autoPayTriggered) return; // Already triggered
     if (!widget.autoPayCollateral) return; // Not in auto-pay mode
-    if (_contract == null) return;
+    if (_contract == null) {
+      // Contract failed to load, dismiss overlay
+      setState(() => _isAutoPayingCollateral = false);
+      return;
+    }
 
     // Check if contract is ready for collateral payment
     final canPayCollateral = _contract!.status == ContractStatus.approved &&
@@ -115,6 +124,9 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     if (canPayCollateral) {
       _autoPayTriggered = true;
       _executeAutoPayCollateral();
+    } else {
+      // Contract not ready for auto-pay, dismiss overlay
+      setState(() => _isAutoPayingCollateral = false);
     }
   }
 
@@ -581,41 +593,27 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _errorMessage != null
-                  ? _buildErrorView()
-                  : _contract == null
-                      ? _buildNotFoundView()
-                      : _buildContractDetails(),
-          // Auto-pay collateral overlay
-          if (_isAutoPayingCollateral)
-            Container(
-              color: Colors.black.withValues(alpha: 0.7),
-              child: Center(
-                child: GlassContainer(
-                  padding: const EdgeInsets.all(AppTheme.cardPadding * 2),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(height: AppTheme.cardPadding),
-                      Text(
-                        _autoPayStep,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
+      body: _isLoading || _isAutoPayingCollateral
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  if (_isAutoPayingCollateral) ...[
+                    const SizedBox(height: AppTheme.cardPadding),
+                    Text(
+                      _autoPayStep,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ],
               ),
-            ),
-        ],
-      ),
+            )
+          : _errorMessage != null
+              ? _buildErrorView()
+              : _contract == null
+                  ? _buildNotFoundView()
+                  : _buildContractDetails(),
     );
   }
 

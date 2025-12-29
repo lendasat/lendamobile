@@ -3,7 +3,6 @@ pub mod client;
 pub mod esplora;
 pub mod mnemonic_file;
 pub mod storage;
-pub mod tx_metadata;
 
 use crate::ark::esplora::EsploraClient;
 use crate::ark::mnemonic_file::{
