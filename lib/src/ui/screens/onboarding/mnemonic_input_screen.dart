@@ -467,9 +467,9 @@ class _MnemonicInputScreenState extends State<MnemonicInputScreen> {
           fontSize: 16,
         ),
         decoration: InputDecoration(
-          hintText: '${index + 1}.',
+          hintText: 'Enter word',
           hintStyle: TextStyle(
-            color: Theme.of(context).hintColor,
+            color: Theme.of(context).hintColor.withValues(alpha: 0.5),
             fontSize: 16,
           ),
           prefixIcon: Container(

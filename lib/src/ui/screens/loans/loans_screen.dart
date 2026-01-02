@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
@@ -23,12 +25,13 @@ class LoansScreen extends StatefulWidget {
   State<LoansScreen> createState() => _LoansScreenState();
 }
 
-class _LoansScreenState extends State<LoansScreen> {
+class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   final LendasatService _lendasatService = LendasatService();
   String _searchQuery = '';
 
   bool _isLoading = true;
   String? _errorMessage;
+  Timer? _autoRefreshTimer;
 
   // Debug info
   String? _debugPubkey;
@@ -38,7 +41,31 @@ class _LoansScreenState extends State<LoansScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeLendasat();
+
+    // Auto-refresh every 30 seconds when there are active contracts
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted && _lendasatService.activeContracts.isNotEmpty) {
+        _refresh();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _autoRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh data when app comes back to foreground
+    if (state == AppLifecycleState.resumed && mounted && !_isLoading) {
+      _refresh();
+    }
   }
 
   Future<void> _initializeLendasat() async {
@@ -66,35 +93,15 @@ class _LoansScreenState extends State<LoansScreen> {
       }
 
       // Try to load data
-      try {
-        if (_lendasatService.isAuthenticated) {
-          await Future.wait([
-            _lendasatService.refreshOffers(),
-            _lendasatService.refreshContracts(),
-          ]);
-        } else {
-          // Try to load offers (may require auth depending on API)
-          await _lendasatService.refreshOffers();
-        }
-      } catch (e) {
-        // Check if this is a 401 error - token expired
-        if (_isUnauthorizedError(e)) {
-          logger.i('Token expired, re-authenticating...');
-          await _autoAuthenticate();
-          // Retry loading data after re-authentication
-          if (_lendasatService.isAuthenticated) {
-            try {
-              await Future.wait([
-                _lendasatService.refreshOffers(),
-                _lendasatService.refreshContracts(),
-              ]);
-            } catch (retryError) {
-              logger.w('Could not load data after re-auth: $retryError');
-            }
-          }
-        } else {
-          // Log but don't fail for other errors
-          logger.w('Could not load initial data: $e');
+      await _loadData();
+
+      // If data is empty after initial load, retry after a short delay
+      // This handles the case where Ark keypair derivation is still in progress
+      if (_lendasatService.offers.isEmpty && mounted) {
+        logger.i('Lendasat: Initial data empty, retrying after delay...');
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          await _loadData();
         }
       }
     } catch (e) {
@@ -103,6 +110,41 @@ class _LoansScreenState extends State<LoansScreen> {
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  /// Load offers and contracts data.
+  Future<void> _loadData() async {
+    try {
+      if (_lendasatService.isAuthenticated) {
+        await Future.wait([
+          _lendasatService.refreshOffers(),
+          _lendasatService.refreshContracts(),
+        ]);
+      } else {
+        // Try to load offers (may require auth depending on API)
+        await _lendasatService.refreshOffers();
+      }
+    } catch (e) {
+      // Check if this is a 401 error - token expired
+      if (_isUnauthorizedError(e)) {
+        logger.i('Token expired, re-authenticating...');
+        await _autoAuthenticate();
+        // Retry loading data after re-authentication
+        if (_lendasatService.isAuthenticated) {
+          try {
+            await Future.wait([
+              _lendasatService.refreshOffers(),
+              _lendasatService.refreshContracts(),
+            ]);
+          } catch (retryError) {
+            logger.w('Could not load data after re-auth: $retryError');
+          }
+        }
+      } else {
+        // Log but don't fail for other errors
+        logger.w('Could not load data: $e');
       }
     }
   }
