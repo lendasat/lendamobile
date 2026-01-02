@@ -34,7 +34,7 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
   void initState() {
     super.initState();
     _trackballDataNotifier = ValueNotifier<PriceData?>(null);
-    _loadData();
+    _loadAllData();
   }
 
   @override
@@ -43,6 +43,64 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
     super.dispose();
   }
 
+  /// Load all time ranges in parallel for instant switching.
+  Future<void> _loadAllData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    // Load the selected time range first for quick display
+    try {
+      final data = await fetchBitcoinPriceData(_selectedTimeRange);
+      data.sort((a, b) => a.time.compareTo(b.time));
+
+      if (mounted) {
+        setState(() {
+          _dataCache[_selectedTimeRange] = data;
+          _isLoading = false;
+          _trackballDataNotifier.value = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+      return; // Don't load others if first one fails
+    }
+
+    // Load remaining time ranges in parallel (background)
+    final remainingRanges =
+        TimeRange.values.where((r) => r != _selectedTimeRange).toList();
+
+    // Fire off all requests in parallel without awaiting
+    for (final range in remainingRanges) {
+      _loadSingleRange(range);
+    }
+  }
+
+  /// Load a single time range (used for background loading).
+  Future<void> _loadSingleRange(TimeRange range) async {
+    if (_dataCache.containsKey(range)) return;
+
+    try {
+      final data = await fetchBitcoinPriceData(range);
+      data.sort((a, b) => a.time.compareTo(b.time));
+
+      if (mounted) {
+        setState(() {
+          _dataCache[range] = data;
+        });
+      }
+    } catch (e) {
+      // Silently fail for background loads - user can retry by selecting
+    }
+  }
+
+  /// Load data for current selection (fallback if not cached).
   Future<void> _loadData() async {
     if (_dataCache.containsKey(_selectedTimeRange)) {
       setState(() {
@@ -62,16 +120,20 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
       final data = await fetchBitcoinPriceData(_selectedTimeRange);
       data.sort((a, b) => a.time.compareTo(b.time));
 
-      setState(() {
-        _dataCache[_selectedTimeRange] = data;
-        _isLoading = false;
-        _trackballDataNotifier.value = null;
-      });
+      if (mounted) {
+        setState(() {
+          _dataCache[_selectedTimeRange] = data;
+          _isLoading = false;
+          _trackballDataNotifier.value = null;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 

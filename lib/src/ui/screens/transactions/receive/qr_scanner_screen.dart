@@ -6,6 +6,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/qr_scanner_overlay.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -129,14 +130,16 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       // Switch camera button
                       GestureDetector(
                         onTap: () => cameraController.switchCamera(),
-                        child: const Icon(Icons.camera_rear),
+                        child: const Icon(CupertinoIcons.switch_camera),
                       ),
 
                       // Torch toggle button
                       GestureDetector(
                         onTap: _toggleTorch,
                         child: Icon(
-                          _torchEnabled ? Icons.flash_on : Icons.flash_off,
+                          _torchEnabled
+                              ? CupertinoIcons.bolt_fill
+                              : CupertinoIcons.bolt_slash_fill,
                           color: _torchEnabled
                               ? AppTheme.colorBitcoin
                               : AppTheme.white90,
@@ -146,7 +149,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       // Pick from gallery button
                       GestureDetector(
                         onTap: _pickImageAndScan,
-                        child: const Icon(Icons.image),
+                        child: const Icon(CupertinoIcons.photo_fill),
                       ),
                     ],
                   ),
