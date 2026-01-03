@@ -441,6 +441,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get date => 'Data';
 
   @override
+  String get time => 'Ora';
+
+  @override
+  String get transactionVolume => 'Volume della Transazione';
+
+  @override
   String get confirmedAt => 'Confermato il';
 
   @override
@@ -1279,4 +1285,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sendFeedback => 'Invia feedback';
+
+  @override
+  String get sender => 'Mittente';
+
+  @override
+  String get receiver => 'Destinatario';
+
+  @override
+  String get scan => 'Scansiona';
 }

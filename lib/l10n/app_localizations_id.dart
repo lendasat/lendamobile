@@ -437,6 +437,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get date => 'Tanggal';
 
   @override
+  String get time => 'Waktu';
+
+  @override
+  String get transactionVolume => 'Volume Transaksi';
+
+  @override
   String get confirmedAt => 'Dikonfirmasi Pada';
 
   @override
@@ -1274,4 +1280,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get sendFeedback => 'Kirim Umpan Balik';
+
+  @override
+  String get sender => 'Pengirim';
+
+  @override
+  String get receiver => 'Penerima';
+
+  @override
+  String get scan => 'Pindai';
 }

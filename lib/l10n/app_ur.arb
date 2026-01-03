@@ -361,5 +361,10 @@
   "failed": "ناکام",
   "confirmSwap": "سواپ کی تصدیق",
   "unknownError": "نامعلوم خرابی",
-  "sendFeedback": "فیڈبیک بھیجیں"
+  "sendFeedback": "فیڈبیک بھیجیں",
+  "time": "وقت",
+  "transactionVolume": "ٹرانزیکشن کی مقدار",
+  "sender": "بھیجنے والا",
+  "receiver": "وصول کنندہ",
+  "scan": "اسکین"
 }

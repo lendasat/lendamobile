@@ -443,6 +443,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get date => 'Datum';
 
   @override
+  String get time => 'Uhrzeit';
+
+  @override
+  String get transactionVolume => 'Transaktionsvolumen';
+
+  @override
   String get confirmedAt => 'Bestätigt am';
 
   @override
@@ -1280,4 +1286,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sendFeedback => 'Feedback senden';
+
+  @override
+  String get sender => 'Absender';
+
+  @override
+  String get receiver => 'Empfänger';
+
+  @override
+  String get scan => 'Scannen';
 }

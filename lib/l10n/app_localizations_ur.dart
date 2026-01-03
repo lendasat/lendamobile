@@ -437,6 +437,12 @@ class AppLocalizationsUr extends AppLocalizations {
   String get date => 'تاریخ';
 
   @override
+  String get time => 'وقت';
+
+  @override
+  String get transactionVolume => 'ٹرانزیکشن کی مقدار';
+
+  @override
   String get confirmedAt => 'تصدیق کی گئی تاریخ';
 
   @override
@@ -1274,4 +1280,13 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get sendFeedback => 'فیڈبیک بھیجیں';
+
+  @override
+  String get sender => 'بھیجنے والا';
+
+  @override
+  String get receiver => 'وصول کنندہ';
+
+  @override
+  String get scan => 'اسکین';
 }

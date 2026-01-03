@@ -198,6 +198,8 @@
   "confirmed": "Confirmed",
   "pending": "Pending",
   "date": "Date",
+  "time": "Time",
+  "transactionVolume": "Transaction Volume",
   "confirmedAt": "Confirmed At",
   "transactionPendingFundsWillBeNonReversibleAfterSettlement": "Transaction pending. Funds will be non-reversible after settlement.",
   "settle": "SETTLE",
@@ -469,5 +471,8 @@
   "failed": "Failed",
   "confirmSwap": "Confirm Swap",
   "unknownError": "Unknown error",
-  "sendFeedback": "Send Feedback"
+  "sendFeedback": "Send Feedback",
+  "sender": "Sender",
+  "receiver": "Receiver",
+  "scan": "Scan"
 }

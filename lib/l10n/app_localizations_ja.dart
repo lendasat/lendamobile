@@ -429,6 +429,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get date => '日付';
 
   @override
+  String get time => '時間';
+
+  @override
+  String get transactionVolume => '取引量';
+
+  @override
   String get confirmedAt => '確認日時';
 
   @override
@@ -1263,4 +1269,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sendFeedback => 'フィードバックを送信';
+
+  @override
+  String get sender => '送信者';
+
+  @override
+  String get receiver => '受信者';
+
+  @override
+  String get scan => 'スキャン';
 }

@@ -198,6 +198,8 @@
   "confirmed": "Confirmed",
   "pending": "Pending",
   "date": "Datum",
+  "time": "Uhrzeit",
+  "transactionVolume": "Transaktionsvolumen",
   "confirmedAt": "Bestätigt am",
   "transactionPendingFundsWillBeNonReversibleAfterSettlement": "Transaktion ausstehend. Nach der Abwicklung sind die Gelder nicht mehr rückgängig zu machen.",
   "settle": "ABWICKELN",
@@ -393,5 +395,8 @@
   "failed": "Fehlgeschlagen",
   "confirmSwap": "Swap bestätigen",
   "unknownError": "Unbekannter Fehler",
-  "sendFeedback": "Feedback senden"
+  "sendFeedback": "Feedback senden",
+  "sender": "Absender",
+  "receiver": "Empfänger",
+  "scan": "Scannen"
 }

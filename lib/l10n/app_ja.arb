@@ -198,6 +198,8 @@
   "confirmed": "Confirmed",
   "pending": "Pending",
   "date": "日付",
+  "time": "時間",
+  "transactionVolume": "取引量",
   "confirmedAt": "確認日時",
   "transactionPendingFundsWillBeNonReversibleAfterSettlement": "トランザクションは保留中です。完了後は資金を取り消すことはできません。",
   "settle": "完了",
@@ -361,5 +363,8 @@
   "failed": "失敗",
   "confirmSwap": "スワップを確認",
   "unknownError": "不明なエラー",
-  "sendFeedback": "フィードバックを送信"
+  "sendFeedback": "フィードバックを送信",
+  "sender": "送信者",
+  "receiver": "受信者",
+  "scan": "スキャン"
 }

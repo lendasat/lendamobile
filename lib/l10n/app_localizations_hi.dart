@@ -437,6 +437,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get date => 'तारीख';
 
   @override
+  String get time => 'समय';
+
+  @override
+  String get transactionVolume => 'लेनदेन राशि';
+
+  @override
   String get confirmedAt => 'पुष्ट किया गया समय';
 
   @override
@@ -1274,4 +1280,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get sendFeedback => 'प्रतिक्रिया भेजें';
+
+  @override
+  String get sender => 'भेजने वाला';
+
+  @override
+  String get receiver => 'प्राप्तकर्ता';
+
+  @override
+  String get scan => 'स्कैन';
 }

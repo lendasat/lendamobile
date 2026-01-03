@@ -427,6 +427,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get date => '日期';
 
   @override
+  String get time => '时间';
+
+  @override
+  String get transactionVolume => '交易金额';
+
+  @override
   String get confirmedAt => '确认时间';
 
   @override
@@ -1260,4 +1266,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sendFeedback => '发送反馈';
+
+  @override
+  String get sender => '发送者';
+
+  @override
+  String get receiver => '接收者';
+
+  @override
+  String get scan => '扫描';
 }

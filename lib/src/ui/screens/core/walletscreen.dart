@@ -691,7 +691,8 @@ class WalletScreenState extends State<WalletScreen> {
       statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
       // Navigation bar (bottom) - match scaffold background
       systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
-      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarIconBrightness:
+          isDark ? Brightness.light : Brightness.dark,
     );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -728,11 +729,13 @@ class WalletScreenState extends State<WalletScreen> {
                           const SizedBox(height: AppTheme.cardPadding * 1.5),
                           _buildBalanceDisplay(),
                           if (_lockedCollateralSats > 0) ...[
-                            const SizedBox(height: AppTheme.elementSpacing * 0.5),
+                            const SizedBox(
+                                height: AppTheme.elementSpacing * 0.5),
                             _buildLockedCollateralDisplay(),
                           ],
                           if (_boardingBalanceSats > 0) ...[
-                            const SizedBox(height: AppTheme.elementSpacing * 0.5),
+                            const SizedBox(
+                                height: AppTheme.elementSpacing * 0.5),
                             _buildBoardingBalanceDisplay(),
                           ],
                           const SizedBox(height: AppTheme.elementSpacing),
@@ -964,7 +967,8 @@ class WalletScreenState extends State<WalletScreen> {
                                 .textTheme
                                 .displayLarge
                                 ?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                           ),
                           const SizedBox(width: 8),
@@ -985,7 +989,10 @@ class WalletScreenState extends State<WalletScreen> {
                                               ?.rates[currencyService.code] ??
                                           1.0))
                               : '${currencyService.symbol}****.**',
-                          style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .displayLarge
+                              ?.copyWith(
                                 color: Theme.of(context).colorScheme.onSurface,
                               ),
                         ),
@@ -1286,7 +1293,7 @@ class WalletScreenState extends State<WalletScreen> {
           // Scan button (replaces Sell)
           Flexible(
             child: BitNetImageWithTextButton(
-              "Scan",
+              AppLocalizations.of(context)?.scan ?? "Scan",
               _handleScan,
               width: AppTheme.cardPadding * 2.5,
               height: AppTheme.cardPadding * 2.5,

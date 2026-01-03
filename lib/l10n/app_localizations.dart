@@ -926,6 +926,18 @@ abstract class AppLocalizations {
   /// **'Date'**
   String get date;
 
+  /// No description provided for @time.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get time;
+
+  /// No description provided for @transactionVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction Volume'**
+  String get transactionVolume;
+
   /// No description provided for @confirmedAt.
   ///
   /// In en, this message translates to:
@@ -2539,6 +2551,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send Feedback'**
   String get sendFeedback;
+
+  /// No description provided for @sender.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender'**
+  String get sender;
+
+  /// No description provided for @receiver.
+  ///
+  /// In en, this message translates to:
+  /// **'Receiver'**
+  String get receiver;
+
+  /// No description provided for @scan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get scan;
 }
 
 class _AppLocalizationsDelegate

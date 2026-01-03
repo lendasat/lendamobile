@@ -198,6 +198,8 @@
   "confirmed": "Confirmed",
   "pending": "Pending",
   "date": "日期",
+  "time": "时间",
+  "transactionVolume": "交易金额",
   "confirmedAt": "确认时间",
   "transactionPendingFundsWillBeNonReversibleAfterSettlement": "交易待处理。结算后资金将不可撤销。",
   "settle": "结算",
@@ -361,5 +363,8 @@
   "failed": "失败",
   "confirmSwap": "确认兑换",
   "unknownError": "未知错误",
-  "sendFeedback": "发送反馈"
+  "sendFeedback": "发送反馈",
+  "sender": "发送者",
+  "receiver": "接收者",
+  "scan": "扫描"
 }

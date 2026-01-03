@@ -198,6 +198,8 @@
   "confirmed": "Confirmed",
   "pending": "Pending",
   "date": "Data",
+  "time": "Ora",
+  "transactionVolume": "Volume della Transazione",
   "confirmedAt": "Confermato il",
   "transactionPendingFundsWillBeNonReversibleAfterSettlement": "Transazione in sospeso. I fondi non saranno reversibili dopo il completamento.",
   "settle": "COMPLETA",
@@ -361,5 +363,8 @@
   "failed": "Fallito",
   "confirmSwap": "Conferma Swap",
   "unknownError": "Errore sconosciuto",
-  "sendFeedback": "Invia feedback"
+  "sendFeedback": "Invia feedback",
+  "sender": "Mittente",
+  "receiver": "Destinatario",
+  "scan": "Scansiona"
 }

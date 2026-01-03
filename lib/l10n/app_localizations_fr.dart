@@ -448,6 +448,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get date => 'Date';
 
   @override
+  String get time => 'Heure';
+
+  @override
+  String get transactionVolume => 'Volume de Transaction';
+
+  @override
   String get confirmedAt => 'Confirmé le';
 
   @override
@@ -1287,4 +1293,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sendFeedback => 'Envoyer des commentaires';
+
+  @override
+  String get sender => 'Expéditeur';
+
+  @override
+  String get receiver => 'Destinataire';
+
+  @override
+  String get scan => 'Scanner';
 }

@@ -198,6 +198,8 @@
   "confirmed": "Confirmed",
   "pending": "Pending",
   "date": "التاريخ",
+  "time": "الوقت",
+  "transactionVolume": "حجم المعاملة",
   "confirmedAt": "تم التأكيد في",
   "transactionPendingFundsWillBeNonReversibleAfterSettlement": "المعاملة معلقة. ستصبح الأموال غير قابلة للاسترجاع بعد التسوية.",
   "settle": "تسوية",
@@ -361,5 +363,8 @@
   "failed": "فشل",
   "confirmSwap": "تأكيد المبادلة",
   "unknownError": "خطأ غير معروف",
-  "sendFeedback": "إرسال ملاحظات"
+  "sendFeedback": "إرسال ملاحظات",
+  "sender": "المرسل",
+  "receiver": "المستلم",
+  "scan": "مسح"
 }

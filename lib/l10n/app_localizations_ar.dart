@@ -436,6 +436,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get date => 'التاريخ';
 
   @override
+  String get time => 'الوقت';
+
+  @override
+  String get transactionVolume => 'حجم المعاملة';
+
+  @override
   String get confirmedAt => 'تم التأكيد في';
 
   @override
@@ -1270,4 +1276,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sendFeedback => 'إرسال ملاحظات';
+
+  @override
+  String get sender => 'المرسل';
+
+  @override
+  String get receiver => 'المستلم';
+
+  @override
+  String get scan => 'مسح';
 }

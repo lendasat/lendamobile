@@ -771,16 +771,16 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Column(
+                                Column(
                                   children: [
-                                    Avatar(
+                                    const Avatar(
                                       size: AppTheme.cardPadding * 4,
                                       isNft: false,
                                     ),
-                                    SizedBox(
+                                    const SizedBox(
                                       height: AppTheme.elementSpacing * 0.5,
                                     ),
-                                    Text("Sender"),
+                                    Text(l10n.sender),
                                   ],
                                 ),
                                 const SizedBox(
@@ -797,16 +797,16 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                 const SizedBox(
                                   width: AppTheme.cardPadding * 0.75,
                                 ),
-                                const Column(
+                                Column(
                                   children: [
-                                    Avatar(
+                                    const Avatar(
                                       size: AppTheme.cardPadding * 4,
                                       isNft: false,
                                     ),
-                                    SizedBox(
+                                    const SizedBox(
                                       height: AppTheme.elementSpacing * 0.5,
                                     ),
-                                    Text("Receiver"),
+                                    Text(l10n.receiver),
                                   ],
                                 ),
                               ],
