@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
@@ -144,7 +145,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     await arkBottomSheet(
       context: context,
       child: _ConfirmationSheet(
-        title: 'Cancel Contract',
+        title: AppLocalizations.of(context)?.cancel ?? 'Cancel',
         message:
             'Are you sure you want to cancel this loan request? This action cannot be undone.',
         confirmText: 'Cancel Request',
@@ -541,7 +542,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             ),
             const SizedBox(height: AppTheme.cardPadding),
             LongButtonWidget(
-              title: 'Retry',
+              title: AppLocalizations.of(context)?.retry ?? 'Retry',
               buttonType: ButtonType.secondary,
               onTap: _loadContract,
             ),
@@ -1748,7 +1749,7 @@ class _RepayConfirmationSheet extends StatelessWidget {
             children: [
               Expanded(
                 child: LongButtonWidget(
-                  title: 'Cancel',
+                  title: AppLocalizations.of(context)?.cancel ?? 'Cancel',
                   buttonType: ButtonType.secondary,
                   customWidth: double.infinity,
                   onTap: () => Navigator.pop(context),
