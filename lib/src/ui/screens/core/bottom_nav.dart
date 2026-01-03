@@ -57,6 +57,9 @@ class _BottomNavState extends State<BottomNav> {
   }
 
   void _onItemTapped(int index) {
+    // Close any open bottom sheets/dialogs before switching tabs
+    Navigator.of(context).popUntil((route) => route is! PopupRoute);
+
     // Dismiss keyboard and unfocus swap screen when switching tabs
     FocusScope.of(context).unfocus();
     _swapKey.currentState?.unfocusAll();
