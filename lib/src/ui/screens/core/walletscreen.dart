@@ -1158,16 +1158,13 @@ class WalletScreenState extends State<WalletScreen> {
           firstBalance, currentBalance, firstValue, currentValue);
 
       // Calculate percent change with proper edge case handling
+      // Must be consistent with _isBalanceChangePositive and gradient
       const satoshiThreshold = 0.00000001;
       if (firstBalance < satoshiThreshold &&
           currentBalance < satoshiThreshold) {
-        // No balance before or now - show BTC price change
-        if (firstData.price > 0) {
-          percentChange =
-              ((currentPrice - firstData.price) / firstData.price) * 100;
-        } else {
-          percentChange = 0.0;
-        }
+        // No balance before or now - neutral state, show 0%
+        // Consistent with gradient showing green (neutral)
+        percentChange = 0.0;
       } else if (firstBalance >= satoshiThreshold &&
           currentBalance < satoshiThreshold) {
         percentChange = -100.0;
