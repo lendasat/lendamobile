@@ -320,6 +320,7 @@
   "realTime": "Real-time",
   "sendBitcoin": "Send Bitcoin",
   "sendNow": "SEND NOW",
+  "notEnoughFunds": "Not enough funds",
   "recipient": "Recipient",
   "unknown": "Unknown",
   "walletAddressCopied": "Wallet address copied",

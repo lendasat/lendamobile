@@ -813,6 +813,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sendNow => 'SEND NOW';
 
   @override
+  String get notEnoughFunds => 'Nicht genügend Guthaben';
+
+  @override
   String get recipient => 'Recipient';
 
   @override

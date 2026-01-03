@@ -8,6 +8,7 @@ import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/lnurl_service.dart';
+import 'package:ark_flutter/src/utils/address_validator.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/services/pending_transaction_service.dart';
@@ -66,6 +67,7 @@ class SendScreenState extends State<SendScreen>
   bool _isLoading = false;
   bool _isAddressExpanded = false;
   bool _hasValidAddress = false;
+  String? _addressError; // Error message for invalid address format
   String? _description;
   double? _bitcoinPrice;
 
@@ -153,7 +155,8 @@ class SendScreenState extends State<SendScreen>
 
   void _onAddressChanged() {
     final text = _addressController.text.trim();
-    final isValid = text.isNotEmpty && _isValidAddress(text);
+    final validationResult = AddressValidator.validate(text);
+    final isValid = validationResult.isValid;
 
     // If it looks like a complete invoice/URI with an amount, parse it
     // Only parse if the amount field is empty/zero to avoid overwriting user input
@@ -186,6 +189,7 @@ class SendScreenState extends State<SendScreen>
     setState(() {
       _hasValidAddress = isValid;
       _isOnChainAddress = isOnChain;
+      _addressError = text.isNotEmpty ? validationResult.error : null;
       // Clear fees if not on-chain
       if (!isOnChain) {
         _recommendedFees = null;
@@ -316,128 +320,28 @@ class SendScreenState extends State<SendScreen>
     }
   }
 
+  /// Check if address is valid using AddressValidator
   bool _isValidAddress(String address) {
-    // Basic validation for Bitcoin/Ark/Lightning addresses
-    if (address.isEmpty) return false;
-
-    final lower = address.toLowerCase().trim();
-
-    // BIP21 URI (bitcoin:address?params)
-    if (lower.startsWith('bitcoin:')) {
-      // Valid if it has at least some content after the scheme
-      return address.length > 10;
-    }
-
-    // Lightning URI (lightning:invoice)
-    if (lower.startsWith('lightning:')) {
-      return address.length > 15;
-    }
-
-    // Lightning invoices (BOLT11) - lnbc (mainnet), lntb (testnet), lnbcrt (regtest)
-    if (lower.startsWith('lnbc') ||
-        lower.startsWith('lntb') ||
-        lower.startsWith('lnbcrt')) {
-      return address.length >= 50; // BOLT11 invoices are typically very long
-    }
-
-    // LNURL (bech32 encoded URL)
-    if (LnurlService.isLnurl(address)) {
-      return address.length >= 20;
-    }
-
-    // Lightning Address (user@domain.com format)
-    if (LnurlService.isLightningAddress(address)) {
-      return true;
-    }
-
-    // Ark addresses (mainnet: ark1, testnet: tark1)
-    if (lower.startsWith('ark1') || lower.startsWith('tark1')) {
-      return address.length >= 20;
-    }
-
-    // Bitcoin mainnet
-    if (address.startsWith('1') ||
-        address.startsWith('3') ||
-        address.startsWith('bc1')) {
-      return address.length >= 26 && address.length <= 62;
-    }
-
-    // Bitcoin testnet
-    if (address.startsWith('m') ||
-        address.startsWith('n') ||
-        address.startsWith('2') ||
-        address.startsWith('tb1')) {
-      return address.length >= 26 && address.length <= 62;
-    }
-
-    // Ark addresses - add specific validation
-    // For now, accept any reasonable length string
-    return address.length >= 10;
+    return AddressValidator.isValid(address);
   }
 
   /// Check if the address is a Lightning invoice (BOLT11)
   bool _isLightningInvoice(String address) {
-    final lower = address.toLowerCase().trim();
-    return lower.startsWith('lnbc') ||
-        lower.startsWith('lntb') ||
-        lower.startsWith('lnbcrt');
+    final result = AddressValidator.validate(address);
+    return result.isValid && result.type == PaymentAddressType.lightningInvoice;
   }
 
   /// Check if the address is an LNURL or Lightning Address
   bool _isLnurlOrLightningAddress(String address) {
-    return LnurlService.isLnurl(address) ||
-        LnurlService.isLightningAddress(address);
+    final result = AddressValidator.validate(address);
+    return result.isValid &&
+        (result.type == PaymentAddressType.lnurl ||
+            result.type == PaymentAddressType.lightningAddress);
   }
 
   /// Check if the address is an on-chain Bitcoin address (not Ark, not Lightning)
   bool _isOnChainBitcoinAddress(String address) {
-    final lower = address.toLowerCase().trim();
-
-    // Exclude Ark addresses
-    if (lower.startsWith('ark1') || lower.startsWith('tark1')) {
-      return false;
-    }
-
-    // Exclude Lightning invoices
-    if (_isLightningInvoice(address)) {
-      return false;
-    }
-
-    // Exclude LNURL and Lightning addresses
-    if (_isLnurlOrLightningAddress(address)) {
-      return false;
-    }
-
-    // Exclude BIP21 URIs that have an ark/lightning parameter (they use off-chain)
-    if (lower.startsWith('bitcoin:')) {
-      final uri = Uri.tryParse(address);
-      if (uri != null) {
-        if (uri.queryParameters.containsKey('ark') ||
-            uri.queryParameters.containsKey('arkade') ||
-            uri.queryParameters.containsKey('lightning')) {
-          return false;
-        }
-        // BIP21 with just a Bitcoin address = on-chain
-        return true;
-      }
-    }
-
-    // Bitcoin mainnet addresses
-    if (address.startsWith('1') ||
-        address.startsWith('3') ||
-        address.startsWith('bc1')) {
-      return address.length >= 26 && address.length <= 62;
-    }
-
-    // Bitcoin testnet addresses
-    if (address.startsWith('m') ||
-        address.startsWith('n') ||
-        address.startsWith('2') ||
-        address.startsWith('tb1')) {
-      return address.length >= 26 && address.length <= 62;
-    }
-
-    return false;
+    return AddressValidator.isOnChainBitcoin(address);
   }
 
   /// Fetch recommended fees from mempool.space API
@@ -826,6 +730,7 @@ class SendScreenState extends State<SendScreen>
       _btcController.text = '0.0';
       _currController.text = '0.0';
       _hasValidAddress = false;
+      _addressError = null;
       _description = null;
       _isAddressExpanded = true;
       _expandController.forward();
@@ -970,13 +875,17 @@ class SendScreenState extends State<SendScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _hasValidAddress
-                            ? (_isLightningInvoice(_addressController.text)
-                                ? 'Lightning'
-                                : l10n.recipient)
-                            : l10n.unknown,
+                        _addressError != null
+                            ? _addressError!
+                            : _hasValidAddress
+                                ? (_isLightningPayment
+                                    ? 'Lightning'
+                                    : l10n.recipient)
+                                : l10n.unknown,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface,
+                              color: _addressError != null
+                                  ? AppTheme.errorColor
+                                  : Theme.of(context).colorScheme.onSurface,
                             ),
                       ),
                       const SizedBox(height: 4),
@@ -1062,6 +971,19 @@ class SendScreenState extends State<SendScreen>
                           hintText: l10n.bitcoinOrArkAddress,
                           hintStyle:
                               TextStyle(color: Theme.of(context).hintColor),
+                          suffixIcon: _addressController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.close_rounded,
+                                    color: Theme.of(context).hintColor,
+                                    size: 20,
+                                  ),
+                                  onPressed: () {
+                                    _addressController.clear();
+                                    // Listener will call _onAddressChanged()
+                                  },
+                                )
+                              : null,
                         ),
                       ),
                     ),
@@ -1110,13 +1032,11 @@ class SendScreenState extends State<SendScreen>
   ) {
     final currencyService = context.watch<CurrencyPreferenceService>();
     final satsAvailable = widget.availableSats.toStringAsFixed(0);
-    final fiatRate =
-        currencyService.exchangeRates?.rates[currencyService.code] ?? 1.0;
+    // formatAmount already converts from USD, so don't multiply by fiatRate
     final fiatAvailable = _bitcoinPrice != null
         ? currencyService.formatAmount(
             (widget.availableSats / BitcoinConstants.satsPerBtc) *
-                _bitcoinPrice! *
-                fiatRate)
+                _bitcoinPrice!)
         : '\$0.00';
 
     return Padding(
@@ -1274,8 +1194,11 @@ class SendScreenState extends State<SendScreen>
     BuildContext context,
     AppLocalizations l10n,
   ) {
+    final amountSats = double.tryParse(_satController.text) ?? 0;
+    final hasInsufficientFunds = amountSats > widget.availableSats;
     final canSend = _hasValidAddress &&
-        (double.tryParse(_satController.text) ?? 0) > 0 &&
+        amountSats > 0 &&
+        !hasInsufficientFunds &&
         !_isLoading;
 
     return Positioned(
@@ -1311,7 +1234,8 @@ class SendScreenState extends State<SendScreen>
               bottom: AppTheme.cardPadding,
             ),
             child: _hasValidAddress
-                ? _buildSendButtonContent(context, l10n, canSend)
+                ? _buildSendButtonContent(
+                    context, l10n, canSend, hasInsufficientFunds)
                 : _buildQuickActionButtons(context),
           ),
         ],
@@ -1323,6 +1247,7 @@ class SendScreenState extends State<SendScreen>
     BuildContext context,
     AppLocalizations l10n,
     bool canSend,
+    bool hasInsufficientFunds,
   ) {
     return GestureDetector(
       onTap: canSend ? _handleSend : null,
@@ -1339,7 +1264,12 @@ class SendScreenState extends State<SendScreen>
                   end: Alignment.bottomCenter,
                 )
               : null,
-          color: canSend ? null : Theme.of(context).colorScheme.secondary,
+          color: canSend
+              ? null
+              : Theme.of(context)
+                  .colorScheme
+                  .secondary
+                  .withValues(alpha: hasInsufficientFunds ? 0.5 : 1.0),
           borderRadius: AppTheme.cardRadiusBig,
           boxShadow: canSend
               ? [
@@ -1365,7 +1295,7 @@ class SendScreenState extends State<SendScreen>
                   ),
                 )
               : Text(
-                  l10n.sendNow,
+                  hasInsufficientFunds ? l10n.notEnoughFunds : l10n.sendNow,
                   style: TextStyle(
                     color: canSend ? Colors.black : Theme.of(context).hintColor,
                     fontSize: 16,

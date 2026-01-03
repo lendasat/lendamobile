@@ -1658,6 +1658,12 @@ abstract class AppLocalizations {
   /// **'SEND NOW'**
   String get sendNow;
 
+  /// No description provided for @notEnoughFunds.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough funds'**
+  String get notEnoughFunds;
+
   /// No description provided for @recipient.
   ///
   /// In en, this message translates to:
