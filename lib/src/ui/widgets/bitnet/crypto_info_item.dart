@@ -55,9 +55,7 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
     // (Assuming balance is in satoshis)
     final double balanceValue = double.tryParse(widget.balance) ?? 0.0;
     final bitcoinPrice = widget.bitcoinPrice ?? 0;
-    final currencyEquivalent =
-        (balanceValue / BitcoinConstants.satsPerBtc * bitcoinPrice)
-            .toStringAsFixed(2);
+    final fiatValue = balanceValue / BitcoinConstants.satsPerBtc * bitcoinPrice;
 
     return GlassContainer(
       height: AppTheme.cardPadding * 2.75,
@@ -116,7 +114,8 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
                             : Text(
                                 currencyService.showCoinBalance
                                     ? widget.balance
-                                    : "${currencyService.symbol}$currencyEquivalent",
+                                    : currencyService
+                                        .formatWithSymbol(fiatValue),
                                 style: Theme.of(
                                   widget.context,
                                 ).textTheme.titleMedium,

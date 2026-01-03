@@ -232,22 +232,28 @@ class CurrencyPreferenceService extends ChangeNotifier {
   }
 
   /// Format amount in selected currency with proper thousand separators.
+  /// Converts from USD to the selected currency.
   String formatAmount(double usdAmount) {
     final convertedAmount = convertFromUsd(usdAmount);
+    return formatWithSymbol(convertedAmount);
+  }
 
+  /// Format an amount that is already in the selected currency.
+  /// Use this when you have already converted the amount yourself.
+  String formatWithSymbol(double amount) {
     // Use NumberFormat for locale-aware formatting with thousand separators
     final formatter = NumberFormat.decimalPatternDigits(
       locale: _localeForCurrency,
       decimalDigits: decimalPlaces,
     );
 
-    final formatted = formatter.format(convertedAmount);
+    final formatted = formatter.format(amount);
 
-    // Some currencies put symbol after amount
+    // Some currencies put symbol after amount (no space)
     switch (_currentCurrency) {
       case FiatCurrency.eur:
       case FiatCurrency.chf:
-        return '$formatted $symbol';
+        return '$formatted$symbol';
       default:
         return '$symbol$formatted';
     }
