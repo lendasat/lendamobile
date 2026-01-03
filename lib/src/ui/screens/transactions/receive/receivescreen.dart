@@ -567,7 +567,10 @@ class _ReceiveScreenState extends State<ReceiveScreen>
             IconButton(
               icon: Icon(Icons.close,
                   color: Theme.of(context).colorScheme.onSurface),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                _unfocusAll();
+                Navigator.pop(context);
+              },
             ),
           ],
         ),
@@ -601,6 +604,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                   final amountText = _satController.text.trim();
                   final amount = int.tryParse(amountText) ?? 0;
                   setState(() => _currentAmount = amount >= 0 ? amount : 0);
+                  _unfocusAll();
                   Navigator.pop(context);
                   // Re-fetch Lightning invoice if on Lightning, otherwise fetch addresses
                   if (_receiveType == ReceiveType.lightning) {
@@ -614,7 +618,11 @@ class _ReceiveScreenState extends State<ReceiveScreen>
           ),
         ),
       ),
-    );
+    ).whenComplete(() {
+      // Ensure keyboard is dismissed when bottom sheet closes by any means
+      // (swipe down, tap outside, or button press)
+      _unfocusAll();
+    });
   }
 
   String _trimAddress(String address) {
