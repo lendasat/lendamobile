@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
@@ -280,7 +281,9 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                               const SizedBox(height: AppTheme.elementSpacing),
                               // Search bar
                               SearchFieldWidget(
-                                hintText: 'Search contracts...',
+                                hintText:
+                                    AppLocalizations.of(context)?.search ??
+                                        'Search',
                                 isSearchEnabled: true,
                                 handleSearch: (value) {
                                   setState(() {
@@ -423,7 +426,7 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: AppTheme.cardPadding),
           LongButtonWidget(
-            title: 'Retry Connection',
+            title: AppLocalizations.of(context)?.retry ?? 'Retry',
             buttonType: ButtonType.primary,
             onTap: _initializeLendasat,
             customHeight: 48,
@@ -448,7 +451,7 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
             ),
             const SizedBox(height: AppTheme.cardPadding),
             Text(
-              'Error Loading Data',
+              AppLocalizations.of(context)?.error ?? 'Error',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppTheme.elementSpacing),
@@ -459,7 +462,7 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
             ),
             const SizedBox(height: AppTheme.cardPadding),
             LongButtonWidget(
-              title: 'Retry',
+              title: AppLocalizations.of(context)?.retry ?? 'Retry',
               buttonType: ButtonType.secondary,
               onTap: _initializeLendasat,
             ),

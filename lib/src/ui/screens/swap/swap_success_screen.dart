@@ -1,3 +1,4 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
@@ -296,7 +297,7 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                   children: [
                     // Done button
                     LongButtonWidget(
-                      title: 'Done',
+                      title: AppLocalizations.of(context)?.done ?? 'Done',
                       customWidth: double.infinity,
                       onTap: () {
                         Navigator.of(context)
