@@ -4,12 +4,11 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/services/pending_transaction_service.dart';
-import 'package:ark_flutter/src/ui/screens/analytics/mempool/single_transaction_screen.dart';
-import 'package:ark_flutter/src/ui/screens/swap/swap_detail_screen.dart';
+import 'package:ark_flutter/src/ui/widgets/transaction/transaction_detail_sheet.dart';
+import 'package:ark_flutter/src/ui/widgets/swap/swap_detail_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/theme.dart';
@@ -614,18 +613,16 @@ class _TransactionItemWidget extends StatelessWidget {
     bool? isConfirmed,
     bool isSettleable = false,
   }) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SingleTransactionScreen(
-          txid: txid,
-          amountSats: amountSats,
-          createdAt: createdAt,
-          transactionType: transactionType,
-          networkType: networkType,
-          isConfirmed: isConfirmed,
-          isSettleable: isSettleable,
-        ),
+    arkBottomSheet(
+      context: context,
+      child: TransactionDetailSheet(
+        txid: txid,
+        amountSats: amountSats,
+        createdAt: createdAt,
+        transactionType: transactionType,
+        networkType: networkType,
+        isConfirmed: isConfirmed,
+        isSettleable: isSettleable,
       ),
     );
   }
@@ -872,13 +869,11 @@ class _SwapItemWidget extends StatelessWidget {
   });
 
   void _navigateToSwapDetail(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SwapDetailScreen(
-          swapId: swapItem.id,
-          initialSwapItem: swapItem,
-        ),
+    arkBottomSheet(
+      context: context,
+      child: SwapDetailSheet(
+        swapId: swapItem.id,
+        initialSwapItem: swapItem,
       ),
     );
   }
