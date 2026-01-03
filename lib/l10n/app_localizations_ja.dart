@@ -1122,4 +1122,145 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get allRightsReserved => 'All rights reserved';
+
+  @override
+  String get loansAndLeverage => 'ローンマーケット';
+
+  @override
+  String get availableOffers => '利用可能なオファー';
+
+  @override
+  String get myContracts => 'マイ契約';
+
+  @override
+  String get signInRequired => 'サインインが必要';
+
+  @override
+  String get signInToViewContracts => '契約を表示してローンを取得するにはサインインしてください。';
+
+  @override
+  String get noArkadeOffersAvailable => 'Arkadeオファーはありません';
+
+  @override
+  String get signInToViewYourContracts => '契約を表示するにはサインイン';
+
+  @override
+  String get noContractsMatchSearch => '検索に一致する契約はありません';
+
+  @override
+  String get noContractsYet => 'まだ契約はありません。オファーを受けて始めましょう！';
+
+  @override
+  String get duration => '期間';
+
+  @override
+  String get minLtv => '最小LTV';
+
+  @override
+  String get limitedTimeOffer => '期間限定オファー — 超お得！';
+
+  @override
+  String get interest => '利息';
+
+  @override
+  String get due => '期限';
+
+  @override
+  String get overdue => '延滞';
+
+  @override
+  String get swapDetails => 'スワップ詳細';
+
+  @override
+  String get errorLoadingSwap => 'スワップの読み込みエラー';
+
+  @override
+  String get refundAddress => '返金アドレス';
+
+  @override
+  String get fundSwap => 'スワップに資金提供';
+
+  @override
+  String get youSend => '送金';
+
+  @override
+  String get youReceive => '受取';
+
+  @override
+  String get walletConnected => 'ウォレット接続済み';
+
+  @override
+  String get switchWallet => '切替';
+
+  @override
+  String get creatingSwap => 'スワップを作成中...';
+
+  @override
+  String get approvingToken => 'トークンを承認中...';
+
+  @override
+  String get creatingHtlc => 'HTLCを作成中...';
+
+  @override
+  String get swapFundedSuccessfully => 'スワップの資金提供が完了しました！';
+
+  @override
+  String get feedback => 'フィードバック';
+
+  @override
+  String get continueButton => '続ける';
+
+  @override
+  String get paste => '貼り付け';
+
+  @override
+  String get scanQr => 'QRスキャン';
+
+  @override
+  String get youPay => '支払い';
+
+  @override
+  String get totalFeesLabel => '合計手数料';
+
+  @override
+  String get beforeFees => '手数料前';
+
+  @override
+  String get networkFee => 'ネットワーク';
+
+  @override
+  String get protocolFee => 'プロトコル';
+
+  @override
+  String get receivingAddress => '受取アドレス';
+
+  @override
+  String get waitingForDeposit => '入金待ち';
+
+  @override
+  String get processing => '処理中';
+
+  @override
+  String get completed => '完了';
+
+  @override
+  String get expired => '期限切れ';
+
+  @override
+  String get refundable => '返金可能';
+
+  @override
+  String get refundedStatus => '返金済み';
+
+  @override
+  String get failed => '失敗';
+
+  @override
+  String get confirmSwap => 'スワップを確認';
+
+  @override
+  String get unknownError => '不明なエラー';
+
+  @override
+  String get sendFeedback => 'フィードバックを送信';
 }

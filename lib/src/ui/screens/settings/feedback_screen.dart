@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/feedback_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
@@ -125,7 +126,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(
-        text: 'Feedback',
+        text: AppLocalizations.of(context)?.feedback ?? 'Feedback',
         context: context,
         hasBackButton: true,
         onTap: () => controller.switchTab('main'),
@@ -406,7 +407,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
             // Submit Button
             LongButtonWidget(
-              title: 'Send Feedback',
+              title: AppLocalizations.of(context)?.sendFeedback ?? 'Send Feedback',
               customWidth: double.infinity,
               state: _isLoading ? ButtonState.loading : ButtonState.idle,
               onTap: _isLoading ? null : _submitFeedback,
