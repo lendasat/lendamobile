@@ -2257,6 +2257,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All rights reserved'**
   String get allRightsReserved;
+
+  /// No description provided for @loansAndLeverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans Marketplace'**
+  String get loansAndLeverage;
+
+  /// No description provided for @availableOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Offers'**
+  String get availableOffers;
+
+  /// No description provided for @myContracts.
+  ///
+  /// In en, this message translates to:
+  /// **'My Contracts'**
+  String get myContracts;
+
+  /// No description provided for @signInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In Required'**
+  String get signInRequired;
+
+  /// No description provided for @signInToViewContracts.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to view your contracts and take loans. You can still browse available offers.'**
+  String get signInToViewContracts;
+
+  /// No description provided for @noArkadeOffersAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No Arkade offers available'**
+  String get noArkadeOffersAvailable;
+
+  /// No description provided for @signInToViewYourContracts.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to view your contracts'**
+  String get signInToViewYourContracts;
+
+  /// No description provided for @noContractsMatchSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No contracts match your search'**
+  String get noContractsMatchSearch;
+
+  /// No description provided for @noContractsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No contracts yet. Take an offer to get started!'**
+  String get noContractsYet;
+
+  /// No description provided for @duration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get duration;
+
+  /// No description provided for @minLtv.
+  ///
+  /// In en, this message translates to:
+  /// **'Min LTV'**
+  String get minLtv;
+
+  /// No description provided for @limitedTimeOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Limited time offer — super cheap!'**
+  String get limitedTimeOffer;
+
+  /// No description provided for @interest.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest'**
+  String get interest;
+
+  /// No description provided for @due.
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get due;
+
+  /// No description provided for @overdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get overdue;
+
+  /// No description provided for @swapDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap Details'**
+  String get swapDetails;
+
+  /// No description provided for @errorLoadingSwap.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading swap'**
+  String get errorLoadingSwap;
+
+  /// No description provided for @refundAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund Address'**
+  String get refundAddress;
+
+  /// No description provided for @fundSwap.
+  ///
+  /// In en, this message translates to:
+  /// **'Fund Swap'**
+  String get fundSwap;
+
+  /// No description provided for @youSend.
+  ///
+  /// In en, this message translates to:
+  /// **'You send'**
+  String get youSend;
+
+  /// No description provided for @youReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'You receive'**
+  String get youReceive;
+
+  /// No description provided for @walletConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet Connected'**
+  String get walletConnected;
+
+  /// No description provided for @switchWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get switchWallet;
+
+  /// No description provided for @creatingSwap.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating Swap...'**
+  String get creatingSwap;
+
+  /// No description provided for @approvingToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Approving token...'**
+  String get approvingToken;
+
+  /// No description provided for @creatingHtlc.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating HTLC...'**
+  String get creatingHtlc;
+
+  /// No description provided for @swapFundedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap funded successfully!'**
+  String get swapFundedSuccessfully;
+
+  /// No description provided for @feedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback'**
+  String get feedback;
+
+  /// No description provided for @continueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
+
+  /// No description provided for @paste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get paste;
+
+  /// No description provided for @scanQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR'**
+  String get scanQr;
+
+  /// No description provided for @youPay.
+  ///
+  /// In en, this message translates to:
+  /// **'You pay'**
+  String get youPay;
+
+  /// No description provided for @totalFeesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total fees'**
+  String get totalFeesLabel;
+
+  /// No description provided for @beforeFees.
+  ///
+  /// In en, this message translates to:
+  /// **'before fees'**
+  String get beforeFees;
+
+  /// No description provided for @networkFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get networkFee;
+
+  /// No description provided for @protocolFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol'**
+  String get protocolFee;
+
+  /// No description provided for @receivingAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving address'**
+  String get receivingAddress;
+
+  /// No description provided for @waitingForDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Deposit'**
+  String get waitingForDeposit;
+
+  /// No description provided for @processing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get processing;
+
+  /// No description provided for @completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completed;
+
+  /// No description provided for @expired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get expired;
+
+  /// No description provided for @refundable.
+  ///
+  /// In en, this message translates to:
+  /// **'Refundable'**
+  String get refundable;
+
+  /// No description provided for @refundedStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get refundedStatus;
+
+  /// No description provided for @failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get failed;
+
+  /// No description provided for @confirmSwap.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Swap'**
+  String get confirmSwap;
+
+  /// No description provided for @unknownError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error'**
+  String get unknownError;
+
+  /// No description provided for @sendFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Feedback'**
+  String get sendFeedback;
 }
 
 class _AppLocalizationsDelegate

@@ -1130,4 +1130,148 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get allRightsReserved => 'All rights reserved';
+
+  @override
+  String get loansAndLeverage => 'Pasar Pinjaman';
+
+  @override
+  String get availableOffers => 'Penawaran Tersedia';
+
+  @override
+  String get myContracts => 'Kontrak Saya';
+
+  @override
+  String get signInRequired => 'Diperlukan Masuk';
+
+  @override
+  String get signInToViewContracts =>
+      'Masuk untuk melihat kontrak dan mengambil pinjaman.';
+
+  @override
+  String get noArkadeOffersAvailable => 'Tidak ada penawaran Arkade tersedia';
+
+  @override
+  String get signInToViewYourContracts => 'Masuk untuk melihat kontrak Anda';
+
+  @override
+  String get noContractsMatchSearch =>
+      'Tidak ada kontrak yang cocok dengan pencarian Anda';
+
+  @override
+  String get noContractsYet =>
+      'Belum ada kontrak. Terima penawaran untuk memulai!';
+
+  @override
+  String get duration => 'Durasi';
+
+  @override
+  String get minLtv => 'LTV Min';
+
+  @override
+  String get limitedTimeOffer => 'Penawaran terbatas — super murah!';
+
+  @override
+  String get interest => 'Bunga';
+
+  @override
+  String get due => 'Jatuh Tempo';
+
+  @override
+  String get overdue => 'Terlambat';
+
+  @override
+  String get swapDetails => 'Detail Swap';
+
+  @override
+  String get errorLoadingSwap => 'Error memuat swap';
+
+  @override
+  String get refundAddress => 'Alamat Pengembalian';
+
+  @override
+  String get fundSwap => 'Danai Swap';
+
+  @override
+  String get youSend => 'Anda kirim';
+
+  @override
+  String get youReceive => 'Anda terima';
+
+  @override
+  String get walletConnected => 'Dompet Terhubung';
+
+  @override
+  String get switchWallet => 'Ganti';
+
+  @override
+  String get creatingSwap => 'Membuat Swap...';
+
+  @override
+  String get approvingToken => 'Menyetujui token...';
+
+  @override
+  String get creatingHtlc => 'Membuat HTLC...';
+
+  @override
+  String get swapFundedSuccessfully => 'Swap berhasil didanai!';
+
+  @override
+  String get feedback => 'Umpan Balik';
+
+  @override
+  String get continueButton => 'Lanjutkan';
+
+  @override
+  String get paste => 'Tempel';
+
+  @override
+  String get scanQr => 'Pindai QR';
+
+  @override
+  String get youPay => 'Anda bayar';
+
+  @override
+  String get totalFeesLabel => 'Total biaya';
+
+  @override
+  String get beforeFees => 'sebelum biaya';
+
+  @override
+  String get networkFee => 'Jaringan';
+
+  @override
+  String get protocolFee => 'Protokol';
+
+  @override
+  String get receivingAddress => 'Alamat penerima';
+
+  @override
+  String get waitingForDeposit => 'Menunggu Deposit';
+
+  @override
+  String get processing => 'Memproses';
+
+  @override
+  String get completed => 'Selesai';
+
+  @override
+  String get expired => 'Kadaluarsa';
+
+  @override
+  String get refundable => 'Dapat dikembalikan';
+
+  @override
+  String get refundedStatus => 'Dikembalikan';
+
+  @override
+  String get failed => 'Gagal';
+
+  @override
+  String get confirmSwap => 'Konfirmasi Swap';
+
+  @override
+  String get unknownError => 'Error tidak diketahui';
+
+  @override
+  String get sendFeedback => 'Kirim Umpan Balik';
 }

@@ -1142,4 +1142,149 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get allRightsReserved => 'All rights reserved';
+
+  @override
+  String get loansAndLeverage => 'Marché des Prêts';
+
+  @override
+  String get availableOffers => 'Offres Disponibles';
+
+  @override
+  String get myContracts => 'Mes Contrats';
+
+  @override
+  String get signInRequired => 'Connexion Requise';
+
+  @override
+  String get signInToViewContracts =>
+      'Connectez-vous pour voir vos contrats et obtenir des prêts.';
+
+  @override
+  String get noArkadeOffersAvailable => 'Aucune offre Arkade disponible';
+
+  @override
+  String get signInToViewYourContracts =>
+      'Connectez-vous pour voir vos contrats';
+
+  @override
+  String get noContractsMatchSearch =>
+      'Aucun contrat ne correspond à votre recherche';
+
+  @override
+  String get noContractsYet =>
+      'Pas encore de contrats. Acceptez une offre pour commencer!';
+
+  @override
+  String get duration => 'Durée';
+
+  @override
+  String get minLtv => 'LTV Min';
+
+  @override
+  String get limitedTimeOffer => 'Offre limitée — super bon marché!';
+
+  @override
+  String get interest => 'Intérêt';
+
+  @override
+  String get due => 'Échéance';
+
+  @override
+  String get overdue => 'En retard';
+
+  @override
+  String get swapDetails => 'Détails du Swap';
+
+  @override
+  String get errorLoadingSwap => 'Erreur lors du chargement du swap';
+
+  @override
+  String get refundAddress => 'Adresse de Remboursement';
+
+  @override
+  String get fundSwap => 'Financer le Swap';
+
+  @override
+  String get youSend => 'Vous envoyez';
+
+  @override
+  String get youReceive => 'Vous recevez';
+
+  @override
+  String get walletConnected => 'Portefeuille Connecté';
+
+  @override
+  String get switchWallet => 'Changer';
+
+  @override
+  String get creatingSwap => 'Création du Swap...';
+
+  @override
+  String get approvingToken => 'Approbation du token...';
+
+  @override
+  String get creatingHtlc => 'Création du HTLC...';
+
+  @override
+  String get swapFundedSuccessfully => 'Swap financé avec succès!';
+
+  @override
+  String get feedback => 'Commentaires';
+
+  @override
+  String get continueButton => 'Continuer';
+
+  @override
+  String get paste => 'Coller';
+
+  @override
+  String get scanQr => 'Scanner QR';
+
+  @override
+  String get youPay => 'Vous payez';
+
+  @override
+  String get totalFeesLabel => 'Frais totaux';
+
+  @override
+  String get beforeFees => 'avant frais';
+
+  @override
+  String get networkFee => 'Réseau';
+
+  @override
+  String get protocolFee => 'Protocole';
+
+  @override
+  String get receivingAddress => 'Adresse de réception';
+
+  @override
+  String get waitingForDeposit => 'En attente de Dépôt';
+
+  @override
+  String get processing => 'Traitement';
+
+  @override
+  String get completed => 'Terminé';
+
+  @override
+  String get expired => 'Expiré';
+
+  @override
+  String get refundable => 'Remboursable';
+
+  @override
+  String get refundedStatus => 'Remboursé';
+
+  @override
+  String get failed => 'Échoué';
+
+  @override
+  String get confirmSwap => 'Confirmer le Swap';
+
+  @override
+  String get unknownError => 'Erreur inconnue';
+
+  @override
+  String get sendFeedback => 'Envoyer des commentaires';
 }

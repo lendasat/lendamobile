@@ -1130,4 +1130,147 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allRightsReserved => 'All rights reserved';
+
+  @override
+  String get loansAndLeverage => 'Loans Marketplace';
+
+  @override
+  String get availableOffers => 'Available Offers';
+
+  @override
+  String get myContracts => 'My Contracts';
+
+  @override
+  String get signInRequired => 'Sign In Required';
+
+  @override
+  String get signInToViewContracts =>
+      'Sign in to view your contracts and take loans. You can still browse available offers.';
+
+  @override
+  String get noArkadeOffersAvailable => 'No Arkade offers available';
+
+  @override
+  String get signInToViewYourContracts => 'Sign in to view your contracts';
+
+  @override
+  String get noContractsMatchSearch => 'No contracts match your search';
+
+  @override
+  String get noContractsYet =>
+      'No contracts yet. Take an offer to get started!';
+
+  @override
+  String get duration => 'Duration';
+
+  @override
+  String get minLtv => 'Min LTV';
+
+  @override
+  String get limitedTimeOffer => 'Limited time offer — super cheap!';
+
+  @override
+  String get interest => 'Interest';
+
+  @override
+  String get due => 'Due';
+
+  @override
+  String get overdue => 'Overdue';
+
+  @override
+  String get swapDetails => 'Swap Details';
+
+  @override
+  String get errorLoadingSwap => 'Error loading swap';
+
+  @override
+  String get refundAddress => 'Refund Address';
+
+  @override
+  String get fundSwap => 'Fund Swap';
+
+  @override
+  String get youSend => 'You send';
+
+  @override
+  String get youReceive => 'You receive';
+
+  @override
+  String get walletConnected => 'Wallet Connected';
+
+  @override
+  String get switchWallet => 'Switch';
+
+  @override
+  String get creatingSwap => 'Creating Swap...';
+
+  @override
+  String get approvingToken => 'Approving token...';
+
+  @override
+  String get creatingHtlc => 'Creating HTLC...';
+
+  @override
+  String get swapFundedSuccessfully => 'Swap funded successfully!';
+
+  @override
+  String get feedback => 'Feedback';
+
+  @override
+  String get continueButton => 'Continue';
+
+  @override
+  String get paste => 'Paste';
+
+  @override
+  String get scanQr => 'Scan QR';
+
+  @override
+  String get youPay => 'You pay';
+
+  @override
+  String get totalFeesLabel => 'Total fees';
+
+  @override
+  String get beforeFees => 'before fees';
+
+  @override
+  String get networkFee => 'Network';
+
+  @override
+  String get protocolFee => 'Protocol';
+
+  @override
+  String get receivingAddress => 'Receiving address';
+
+  @override
+  String get waitingForDeposit => 'Waiting for Deposit';
+
+  @override
+  String get processing => 'Processing';
+
+  @override
+  String get completed => 'Completed';
+
+  @override
+  String get expired => 'Expired';
+
+  @override
+  String get refundable => 'Refundable';
+
+  @override
+  String get refundedStatus => 'Refunded';
+
+  @override
+  String get failed => 'Failed';
+
+  @override
+  String get confirmSwap => 'Confirm Swap';
+
+  @override
+  String get unknownError => 'Unknown error';
+
+  @override
+  String get sendFeedback => 'Send Feedback';
 }

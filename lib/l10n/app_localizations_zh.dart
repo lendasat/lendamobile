@@ -1119,4 +1119,145 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get allRightsReserved => 'All rights reserved';
+
+  @override
+  String get loansAndLeverage => '贷款市场';
+
+  @override
+  String get availableOffers => '可用报价';
+
+  @override
+  String get myContracts => '我的合约';
+
+  @override
+  String get signInRequired => '需要登录';
+
+  @override
+  String get signInToViewContracts => '登录以查看您的合约并获取贷款。';
+
+  @override
+  String get noArkadeOffersAvailable => '没有可用的 Arkade 报价';
+
+  @override
+  String get signInToViewYourContracts => '登录以查看您的合约';
+
+  @override
+  String get noContractsMatchSearch => '没有合约匹配您的搜索';
+
+  @override
+  String get noContractsYet => '暂无合约。接受报价以开始！';
+
+  @override
+  String get duration => '期限';
+
+  @override
+  String get minLtv => '最低 LTV';
+
+  @override
+  String get limitedTimeOffer => '限时优惠 — 超级便宜！';
+
+  @override
+  String get interest => '利息';
+
+  @override
+  String get due => '到期';
+
+  @override
+  String get overdue => '逾期';
+
+  @override
+  String get swapDetails => '兑换详情';
+
+  @override
+  String get errorLoadingSwap => '加载兑换时出错';
+
+  @override
+  String get refundAddress => '退款地址';
+
+  @override
+  String get fundSwap => '为兑换注资';
+
+  @override
+  String get youSend => '您发送';
+
+  @override
+  String get youReceive => '您接收';
+
+  @override
+  String get walletConnected => '钱包已连接';
+
+  @override
+  String get switchWallet => '切换';
+
+  @override
+  String get creatingSwap => '正在创建兑换...';
+
+  @override
+  String get approvingToken => '正在批准代币...';
+
+  @override
+  String get creatingHtlc => '正在创建 HTLC...';
+
+  @override
+  String get swapFundedSuccessfully => '兑换注资成功！';
+
+  @override
+  String get feedback => '反馈';
+
+  @override
+  String get continueButton => '继续';
+
+  @override
+  String get paste => '粘贴';
+
+  @override
+  String get scanQr => '扫描二维码';
+
+  @override
+  String get youPay => '您支付';
+
+  @override
+  String get totalFeesLabel => '总费用';
+
+  @override
+  String get beforeFees => '费用前';
+
+  @override
+  String get networkFee => '网络';
+
+  @override
+  String get protocolFee => '协议';
+
+  @override
+  String get receivingAddress => '接收地址';
+
+  @override
+  String get waitingForDeposit => '等待存款';
+
+  @override
+  String get processing => '处理中';
+
+  @override
+  String get completed => '已完成';
+
+  @override
+  String get expired => '已过期';
+
+  @override
+  String get refundable => '可退款';
+
+  @override
+  String get refundedStatus => '已退款';
+
+  @override
+  String get failed => '失败';
+
+  @override
+  String get confirmSwap => '确认兑换';
+
+  @override
+  String get unknownError => '未知错误';
+
+  @override
+  String get sendFeedback => '发送反馈';
 }

@@ -1129,4 +1129,145 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get allRightsReserved => 'All rights reserved';
+
+  @override
+  String get loansAndLeverage => 'سوق القروض';
+
+  @override
+  String get availableOffers => 'العروض المتاحة';
+
+  @override
+  String get myContracts => 'عقودي';
+
+  @override
+  String get signInRequired => 'تسجيل الدخول مطلوب';
+
+  @override
+  String get signInToViewContracts => 'سجل الدخول لعرض عقودك والحصول على قروض.';
+
+  @override
+  String get noArkadeOffersAvailable => 'لا توجد عروض Arkade متاحة';
+
+  @override
+  String get signInToViewYourContracts => 'سجل الدخول لعرض عقودك';
+
+  @override
+  String get noContractsMatchSearch => 'لا توجد عقود تطابق بحثك';
+
+  @override
+  String get noContractsYet => 'لا توجد عقود بعد. اقبل عرضاً للبدء!';
+
+  @override
+  String get duration => 'المدة';
+
+  @override
+  String get minLtv => 'الحد الأدنى LTV';
+
+  @override
+  String get limitedTimeOffer => 'عرض محدود — رخيص جداً!';
+
+  @override
+  String get interest => 'الفائدة';
+
+  @override
+  String get due => 'مستحق';
+
+  @override
+  String get overdue => 'متأخر';
+
+  @override
+  String get swapDetails => 'تفاصيل المبادلة';
+
+  @override
+  String get errorLoadingSwap => 'خطأ في تحميل المبادلة';
+
+  @override
+  String get refundAddress => 'عنوان الاسترداد';
+
+  @override
+  String get fundSwap => 'تمويل المبادلة';
+
+  @override
+  String get youSend => 'ترسل';
+
+  @override
+  String get youReceive => 'تستلم';
+
+  @override
+  String get walletConnected => 'المحفظة متصلة';
+
+  @override
+  String get switchWallet => 'تبديل';
+
+  @override
+  String get creatingSwap => 'جاري إنشاء المبادلة...';
+
+  @override
+  String get approvingToken => 'جاري الموافقة على الرمز...';
+
+  @override
+  String get creatingHtlc => 'جاري إنشاء HTLC...';
+
+  @override
+  String get swapFundedSuccessfully => 'تم تمويل المبادلة بنجاح!';
+
+  @override
+  String get feedback => 'ملاحظات';
+
+  @override
+  String get continueButton => 'متابعة';
+
+  @override
+  String get paste => 'لصق';
+
+  @override
+  String get scanQr => 'مسح QR';
+
+  @override
+  String get youPay => 'تدفع';
+
+  @override
+  String get totalFeesLabel => 'إجمالي الرسوم';
+
+  @override
+  String get beforeFees => 'قبل الرسوم';
+
+  @override
+  String get networkFee => 'الشبكة';
+
+  @override
+  String get protocolFee => 'البروتوكول';
+
+  @override
+  String get receivingAddress => 'عنوان الاستلام';
+
+  @override
+  String get waitingForDeposit => 'في انتظار الإيداع';
+
+  @override
+  String get processing => 'جاري المعالجة';
+
+  @override
+  String get completed => 'مكتمل';
+
+  @override
+  String get expired => 'منتهي';
+
+  @override
+  String get refundable => 'قابل للاسترداد';
+
+  @override
+  String get refundedStatus => 'مسترد';
+
+  @override
+  String get failed => 'فشل';
+
+  @override
+  String get confirmSwap => 'تأكيد المبادلة';
+
+  @override
+  String get unknownError => 'خطأ غير معروف';
+
+  @override
+  String get sendFeedback => 'إرسال ملاحظات';
 }

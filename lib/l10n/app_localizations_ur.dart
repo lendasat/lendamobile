@@ -1130,4 +1130,148 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get allRightsReserved => 'All rights reserved';
+
+  @override
+  String get loansAndLeverage => 'قرضوں کا بازار';
+
+  @override
+  String get availableOffers => 'دستیاب پیشکشیں';
+
+  @override
+  String get myContracts => 'میرے معاہدے';
+
+  @override
+  String get signInRequired => 'سائن ان ضروری ہے';
+
+  @override
+  String get signInToViewContracts =>
+      'اپنے معاہدے دیکھنے اور قرض لینے کے لیے سائن ان کریں۔';
+
+  @override
+  String get noArkadeOffersAvailable => 'کوئی Arkade پیشکش دستیاب نہیں';
+
+  @override
+  String get signInToViewYourContracts =>
+      'اپنے معاہدے دیکھنے کے لیے سائن ان کریں';
+
+  @override
+  String get noContractsMatchSearch => 'کوئی معاہدہ آپ کی تلاش سے مماثل نہیں';
+
+  @override
+  String get noContractsYet =>
+      'ابھی کوئی معاہدہ نہیں۔ شروع کرنے کے لیے پیشکش قبول کریں!';
+
+  @override
+  String get duration => 'مدت';
+
+  @override
+  String get minLtv => 'کم از کم LTV';
+
+  @override
+  String get limitedTimeOffer => 'محدود وقت کی پیشکش — بہت سستی!';
+
+  @override
+  String get interest => 'سود';
+
+  @override
+  String get due => 'واجب الادا';
+
+  @override
+  String get overdue => 'تاخیر';
+
+  @override
+  String get swapDetails => 'سواپ کی تفصیلات';
+
+  @override
+  String get errorLoadingSwap => 'سواپ لوڈ کرنے میں خرابی';
+
+  @override
+  String get refundAddress => 'واپسی کا پتہ';
+
+  @override
+  String get fundSwap => 'سواپ فنڈ کریں';
+
+  @override
+  String get youSend => 'آپ بھیجیں';
+
+  @override
+  String get youReceive => 'آپ وصول کریں';
+
+  @override
+  String get walletConnected => 'والیٹ منسلک';
+
+  @override
+  String get switchWallet => 'تبدیل';
+
+  @override
+  String get creatingSwap => 'سواپ بنایا جا رہا ہے...';
+
+  @override
+  String get approvingToken => 'ٹوکن منظور کیا جا رہا ہے...';
+
+  @override
+  String get creatingHtlc => 'HTLC بنایا جا رہا ہے...';
+
+  @override
+  String get swapFundedSuccessfully => 'سواپ کامیابی سے فنڈ ہو گیا!';
+
+  @override
+  String get feedback => 'فیڈبیک';
+
+  @override
+  String get continueButton => 'جاری رکھیں';
+
+  @override
+  String get paste => 'چسپاں';
+
+  @override
+  String get scanQr => 'QR اسکین';
+
+  @override
+  String get youPay => 'آپ ادا کریں';
+
+  @override
+  String get totalFeesLabel => 'کل فیس';
+
+  @override
+  String get beforeFees => 'فیس سے پہلے';
+
+  @override
+  String get networkFee => 'نیٹ ورک';
+
+  @override
+  String get protocolFee => 'پروٹوکول';
+
+  @override
+  String get receivingAddress => 'وصول کرنے کا پتہ';
+
+  @override
+  String get waitingForDeposit => 'ڈپازٹ کا انتظار';
+
+  @override
+  String get processing => 'پراسیس ہو رہا ہے';
+
+  @override
+  String get completed => 'مکمل';
+
+  @override
+  String get expired => 'ختم ہو گیا';
+
+  @override
+  String get refundable => 'واپسی قابل';
+
+  @override
+  String get refundedStatus => 'واپس';
+
+  @override
+  String get failed => 'ناکام';
+
+  @override
+  String get confirmSwap => 'سواپ کی تصدیق';
+
+  @override
+  String get unknownError => 'نامعلوم خرابی';
+
+  @override
+  String get sendFeedback => 'فیڈبیک بھیجیں';
 }

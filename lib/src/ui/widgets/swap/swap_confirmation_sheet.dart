@@ -1,3 +1,4 @@
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
@@ -77,7 +78,7 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
       extendBodyBehindAppBar: true,
       appBar: BitNetAppBar(
         context: context,
-        text: 'Confirm Swap',
+        text: AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
         hasBackButton: false,
       ),
       body: Padding(
@@ -115,7 +116,7 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
             const SizedBox(height: AppTheme.cardPadding),
             // Confirm button
             LongButtonWidget(
-              title: 'Confirm Swap',
+              title: AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
               customWidth: double.infinity,
               state: widget.isLoading ? ButtonState.loading : ButtonState.idle,
               onTap: widget.isLoading ? null : widget.onConfirm,
@@ -139,7 +140,7 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'You pay',
+                    AppLocalizations.of(context)?.youPay ?? 'You pay',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color:
                               isDarkMode ? AppTheme.white60 : AppTheme.black60,
@@ -188,7 +189,7 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'You receive',
+                    AppLocalizations.of(context)?.youReceive ?? 'You receive',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color:
                               isDarkMode ? AppTheme.white60 : AppTheme.black60,
@@ -208,7 +209,7 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                   // Gross amount (before fees) - secondary
                   if (!widget.targetToken.isBtc && _totalFeesUsd > 0.01)
                     Text(
-                      'before fees: \$$grossAmount',
+                      '${AppLocalizations.of(context)?.beforeFees ?? 'before fees'}: \$$grossAmount',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: isDarkMode
                                 ? AppTheme.white60
@@ -240,7 +241,7 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Total fees',
+                    AppLocalizations.of(context)?.totalFeesLabel ?? 'Total fees',
                     style: TextStyle(
                       fontSize: 14,
                       color: isDarkMode ? Colors.white : Colors.black,
@@ -292,14 +293,14 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                   const SizedBox(height: AppTheme.elementSpacing),
                   _buildFeeRow(
                     context,
-                    'Network',
+                    AppLocalizations.of(context)?.networkFee ?? 'Network',
                     '~\$${_networkFeeUsd.toStringAsFixed(2)}',
                     isDarkMode,
                   ),
                   const SizedBox(height: AppTheme.elementSpacing * 0.5),
                   _buildFeeRow(
                     context,
-                    'Protocol (${widget.protocolFeePercent}%)',
+                    '${AppLocalizations.of(context)?.protocolFee ?? 'Protocol'} (${widget.protocolFeePercent}%)',
                     '~\$${_protocolFeeUsd.toStringAsFixed(2)}',
                     isDarkMode,
                   ),
@@ -352,7 +353,7 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Receiving address',
+              AppLocalizations.of(context)?.receivingAddress ?? 'Receiving address',
               style: TextStyle(
                 fontSize: 14,
                 color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
