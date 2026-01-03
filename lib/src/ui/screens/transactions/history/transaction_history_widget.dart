@@ -714,9 +714,9 @@ class _TransactionItemWidget extends StatelessWidget {
     final amountBtc = amountSats / BitcoinConstants.satsPerBtc;
 
     // Use actual BTC price, with fallback only if not available
-    final btcPriceUsd = bitcoinPrice ?? 0;
-    // USD value - formatAmount handles currency conversion
-    final amountUsd = amountBtc * btcPriceUsd;
+    final btcPrice = bitcoinPrice ?? 0;
+    // formatAmount handles currency conversion internally
+    final fiatAmount = amountBtc * btcPrice;
 
     String transactionType = dialogTitle.replaceAll(' Transaction', '');
 
@@ -833,7 +833,7 @@ class _TransactionItemWidget extends StatelessWidget {
                                 Text(
                                   showBtcAsMain
                                       ? '${amountSats.isNegative ? "" : "+"}${amountSats.abs()}'
-                                      : '${amountSats.isNegative ? "-" : "+"}${currencyService.formatAmount(amountUsd.abs())}',
+                                      : '${amountSats.isNegative ? "-" : "+"}${currencyService.formatAmount(fiatAmount.abs())}',
                                   overflow: TextOverflow.ellipsis,
                                   style:
                                       Theme.of(context).textTheme.titleMedium,

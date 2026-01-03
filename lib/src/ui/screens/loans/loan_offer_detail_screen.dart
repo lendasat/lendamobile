@@ -11,8 +11,11 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/screens/loans/contract_detail_screen.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
+import 'package:url_launcher/url_launcher.dart' as url_launcher;
 
 /// Screen to view loan offer details and create a contract.
 class LoanOfferDetailScreen extends StatefulWidget {
@@ -228,6 +231,101 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     }
   }
 
+  /// Show bottom sheet with LendaSat information
+  void _showLendasatInfoSheet() {
+    final l10n = AppLocalizations.of(context);
+
+    arkBottomSheet(
+      context: context,
+      height: MediaQuery.of(context).size.height * 0.55,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.colorBitcoin.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.handshake_outlined,
+                    color: AppTheme.colorBitcoin,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.elementSpacing),
+                Expanded(
+                  child: Text(
+                    l10n?.aboutLendasat ?? 'About LendaSat',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.cardPadding * 1.5),
+            // Description
+            Text(
+              l10n?.lendasatInfoDescription ??
+                  'LendaSat is a Bitcoin peer-to-peer loan marketplace. We act as a platform that connects you with private lenders who provide the funds. Your Bitcoin is used as collateral, and you receive the loan amount directly. All transactions are secured through smart contracts on the Bitcoin network.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.8),
+                    height: 1.6,
+                  ),
+            ),
+            const Spacer(),
+            // Learn more link with arrow
+            GestureDetector(
+              onTap: () async {
+                Navigator.pop(context);
+                final url = Uri.parse('https://lendasat.com');
+                if (await url_launcher.canLaunchUrl(url)) {
+                  await url_launcher.launchUrl(url,
+                      mode: url_launcher.LaunchMode.externalApplication);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    vertical: AppTheme.elementSpacing),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      l10n?.learnMoreAboutLendasat ??
+                          'Learn more about how LendaSat works',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ArkScaffold(
@@ -393,10 +491,13 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
               ],
             ),
           ),
-          Icon(
-            Icons.info_outline_rounded,
-            size: 18,
-            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+          GestureDetector(
+            onTap: _showLendasatInfoSheet,
+            child: Icon(
+              Icons.info_outline_rounded,
+              size: 18,
+              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+            ),
           ),
         ],
       ),

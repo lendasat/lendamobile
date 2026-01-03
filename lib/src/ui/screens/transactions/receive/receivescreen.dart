@@ -337,6 +337,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       payment: payment,
       onDismiss: () {
         if (mounted) {
+          _unfocusAll();
           Navigator.of(context).popUntil((route) => route.isFirst);
         }
       },
@@ -621,6 +622,11 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     return '${address.substring(0, 10)}...${address.substring(address.length - 10)}';
   }
 
+  /// Unfocus all text fields to dismiss keyboard
+  void _unfocusAll() {
+    _amountFocusNode.unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -632,7 +638,10 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       appBar: BitNetAppBar(
         context: context,
         text: l10n.receiveLower,
-        onTap: () => Navigator.pop(context),
+        onTap: () {
+          _unfocusAll();
+          Navigator.pop(context);
+        },
         actions: [
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -665,6 +674,11 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       ),
       body: PopScope(
         canPop: true,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) {
+            _unfocusAll();
+          }
+        },
         child: SingleChildScrollView(
           child: SizedBox(
             width: double.infinity,

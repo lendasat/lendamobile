@@ -753,6 +753,7 @@ class SendScreenState extends State<SendScreen>
 
       // Return to wallet and show success
       if (mounted) {
+        _unfocusAll();
         Navigator.of(context).popUntil((route) => route.isFirst);
         OverlayService().showSuccess('Lightning payment sent!');
       }
@@ -787,6 +788,7 @@ class SendScreenState extends State<SendScreen>
 
     // Return to wallet immediately - the send continues in background
     if (mounted) {
+      _unfocusAll();
       Navigator.of(context).popUntil((route) => route.isFirst);
       // Show a subtle notification that send is in progress
       OverlayService().showSuccess('Sending transaction...');
@@ -830,6 +832,12 @@ class SendScreenState extends State<SendScreen>
     });
   }
 
+  /// Unfocus all text fields to dismiss keyboard
+  void _unfocusAll() {
+    _amountFocusNode.unfocus();
+    _addressFocusNode.unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -842,11 +850,19 @@ class SendScreenState extends State<SendScreen>
         context: context,
         text: l10n.sendBitcoin,
         hasBackButton: true,
-        onTap: () => Navigator.pop(context),
+        onTap: () {
+          _unfocusAll();
+          Navigator.pop(context);
+        },
         buttonType: ButtonType.transparent,
       ),
       body: PopScope(
         canPop: true,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) {
+            _unfocusAll();
+          }
+        },
         child: _buildSendContent(context),
       ),
     );

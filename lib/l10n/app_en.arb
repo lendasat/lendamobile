@@ -474,5 +474,8 @@
   "sendFeedback": "Send Feedback",
   "sender": "Sender",
   "receiver": "Receiver",
-  "scan": "Scan"
+  "scan": "Scan",
+  "aboutLendasat": "About LendaSat",
+  "lendasatInfoDescription": "LendaSat is a Bitcoin peer-to-peer loan marketplace. We act as a platform that connects you with private lenders who provide the funds. Your Bitcoin is used as collateral, and you receive the loan amount directly. All transactions are secured through smart contracts on the Bitcoin network.",
+  "learnMoreAboutLendasat": "Learn more about how LendaSat works"
 }

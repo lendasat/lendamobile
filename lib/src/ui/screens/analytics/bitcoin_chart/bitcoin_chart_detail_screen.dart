@@ -59,47 +59,47 @@ class _BitcoinChartDetailScreenState extends State<BitcoinChartDetailScreen> {
             child: SizedBox(height: 24),
           ),
 
-          // Action Buttons
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  BitNetImageWithTextButton(
-                    AppLocalizations.of(context)!.sendLower,
-                    () {
-                      Navigator.of(context).pushNamed('/send');
-                    },
-                    fallbackIcon: Icons.arrow_upward_rounded,
-                  ),
-                  BitNetImageWithTextButton(
-                    AppLocalizations.of(context)!.receiveLower,
-                    () {
-                      Navigator.of(context).pushNamed('/receive');
-                    },
-                    fallbackIcon: Icons.arrow_downward_rounded,
-                  ),
-                  BitNetImageWithTextButton(
-                    'Swap',
-                    () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SwapScreen(),
-                        ),
-                      );
-                    },
-                    fallbackIcon: Icons.sync_rounded,
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // // Action Buttons
+          // SliverToBoxAdapter(
+          //   child: Padding(
+          //     padding: const EdgeInsets.symmetric(horizontal: 16),
+          //     child: Row(
+          //       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          //       children: [
+          //         BitNetImageWithTextButton(
+          //           AppLocalizations.of(context)!.sendLower,
+          //           () {
+          //             Navigator.of(context).pushNamed('/send');
+          //           },
+          //           fallbackIcon: Icons.arrow_upward_rounded,
+          //         ),
+          //         BitNetImageWithTextButton(
+          //           AppLocalizations.of(context)!.receiveLower,
+          //           () {
+          //             Navigator.of(context).pushNamed('/receive');
+          //           },
+          //           fallbackIcon: Icons.arrow_downward_rounded,
+          //         ),
+          //         BitNetImageWithTextButton(
+          //           'Swap',
+          //           () {
+          //             Navigator.push(
+          //               context,
+          //               MaterialPageRoute(
+          //                 builder: (context) => const SwapScreen(),
+          //               ),
+          //             );
+          //           },
+          //           fallbackIcon: Icons.sync_rounded,
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
 
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 32),
-          ),
+          // const SliverToBoxAdapter(
+          //   child: SizedBox(height: 32),
+          // ),
 
           // About Section
           SliverToBoxAdapter(

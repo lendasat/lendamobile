@@ -259,14 +259,15 @@ class _AmountWidgetState extends State<AmountWidget> {
             ) ??
             0.0;
 
-    double btcAmount =
-        _service.currentUnit == CurrencyType.sats ? amount / BitcoinConstants.satsPerBtc : amount;
-    double usdAmount = btcAmount * bitcoinPrice;
+    double btcAmount = _service.currentUnit == CurrencyType.sats
+        ? amount / BitcoinConstants.satsPerBtc
+        : amount;
+    double fiatAmount = btcAmount * bitcoinPrice;
 
-    // Convert USD to user's selected currency
+    // Convert to user's selected currency for the text field
     final exchangeRates = currencyService.exchangeRates;
     final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
-    final localCurrencyAmount = usdAmount * fiatRate;
+    final localCurrencyAmount = fiatAmount * fiatRate;
 
     if (!_service.preventConversion) {
       widget.currController.text = localCurrencyAmount.toStringAsFixed(2);
@@ -280,8 +281,9 @@ class _AmountWidgetState extends State<AmountWidget> {
       _service.processAutoConvert(unitEquivalent);
     }
 
+    // formatAmount handles currency conversion internally
     return Text(
-      "≈ ${currencyService.formatAmount(localCurrencyAmount)}",
+      "≈ ${currencyService.formatAmount(fiatAmount)}",
       style: materialTheme.textTheme.bodyLarge?.copyWith(
           color:
               Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),

@@ -56,7 +56,8 @@ class WalletScreen extends StatefulWidget {
   WalletScreenState createState() => WalletScreenState();
 }
 
-class WalletScreenState extends State<WalletScreen> {
+class WalletScreenState extends State<WalletScreen>
+    with WidgetsBindingObserver {
   // Loading states - start as true since we fetch data in initState
   bool _isBalanceLoading = true;
   bool _isTransactionFetching = true;
@@ -99,6 +100,7 @@ class WalletScreenState extends State<WalletScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     logger.i("WalletScreen initialized with ASP ID: ${widget.aspId}");
     _initializeWalletData();
     _loadBitcoinPriceData();
@@ -109,6 +111,15 @@ class WalletScreenState extends State<WalletScreen> {
       context.read<CurrencyPreferenceService>().fetchExchangeRates();
       _checkAndShowAlphaWarning();
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Clear any lingering keyboard when app resumes
+    if (state == AppLifecycleState.resumed) {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
   }
 
   /// Initialize wallet data with retry to ensure fresh data is loaded
@@ -196,6 +207,7 @@ class WalletScreenState extends State<WalletScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
     super.dispose();
   }
@@ -697,82 +709,86 @@ class WalletScreenState extends State<WalletScreen> {
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: systemUiStyle,
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        // Extend body behind status bar so gradient fills notch area
-        extendBodyBehindAppBar: true,
-        body: RefreshIndicator(
-          onRefresh: fetchWalletData,
-          child: CustomScrollView(
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              // Main wallet header with gradient and chart
-              SliverToBoxAdapter(
-                child: Stack(
-                  children: [
-                    // Dynamic gradient background - extends into status bar area
-                    _buildDynamicGradient(),
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          // Extend body behind status bar so gradient fills notch area
+          extendBodyBehindAppBar: true,
+          body: RefreshIndicator(
+            onRefresh: fetchWalletData,
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                // Main wallet header with gradient and chart
+                SliverToBoxAdapter(
+                  child: Stack(
+                    children: [
+                      // Dynamic gradient background - extends into status bar area
+                      _buildDynamicGradient(),
 
-                    // Chart overlay
-                    Opacity(
-                      opacity: 0.1,
-                      child: _buildChartWidget(),
-                    ),
-
-                    // Main content with SafeArea for proper padding
-                    SafeArea(
-                      child: Column(
-                        children: [
-                          const SizedBox(height: AppTheme.cardPadding),
-                          _buildTopBar(),
-                          const SizedBox(height: AppTheme.cardPadding * 1.5),
-                          _buildBalanceDisplay(),
-                          if (_lockedCollateralSats > 0) ...[
-                            const SizedBox(
-                                height: AppTheme.elementSpacing * 0.5),
-                            _buildLockedCollateralDisplay(),
-                          ],
-                          if (_boardingBalanceSats > 0) ...[
-                            const SizedBox(
-                                height: AppTheme.elementSpacing * 0.5),
-                            _buildBoardingBalanceDisplay(),
-                          ],
-                          const SizedBox(height: AppTheme.elementSpacing),
-                          _buildPriceChangeIndicators(),
-                          const SizedBox(height: AppTheme.cardPadding * 1.5),
-                          _buildActionButtons(),
-                          const SizedBox(height: AppTheme.cardPadding),
-                        ],
+                      // Chart overlay
+                      Opacity(
+                        opacity: 0.1,
+                        child: _buildChartWidget(),
                       ),
-                    ),
-                  ],
+
+                      // Main content with SafeArea for proper padding
+                      SafeArea(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: AppTheme.cardPadding),
+                            _buildTopBar(),
+                            const SizedBox(height: AppTheme.cardPadding * 1.5),
+                            _buildBalanceDisplay(),
+                            if (_lockedCollateralSats > 0) ...[
+                              const SizedBox(
+                                  height: AppTheme.elementSpacing * 0.5),
+                              _buildLockedCollateralDisplay(),
+                            ],
+                            if (_boardingBalanceSats > 0) ...[
+                              const SizedBox(
+                                  height: AppTheme.elementSpacing * 0.5),
+                              _buildBoardingBalanceDisplay(),
+                            ],
+                            const SizedBox(height: AppTheme.elementSpacing),
+                            _buildPriceChangeIndicators(),
+                            const SizedBox(height: AppTheme.cardPadding * 1.5),
+                            _buildActionButtons(),
+                            const SizedBox(height: AppTheme.cardPadding),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              // Cryptos section
-              SliverToBoxAdapter(
-                child: _buildCryptosSection(),
-              ),
-
-              // Spacing before transaction list
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppTheme.cardPadding),
-              ),
-
-              // Transaction list (TransactionHistoryWidget has its own header)
-              SliverToBoxAdapter(
-                child: _buildTransactionList(),
-              ),
-
-              // Bottom padding with SafeArea for bottom inset
-              SliverToBoxAdapter(
-                child: SafeArea(
-                  top: false,
-                  child: SizedBox(height: AppTheme.cardPadding * 2),
+                // Cryptos section
+                SliverToBoxAdapter(
+                  child: _buildCryptosSection(),
                 ),
-              ),
-            ],
+
+                // Spacing before transaction list
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppTheme.cardPadding),
+                ),
+
+                // Transaction list (TransactionHistoryWidget has its own header)
+                SliverToBoxAdapter(
+                  child: _buildTransactionList(),
+                ),
+
+                // Bottom padding with SafeArea for bottom inset
+                SliverToBoxAdapter(
+                  child: SafeArea(
+                    top: false,
+                    child: SizedBox(height: AppTheme.cardPadding * 2),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1016,9 +1032,9 @@ class WalletScreenState extends State<WalletScreen> {
 
     final formattedSats = _formatSatsAmount(_lockedCollateralSats);
     final lockedBtc = _lockedCollateralSats / BitcoinConstants.satsPerBtc;
-    final btcPriceUsd = _getCurrentBtcPrice();
-    // USD value - formatAmount will handle currency conversion
-    final lockedUsd = lockedBtc * btcPriceUsd;
+    final btcPrice = _getCurrentBtcPrice();
+    // formatAmount handles currency conversion internally
+    final lockedFiatAmount = lockedBtc * btcPrice;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
@@ -1043,7 +1059,7 @@ class WalletScreenState extends State<WalletScreen> {
                 userPrefs.balancesVisible
                     ? (currencyService.showCoinBalance
                         ? '$formattedSats sats'
-                        : currencyService.formatAmount(lockedUsd))
+                        : currencyService.formatAmount(lockedFiatAmount))
                     : '****',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context)
@@ -1075,9 +1091,9 @@ class WalletScreenState extends State<WalletScreen> {
 
     final formattedSats = _formatSatsAmount(_boardingBalanceSats);
     final boardingBtc = _boardingBalanceSats / BitcoinConstants.satsPerBtc;
-    final btcPriceUsd = _getCurrentBtcPrice();
-    // USD value - formatAmount will handle currency conversion
-    final boardingUsd = boardingBtc * btcPriceUsd;
+    final btcPrice = _getCurrentBtcPrice();
+    // formatAmount handles currency conversion internally
+    final boardingFiatAmount = boardingBtc * btcPrice;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
@@ -1115,7 +1131,7 @@ class WalletScreenState extends State<WalletScreen> {
                 userPrefs.balancesVisible
                     ? (currencyService.showCoinBalance
                         ? '$formattedSats sats'
-                        : currencyService.formatAmount(boardingUsd))
+                        : currencyService.formatAmount(boardingFiatAmount))
                     : '****',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context)

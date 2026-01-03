@@ -1295,4 +1295,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get scan => 'Scannen';
+
+  @override
+  String get aboutLendasat => 'Über LendaSat';
+
+  @override
+  String get lendasatInfoDescription =>
+      'LendaSat ist ein Bitcoin Peer-to-Peer Kreditmarktplatz. Wir fungieren als Plattform, die Sie mit privaten Kreditgebern verbindet, die das Kapital bereitstellen. Ihr Bitcoin dient als Sicherheit und Sie erhalten den Kreditbetrag direkt. Alle Transaktionen werden durch Smart Contracts im Bitcoin-Netzwerk abgesichert.';
+
+  @override
+  String get learnMoreAboutLendasat => 'Erfahren Sie mehr über LendaSat';
 }

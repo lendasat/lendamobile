@@ -115,10 +115,13 @@ class SwapScreenState extends State<SwapScreen> {
     super.dispose();
   }
 
-  /// Unfocus all text fields - called when screen becomes invisible
+  /// Unfocus all text fields and cancel pending operations
+  /// Called when screen becomes invisible (tab switch)
   void unfocusAll() {
     _sourceFocusNode.unfocus();
     _targetFocusNode.unfocus();
+    // Cancel any pending quote fetch to prevent callbacks after tab switch
+    _quoteDebounceTimer?.cancel();
   }
 
   /// Fetch quote from LendaSwap API with debouncing
@@ -966,73 +969,85 @@ class SwapScreenState extends State<SwapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ArkScaffold(
-      context: context,
-      extendBodyBehindAppBar: true,
-      resizeToAvoidBottomInset: true,
-      appBar: BitNetAppBar(
-        text: "Swap",
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.translucent,
+      child: ArkScaffold(
         context: context,
-        hasBackButton: false,
-      ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            controller: scrollController,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: AppTheme.cardPadding * 2),
-                // Uniswap-style card stack with connected border
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.cardPadding,
-                  ),
-                  child: Stack(
-                    children: [
-                      Column(
-                        children: [
-                          // SOURCE CARD (You Sell)
-                          _SwapAmountCard(
-                            token: sourceToken,
-                            cardTitle: "Sell",
-                            controller: _sourceController,
-                            focusNode: _sourceFocusNode,
-                            showUsdMode: sourceShowUsd,
-                            conversionText: _getSourceConversionText(),
-                            onAmountChanged: _onSourceAmountChanged,
-                            onToggleMode:
-                                sourceToken.isBtc ? _toggleSourceMode : null,
-                            availableTokens: _getAvailableSourceTokens(),
-                            onTokenChanged: _onSourceTokenChanged,
-                            showBalance: true,
-                            label: 'sell',
-                            isTopCard: true,
-                            btcUnit: _sourceBtcUnit,
-                          ),
-                          const SizedBox(height: 4),
-                          // TARGET CARD (You Buy)
-                          _SwapAmountCard(
-                            token: targetToken,
-                            cardTitle: "Buy",
-                            controller: _targetController,
-                            focusNode: _targetFocusNode,
-                            showUsdMode: targetShowUsd,
-                            conversionText: _getTargetConversionText(),
-                            onAmountChanged: _onTargetAmountChanged,
-                            onToggleMode:
-                                targetToken.isBtc ? _toggleTargetMode : null,
-                            availableTokens: _getAvailableTargetTokens(),
-                            onTokenChanged: _onTargetTokenChanged,
-                            showBalance: false,
-                            label: 'buy',
-                            isTopCard: false,
-                            btcUnit: _targetBtcUnit,
-                          ),
-                        ],
+        extendBodyBehindAppBar: true,
+        resizeToAvoidBottomInset: true,
+        appBar: BitNetAppBar(
+          text: "Swap",
+          context: context,
+          hasBackButton: false,
+        ),
+        body: PopScope(
+          canPop: true,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) {
+              unfocusAll();
+            }
+          },
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                controller: scrollController,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: AppTheme.cardPadding * 2),
+                    // Uniswap-style card stack with connected border
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.cardPadding,
                       ),
-                      // SWAP BUTTON - Hidden for first release as only one direction is supported
-                      /*
+                      child: Stack(
+                        children: [
+                          Column(
+                            children: [
+                              // SOURCE CARD (You Sell)
+                              _SwapAmountCard(
+                                token: sourceToken,
+                                cardTitle: "Sell",
+                                controller: _sourceController,
+                                focusNode: _sourceFocusNode,
+                                showUsdMode: sourceShowUsd,
+                                conversionText: _getSourceConversionText(),
+                                onAmountChanged: _onSourceAmountChanged,
+                                onToggleMode: sourceToken.isBtc
+                                    ? _toggleSourceMode
+                                    : null,
+                                availableTokens: _getAvailableSourceTokens(),
+                                onTokenChanged: _onSourceTokenChanged,
+                                showBalance: true,
+                                label: 'sell',
+                                isTopCard: true,
+                                btcUnit: _sourceBtcUnit,
+                              ),
+                              const SizedBox(height: 4),
+                              // TARGET CARD (You Buy)
+                              _SwapAmountCard(
+                                token: targetToken,
+                                cardTitle: "Buy",
+                                controller: _targetController,
+                                focusNode: _targetFocusNode,
+                                showUsdMode: targetShowUsd,
+                                conversionText: _getTargetConversionText(),
+                                onAmountChanged: _onTargetAmountChanged,
+                                onToggleMode: targetToken.isBtc
+                                    ? _toggleTargetMode
+                                    : null,
+                                availableTokens: _getAvailableTargetTokens(),
+                                onTokenChanged: _onTargetTokenChanged,
+                                showBalance: false,
+                                label: 'buy',
+                                isTopCard: false,
+                                btcUnit: _targetBtcUnit,
+                              ),
+                            ],
+                          ),
+                          // SWAP BUTTON - Hidden for first release as only one direction is supported
+                          /*
                       Positioned.fill(
                         child: Align(
                           alignment: Alignment.center,
@@ -1065,38 +1080,41 @@ class SwapScreenState extends State<SwapScreen> {
                         ),
                       ),
                       */
-                    ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.cardPadding),
+                    // Minimal rate info
+                    _buildRateInfo(context),
+                    const SizedBox(height: AppTheme.cardPadding * 5.5),
+                  ],
+                ),
+              ),
+              // Bottom button
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: AppTheme.cardPadding,
+                child: Center(
+                  child: LongButtonWidget(
+                    title: _getButtonTitle(),
+                    customWidth: MediaQuery.of(context).size.width -
+                        AppTheme.cardPadding * 2,
+                    buttonType: _isAmountValid
+                        ? ButtonType.solid
+                        : ButtonType.transparent,
+                    state: isLoading
+                        ? ButtonState.loading
+                        : (_isAmountTooSmall
+                            ? ButtonState.disabled
+                            : ButtonState.idle),
+                    onTap: _isAmountValid ? _initiateSwap : null,
                   ),
                 ),
-                const SizedBox(height: AppTheme.cardPadding),
-                // Minimal rate info
-                _buildRateInfo(context),
-                const SizedBox(height: AppTheme.cardPadding * 5.5),
-              ],
-            ),
-          ),
-          // Bottom button
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: AppTheme.cardPadding,
-            child: Center(
-              child: LongButtonWidget(
-                title: _getButtonTitle(),
-                customWidth: MediaQuery.of(context).size.width -
-                    AppTheme.cardPadding * 2,
-                buttonType:
-                    _isAmountValid ? ButtonType.solid : ButtonType.transparent,
-                state: isLoading
-                    ? ButtonState.loading
-                    : (_isAmountTooSmall
-                        ? ButtonState.disabled
-                        : ButtonState.idle),
-                onTap: _isAmountValid ? _initiateSwap : null,
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

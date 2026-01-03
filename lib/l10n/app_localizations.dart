@@ -2569,6 +2569,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scan'**
   String get scan;
+
+  /// No description provided for @aboutLendasat.
+  ///
+  /// In en, this message translates to:
+  /// **'About LendaSat'**
+  String get aboutLendasat;
+
+  /// No description provided for @lendasatInfoDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'LendaSat is a Bitcoin peer-to-peer loan marketplace. We act as a platform that connects you with private lenders who provide the funds. Your Bitcoin is used as collateral, and you receive the loan amount directly. All transactions are secured through smart contracts on the Bitcoin network.'**
+  String get lendasatInfoDescription;
+
+  /// No description provided for @learnMoreAboutLendasat.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more about how LendaSat works'**
+  String get learnMoreAboutLendasat;
 }
 
 class _AppLocalizationsDelegate

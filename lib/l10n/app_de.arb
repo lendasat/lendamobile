@@ -398,5 +398,8 @@
   "sendFeedback": "Feedback senden",
   "sender": "Absender",
   "receiver": "Empfänger",
-  "scan": "Scannen"
+  "scan": "Scannen",
+  "aboutLendasat": "Über LendaSat",
+  "lendasatInfoDescription": "LendaSat ist ein Bitcoin Peer-to-Peer Kreditmarktplatz. Wir fungieren als Plattform, die Sie mit privaten Kreditgebern verbindet, die das Kapital bereitstellen. Ihr Bitcoin dient als Sicherheit und Sie erhalten den Kreditbetrag direkt. Alle Transaktionen werden durch Smart Contracts im Bitcoin-Netzwerk abgesichert.",
+  "learnMoreAboutLendasat": "Erfahren Sie mehr über LendaSat"
 }
