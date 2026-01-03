@@ -31,9 +31,9 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/price_widgets.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:provider/provider.dart';
@@ -680,83 +680,109 @@ class WalletScreenState extends State<WalletScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ArkScaffold(
-      context: context,
-      body: RefreshIndicator(
-        onRefresh: fetchWalletData,
-        child: CustomScrollView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            // Main wallet header with gradient and chart
-            SliverToBoxAdapter(
-              child: Stack(
-                children: [
-                  // Dynamic gradient background
-                  _buildDynamicGradient(),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-                  // Chart overlay
-                  Opacity(
-                    opacity: 0.1,
-                    child: _buildChartWidget(),
-                  ),
+    // Create system UI overlay style that matches the gradient color
+    // This makes the notch/dynamic island area match the wallet gradient
+    final systemUiStyle = SystemUiOverlayStyle(
+      // Status bar (top) - use gradient color
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      // Navigation bar (bottom) - match scaffold background
+      systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
+      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+    );
 
-                  // Main content
-                  SafeArea(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: AppTheme.cardPadding),
-                        _buildTopBar(),
-                        const SizedBox(height: AppTheme.cardPadding * 1.5),
-                        _buildBalanceDisplay(),
-                        if (_lockedCollateralSats > 0) ...[
-                          const SizedBox(height: AppTheme.elementSpacing * 0.5),
-                          _buildLockedCollateralDisplay(),
-                        ],
-                        if (_boardingBalanceSats > 0) ...[
-                          const SizedBox(height: AppTheme.elementSpacing * 0.5),
-                          _buildBoardingBalanceDisplay(),
-                        ],
-                        const SizedBox(height: AppTheme.elementSpacing),
-                        _buildPriceChangeIndicators(),
-                        const SizedBox(height: AppTheme.cardPadding * 1.5),
-                        _buildActionButtons(),
-                        const SizedBox(height: AppTheme.cardPadding),
-                      ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: systemUiStyle,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        // Extend body behind status bar so gradient fills notch area
+        extendBodyBehindAppBar: true,
+        body: RefreshIndicator(
+          onRefresh: fetchWalletData,
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              // Main wallet header with gradient and chart
+              SliverToBoxAdapter(
+                child: Stack(
+                  children: [
+                    // Dynamic gradient background - extends into status bar area
+                    _buildDynamicGradient(),
+
+                    // Chart overlay
+                    Opacity(
+                      opacity: 0.1,
+                      child: _buildChartWidget(),
                     ),
-                  ),
-                ],
+
+                    // Main content with SafeArea for proper padding
+                    SafeArea(
+                      child: Column(
+                        children: [
+                          const SizedBox(height: AppTheme.cardPadding),
+                          _buildTopBar(),
+                          const SizedBox(height: AppTheme.cardPadding * 1.5),
+                          _buildBalanceDisplay(),
+                          if (_lockedCollateralSats > 0) ...[
+                            const SizedBox(height: AppTheme.elementSpacing * 0.5),
+                            _buildLockedCollateralDisplay(),
+                          ],
+                          if (_boardingBalanceSats > 0) ...[
+                            const SizedBox(height: AppTheme.elementSpacing * 0.5),
+                            _buildBoardingBalanceDisplay(),
+                          ],
+                          const SizedBox(height: AppTheme.elementSpacing),
+                          _buildPriceChangeIndicators(),
+                          const SizedBox(height: AppTheme.cardPadding * 1.5),
+                          _buildActionButtons(),
+                          const SizedBox(height: AppTheme.cardPadding),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            // Cryptos section
-            SliverToBoxAdapter(
-              child: _buildCryptosSection(),
-            ),
+              // Cryptos section
+              SliverToBoxAdapter(
+                child: _buildCryptosSection(),
+              ),
 
-            // Spacing before transaction list
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppTheme.cardPadding),
-            ),
+              // Spacing before transaction list
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppTheme.cardPadding),
+              ),
 
-            // Transaction list (TransactionHistoryWidget has its own header)
-            SliverToBoxAdapter(
-              child: _buildTransactionList(),
-            ),
+              // Transaction list (TransactionHistoryWidget has its own header)
+              SliverToBoxAdapter(
+                child: _buildTransactionList(),
+              ),
 
-            // Bottom padding
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppTheme.cardPadding * 2),
-            ),
-          ],
+              // Bottom padding with SafeArea for bottom inset
+              SliverToBoxAdapter(
+                child: SafeArea(
+                  top: false,
+                  child: SizedBox(height: AppTheme.cardPadding * 2),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildDynamicGradient() {
+    // Get the top padding (status bar / notch / dynamic island height)
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Container(
-      height: AppTheme.cardPadding * 12,
+      // Add top padding to gradient height so it fills the notch/dynamic island area
+      height: AppTheme.cardPadding * 12 + topPadding,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -830,8 +856,11 @@ class WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildChartWidget() {
+    // Get the top padding (status bar / notch / dynamic island height)
+    final topPadding = MediaQuery.of(context).padding.top;
+
     if (_bitcoinPriceData.isEmpty || _isBalanceLoading) {
-      return SizedBox(height: AppTheme.cardPadding * 10);
+      return SizedBox(height: AppTheme.cardPadding * 10 + topPadding);
     }
 
     // Transform price data to historical balance value (balance at time × price)
@@ -856,7 +885,8 @@ class WalletScreenState extends State<WalletScreen> {
       lineColor: _isPriceChangePositive()
           ? AppTheme.successColor
           : AppTheme.errorColor,
-      height: AppTheme.cardPadding * 10,
+      // Add top padding to chart height so it aligns with gradient
+      height: AppTheme.cardPadding * 10 + topPadding,
     );
   }
 
