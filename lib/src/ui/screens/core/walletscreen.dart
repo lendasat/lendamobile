@@ -950,39 +950,43 @@ class WalletScreenState extends State<WalletScreen> {
               onTap: _toggleDisplayUnit,
               onLongPress: _toggleBalanceType,
               behavior: HitTestBehavior.opaque,
-              child: currencyService.showCoinBalance
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
+              child: SizedBox(
+                width: double.infinity,
+                child: currencyService.showCoinBalance
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            userPrefs.balancesVisible
+                                ? formattedSats
+                                : '********',
+                            style: Theme.of(context)
+                                .textTheme
+                                .displayLarge
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            AppTheme.satoshiIcon,
+                            size: 40,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ],
+                      )
+                    : Center(
+                        child: Text(
                           userPrefs.balancesVisible
-                              ? formattedSats
-                              : '********',
-                          style: Theme.of(context)
-                              .textTheme
-                              .displayLarge
-                              ?.copyWith(
+                              ? currencyService.formatAmount(
+                                  _getSelectedBalance() * _getCurrentBtcPrice())
+                              : '${currencyService.symbol}****.**',
+                          style: Theme.of(context).textTheme.displayLarge?.copyWith(
                                 color: Theme.of(context).colorScheme.onSurface,
                               ),
                         ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          AppTheme.satoshiIcon,
-                          size: 40,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ],
-                    )
-                  : Text(
-                      userPrefs.balancesVisible
-                          ? currencyService.formatAmount(
-                              _getSelectedBalance() * _getCurrentBtcPrice())
-                          : '${currencyService.symbol}****.**',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                    ),
+                      ),
+              ),
             ),
           ),
         ],

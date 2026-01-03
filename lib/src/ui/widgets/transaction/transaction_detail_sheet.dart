@@ -4,6 +4,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
+import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
@@ -31,6 +32,7 @@ class TransactionDetailSheet extends StatefulWidget {
   final String? networkType;
   final bool? isConfirmed;
   final bool isSettleable;
+  final double? bitcoinPrice;
 
   const TransactionDetailSheet({
     super.key,
@@ -41,6 +43,7 @@ class TransactionDetailSheet extends StatefulWidget {
     this.networkType,
     this.isConfirmed,
     this.isSettleable = false,
+    this.bitcoinPrice,
   });
 
   @override
@@ -165,6 +168,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     final l10n = AppLocalizations.of(context)!;
     final timezoneService =
         Provider.of<TimezoneService>(context, listen: false);
+    final currencyService = context.watch<CurrencyPreferenceService>();
 
     BigInt outputTotal = BigInt.zero;
     if (transactionModel != null) {
@@ -175,8 +179,6 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
 
     final isSent = _isSent(widget.amountSats);
     final displayAmountSats = widget.amountSats ?? outputTotal.toInt();
-    final (formattedAmount, unit, isSatsUnit) =
-        _formatAmountWithUnit(displayAmountSats);
 
     return ArkScaffoldUnsafe(
       context: context,
@@ -208,9 +210,9 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : transactionModel == null
-              ? _buildFallbackView(context, l10n, timezoneService)
+              ? _buildFallbackView(context, l10n, timezoneService, currencyService, displayAmountSats, isSent)
               : _buildFullView(
-                  context, l10n, timezoneService, formattedAmount, unit, isSatsUnit, isSent),
+                  context, l10n, timezoneService, currencyService, displayAmountSats, isSent),
     );
   }
 
@@ -218,11 +220,16 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     BuildContext context,
     AppLocalizations l10n,
     TimezoneService timezoneService,
-    String formattedAmount,
-    String unit,
-    bool isSatsUnit,
+    CurrencyPreferenceService currencyService,
+    int displayAmountSats,
     bool isSent,
   ) {
+    final showCoinBalance = currencyService.showCoinBalance;
+    final (formattedAmount, unit, isSatsUnit) = _formatAmountWithUnit(displayAmountSats);
+
+    // Calculate fiat value
+    final btcAmount = displayAmountSats.abs() / BitcoinConstants.satsPerBtc;
+    final fiatValue = widget.bitcoinPrice != null ? btcAmount * widget.bitcoinPrice! : 0.0;
     return NotificationListener<OverscrollNotification>(
       onNotification: (notification) {
         // Close bottom sheet when user overscrolls at the top
@@ -335,35 +342,46 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Transaction Volume
+                                // Transaction Volume (tappable to toggle currency)
                                 ArkListTile(
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: AppTheme.elementSpacing * 0.75,
                                     vertical: AppTheme.elementSpacing * 0.5,
                                   ),
                                   text: 'Transaction Volume',
+                                  onTap: widget.bitcoinPrice != null
+                                      ? () => currencyService.toggleShowCoinBalance()
+                                      : null,
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(
-                                        formattedAmount,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context).textTheme.titleMedium,
-                                      ),
-                                      if (isSatsUnit)
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 2),
-                                          child: Icon(
-                                            AppTheme.satoshiIcon,
-                                            size: 16,
-                                            color: Theme.of(context).colorScheme.onSurface,
-                                          ),
-                                        )
-                                      else
+                                      if (showCoinBalance) ...[
                                         Text(
-                                          ' $unit',
-                                          style: Theme.of(context).textTheme.bodySmall,
+                                          formattedAmount,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context).textTheme.titleMedium,
                                         ),
+                                        if (isSatsUnit)
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 2),
+                                            child: Icon(
+                                              AppTheme.satoshiIcon,
+                                              size: 16,
+                                              color: Theme.of(context).colorScheme.onSurface,
+                                            ),
+                                          )
+                                        else
+                                          Text(
+                                            ' $unit',
+                                            style: Theme.of(context).textTheme.bodySmall,
+                                          ),
+                                      ] else ...[
+                                        Text(
+                                          currencyService.formatAmount(fiatValue),
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context).textTheme.titleMedium,
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),
@@ -598,10 +616,16 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     BuildContext context,
     AppLocalizations l10n,
     TimezoneService timezoneService,
+    CurrencyPreferenceService currencyService,
+    int displayAmountSats,
+    bool isSent,
   ) {
-    final isSent = _isSent(widget.amountSats);
-    final amountSats = widget.amountSats ?? 0;
-    final (formattedAmount, unit, isSatsUnit) = _formatAmountWithUnit(amountSats);
+    final showCoinBalance = currencyService.showCoinBalance;
+    final (formattedAmount, unit, isSatsUnit) = _formatAmountWithUnit(displayAmountSats);
+
+    // Calculate fiat value
+    final btcAmount = displayAmountSats.abs() / BitcoinConstants.satsPerBtc;
+    final fiatValue = widget.bitcoinPrice != null ? btcAmount * widget.bitcoinPrice! : 0.0;
 
     String formattedDate = '--';
     if (widget.createdAt != null) {
@@ -714,35 +738,46 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Transaction Volume
+                                // Transaction Volume (tappable to toggle currency)
                                 ArkListTile(
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: AppTheme.elementSpacing * 0.75,
                                     vertical: AppTheme.elementSpacing * 0.5,
                                   ),
                                   text: 'Transaction Volume',
+                                  onTap: widget.bitcoinPrice != null
+                                      ? () => currencyService.toggleShowCoinBalance()
+                                      : null,
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(
-                                        formattedAmount,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context).textTheme.titleMedium,
-                                      ),
-                                      if (isSatsUnit)
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 2),
-                                          child: Icon(
-                                            AppTheme.satoshiIcon,
-                                            size: 16,
-                                            color: Theme.of(context).colorScheme.onSurface,
-                                          ),
-                                        )
-                                      else
+                                      if (showCoinBalance) ...[
                                         Text(
-                                          ' $unit',
-                                          style: Theme.of(context).textTheme.bodySmall,
+                                          formattedAmount,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context).textTheme.titleMedium,
                                         ),
+                                        if (isSatsUnit)
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 2),
+                                            child: Icon(
+                                              AppTheme.satoshiIcon,
+                                              size: 16,
+                                              color: Theme.of(context).colorScheme.onSurface,
+                                            ),
+                                          )
+                                        else
+                                          Text(
+                                            ' $unit',
+                                            style: Theme.of(context).textTheme.bodySmall,
+                                          ),
+                                      ] else ...[
+                                        Text(
+                                          currencyService.formatAmount(fiatValue),
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context).textTheme.titleMedium,
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),

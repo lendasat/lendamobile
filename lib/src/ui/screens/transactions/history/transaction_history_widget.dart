@@ -625,6 +625,7 @@ class _TransactionItemWidget extends StatelessWidget {
         networkType: networkType,
         isConfirmed: isConfirmed,
         isSettleable: isSettleable,
+        bitcoinPrice: bitcoinPrice,
       ),
     );
   }
