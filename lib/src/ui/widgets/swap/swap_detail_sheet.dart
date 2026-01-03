@@ -6,6 +6,8 @@ import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
@@ -17,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Bottom sheet widget for displaying swap details.
+/// Uses the exact same UI as SwapDetailScreen.
 class SwapDetailSheet extends StatefulWidget {
   final String swapId;
   final SwapActivityItem? initialSwapItem;
@@ -225,53 +228,22 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
+    return ArkScaffoldUnsafe(
+      context: context,
+      extendBodyBehindAppBar: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: BitNetAppBar(
+        context: context,
+        text: 'Swap Details',
+        hasBackButton: false,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(AppTheme.cardPadding),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Swap Details',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(
-                    Icons.close,
-                    color: isDark ? AppTheme.white60 : AppTheme.black60,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Content
-          Flexible(
-            child: _isLoading
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(AppTheme.cardPadding * 2),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                : _errorMessage != null && _swapInfo == null
-                    ? _buildErrorState(context)
-                    : _buildContent(context, isDark),
-          ),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage != null && _swapInfo == null
+              ? _buildErrorState(context)
+              : _buildContent(context, isDarkMode),
     );
   }
 
@@ -317,54 +289,51 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     );
   }
 
-  Widget _buildContent(BuildContext context, bool isDark) {
+  Widget _buildContent(BuildContext context, bool isDarkMode) {
     final sourceToken = _getSourceToken();
     final targetToken = _getTargetToken();
     final status = _swapInfo?.status ?? SwapStatusSimple.waitingForDeposit;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+      padding: const EdgeInsets.all(AppTheme.cardPadding),
       child: Column(
         children: [
+          const SizedBox(height: AppTheme.cardPadding * 2),
           // Status header
-          _buildStatusHeader(context, status, isDark),
-          const SizedBox(height: AppTheme.cardPadding),
+          _buildStatusHeader(context, status, isDarkMode),
+          const SizedBox(height: AppTheme.cardPadding * 1.5),
           // Swap summary
-          _buildSwapSummary(context, sourceToken, targetToken, isDark),
+          _buildSwapSummary(context, sourceToken, targetToken, isDarkMode),
           const SizedBox(height: AppTheme.cardPadding),
           // Swap details
-          _buildSwapDetails(context, isDark),
+          _buildSwapDetails(context, isDarkMode),
           const SizedBox(height: AppTheme.cardPadding),
           // Action buttons
           _buildActionButtons(context, status),
-          SafeArea(
-            top: false,
-            child: const SizedBox(height: AppTheme.cardPadding),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildStatusHeader(
-      BuildContext context, SwapStatusSimple status, bool isDark) {
+      BuildContext context, SwapStatusSimple status, bool isDarkMode) {
     final statusInfo = _getStatusInfo(status);
 
     return Column(
       children: [
         Container(
-          width: 64,
-          height: 64,
+          width: 80,
+          height: 80,
           decoration: BoxDecoration(
             color: statusInfo.color.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
-          child: Icon(statusInfo.icon, size: 32, color: statusInfo.color),
+          child: Icon(statusInfo.icon, size: 40, color: statusInfo.color),
         ),
         const SizedBox(height: AppTheme.elementSpacing),
         Text(
           statusInfo.text,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: statusInfo.color,
               ),
@@ -375,7 +344,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
             statusInfo.description!,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDark ? AppTheme.white60 : AppTheme.black60,
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                 ),
           ),
         ],
@@ -438,7 +407,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
   }
 
   Widget _buildSwapSummary(BuildContext context, SwapToken sourceToken,
-      SwapToken targetToken, bool isDark) {
+      SwapToken targetToken, bool isDarkMode) {
     final btcAmount = _swapInfo != null
         ? ((_swapInfo!.sourceAmountSats.toInt()) / BitcoinConstants.satsPerBtc)
             .toStringAsFixed(8)
@@ -447,12 +416,14 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
             sourceToken.isStablecoin || targetToken.isStablecoin ? 2 : 6) ??
         '0.00';
 
+    // Format amount based on token type
     String formatTokenAmount(SwapToken token, String amount) {
       if (token.isBtc) {
         return '$btcAmount BTC';
       } else if (token.isStablecoin) {
         return '\$$amount';
       } else {
+        // Non-stablecoin (XAUT, etc.)
         return '$amount ${token.symbol}';
       }
     }
@@ -476,7 +447,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                         'Sent',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color:
-                                  isDark ? AppTheme.white60 : AppTheme.black60,
+                                  isDarkMode ? AppTheme.white60 : AppTheme.black60,
                             ),
                       ),
                       Text(
@@ -486,19 +457,47 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                                   fontWeight: FontWeight.bold,
                                 ),
                       ),
+                      Text(
+                        '${sourceToken.symbol} (${sourceToken.network})',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color:
+                                  isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            ),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            // Arrow
-            Icon(
-              Icons.arrow_downward_rounded,
-              size: 20,
-              color: isDark ? AppTheme.white60 : AppTheme.black60,
+            const SizedBox(height: AppTheme.cardPadding),
+            // Divider with arrow
+            Row(
+              children: [
+                Expanded(
+                  child: Divider(
+                    color: isDarkMode
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.1),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Icon(
+                    Icons.arrow_downward_rounded,
+                    size: 20,
+                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                  ),
+                ),
+                Expanded(
+                  child: Divider(
+                    color: isDarkMode
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.1),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppTheme.elementSpacing),
+            const SizedBox(height: AppTheme.cardPadding),
             // To
             Row(
               children: [
@@ -512,7 +511,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                         'Received',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color:
-                                  isDark ? AppTheme.white60 : AppTheme.black60,
+                                  isDarkMode ? AppTheme.white60 : AppTheme.black60,
                             ),
                       ),
                       Text(
@@ -526,6 +525,13 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                                       : null,
                                 ),
                       ),
+                      Text(
+                        '${targetToken.symbol} (${targetToken.network})',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color:
+                                  isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            ),
+                      ),
                     ],
                   ),
                 ),
@@ -537,8 +543,10 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     );
   }
 
-  Widget _buildSwapDetails(BuildContext context, bool isDark) {
+  Widget _buildSwapDetails(BuildContext context, bool isDarkMode) {
     if (_swapInfo == null) return const SizedBox.shrink();
+
+    final createdAt = _formatTimestamp(_swapInfo!.createdAt);
 
     return GlassContainer(
       borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
@@ -550,7 +558,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
               context,
               'Swap ID',
               _truncateId(widget.swapId),
-              isDark,
+              isDarkMode,
               onTap: () => _copyToClipboard(widget.swapId),
             ),
             const SizedBox(height: AppTheme.elementSpacing),
@@ -558,10 +566,38 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
               context,
               'Direction',
               _swapInfo!.direction == 'btc_to_evm'
-                  ? 'BTC → ${_getTargetToken().symbol}'
-                  : '${_getSourceToken().symbol} → BTC',
-              isDark,
+                  ? 'BTC → ${_getTargetToken().symbol} (${_getTargetToken().network})'
+                  : '${_getSourceToken().symbol} (${_getSourceToken().network}) → BTC',
+              isDarkMode,
             ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            _buildDetailRow(
+              context,
+              'Created',
+              createdAt,
+              isDarkMode,
+            ),
+            if (_swapInfo!.evmHtlcAddress != null) ...[
+              const SizedBox(height: AppTheme.elementSpacing),
+              _buildDetailRow(
+                context,
+                'EVM Contract',
+                _truncateId(_swapInfo!.evmHtlcAddress!),
+                isDarkMode,
+                onTap: () => _copyToClipboard(_swapInfo!.evmHtlcAddress!),
+              ),
+            ],
+            if (_swapInfo!.arkadeHtlcAddress != null) ...[
+              const SizedBox(height: AppTheme.elementSpacing),
+              _buildDetailRow(
+                context,
+                'Arkade HTLC',
+                _truncateId(_swapInfo!.arkadeHtlcAddress!),
+                isDarkMode,
+                onTap: () => _copyToClipboard(_swapInfo!.arkadeHtlcAddress!),
+              ),
+            ],
+            // Show claim transaction hash for BTC→EVM swaps
             if (_swapInfo!.evmHtlcClaimTxid != null &&
                 _swapInfo!.direction == 'btc_to_evm') ...[
               const SizedBox(height: AppTheme.elementSpacing),
@@ -569,7 +605,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                 context,
                 'Transaction',
                 _truncateId(_swapInfo!.evmHtlcClaimTxid!),
-                isDark,
+                isDarkMode,
                 onTap: () => _copyToClipboard(_swapInfo!.evmHtlcClaimTxid!),
               ),
             ],
@@ -583,7 +619,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     BuildContext context,
     String label,
     String value,
-    bool isDark, {
+    bool isDarkMode, {
     VoidCallback? onTap,
   }) {
     final content = Row(
@@ -592,7 +628,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
         Text(
           label,
           style: TextStyle(
-            color: isDark ? AppTheme.white60 : AppTheme.black60,
+            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
             fontSize: 14,
           ),
         ),
@@ -602,7 +638,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
             Text(
               value,
               style: TextStyle(
-                color: isDark ? Colors.white : Colors.black,
+                color: isDarkMode ? Colors.white : Colors.black,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -612,7 +648,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
               Icon(
                 Icons.copy_rounded,
                 size: 14,
-                color: isDark ? AppTheme.white60 : AppTheme.black60,
+                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
               ),
             ],
           ],
@@ -657,6 +693,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
         _swapInfo?.canClaimGelato == true || _swapInfo?.canClaimVhtlc == true;
     final canRefund = _swapInfo?.canRefund == true;
     final isWaitingForDeposit = status == SwapStatusSimple.waitingForDeposit;
+    // Only show deposit button for EVM → BTC swaps (user needs to send EVM tokens)
     final showDepositButton = isWaitingForDeposit &&
         _swapInfo?.direction == 'evm_to_btc' &&
         _swapInfo?.depositAddress != null;
@@ -667,6 +704,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
 
     return Column(
       children: [
+        // Deposit button for pending EVM → BTC swaps
         if (showDepositButton) ...[
           LongButtonWidget(
             title: 'Deposit',
@@ -675,7 +713,35 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
           ),
           const SizedBox(height: AppTheme.cardPadding),
         ],
+        // Claim section
         if (canClaim) ...[
+          GlassContainer(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.cardPadding),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: AppTheme.successColor,
+                    size: 24,
+                  ),
+                  const SizedBox(width: AppTheme.elementSpacing),
+                  Expanded(
+                    child: Text(
+                      _swapInfo!.canClaimGelato
+                          ? 'Your swap is ready! Claim your ${_getTargetToken().symbol} now.'
+                          : 'Your swap is ready! Claim your BTC now.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.successColor,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
           LongButtonWidget(
             title: _swapInfo!.canClaimGelato
                 ? 'Claim ${_getTargetToken().symbol}'
@@ -685,8 +751,34 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
             onTap: _isClaiming ? null : _handleClaim,
           ),
         ],
+        // Refund section
         if (canRefund) ...[
-          if (canClaim) const SizedBox(height: AppTheme.elementSpacing),
+          if (canClaim) const SizedBox(height: AppTheme.cardPadding),
+          GlassContainer(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.cardPadding),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: Colors.orange,
+                    size: 24,
+                  ),
+                  const SizedBox(width: AppTheme.elementSpacing),
+                  Expanded(
+                    child: Text(
+                      'This swap did not complete. You can claim a refund to recover your funds.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.orange,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
           LongButtonWidget(
             title: 'Claim Refund',
             customWidth: double.infinity,
@@ -702,6 +794,68 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
   String _truncateId(String id) {
     if (id.length <= 16) return id;
     return '${id.substring(0, 8)}...${id.substring(id.length - 6)}';
+  }
+
+  String _formatTimestamp(String timestamp) {
+    try {
+      // Handle format like "2025-12-21 19:04:15.0 +00:00:00" or "2025-12-24 3:24:25.0 +00:00:00"
+      // Remove the extra timezone format and normalize
+      String normalizedTimestamp = timestamp;
+
+      // Replace space before timezone with 'T' for ISO format
+      // and handle the unusual "+00:00:00" format
+      if (timestamp.contains(' +') || timestamp.contains(' -')) {
+        // Split at the timezone part
+        final parts = timestamp.split(RegExp(r' [+-]'));
+        if (parts.isNotEmpty) {
+          normalizedTimestamp = parts[0].trim();
+        }
+      }
+
+      // Pad single-digit hour (e.g., "3:24:25" -> "03:24:25")
+      final dateTimeParts = normalizedTimestamp.split(' ');
+      if (dateTimeParts.length == 2) {
+        final datePart = dateTimeParts[0];
+        var timePart = dateTimeParts[1];
+
+        final timeComponents = timePart.split(':');
+        if (timeComponents.isNotEmpty && timeComponents[0].length == 1) {
+          timeComponents[0] = '0${timeComponents[0]}';
+          timePart = timeComponents.join(':');
+        }
+
+        normalizedTimestamp = '$datePart $timePart';
+      }
+
+      // Replace space between date and time with 'T' for ISO format
+      normalizedTimestamp = normalizedTimestamp.replaceFirst(' ', 'T');
+
+      final date = DateTime.parse(normalizedTimestamp).toLocal();
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inSeconds < 60) {
+        return '${difference.inSeconds} seconds ago';
+      } else if (difference.inMinutes < 60) {
+        final minutes = difference.inMinutes;
+        return '$minutes ${minutes == 1 ? 'minute' : 'minutes'} ago';
+      } else if (difference.inHours < 24) {
+        final hours = difference.inHours;
+        return '$hours ${hours == 1 ? 'hour' : 'hours'} ago';
+      } else if (difference.inDays < 30) {
+        final days = difference.inDays;
+        return '$days ${days == 1 ? 'day' : 'days'} ago';
+      } else if (difference.inDays < 365) {
+        final months = (difference.inDays / 30).floor();
+        return '$months ${months == 1 ? 'month' : 'months'} ago';
+      } else {
+        final years = (difference.inDays / 365).floor();
+        return '$years ${years == 1 ? 'year' : 'years'} ago';
+      }
+    } catch (e) {
+      logger.e('Error parsing timestamp: $timestamp - $e');
+      return timestamp;
+    }
   }
 }
 
@@ -739,12 +893,15 @@ class _RefundAddressSheetState extends State<_RefundAddressSheet> {
 
   bool _validateAddress(String address) {
     if (address.isEmpty) return false;
+    // Ark bech32m addresses
     if (address.startsWith('ark1') || address.startsWith('tark1')) {
       return address.length >= 20;
     }
+    // Bitcoin bech32 addresses
     if (address.startsWith('bc1') || address.startsWith('tb1')) {
       return address.length >= 26;
     }
+    // Legacy Bitcoin addresses
     if (address.startsWith('1') ||
         address.startsWith('3') ||
         address.startsWith('m') ||
@@ -780,7 +937,7 @@ class _RefundAddressSheetState extends State<_RefundAddressSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
@@ -798,7 +955,7 @@ class _RefundAddressSheetState extends State<_RefundAddressSheet> {
           Text(
             'Enter the Bitcoin or Ark address where you want to receive your refund.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDark ? AppTheme.white60 : AppTheme.black60,
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                 ),
           ),
           const SizedBox(height: AppTheme.cardPadding),
@@ -816,15 +973,14 @@ class _RefundAddressSheetState extends State<_RefundAddressSheet> {
                       controller: widget.controller,
                       onChanged: _onAddressChanged,
                       style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black,
+                        color: isDarkMode ? Colors.white : Colors.black,
                         fontSize: 14,
                         fontFamily: 'monospace',
                       ),
                       decoration: InputDecoration(
                         hintText: 'ark1... or bc1...',
                         hintStyle: TextStyle(
-                          color:
-                              isDark ? AppTheme.white60 : AppTheme.black60,
+                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                         border: InputBorder.none,
                         errorText: _errorText,
@@ -839,7 +995,7 @@ class _RefundAddressSheetState extends State<_RefundAddressSheet> {
                     onPressed: _pasteFromClipboard,
                     icon: Icon(
                       Icons.paste_rounded,
-                      color: isDark ? AppTheme.white60 : AppTheme.black60,
+                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                       size: 20,
                     ),
                     tooltip: 'Paste',
