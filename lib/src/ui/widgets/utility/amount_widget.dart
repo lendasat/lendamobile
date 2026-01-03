@@ -263,8 +263,13 @@ class _AmountWidgetState extends State<AmountWidget> {
         _service.currentUnit == CurrencyType.sats ? amount / BitcoinConstants.satsPerBtc : amount;
     double usdAmount = btcAmount * bitcoinPrice;
 
+    // Convert USD to user's selected currency
+    final exchangeRates = currencyService.exchangeRates;
+    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+    final localCurrencyAmount = usdAmount * fiatRate;
+
     if (!_service.preventConversion) {
-      widget.currController.text = usdAmount.toStringAsFixed(2);
+      widget.currController.text = localCurrencyAmount.toStringAsFixed(2);
     }
 
     if (widget.autoConvert) {
@@ -276,7 +281,7 @@ class _AmountWidgetState extends State<AmountWidget> {
     }
 
     return Text(
-      "≈ ${currencyService.formatAmount(usdAmount)}",
+      "≈ ${currencyService.formatAmount(localCurrencyAmount)}",
       style: materialTheme.textTheme.bodyLarge?.copyWith(
           color:
               Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
@@ -314,7 +319,12 @@ class _AmountWidgetState extends State<AmountWidget> {
               : widget.currController.text,
         ) ??
         0.0;
-    final btcAmount = currAmount / bitcoinPrice;
+
+    // Convert from user's local currency to BTC
+    // currAmount is in local currency, need to convert to USD first, then to BTC
+    final exchangeRates = currencyService.exchangeRates;
+    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+    final btcAmount = currAmount / (bitcoinPrice * fiatRate);
     final satAmount = (btcAmount * BitcoinConstants.satsPerBtc).round();
 
     if (!_service.preventConversion) {

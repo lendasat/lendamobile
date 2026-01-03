@@ -187,9 +187,11 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
     return DateFormat('HH:mm').format(date);
   }
 
-  String _formatPrice(double price, BuildContext context) {
+  String _formatPrice(double priceUsd, BuildContext context) {
     final currencyService = context.watch<CurrencyPreferenceService>();
-    return currencyService.formatAmount(price);
+    final fiatRate =
+        currencyService.exchangeRates?.rates[currencyService.code] ?? 1.0;
+    return currencyService.formatAmount(priceUsd * fiatRate);
   }
 
   String _calculatePriceChange(List<PriceData>? data, PriceData? current) {

@@ -22,6 +22,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:bolt11_decoder/bolt11_decoder.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -971,7 +972,7 @@ class SendScreenState extends State<SendScreen>
                             child: Row(
                               children: [
                                 Icon(
-                                  Icons.copy_rounded,
+                                  CupertinoIcons.doc_on_doc,
                                   color: Theme.of(context).hintColor,
                                   size: 14,
                                 ),
@@ -1010,8 +1011,8 @@ class SendScreenState extends State<SendScreen>
                     padding: const EdgeInsets.all(AppTheme.elementSpacing),
                     child: Icon(
                       _isAddressExpanded
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.edit_rounded,
+                          ? CupertinoIcons.chevron_up
+                          : CupertinoIcons.pencil,
                       color: Theme.of(context).hintColor,
                       size: AppTheme.cardPadding,
                     ),
@@ -1093,10 +1094,13 @@ class SendScreenState extends State<SendScreen>
   ) {
     final currencyService = context.watch<CurrencyPreferenceService>();
     final satsAvailable = widget.availableSats.toStringAsFixed(0);
+    final fiatRate =
+        currencyService.exchangeRates?.rates[currencyService.code] ?? 1.0;
     final fiatAvailable = _bitcoinPrice != null
         ? currencyService.formatAmount(
             (widget.availableSats / BitcoinConstants.satsPerBtc) *
-                _bitcoinPrice!)
+                _bitcoinPrice! *
+                fiatRate)
         : '\$0.00';
 
     return Padding(
@@ -1370,7 +1374,7 @@ class SendScreenState extends State<SendScreen>
           children: [
             // Image/Gallery button
             _buildQuickActionButton(
-              icon: Icons.image_rounded,
+              icon: CupertinoIcons.photo_fill,
               onTap: _pickImageAndScan,
               iconColor: iconColor,
               size: buttonSize,
@@ -1378,7 +1382,7 @@ class SendScreenState extends State<SendScreen>
             const SizedBox(width: AppTheme.elementSpacing),
             // QR Scan button
             _buildQuickActionButton(
-              icon: Icons.qr_code_scanner_rounded,
+              icon: CupertinoIcons.qrcode_viewfinder,
               onTap: _handleQRScan,
               iconColor: iconColor,
               size: buttonSize,
@@ -1386,7 +1390,7 @@ class SendScreenState extends State<SendScreen>
             const SizedBox(width: AppTheme.elementSpacing),
             // Paste button
             _buildQuickActionButton(
-              icon: Icons.content_paste_rounded,
+              icon: CupertinoIcons.doc_on_clipboard_fill,
               onTap: _pasteFromClipboard,
               iconColor: iconColor,
               size: buttonSize,
@@ -1395,7 +1399,7 @@ class SendScreenState extends State<SendScreen>
         ),
         // Right side: Close button
         _buildQuickActionButton(
-          icon: Icons.close_rounded,
+          icon: CupertinoIcons.xmark,
           onTap: () => Navigator.pop(context),
           iconColor: iconColor,
           size: buttonSize,

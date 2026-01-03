@@ -979,7 +979,11 @@ class WalletScreenState extends State<WalletScreen> {
                         child: Text(
                           userPrefs.balancesVisible
                               ? currencyService.formatAmount(
-                                  _getSelectedBalance() * _getCurrentBtcPrice())
+                                  _getSelectedBalance() *
+                                      _getCurrentBtcPrice() *
+                                      (currencyService.exchangeRates
+                                              ?.rates[currencyService.code] ??
+                                          1.0))
                               : '${currencyService.symbol}****.**',
                           style: Theme.of(context).textTheme.displayLarge?.copyWith(
                                 color: Theme.of(context).colorScheme.onSurface,
@@ -1009,7 +1013,10 @@ class WalletScreenState extends State<WalletScreen> {
 
     final formattedSats = _formatSatsAmount(_lockedCollateralSats);
     final lockedBtc = _lockedCollateralSats / BitcoinConstants.satsPerBtc;
-    final lockedFiat = lockedBtc * _getCurrentBtcPrice();
+    final btcPriceUsd = _getCurrentBtcPrice();
+    final exchangeRates = currencyService.exchangeRates;
+    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+    final lockedFiat = lockedBtc * btcPriceUsd * fiatRate;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
@@ -1066,7 +1073,10 @@ class WalletScreenState extends State<WalletScreen> {
 
     final formattedSats = _formatSatsAmount(_boardingBalanceSats);
     final boardingBtc = _boardingBalanceSats / BitcoinConstants.satsPerBtc;
-    final boardingFiat = boardingBtc * _getCurrentBtcPrice();
+    final btcPriceUsd = _getCurrentBtcPrice();
+    final exchangeRates = currencyService.exchangeRates;
+    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+    final boardingFiat = boardingBtc * btcPriceUsd * fiatRate;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),

@@ -54,8 +54,10 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
     // Parse the balance and calculate the fiat equivalent.
     // (Assuming balance is in satoshis)
     final double balanceValue = double.tryParse(widget.balance) ?? 0.0;
-    final bitcoinPrice = widget.bitcoinPrice ?? 0;
-    final fiatValue = balanceValue / BitcoinConstants.satsPerBtc * bitcoinPrice;
+    final btcPriceUsd = widget.bitcoinPrice ?? 0.0;
+    final exchangeRates = currencyService.exchangeRates;
+    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+    final fiatValue = balanceValue / BitcoinConstants.satsPerBtc * btcPriceUsd * fiatRate;
 
     return GlassContainer(
       height: AppTheme.cardPadding * 2.75,

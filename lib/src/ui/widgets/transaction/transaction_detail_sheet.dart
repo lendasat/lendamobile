@@ -227,9 +227,12 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     final showCoinBalance = currencyService.showCoinBalance;
     final (formattedAmount, unit, isSatsUnit) = _formatAmountWithUnit(displayAmountSats);
 
-    // Calculate fiat value
+    // Calculate fiat value (must apply exchange rate like transaction history widget)
     final btcAmount = displayAmountSats.abs() / BitcoinConstants.satsPerBtc;
-    final fiatValue = widget.bitcoinPrice != null ? btcAmount * widget.bitcoinPrice! : 0.0;
+    final btcPriceUsd = widget.bitcoinPrice ?? 0.0;
+    final exchangeRates = currencyService.exchangeRates;
+    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+    final fiatValue = btcAmount * btcPriceUsd * fiatRate;
     return NotificationListener<OverscrollNotification>(
       onNotification: (notification) {
         // Close bottom sheet when user overscrolls at the top
@@ -357,7 +360,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                     children: [
                                       if (showCoinBalance) ...[
                                         Text(
-                                          formattedAmount,
+                                          '${isSent ? '-' : '+'}$formattedAmount',
                                           overflow: TextOverflow.ellipsis,
                                           style: Theme.of(context).textTheme.titleMedium,
                                         ),
@@ -377,7 +380,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                           ),
                                       ] else ...[
                                         Text(
-                                          currencyService.formatAmount(fiatValue),
+                                          '${isSent ? '-' : '+'}${currencyService.formatAmount(fiatValue)}',
                                           overflow: TextOverflow.ellipsis,
                                           style: Theme.of(context).textTheme.titleMedium,
                                         ),
@@ -623,9 +626,12 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     final showCoinBalance = currencyService.showCoinBalance;
     final (formattedAmount, unit, isSatsUnit) = _formatAmountWithUnit(displayAmountSats);
 
-    // Calculate fiat value
+    // Calculate fiat value (must apply exchange rate like transaction history widget)
     final btcAmount = displayAmountSats.abs() / BitcoinConstants.satsPerBtc;
-    final fiatValue = widget.bitcoinPrice != null ? btcAmount * widget.bitcoinPrice! : 0.0;
+    final btcPriceUsd = widget.bitcoinPrice ?? 0.0;
+    final exchangeRates = currencyService.exchangeRates;
+    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+    final fiatValue = btcAmount * btcPriceUsd * fiatRate;
 
     String formattedDate = '--';
     if (widget.createdAt != null) {
@@ -753,7 +759,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                     children: [
                                       if (showCoinBalance) ...[
                                         Text(
-                                          formattedAmount,
+                                          '${isSent ? '-' : '+'}$formattedAmount',
                                           overflow: TextOverflow.ellipsis,
                                           style: Theme.of(context).textTheme.titleMedium,
                                         ),
@@ -773,7 +779,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                           ),
                                       ] else ...[
                                         Text(
-                                          currencyService.formatAmount(fiatValue),
+                                          '${isSent ? '-' : '+'}${currencyService.formatAmount(fiatValue)}',
                                           overflow: TextOverflow.ellipsis,
                                           style: Theme.of(context).textTheme.titleMedium,
                                         ),
