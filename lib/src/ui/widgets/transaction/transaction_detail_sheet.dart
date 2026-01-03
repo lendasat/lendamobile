@@ -223,8 +223,18 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     bool isSatsUnit,
     bool isSent,
   ) {
-    return SingleChildScrollView(
-      child: Padding(
+    return NotificationListener<OverscrollNotification>(
+      onNotification: (notification) {
+        // Close bottom sheet when user overscrolls at the top
+        if (notification.overscroll < 0 && notification.metrics.pixels == 0) {
+          Navigator.of(context).pop();
+          return true;
+        }
+        return false;
+      },
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        child: Padding(
         padding: const EdgeInsets.only(
           top: AppTheme.cardPadding * 3,
         ),
@@ -580,6 +590,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -602,17 +613,27 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
           '${DateFormat('yyyy-MM-dd HH:mm').format(datetime)} (${_formatTimeAgo(datetime)})';
     }
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.only(
-          top: AppTheme.cardPadding * 3,
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.elementSpacing,
-              ),
+    return NotificationListener<OverscrollNotification>(
+      onNotification: (notification) {
+        // Close bottom sheet when user overscrolls at the top
+        if (notification.overscroll < 0 && notification.metrics.pixels == 0) {
+          Navigator.of(context).pop();
+          return true;
+        }
+        return false;
+      },
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.only(
+            top: AppTheme.cardPadding * 3,
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.elementSpacing,
+                ),
               child: GlassContainer(
                 borderRadius: AppTheme.cardRadiusBig,
                 child: Padding(
@@ -907,6 +928,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

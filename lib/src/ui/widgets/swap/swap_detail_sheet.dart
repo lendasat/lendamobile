@@ -294,23 +294,34 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     final targetToken = _getTargetToken();
     final status = _swapInfo?.status ?? SwapStatusSimple.waitingForDeposit;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppTheme.cardPadding),
-      child: Column(
-        children: [
-          const SizedBox(height: AppTheme.cardPadding * 2),
-          // Status header
-          _buildStatusHeader(context, status, isDarkMode),
-          const SizedBox(height: AppTheme.cardPadding * 1.5),
-          // Swap summary
-          _buildSwapSummary(context, sourceToken, targetToken, isDarkMode),
-          const SizedBox(height: AppTheme.cardPadding),
-          // Swap details
-          _buildSwapDetails(context, isDarkMode),
-          const SizedBox(height: AppTheme.cardPadding),
-          // Action buttons
-          _buildActionButtons(context, status),
-        ],
+    return NotificationListener<OverscrollNotification>(
+      onNotification: (notification) {
+        // Close bottom sheet when user overscrolls at the top
+        if (notification.overscroll < 0 && notification.metrics.pixels == 0) {
+          Navigator.of(context).pop();
+          return true;
+        }
+        return false;
+      },
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Column(
+          children: [
+            const SizedBox(height: AppTheme.cardPadding * 2),
+            // Status header
+            _buildStatusHeader(context, status, isDarkMode),
+            const SizedBox(height: AppTheme.cardPadding * 1.5),
+            // Swap summary
+            _buildSwapSummary(context, sourceToken, targetToken, isDarkMode),
+            const SizedBox(height: AppTheme.cardPadding),
+            // Swap details
+            _buildSwapDetails(context, isDarkMode),
+            const SizedBox(height: AppTheme.cardPadding),
+            // Action buttons
+            _buildActionButtons(context, status),
+          ],
+        ),
       ),
     );
   }

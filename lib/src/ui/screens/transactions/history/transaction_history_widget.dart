@@ -615,7 +615,7 @@ class _TransactionItemWidget extends StatelessWidget {
   }) {
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.9,
+      height: MediaQuery.of(context).size.height * 0.95,
       backgroundColor: Theme.of(context).colorScheme.surface,
       child: TransactionDetailSheet(
         txid: txid,
@@ -873,7 +873,7 @@ class _SwapItemWidget extends StatelessWidget {
   void _navigateToSwapDetail(BuildContext context) {
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.9,
+      height: MediaQuery.of(context).size.height * 0.95,
       backgroundColor: Theme.of(context).colorScheme.surface,
       child: SwapDetailSheet(
         swapId: swapItem.id,
