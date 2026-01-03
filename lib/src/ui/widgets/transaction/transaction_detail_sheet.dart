@@ -229,12 +229,10 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     final (formattedAmount, unit, isSatsUnit) =
         _formatAmountWithUnit(displayAmountSats);
 
-    // Calculate fiat value (must apply exchange rate like transaction history widget)
+    // Calculate USD value - formatAmount handles currency conversion
     final btcAmount = displayAmountSats.abs() / BitcoinConstants.satsPerBtc;
     final btcPriceUsd = widget.bitcoinPrice ?? 0.0;
-    final exchangeRates = currencyService.exchangeRates;
-    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
-    final fiatValue = btcAmount * btcPriceUsd * fiatRate;
+    final usdValue = btcAmount * btcPriceUsd;
     return NotificationListener<OverscrollNotification>(
       onNotification: (notification) {
         // Close bottom sheet when user overscrolls at the top
@@ -391,7 +389,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                             ),
                                         ] else ...[
                                           Text(
-                                            '${isSent ? '-' : '+'}${currencyService.formatAmount(fiatValue)}',
+                                            '${isSent ? '-' : '+'}${currencyService.formatAmount(usdValue)}',
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme
@@ -690,12 +688,10 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     final (formattedAmount, unit, isSatsUnit) =
         _formatAmountWithUnit(displayAmountSats);
 
-    // Calculate fiat value (must apply exchange rate like transaction history widget)
+    // Calculate USD value - formatAmount handles currency conversion
     final btcAmount = displayAmountSats.abs() / BitcoinConstants.satsPerBtc;
     final btcPriceUsd = widget.bitcoinPrice ?? 0.0;
-    final exchangeRates = currencyService.exchangeRates;
-    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
-    final fiatValue = btcAmount * btcPriceUsd * fiatRate;
+    final usdValue = btcAmount * btcPriceUsd;
 
     String formattedDate = '--';
     if (widget.createdAt != null) {
@@ -853,7 +849,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                             ),
                                         ] else ...[
                                           Text(
-                                            '${isSent ? '-' : '+'}${currencyService.formatAmount(fiatValue)}',
+                                            '${isSent ? '-' : '+'}${currencyService.formatAmount(usdValue)}',
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme

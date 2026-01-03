@@ -983,11 +983,7 @@ class WalletScreenState extends State<WalletScreen> {
                         child: Text(
                           userPrefs.balancesVisible
                               ? currencyService.formatAmount(
-                                  _getSelectedBalance() *
-                                      _getCurrentBtcPrice() *
-                                      (currencyService.exchangeRates
-                                              ?.rates[currencyService.code] ??
-                                          1.0))
+                                  _getSelectedBalance() * _getCurrentBtcPrice())
                               : '${currencyService.symbol}****.**',
                           style: Theme.of(context)
                               .textTheme
@@ -1021,9 +1017,8 @@ class WalletScreenState extends State<WalletScreen> {
     final formattedSats = _formatSatsAmount(_lockedCollateralSats);
     final lockedBtc = _lockedCollateralSats / BitcoinConstants.satsPerBtc;
     final btcPriceUsd = _getCurrentBtcPrice();
-    final exchangeRates = currencyService.exchangeRates;
-    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
-    final lockedFiat = lockedBtc * btcPriceUsd * fiatRate;
+    // USD value - formatAmount will handle currency conversion
+    final lockedUsd = lockedBtc * btcPriceUsd;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
@@ -1048,7 +1043,7 @@ class WalletScreenState extends State<WalletScreen> {
                 userPrefs.balancesVisible
                     ? (currencyService.showCoinBalance
                         ? '$formattedSats sats'
-                        : currencyService.formatAmount(lockedFiat))
+                        : currencyService.formatAmount(lockedUsd))
                     : '****',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context)
@@ -1081,9 +1076,8 @@ class WalletScreenState extends State<WalletScreen> {
     final formattedSats = _formatSatsAmount(_boardingBalanceSats);
     final boardingBtc = _boardingBalanceSats / BitcoinConstants.satsPerBtc;
     final btcPriceUsd = _getCurrentBtcPrice();
-    final exchangeRates = currencyService.exchangeRates;
-    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
-    final boardingFiat = boardingBtc * btcPriceUsd * fiatRate;
+    // USD value - formatAmount will handle currency conversion
+    final boardingUsd = boardingBtc * btcPriceUsd;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
@@ -1121,7 +1115,7 @@ class WalletScreenState extends State<WalletScreen> {
                 userPrefs.balancesVisible
                     ? (currencyService.showCoinBalance
                         ? '$formattedSats sats'
-                        : currencyService.formatAmount(boardingFiat))
+                        : currencyService.formatAmount(boardingUsd))
                     : '****',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context)
@@ -1327,8 +1321,9 @@ class WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildCryptosSection() {
-    // Convert total balance to sats for display
-    final balanceInSats = (_totalBalance * BitcoinConstants.satsPerBtc).toInt();
+    // Convert selected balance to sats for display (matches top balance display)
+    final balanceInSats =
+        (_getSelectedBalance() * BitcoinConstants.satsPerBtc).toInt();
 
     return Padding(
       padding: const EdgeInsets.symmetric(
