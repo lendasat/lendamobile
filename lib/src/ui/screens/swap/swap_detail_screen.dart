@@ -633,13 +633,18 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
     final content = Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-            fontSize: 14,
+        Flexible(
+          child: Text(
+            label,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: TextStyle(
+              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+              fontSize: 14,
+            ),
           ),
         ),
+        const SizedBox(width: 8),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [

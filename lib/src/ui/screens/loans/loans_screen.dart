@@ -215,7 +215,8 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
       appBar: BitNetAppBar(
         context: context,
         hasBackButton: false,
-        text: AppLocalizations.of(context)?.loansAndLeverage ?? 'Loans Marketplace',
+        text: AppLocalizations.of(context)?.loansAndLeverage ??
+            'Loans Marketplace',
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -243,7 +244,8 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                             AppTheme.elementSpacing,
                           ),
                           child: Text(
-                            AppLocalizations.of(context)?.availableOffers ?? 'Available Offers',
+                            AppLocalizations.of(context)?.availableOffers ??
+                                'Available Offers',
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -270,7 +272,8 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                AppLocalizations.of(context)?.myContracts ?? 'My Contracts',
+                                AppLocalizations.of(context)?.myContracts ??
+                                    'My Contracts',
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleMedium
@@ -415,7 +418,8 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: AppTheme.elementSpacing / 2),
           Text(
-            AppLocalizations.of(context)?.signInToViewContracts ?? 'Sign in to view your contracts and take loans. You can still browse available offers.',
+            AppLocalizations.of(context)?.signInToViewContracts ??
+                'Sign in to view your contracts and take loans. You can still browse available offers.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context)
                       .colorScheme
@@ -456,7 +460,9 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
             ),
             const SizedBox(height: AppTheme.elementSpacing),
             Text(
-              _errorMessage ?? (AppLocalizations.of(context)?.unknownError ?? 'Unknown error'),
+              _errorMessage ??
+                  (AppLocalizations.of(context)?.unknownError ??
+                      'Unknown error'),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -498,7 +504,8 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                 const SizedBox(width: AppTheme.elementSpacing),
                 Expanded(
                   child: Text(
-                    AppLocalizations.of(context)?.noArkadeOffersAvailable ?? 'No Arkade offers available',
+                    AppLocalizations.of(context)?.noArkadeOffersAvailable ??
+                        'No Arkade offers available',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context)
                               .colorScheme
@@ -551,7 +558,8 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                 const SizedBox(width: AppTheme.elementSpacing),
                 Expanded(
                   child: Text(
-                    AppLocalizations.of(context)?.signInToViewYourContracts ?? 'Sign in to view your contracts',
+                    AppLocalizations.of(context)?.signInToViewYourContracts ??
+                        'Sign in to view your contracts',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context)
                               .colorScheme
@@ -604,8 +612,10 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
               Expanded(
                 child: Text(
                   _searchQuery.isNotEmpty
-                      ? (AppLocalizations.of(context)?.noContractsMatchSearch ?? 'No contracts match your search')
-                      : (AppLocalizations.of(context)?.noContractsYet ?? 'No contracts yet. Take an offer to get started!'),
+                      ? (AppLocalizations.of(context)?.noContractsMatchSearch ??
+                          'No contracts match your search')
+                      : (AppLocalizations.of(context)?.noContractsYet ??
+                          'No contracts yet. Take an offer to get started!'),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context)
                             .colorScheme
@@ -728,14 +738,18 @@ class _OfferCard extends StatelessWidget {
                     Expanded(
                       child: Row(
                         children: [
-                          Text(
-                            offer.lender.name,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          Flexible(
+                            child: Text(
+                              offer.lender.name,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
                           ),
                           if (offer.lender.vetted) ...[
                             const SizedBox(width: 4),
@@ -842,12 +856,18 @@ class _OfferCard extends StatelessWidget {
                         style: TextStyle(fontSize: 14),
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        AppLocalizations.of(context)?.limitedTimeOffer ?? 'Limited time offer — super cheap!',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.colorBitcoin,
-                            ),
+                      Flexible(
+                        child: Text(
+                          AppLocalizations.of(context)?.limitedTimeOffer ??
+                              'Limited time offer — super cheap!',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.colorBitcoin,
+                                  ),
+                        ),
                       ),
                     ],
                   ),
@@ -993,10 +1013,14 @@ class _ContractCard extends StatelessWidget {
                 // Mini stats
                 Row(
                   children: [
-                    _buildMiniInfo(context, AppLocalizations.of(context)?.interest ?? 'Interest',
+                    _buildMiniInfo(
+                        context,
+                        AppLocalizations.of(context)?.interest ?? 'Interest',
                         '${(contract.interestRate * 100).toStringAsFixed(1)}% APY'),
                     const SizedBox(width: 16),
-                    _buildMiniInfo(context, AppLocalizations.of(context)?.due ?? 'Due',
+                    _buildMiniInfo(
+                        context,
+                        AppLocalizations.of(context)?.due ?? 'Due',
                         _formatDate(DateTime.parse(contract.expiry))),
                     const Spacer(),
                     Icon(
@@ -1044,6 +1068,8 @@ class _ContractCard extends StatelessWidget {
       children: [
         Text(
           label.toUpperCase(),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
           style: TextStyle(
             color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
             fontSize: 8,
@@ -1053,6 +1079,8 @@ class _ContractCard extends StatelessWidget {
         ),
         Text(
           value,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),

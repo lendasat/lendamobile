@@ -176,7 +176,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                               color: _getTypeColor(type),
                             ),
                             const SizedBox(width: 12),
-                            Text(type),
+                            Flexible(
+                              child: Text(
+                                type,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
                           ],
                         ),
                       );
@@ -231,11 +237,15 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Images (Optional)',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                Flexible(
+                  child: Text(
+                    'Images (Optional)',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
                 ),
                 if (_attachedImages.length < 5)
                   TextButton.icon(
@@ -407,7 +417,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
             // Submit Button
             LongButtonWidget(
-              title: AppLocalizations.of(context)?.sendFeedback ?? 'Send Feedback',
+              title:
+                  AppLocalizations.of(context)?.sendFeedback ?? 'Send Feedback',
               customWidth: double.infinity,
               state: _isLoading ? ButtonState.loading : ButtonState.idle,
               onTap: _isLoading ? null : _submitFeedback,

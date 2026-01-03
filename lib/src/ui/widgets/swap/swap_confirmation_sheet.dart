@@ -51,7 +51,8 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
 
   /// Calculate network fee in USD
   double get _networkFeeUsd {
-    return (widget.networkFeeSats / BitcoinConstants.satsPerBtc) * widget.exchangeRate;
+    return (widget.networkFeeSats / BitcoinConstants.satsPerBtc) *
+        widget.exchangeRate;
   }
 
   /// Calculate protocol fee in USD
@@ -116,7 +117,8 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
             const SizedBox(height: AppTheme.cardPadding),
             // Confirm button
             LongButtonWidget(
-              title: AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
+              title:
+                  AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
               customWidth: double.infinity,
               state: widget.isLoading ? ButtonState.loading : ButtonState.idle,
               onTap: widget.isLoading ? null : widget.onConfirm,
@@ -240,11 +242,16 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    AppLocalizations.of(context)?.totalFeesLabel ?? 'Total fees',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDarkMode ? Colors.white : Colors.black,
+                  Flexible(
+                    child: Text(
+                      AppLocalizations.of(context)?.totalFeesLabel ??
+                          'Total fees',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
                     ),
                   ),
                   Row(
@@ -326,13 +333,18 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+        Flexible(
+          child: Text(
+            label,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 13,
+              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+            ),
           ),
         ),
+        const SizedBox(width: 8),
         Text(
           value,
           style: TextStyle(
@@ -352,13 +364,19 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              AppLocalizations.of(context)?.receivingAddress ?? 'Receiving address',
-              style: TextStyle(
-                fontSize: 14,
-                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+            Flexible(
+              child: Text(
+                AppLocalizations.of(context)?.receivingAddress ??
+                    'Receiving address',
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               _truncateAddress(widget.targetAddress!),
               style: TextStyle(
