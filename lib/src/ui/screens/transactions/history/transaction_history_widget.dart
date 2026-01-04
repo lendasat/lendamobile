@@ -48,6 +48,7 @@ class TransactionHistoryWidget extends StatefulWidget {
 class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   String? _error;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   Timer? _searchTimer;
   List<WalletActivityItem> _filteredActivity = [];
 
@@ -123,8 +124,14 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   void dispose() {
     _pendingService.removeListener(_onPendingTransactionsChanged);
     _searchController.dispose();
+    _searchFocusNode.dispose();
     _searchTimer?.cancel();
     super.dispose();
+  }
+
+  /// Unfocus search field - can be called from parent (e.g., WalletScreen)
+  void unfocusSearch() {
+    _searchFocusNode.unfocus();
   }
 
   void _applySearch(String searchText) {
@@ -415,6 +422,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             child: SearchFieldWidget(
               hintText: AppLocalizations.of(context)!.search,
               isSearchEnabled: true,
+              node: _searchFocusNode,
               handleSearch: (value) {
                 _searchTimer?.cancel();
                 _searchTimer = Timer(const Duration(milliseconds: 300), () {
@@ -434,6 +442,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                   size: AppTheme.cardPadding * 0.75,
                 ),
                 onPressed: () async {
+                  // Unfocus search field before opening filter
+                  _searchFocusNode.unfocus();
                   await arkBottomSheet(
                     context: context,
                     height: MediaQuery.of(context).size.height * 0.6,
@@ -613,6 +623,8 @@ class _TransactionItemWidget extends StatelessWidget {
     bool? isConfirmed,
     bool isSettleable = false,
   }) {
+    // Unfocus any text field before opening bottom sheet
+    FocusScope.of(context).unfocus();
     arkBottomSheet(
       context: context,
       height: MediaQuery.of(context).size.height * 0.95,
@@ -871,6 +883,8 @@ class _SwapItemWidget extends StatelessWidget {
   });
 
   void _navigateToSwapDetail(BuildContext context) {
+    // Unfocus any text field before opening bottom sheet
+    FocusScope.of(context).unfocus();
     arkBottomSheet(
       context: context,
       height: MediaQuery.of(context).size.height * 0.95,

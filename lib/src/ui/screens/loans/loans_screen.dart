@@ -23,12 +23,14 @@ class LoansScreen extends StatefulWidget {
   const LoansScreen({super.key, required this.aspId});
 
   @override
-  State<LoansScreen> createState() => _LoansScreenState();
+  State<LoansScreen> createState() => LoansScreenState();
 }
 
-class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
+class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   final LendasatService _lendasatService = LendasatService();
   String _searchQuery = '';
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _wasKeyboardVisible = false;
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -57,7 +59,13 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _autoRefreshTimer?.cancel();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  /// Unfocus search field - can be called from parent (e.g., bottom nav)
+  void unfocusAll() {
+    _searchFocusNode.unfocus();
   }
 
   @override
@@ -67,6 +75,21 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed && mounted && !_isLoading) {
       _refresh();
     }
+  }
+
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    // Detect keyboard dismiss and unfocus the search field
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+      if (_wasKeyboardVisible && !keyboardVisible) {
+        // Keyboard was just dismissed - unfocus search field
+        _searchFocusNode.unfocus();
+      }
+      _wasKeyboardVisible = keyboardVisible;
+    });
   }
 
   Future<void> _initializeLendasat() async {
@@ -218,102 +241,107 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
         text: AppLocalizations.of(context)?.loansAndLeverage ??
             'Loans Marketplace',
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-              ? _buildErrorView()
-              : RefreshIndicator(
-                  onRefresh: _refresh,
-                  child: CustomScrollView(
-                    slivers: [
-                      // Debug info (development only)
-                      if (_showDebugInfo)
-                        SliverToBoxAdapter(child: _buildDebugCard(context)),
+      body: GestureDetector(
+        onTap: () => _searchFocusNode.unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+                ? _buildErrorView()
+                : RefreshIndicator(
+                    onRefresh: _refresh,
+                    child: CustomScrollView(
+                      slivers: [
+                        // Debug info (development only)
+                        if (_showDebugInfo)
+                          SliverToBoxAdapter(child: _buildDebugCard(context)),
 
-                      // Auth banner (if not authenticated)
-                      if (!_lendasatService.isAuthenticated)
-                        SliverToBoxAdapter(child: _buildAuthBanner()),
+                        // Auth banner (if not authenticated)
+                        if (!_lendasatService.isAuthenticated)
+                          SliverToBoxAdapter(child: _buildAuthBanner()),
 
-                      // Offers section
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppTheme.cardPadding,
-                            AppTheme.cardPadding,
-                            AppTheme.cardPadding,
-                            AppTheme.elementSpacing,
+                        // Offers section
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppTheme.cardPadding,
+                              AppTheme.cardPadding,
+                              AppTheme.cardPadding,
+                              AppTheme.elementSpacing,
+                            ),
+                            child: Text(
+                              AppLocalizations.of(context)?.availableOffers ??
+                                  'Available Offers',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
                           ),
-                          child: Text(
-                            AppLocalizations.of(context)?.availableOffers ??
-                                'Available Offers',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                        ),
+
+                        // Offers list
+                        _buildOffersSliver(),
+
+                        // My Contracts section with search
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppTheme.cardPadding,
+                              AppTheme.cardPadding,
+                              AppTheme.cardPadding,
+                              AppTheme.elementSpacing,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AppLocalizations.of(context)?.myContracts ??
+                                      'My Contracts',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                 ),
+                                const SizedBox(height: AppTheme.elementSpacing),
+                                // Search bar
+                                SearchFieldWidget(
+                                  hintText:
+                                      AppLocalizations.of(context)?.search ??
+                                          'Search',
+                                  isSearchEnabled: true,
+                                  node: _searchFocusNode,
+                                  handleSearch: (value) {
+                                    setState(() {
+                                      _searchQuery = value.toLowerCase();
+                                    });
+                                  },
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _searchQuery = value.toLowerCase();
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
 
-                      // Offers list
-                      _buildOffersSliver(),
+                        // Contracts list
+                        _buildContractsSliver(),
 
-                      // My Contracts section with search
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppTheme.cardPadding,
-                            AppTheme.cardPadding,
-                            AppTheme.cardPadding,
-                            AppTheme.elementSpacing,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                AppLocalizations.of(context)?.myContracts ??
-                                    'My Contracts',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              const SizedBox(height: AppTheme.elementSpacing),
-                              // Search bar
-                              SearchFieldWidget(
-                                hintText:
-                                    AppLocalizations.of(context)?.search ??
-                                        'Search',
-                                isSearchEnabled: true,
-                                handleSearch: (value) {
-                                  setState(() {
-                                    _searchQuery = value.toLowerCase();
-                                  });
-                                },
-                                onChanged: (value) {
-                                  setState(() {
-                                    _searchQuery = value.toLowerCase();
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
+                        // Bottom padding
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: AppTheme.cardPadding * 2),
                         ),
-                      ),
-
-                      // Contracts list
-                      _buildContractsSliver(),
-
-                      // Bottom padding
-                      const SliverToBoxAdapter(
-                        child: SizedBox(height: AppTheme.cardPadding * 2),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+      ),
     );
   }
 
@@ -648,6 +676,7 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   }
 
   void _openOfferDetail(LoanOffer offer) {
+    _searchFocusNode.unfocus();
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -657,6 +686,7 @@ class _LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   }
 
   void _openContractDetail(Contract contract) {
+    _searchFocusNode.unfocus();
     Navigator.push(
       context,
       MaterialPageRoute(

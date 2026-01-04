@@ -82,6 +82,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   late AnimationController _animationController;
   late Animation<double> _animation;
 
+  // Keyboard visibility tracking for unfocusing amount field
+  bool _wasKeyboardVisible = false;
+
   @override
   void initState() {
     super.initState();
@@ -142,6 +145,22 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       logger.i("App resumed, will restart payment monitoring");
       _restartPaymentMonitoring();
     }
+  }
+
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    // Detect keyboard dismiss and unfocus the amount field
+    // This handles the case when AmountWidget is inside arkBottomSheet
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+      if (_wasKeyboardVisible && !keyboardVisible) {
+        // Keyboard was just dismissed - unfocus amount field
+        _amountFocusNode.unfocus();
+      }
+      _wasKeyboardVisible = keyboardVisible;
+    });
   }
 
   Future<void> _restartPaymentMonitoring() async {

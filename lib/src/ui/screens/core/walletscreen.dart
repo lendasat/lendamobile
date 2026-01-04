@@ -63,6 +63,11 @@ class WalletScreenState extends State<WalletScreen>
   bool _isTransactionFetching = true;
   List<Transaction> _transactions = [];
 
+  // Key for transaction history widget to control its focus
+  final GlobalKey<TransactionHistoryWidgetState> _transactionHistoryKey =
+      GlobalKey<TransactionHistoryWidgetState>();
+  bool _wasKeyboardVisible = false;
+
   // Swap history
   final LendaSwapService _swapService = LendaSwapService();
   List<SwapInfo> _swaps = [];
@@ -120,6 +125,21 @@ class WalletScreenState extends State<WalletScreen>
     if (state == AppLifecycleState.resumed) {
       FocusManager.instance.primaryFocus?.unfocus();
     }
+  }
+
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    // Detect keyboard dismiss and unfocus the transaction history search field
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+      if (_wasKeyboardVisible && !keyboardVisible) {
+        // Keyboard was just dismissed - unfocus search field
+        _transactionHistoryKey.currentState?.unfocusSearch();
+      }
+      _wasKeyboardVisible = keyboardVisible;
+    });
   }
 
   /// Initialize wallet data with retry to ensure fresh data is loaded
@@ -1380,6 +1400,7 @@ class WalletScreenState extends State<WalletScreen>
     final currencyService = context.watch<CurrencyPreferenceService>();
 
     return TransactionHistoryWidget(
+      key: _transactionHistoryKey,
       aspId: widget.aspId,
       transactions: _transactions,
       swaps: _swaps,

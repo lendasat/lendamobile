@@ -52,12 +52,15 @@ class AmountWidget extends StatefulWidget {
   State<AmountWidget> createState() => _AmountWidgetState();
 }
 
-class _AmountWidgetState extends State<AmountWidget> {
+class _AmountWidgetState extends State<AmountWidget>
+    with WidgetsBindingObserver {
   late AmountWidgetService _service;
+  bool _wasKeyboardVisible = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     widget.init?.call();
 
     _service = AmountWidgetService();
@@ -87,8 +90,24 @@ class _AmountWidgetState extends State<AmountWidget> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _service.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    // Detect keyboard dismiss and unfocus the amount field
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+      if (_wasKeyboardVisible && !keyboardVisible) {
+        // Keyboard was just dismissed - unfocus amount field
+        widget.focusNode.unfocus();
+      }
+      _wasKeyboardVisible = keyboardVisible;
+    });
   }
 
   @override

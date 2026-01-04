@@ -28,6 +28,7 @@ class _BottomNavState extends State<BottomNav> {
   final GlobalKey<WalletScreenState> _walletKey =
       GlobalKey<WalletScreenState>();
   final GlobalKey<SwapScreenState> _swapKey = GlobalKey<SwapScreenState>();
+  final GlobalKey<LoansScreenState> _loansKey = GlobalKey<LoansScreenState>();
 
   @override
   void initState() {
@@ -35,7 +36,7 @@ class _BottomNavState extends State<BottomNav> {
     _screens = [
       WalletScreen(key: _walletKey, aspId: widget.aspId),
       SwapScreen(key: _swapKey),
-      LoansScreen(aspId: widget.aspId),
+      LoansScreen(key: _loansKey, aspId: widget.aspId),
     ];
 
     // Initialize payment monitoring after first frame
@@ -60,9 +61,10 @@ class _BottomNavState extends State<BottomNav> {
     // Close any open bottom sheets/dialogs before switching tabs
     Navigator.of(context).popUntil((route) => route is! PopupRoute);
 
-    // Dismiss keyboard and unfocus swap screen when switching tabs
+    // Dismiss keyboard and unfocus all screens when switching tabs
     FocusScope.of(context).unfocus();
     _swapKey.currentState?.unfocusAll();
+    _loansKey.currentState?.unfocusAll();
     setState(() {
       _selectedIndex = index;
     });
