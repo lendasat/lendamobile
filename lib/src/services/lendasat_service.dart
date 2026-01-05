@@ -6,7 +6,6 @@ import 'package:ark_flutter/src/rust/api/lendasat_api.dart' as lendasat_api;
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path_provider/path_provider.dart';
 
 // Re-export types needed by consumers
@@ -668,17 +667,23 @@ class LendasatService extends ChangeNotifier {
     }
   }
 
+  // API keys from environment (injected via --dart-define)
+  static const String _apiKeyMainnet =
+      String.fromEnvironment('LENDASAT_API_KEY_MAINNET');
+  static const String _apiKeySignet =
+      String.fromEnvironment('LENDASAT_API_KEY_SIGNET');
+
   /// Get API key based on network.
   String? _getApiKey(String network) {
     switch (network.toLowerCase()) {
       case 'bitcoin':
-        return dotenv.env['LENDASAT_API_KEY_MAINNET'];
+        return _apiKeyMainnet.isNotEmpty ? _apiKeyMainnet : null;
       case 'testnet':
       case 'signet':
       case 'regtest':
-        return dotenv.env['LENDASAT_API_KEY_SIGNET'];
+        return _apiKeySignet.isNotEmpty ? _apiKeySignet : null;
       default:
-        return dotenv.env['LENDASAT_API_KEY_MAINNET'];
+        return _apiKeyMainnet.isNotEmpty ? _apiKeyMainnet : null;
     }
   }
 }

@@ -13,7 +13,6 @@ import 'package:ark_flutter/theme.dart';
 import 'package:cloudflare_turnstile/cloudflare_turnstile.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,9 +42,9 @@ class _ClaimSatsScreenState extends State<ClaimSatsScreen> {
   String? _turnstileToken;
   bool _turnstileCompleted = false;
 
-  // Get Turnstile config from env
-  String get _siteKey => dotenv.env['TURNSTILE_SITE_KEY'] ?? '';
-  String get _baseUrl => dotenv.env['TURNSTILE_BASE_URL'] ?? '';
+  // Turnstile config from environment (injected via --dart-define)
+  static const String _siteKey = String.fromEnvironment('TURNSTILE_SITE_KEY');
+  static const String _baseUrl = String.fromEnvironment('TURNSTILE_BASE_URL');
 
   // Waitlist API base URL
   static const String _waitlistApiUrl = 'https://waitinglist.lendasat.com';

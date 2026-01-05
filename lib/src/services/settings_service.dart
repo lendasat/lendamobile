@@ -1,4 +1,3 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsService {
@@ -11,18 +10,19 @@ class SettingsService {
   static const String _userEmailKey = 'user_email';
   static const String _alphaWarningShownKey = 'alpha_warning_shown';
 
-  // Default values from environment variables
-  static String get defaultEsploraUrl =>
-      dotenv.env['ESPLORA_URL'] ?? 'http://localhost:30000';
-  static String get defaultArkServerUrl =>
-      dotenv.env['ARK_SERVER_URL'] ?? 'http://localhost:7070';
-  static String get defaultArkNetwork => dotenv.env['ARK_NETWORK'] ?? 'regtest';
-  static String get defaultBoltzUrl =>
-      dotenv.env['BOLTZ_URL'] ?? 'http://localhost:9001';
-  static String get defaultBackendUrl =>
-      dotenv.env['BACKEND_URL'] ?? 'http://localhost:7337';
-  static String get defaultWebsiteUrl =>
-      dotenv.env['WEBSITE_URL'] ?? 'http://localhost:3000';
+  // Default values from environment variables (injected via --dart-define)
+  static const String defaultEsploraUrl =
+      String.fromEnvironment('ESPLORA_URL', defaultValue: 'http://localhost:30000');
+  static const String defaultArkServerUrl =
+      String.fromEnvironment('ARK_SERVER_URL', defaultValue: 'http://localhost:7070');
+  static const String defaultArkNetwork =
+      String.fromEnvironment('ARK_NETWORK', defaultValue: 'regtest');
+  static const String defaultBoltzUrl =
+      String.fromEnvironment('BOLTZ_URL', defaultValue: 'http://localhost:9001');
+  static const String defaultBackendUrl =
+      String.fromEnvironment('BACKEND_URL', defaultValue: 'http://localhost:7337');
+  static const String defaultWebsiteUrl =
+      String.fromEnvironment('WEBSITE_URL', defaultValue: 'http://localhost:3000');
 
   // Singleton instance
   static final SettingsService _instance = SettingsService._internal();

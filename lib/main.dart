@@ -15,7 +15,6 @@ import 'package:ark_flutter/src/ui/screens/core/bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding/onboarding_screen.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -50,20 +49,21 @@ Future setupLogger() async {
 
 final SettingsService _settingsService = SettingsService();
 
-Future<void> _initPostHog() async {
-  final apiKey = dotenv.env['POSTHOG_API_KEY'];
-  final host = dotenv.env['POSTHOG_HOST'];
+// PostHog configuration from environment (injected via --dart-define)
+const String _postHogApiKey = String.fromEnvironment('POSTHOG_API_KEY');
+const String _postHogHost = String.fromEnvironment('POSTHOG_HOST');
 
-  if (apiKey == null || apiKey.isEmpty) {
-    logger.w('PostHog API key not found in .env, skipping initialization');
+Future<void> _initPostHog() async {
+  if (_postHogApiKey.isEmpty) {
+    logger.w('PostHog API key not found, skipping initialization');
     return;
   }
 
-  final config = PostHogConfig(apiKey);
+  final config = PostHogConfig(_postHogApiKey);
 
   // Basic configuration
-  if (host != null && host.isNotEmpty) {
-    config.host = host;
+  if (_postHogHost.isNotEmpty) {
+    config.host = _postHogHost;
   }
   config.captureApplicationLifecycleEvents = true;
   config.debug = false; // Set to true for development
@@ -122,9 +122,6 @@ Future<Widget> determineStartScreen() async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Load environment variables (must be after WidgetsFlutterBinding.ensureInitialized)
-  await dotenv.load(fileName: ".env");
   await RustLib.init();
   await setupLogger();
 

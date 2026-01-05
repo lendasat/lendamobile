@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
@@ -284,15 +283,17 @@ class _MempoolHomeState extends State<MempoolHome> {
     }
   }
 
+  // RapidAPI key from environment (injected via --dart-define)
+  static const String _rapidApiKey = String.fromEnvironment('RAPIDAPI_KEY');
+
   /// Load Fear & Greed data from RapidAPI
   Future<void> _loadFearGreedData() async {
     try {
-      final apiKey = dotenv.env['RAPIDAPI_KEY'] ?? '';
-      if (apiKey.isEmpty) {
-        debugPrint('RAPIDAPI_KEY not found in .env');
+      if (_rapidApiKey.isEmpty) {
+        debugPrint('RAPIDAPI_KEY not found');
         return;
       }
-      final fgiResponse = await mempool_api.getFearGreedIndex(apiKey: apiKey);
+      final fgiResponse = await mempool_api.getFearGreedIndex(apiKey: _rapidApiKey);
 
       if (mounted) {
         setState(() {

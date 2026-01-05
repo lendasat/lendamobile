@@ -1,5 +1,7 @@
 set dotenv-load := true
 
+import 'common.just'
+
 mod ios
 mod android
 
@@ -29,8 +31,8 @@ clippy:
 ## fluttrer helper functions
 ## ------------------------
 
-run:
-    fvm flutter run --verbose
+run: check-env
+    fvm flutter run --verbose {{dart-defines}}
 
 flutter-fmt:
     dart format  --output=write .
