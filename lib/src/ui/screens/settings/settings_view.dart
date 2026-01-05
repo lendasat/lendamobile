@@ -38,10 +38,39 @@ class SettingsViewState extends State<SettingsView> {
   bool _showDeveloperOptions = false;
   bool _isExportingLogs = false;
 
+  // Environment info
+  String _esploraUrl = '';
+  String _arkServerUrl = '';
+  String _arkNetwork = '';
+  String _boltzUrl = '';
+  String _backendUrl = '';
+  String _websiteUrl = '';
+
   @override
   void initState() {
     super.initState();
     _loadRecoveryStatus();
+    _loadEnvironmentInfo();
+  }
+
+  Future<void> _loadEnvironmentInfo() async {
+    final esploraUrl = await _settingsService.getEsploraUrl();
+    final arkServerUrl = await _settingsService.getArkServerUrl();
+    final arkNetwork = await _settingsService.getNetwork();
+    final boltzUrl = await _settingsService.getBoltzUrl();
+    final backendUrl = await _settingsService.getBackendUrl();
+    final websiteUrl = await _settingsService.getWebsiteUrl();
+
+    if (mounted) {
+      setState(() {
+        _esploraUrl = esploraUrl;
+        _arkServerUrl = arkServerUrl;
+        _arkNetwork = arkNetwork;
+        _boltzUrl = boltzUrl;
+        _backendUrl = backendUrl;
+        _websiteUrl = websiteUrl;
+      });
+    }
   }
 
   Future<void> _exportLogs() async {
@@ -149,6 +178,40 @@ class SettingsViewState extends State<SettingsView> {
             const SizedBox(height: AppTheme.elementSpacing),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildEnvInfoRow(String label, String value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: isDark ? AppTheme.white60 : AppTheme.black60,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value.isEmpty ? '(not set)' : value,
+              style: TextStyle(
+                fontSize: 11,
+                color: value.isEmpty
+                    ? AppTheme.errorColor
+                    : (isDark ? Colors.white : Colors.black),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -482,6 +545,39 @@ class SettingsViewState extends State<SettingsView> {
                               : AppTheme.black60,
                         ),
                         onTap: _isExportingLogs ? null : _exportLogs,
+                      ),
+
+                      // Environment Info
+                      const SizedBox(height: AppTheme.elementSpacing),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppTheme.elementSpacing),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.05),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.borderRadiusSmall),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Environment Info',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: AppTheme.elementSpacing),
+                            _buildEnvInfoRow('ARK_NETWORK', _arkNetwork),
+                            _buildEnvInfoRow('ARK_SERVER_URL', _arkServerUrl),
+                            _buildEnvInfoRow('ESPLORA_URL', _esploraUrl),
+                            _buildEnvInfoRow('BOLTZ_URL', _boltzUrl),
+                            _buildEnvInfoRow('BACKEND_URL', _backendUrl),
+                            _buildEnvInfoRow('WEBSITE_URL', _websiteUrl),
+                          ],
+                        ),
                       ),
                     ],
                   ),

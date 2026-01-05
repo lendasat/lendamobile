@@ -248,7 +248,6 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
                 icon: Icons.contact_phone_outlined,
                 title: AppLocalizations.of(context)!.contact,
                 content: const [
-                  "+61 492 921 166",
                   "contact@lendasat.com",
                 ],
               ),
