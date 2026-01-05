@@ -121,10 +121,10 @@ Future<Widget> determineStartScreen() async {
 }
 
 Future<void> main() async {
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
-
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables (must be after WidgetsFlutterBinding.ensureInitialized)
+  await dotenv.load(fileName: ".env");
   await RustLib.init();
   await setupLogger();
 
