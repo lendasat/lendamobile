@@ -15,6 +15,7 @@ class BitcoinPriceChart extends StatefulWidget {
   final ActivationMode? trackballActivationMode;
   final VoidCallback? onChartTouchEnd;
   final Color? lineColor;
+
   /// Unique key for forcing chart rebuild (e.g., when time period changes)
   final String? chartKey;
 
@@ -89,16 +90,19 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
         ? TrackballBehavior(
             enable: true,
             activationMode: widget.trackballActivationMode!,
+            lineColor: Colors.grey[400],
+            lineWidth: 2,
+            lineType: TrackballLineType.vertical,
             tooltipSettings: const InteractiveTooltip(
               enable: false, // Disable tooltip since we use custom header
             ),
-            lineType: TrackballLineType.vertical,
-            lineColor: Colors.grey[400],
-            lineWidth: 2,
-            markerSettings: const TrackballMarkerSettings(
+            markerSettings: TrackballMarkerSettings(
               markerVisibility: TrackballVisibilityMode.visible,
-              color: Colors.white,
+              color: chartLineColor, // Use chart line color for better visibility
               borderColor: Colors.white,
+              borderWidth: 2,
+              height: 10,
+              width: 10,
             ),
           )
         : null;

@@ -1,0 +1,129 @@
+workflows:
+  ios-workflow:
+    name: iOS Workflow
+    integrations:
+      app_store_connect: lendamobile-22.12.2025
+    environment:
+      groups:
+        - production
+      ios_signing:
+        distribution_type: app_store # or: ad_hoc | development | enterprise
+        bundle_identifier: com.lendasat.lendamobile
+      vars:
+        BUNDLE_ID: "com.lendasat.lendamobile"
+        XCODE_WORKSPACE: "Runner.xcworkspace" # <-- Name of your Xcode workspace
+        XCODE_SCHEME: "Runner" # <-- Name of your Xcode scheme
+        APP_STORE_APPLE_ID: 6756863835
+    scripts:
+      # Install Rust toolchain
+      - name: Install Rust
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env"
+          rustup target add aarch64-apple-ios
+
+      # Install flutter_rust_bridge_codegen
+      - name: Install flutter_rust_bridge_codegen
+        script: |
+          source "$HOME/.cargo/env"
+          cargo install flutter_rust_bridge_codegen
+      # Install cargo expand
+      - name: Install cargo expand
+        script: |
+          source "$HOME/.cargo/env"
+          cargo install cargo-expand
+
+      # Generate FFI bindings (equivalent to: just ffi-build)
+      - name: Generate FFI bindings
+        script: |
+          source "$HOME/.cargo/env"
+          flutter_rust_bridge_codegen generate
+
+      # Build Rust for iOS (equivalent to: just ios-build)
+      - name: Build Rust for iOS
+        script: |
+          source "$HOME/.cargo/env"
+          cd rust && cargo build --release --target aarch64-apple-ios
+
+      # Flutter dependencies
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+
+      # Create .env file from Codemagic environment variables
+      - name: Create .env file
+        script: |
+          cat > .env << EOF
+          BACKEND_URL=$BACKEND_URL
+          WEBSITE_URL=$WEBSITE_URL
+          LENDASAT_API_KEY_SIGNET=$LENDASAT_API_KEY_SIGNET
+          LENDASAT_API_KEY_MAINNET=$LENDASAT_API_KEY_MAINNET
+          POSTHOG_API_KEY=$POSTHOG_API_KEY
+          POSTHOG_HOST=$POSTHOG_HOST
+          TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY
+          TURNSTILE_SECRET_KEY=$TURNSTILE_SECRET_KEY
+          TURNSTILE_BASE_URL=$TURNSTILE_BASE_URL
+          RAPIDAPI_KEY=$RAPIDAPI_KEY
+          ARK_SERVER_URL=$ARK_SERVER_URL
+          ESPLORA_URL=$ESPLORA_URL
+          ARK_NETWORK=$ARK_NETWORK
+          BOLTZ_URL=$BOLTZ_URL
+          EOF
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
+
+      - name: Set up provisioning profiles settings on Xcode project
+        script: xcode-project use-profiles
+
+      - name: Build ipa for distribution
+        script: |
+          BUILD_NAME=$(yq -r .version pubspec.yaml)
+          BUILD_NUMBER=$(git rev-list --count HEAD)
+          flutter build ipa \
+            --release \
+            --build-name=$BUILD_NAME \
+            --build-number=$BUILD_NUMBER \
+            --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    publishing:
+      email:
+        recipients:
+          - philipp@lendasat.com
+        notify:
+          success: true
+          failure: true
+
+      app_store_connect:
+        # Use referenced App Store Connect API key to authenticate binary upload
+        auth: integration
+
+        # Configuration related to TestFlight (optional)
+
+        # Optional boolean, defaults to false. Whether or not to submit the uploaded
+        # build to TestFlight beta review. Required for distributing to beta groups.
+        # Note: This action is performed during post-processing.
+        submit_to_testflight: true
+
+        # Optional boolean, defaults to false. Set to true to automatically expire
+        # previous build in review or waiting for review in Testflight before
+        # submitting a new build to beta review. Expired builds will no longer be available for testers.
+        # Note: This action is performed during post-processing.
+        expire_build_submitted_for_review: false
+
+        # Specify the names of beta tester groups that will get access to the build
+        # once it has passed beta review.
+        beta_groups:
+          - beta
+
+        # Configuration related to App Store (optional)
+
+        # Optional boolean, defaults to false. Whether or not to submit the uploaded
+        # build to App Store review. Note: This action is performed during post-processing.
+        submit_to_app_store: false

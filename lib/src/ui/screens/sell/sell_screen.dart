@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as rust_api;
@@ -7,6 +8,7 @@ import 'package:ark_flutter/src/rust/models/moonpay.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/moonpay_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -76,7 +78,8 @@ class _SellScreenState extends State<SellScreen> {
       });
 
       final balance = await rust_api.balance();
-      _bitcoinBalance = balance.offchain.totalSats.toDouble() / 100000000.0;
+      _bitcoinBalance =
+          balance.offchain.totalSats.toDouble() / BitcoinConstants.satsPerBtc;
 
       await Future.wait([_fetchLimits(), _fetchQuote()]);
 
@@ -152,7 +155,7 @@ class _SellScreenState extends State<SellScreen> {
       setState(() => _isProcessing = true);
 
       final sats = int.parse(_satController.text);
-      final btcAmount = sats / 100000000.0;
+      final btcAmount = sats / BitcoinConstants.satsPerBtc;
 
       final queryParams = {
         'quoteCurrencyAmount': btcAmount.toString(),
@@ -213,12 +216,8 @@ class _SellScreenState extends State<SellScreen> {
     } catch (e) {
       logger.e('Error processing sell: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                '${AppLocalizations.of(context)!.failedToLaunchMoonpay}: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
+        OverlayService().showError(
+          '${AppLocalizations.of(context)!.failedToLaunchMoonpay}: ${e.toString()}',
         );
       }
     } finally {
@@ -437,12 +436,15 @@ class _SellScreenState extends State<SellScreen> {
 
   Widget _buildAmountWidget() {
     final minSats = _limits != null
-        ? (_limits!.quoteCurrency.minBuyAmount * 100000000).toInt()
+        ? (_limits!.quoteCurrency.minBuyAmount * BitcoinConstants.satsPerBtc)
+            .toInt()
         : 0;
     final maxFromLimits = _limits != null
-        ? (_limits!.quoteCurrency.maxBuyAmount * 100000000).toInt()
+        ? (_limits!.quoteCurrency.maxBuyAmount * BitcoinConstants.satsPerBtc)
+            .toInt()
         : 0;
-    final maxFromBalance = (_bitcoinBalance * 100000000).toInt();
+    final maxFromBalance =
+        (_bitcoinBalance * BitcoinConstants.satsPerBtc).toInt();
     final maxSats =
         maxFromBalance < maxFromLimits ? maxFromBalance : maxFromLimits;
 
@@ -474,7 +476,8 @@ class _SellScreenState extends State<SellScreen> {
           return;
         }
         _allowedAmountDifference =
-            (_limits!.quoteCurrency.minBuyAmount * 100000000).toInt() -
+            (_limits!.quoteCurrency.minBuyAmount * BitcoinConstants.satsPerBtc)
+                    .toInt() -
                 currentVal.toInt();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) setState(() {});
@@ -493,7 +496,8 @@ class _SellScreenState extends State<SellScreen> {
           return;
         }
         _allowedAmountDifference =
-            (_limits!.quoteCurrency.maxBuyAmount * 100000000).toInt() -
+            (_limits!.quoteCurrency.maxBuyAmount * BitcoinConstants.satsPerBtc)
+                    .toInt() -
                 currentVal.toInt();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) setState(() {});

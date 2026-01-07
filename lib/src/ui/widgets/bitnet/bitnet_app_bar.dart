@@ -27,7 +27,7 @@ class BitNetAppBar extends StatefulWidget implements PreferredSizeWidget {
     this.customTitle,
     this.customLeading,
     this.customIcon,
-    this.buttonType = ButtonType.solid,
+    this.buttonType = ButtonType.transparent,
   });
 
   @override

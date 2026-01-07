@@ -1,6 +1,6 @@
 use crate::ark::address_helper::{decode_bip21, is_ark_address, is_bip21, is_btc_address};
 use crate::ark::esplora::EsploraClient;
-use crate::state::{ArkClient, ARK_CLIENT, ESPLORA_URL};
+use crate::state::{ARK_CLIENT, ArkClient, ESPLORA_URL};
 use anyhow::Result;
 use anyhow::{anyhow, bail};
 use ark_client::Blockchain;
@@ -9,10 +9,10 @@ use ark_client::{OffChainBalance, SwapAmount};
 use ark_core::ArkAddress;
 use ark_core::history::Transaction;
 use ark_core::server::{Info, SubscriptionResponse};
-use bitcoin::{Address, Amount, Txid};
+use bitcoin::{Address, Amount, OutPoint, Txid};
 use futures::StreamExt;
-use rand::rngs::StdRng;
 use rand::SeedableRng;
+use rand::rngs::StdRng;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
@@ -34,6 +34,20 @@ pub async fn balance() -> Result<Balance> {
                 let guard = client.read();
                 Arc::clone(&*guard)
             };
+
+            // Auto-settle any confirmed boarding UTXOs before fetching balance
+            // This runs silently - failures are logged but don't block balance fetch
+            match auto_settle_boarding().await {
+                Ok(settled) => {
+                    if settled {
+                        tracing::info!("Auto-settled boarding UTXOs into Ark");
+                    }
+                }
+                Err(e) => {
+                    // Don't fail balance fetch if auto-settle fails
+                    tracing::debug!("Auto-settle check: {}", e);
+                }
+            }
 
             // Now we can use the cloned Arc safely across await
             let offchain_balance = client_arc
@@ -91,10 +105,15 @@ pub async fn address(amount: Option<Amount>) -> Result<Addresses> {
             let reverse_swap_result = match amount {
                 None => None,
                 Some(amount) => {
-                    match client.get_ln_invoice(SwapAmount::Invoice(amount), Some(300)).await {
+                    match client
+                        .get_ln_invoice(SwapAmount::Invoice(amount), Some(300))
+                        .await
+                    {
                         Ok(swap) => Some(swap),
                         Err(e) => {
-                            tracing::warn!("Failed to create Lightning invoice (Boltz may be unavailable): {e:#}");
+                            tracing::warn!(
+                                "Failed to create Lightning invoice (Boltz may be unavailable): {e:#}"
+                            );
                             None
                         }
                     }
@@ -183,8 +202,19 @@ pub async fn send(address: String, amount: Amount) -> Result<Txid> {
             } else if is_btc_address(address.as_str()) {
                 let address = Address::from_str(address.as_str())?;
                 let rng = &mut StdRng::from_entropy();
+
+                // Select VTXOs sorted by expiry (soonest first) like Arkade wallet
+                // This uses up older VTXOs first, leaving fresher ones available
+                let vtxo_outpoints = select_vtxos_for_amount(&client, amount).await?;
+
+                // Use collaborative_redeem_with_vtxos to send with ordered VTXOs
                 let txid = client
-                    .collaborative_redeem(rng, address.assume_checked(), amount)
+                    .collaborative_redeem_with_vtxos(
+                        rng,
+                        &vtxo_outpoints,
+                        address.assume_checked(),
+                        amount,
+                    )
                     .await
                     .map_err(|e| anyhow!("Failed sending onchain {e:#}"))?;
                 Ok(txid)
@@ -218,9 +248,66 @@ pub async fn settle() -> Result<()> {
     Ok(())
 }
 
+/// Select VTXOs for an onchain send, sorted by expiry (soonest first).
+/// This matches Arkade wallet behavior - uses VTXOs expiring soonest first,
+/// leaving fresher ones available for later use.
+async fn select_vtxos_for_amount(client: &ArkClient, amount: Amount) -> Result<Vec<OutPoint>> {
+    // Get all VTXOs
+    let (vtxo_list, _) = client
+        .list_vtxos()
+        .await
+        .map_err(|e| anyhow!("Failed to list VTXOs: {e}"))?;
+
+    // Get all spendable VTXOs (no expiry filtering - let the server validate)
+    let mut vtxos: Vec<_> = vtxo_list.spendable_offchain().collect();
+
+    let total_available: Amount = vtxos.iter().map(|v| v.amount).sum();
+
+    if total_available < amount {
+        bail!(
+            "Insufficient balance for onchain send: need {}, have {}",
+            amount,
+            total_available
+        );
+    }
+
+    // Sort by expiry ascending (soonest first) - like Arkade wallet
+    // This uses up older VTXOs first, preserving fresher ones
+    vtxos.sort_by_key(|v| v.expires_at);
+
+    // Select VTXOs to cover the amount
+    let mut selected = Vec::new();
+    let mut selected_amount = Amount::ZERO;
+
+    for vtxo in vtxos {
+        if selected_amount >= amount {
+            break;
+        }
+        selected.push(vtxo.outpoint);
+        selected_amount += vtxo.amount;
+
+        tracing::debug!(
+            outpoint = %vtxo.outpoint,
+            amount = %vtxo.amount,
+            expires_at = vtxo.expires_at,
+            "Selected VTXO for onchain send"
+        );
+    }
+
+    tracing::info!(
+        vtxos_selected = selected.len(),
+        total_selected = %selected_amount,
+        requested = %amount,
+        "Selected VTXOs for onchain send"
+    );
+
+    Ok(selected)
+}
+
 /// Represents a pending boarding UTXO (on-chain funds waiting to be settled)
 pub struct BoardingUtxo {
     pub txid: String,
+    pub vout: u32,
     pub amount: Amount,
     pub is_confirmed: bool,
 }
@@ -266,6 +353,7 @@ pub async fn get_boarding_utxos() -> Result<Vec<BoardingUtxo>> {
                 for utxo in address_utxos {
                     utxos.push(BoardingUtxo {
                         txid: utxo.outpoint.txid.to_string(),
+                        vout: utxo.outpoint.vout,
                         amount: utxo.amount,
                         is_confirmed: utxo.confirmation_blocktime.is_some(),
                     });
@@ -288,6 +376,141 @@ pub async fn get_pending_balance() -> Result<Amount> {
     let utxos = get_boarding_utxos().await?;
     let total = utxos.iter().map(|u| u.amount).sum();
     Ok(total)
+}
+
+/// Auto-settle confirmed boarding UTXOs silently.
+/// Returns Ok(true) if settled, Ok(false) if nothing to settle.
+async fn auto_settle_boarding() -> Result<bool> {
+    let maybe_client = ARK_CLIENT.try_get();
+
+    match maybe_client {
+        None => bail!("Ark client not initialized"),
+        Some(client) => {
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+
+            let esplora_url = ESPLORA_URL
+                .try_get()
+                .ok_or_else(|| anyhow!("Esplora URL not initialized"))?
+                .read()
+                .clone();
+
+            let esplora = EsploraClient::new(&esplora_url)
+                .map_err(|e| anyhow!("Could not create esplora client: {e:#}"))?;
+
+            let boarding_addresses = client
+                .get_boarding_addresses()
+                .map_err(|e| anyhow!("Could not get boarding addresses: {e:#}"))?;
+
+            let mut boarding_outpoints = Vec::new();
+
+            for address in boarding_addresses {
+                let address_utxos = esplora
+                    .find_outpoints(&address)
+                    .await
+                    .map_err(|e| anyhow!("Could not find outpoints: {e:#}"))?;
+
+                for utxo in address_utxos {
+                    if utxo.confirmation_blocktime.is_some() {
+                        boarding_outpoints.push(utxo.outpoint);
+                    }
+                }
+            }
+
+            if boarding_outpoints.is_empty() {
+                return Ok(false);
+            }
+
+            tracing::info!("Auto-settling {} boarding UTXOs", boarding_outpoints.len());
+
+            let mut rng = StdRng::from_entropy();
+            client
+                .settle_vtxos(&mut rng, &[], &boarding_outpoints)
+                .await
+                .map_err(|e| anyhow!("Failed auto-settling: {e:#}"))?;
+
+            Ok(true)
+        }
+    }
+}
+
+/// Settle only boarding UTXOs (on-chain funds) into the Ark protocol.
+/// This method settles ONLY the confirmed boarding UTXOs without including
+/// any existing VTXOs, avoiding the minExpiryGap rejection from the server.
+pub async fn settle_boarding() -> Result<()> {
+    let maybe_client = ARK_CLIENT.try_get();
+
+    match maybe_client {
+        None => {
+            bail!("Ark client not initialized");
+        }
+        Some(client) => {
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+
+            // Get the stored esplora URL
+            let esplora_url = ESPLORA_URL
+                .try_get()
+                .ok_or_else(|| anyhow!("Esplora URL not initialized"))?
+                .read()
+                .clone();
+
+            let esplora = EsploraClient::new(&esplora_url)
+                .map_err(|e| anyhow!("Could not create esplora client: {e:#}"))?;
+
+            // Get all boarding addresses
+            let boarding_addresses = client
+                .get_boarding_addresses()
+                .map_err(|e| anyhow!("Could not get boarding addresses: {e:#}"))?;
+
+            let mut boarding_outpoints = Vec::new();
+
+            // Query esplora for confirmed UTXOs at each boarding address
+            for address in boarding_addresses {
+                let address_utxos = esplora
+                    .find_outpoints(&address)
+                    .await
+                    .map_err(|e| anyhow!("Could not find outpoints: {e:#}"))?;
+
+                for utxo in address_utxos {
+                    // Only include confirmed UTXOs
+                    if utxo.confirmation_blocktime.is_some() {
+                        boarding_outpoints.push(utxo.outpoint);
+                    }
+                }
+            }
+
+            if boarding_outpoints.is_empty() {
+                bail!("No confirmed boarding UTXOs to settle");
+            }
+
+            tracing::info!(
+                "Settling {} confirmed boarding UTXOs",
+                boarding_outpoints.len()
+            );
+
+            let mut rng = StdRng::from_entropy();
+
+            // Call settle_vtxos with empty vtxo_outpoints and the boarding outpoints
+            // This ensures we only settle boarding UTXOs, not any existing VTXOs
+            client
+                .settle_vtxos(
+                    &mut rng,
+                    &[],                 // No VTXOs - this is the key!
+                    &boarding_outpoints, // Only boarding UTXOs
+                )
+                .await
+                .map_err(|e| anyhow!("Failed settling boarding UTXOs: {e:#}"))?;
+
+            tracing::info!("Successfully settled boarding UTXOs");
+        }
+    }
+
+    Ok(())
 }
 
 /// Result of paying a Lightning invoice via submarine swap

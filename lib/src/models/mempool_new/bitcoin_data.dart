@@ -53,9 +53,8 @@ class BlockData {
     previousblockhash = json['previousblockhash'];
     mediantime = json['mediantime'];
     stale = json['stale'];
-    extras = json['extras'] != null
-        ? new Extras.fromJson(json['extras'])
-        : null;
+    extras =
+        json['extras'] != null ? new Extras.fromJson(json['extras']) : null;
   }
 
   Map<String, dynamic> toJson() {

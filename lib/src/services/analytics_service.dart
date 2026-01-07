@@ -45,7 +45,8 @@ class AnalyticsService {
           'identified_at': DateTime.now().toIso8601String(),
         },
       );
-      logger.i('[Analytics] User identified with npub: ${npub.substring(0, 20)}...');
+      logger.i(
+          '[Analytics] User identified with npub: ${npub.substring(0, 20)}...');
     } catch (e) {
       logger.w('[Analytics] Failed to identify user: $e');
     }
@@ -70,7 +71,8 @@ class AnalyticsService {
           'timestamp': DateTime.now().toIso8601String(),
         },
       );
-      logger.i('[Analytics] Tracked send_transaction: $amountSats sats ($transactionType)');
+      logger.i(
+          '[Analytics] Tracked send_transaction: $amountSats sats ($transactionType)');
     } catch (e) {
       logger.w('[Analytics] Failed to track send_transaction: $e');
     }
@@ -92,7 +94,8 @@ class AnalyticsService {
           'timestamp': DateTime.now().toIso8601String(),
         },
       );
-      logger.i('[Analytics] Tracked receive_transaction: $amountSats sats ($transactionType)');
+      logger.i(
+          '[Analytics] Tracked receive_transaction: $amountSats sats ($transactionType)');
     } catch (e) {
       logger.w('[Analytics] Failed to track receive_transaction: $e');
     }
@@ -116,7 +119,8 @@ class AnalyticsService {
           'timestamp': DateTime.now().toIso8601String(),
         },
       );
-      logger.i('[Analytics] Tracked swap_transaction: $amountSats sats ($fromAsset -> $toAsset)');
+      logger.i(
+          '[Analytics] Tracked swap_transaction: $amountSats sats ($fromAsset -> $toAsset)');
     } catch (e) {
       logger.w('[Analytics] Failed to track swap_transaction: $e');
     }
@@ -142,7 +146,8 @@ class AnalyticsService {
           'timestamp': DateTime.now().toIso8601String(),
         },
       );
-      logger.i('[Analytics] Tracked bitcoin_transaction: $type $amountSats sats');
+      logger
+          .i('[Analytics] Tracked bitcoin_transaction: $type $amountSats sats');
     } catch (e) {
       logger.w('[Analytics] Failed to track bitcoin_transaction: $e');
     }

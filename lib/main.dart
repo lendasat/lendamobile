@@ -4,16 +4,17 @@ import 'package:ark_flutter/src/rust/api.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/language_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/services/transaction_filter_service.dart';
+import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
-import 'package:ark_flutter/src/ui/screens/bottom_nav.dart';
+import 'package:ark_flutter/src/ui/screens/core/bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
-import 'package:ark_flutter/src/ui/screens/onboarding_screen.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:ark_flutter/src/ui/screens/onboarding/onboarding_screen.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -48,20 +49,21 @@ Future setupLogger() async {
 
 final SettingsService _settingsService = SettingsService();
 
-Future<void> _initPostHog() async {
-  final apiKey = dotenv.env['POSTHOG_API_KEY'];
-  final host = dotenv.env['POSTHOG_HOST'];
+// PostHog configuration from environment (injected via --dart-define)
+const String _postHogApiKey = String.fromEnvironment('POSTHOG_API_KEY');
+const String _postHogHost = String.fromEnvironment('POSTHOG_HOST');
 
-  if (apiKey == null || apiKey.isEmpty) {
-    logger.w('PostHog API key not found in .env, skipping initialization');
+Future<void> _initPostHog() async {
+  if (_postHogApiKey.isEmpty) {
+    logger.w('PostHog API key not found, skipping initialization');
     return;
   }
 
-  final config = PostHogConfig(apiKey);
+  final config = PostHogConfig(_postHogApiKey);
 
   // Basic configuration
-  if (host != null && host.isNotEmpty) {
-    config.host = host;
+  if (_postHogHost.isNotEmpty) {
+    config.host = _postHogHost;
   }
   config.captureApplicationLifecycleEvents = true;
   config.debug = false; // Set to true for development
@@ -119,9 +121,6 @@ Future<Widget> determineStartScreen() async {
 }
 
 Future<void> main() async {
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
-
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
   await setupLogger();
@@ -170,12 +169,17 @@ class MyApp extends StatelessWidget {
           ChangeNotifierProvider(
             create: (context) => UserPreferencesService()..loadPreferences(),
           ),
+          ChangeNotifierProvider(
+            create: (context) => PaymentMonitoringService(),
+          ),
         ],
         child: Consumer2<ThemeProvider, LanguageService>(
           builder: (context, themeProvider, languageService, _) => MaterialApp(
+            debugShowCheckedModeBanner: false,
             title: 'Ark - Flutter - Sample',
             theme: themeProvider.getMaterialTheme(),
             locale: languageService.currentLocale,
+            navigatorKey: OverlayService.navigatorKey,
             navigatorObservers: [PosthogObserver()],
             localizationsDelegates: const [
               AppLocalizations.delegate,

@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -53,9 +54,10 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
     // Parse the balance and calculate the fiat equivalent.
     // (Assuming balance is in satoshis)
     final double balanceValue = double.tryParse(widget.balance) ?? 0.0;
-    final bitcoinPrice = widget.bitcoinPrice ?? 0;
-    final currencyEquivalent =
-        (balanceValue / 100000000 * bitcoinPrice).toStringAsFixed(2);
+    final btcPriceUsd = widget.bitcoinPrice ?? 0.0;
+    final exchangeRates = currencyService.exchangeRates;
+    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+    final fiatValue = balanceValue / BitcoinConstants.satsPerBtc * btcPriceUsd * fiatRate;
 
     return GlassContainer(
       height: AppTheme.cardPadding * 2.75,
@@ -83,10 +85,11 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
                       SizedBox(width: AppTheme.elementSpacing / 1.5),
                       Text(
                         widget.currency.name,
-                        style: Theme.of(widget.context).textTheme.titleSmall!
+                        style: Theme.of(widget.context)
+                            .textTheme
+                            .titleSmall!
                             .copyWith(
-                              color:
-                                  Theme.of(context).brightness ==
+                              color: Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? AppTheme.white90
                                   : AppTheme.black90,
@@ -113,7 +116,8 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
                             : Text(
                                 currencyService.showCoinBalance
                                     ? widget.balance
-                                    : "${currencyService.symbol}$currencyEquivalent",
+                                    : currencyService
+                                        .formatWithSymbol(fiatValue),
                                 style: Theme.of(
                                   widget.context,
                                 ).textTheme.titleMedium,
@@ -133,7 +137,11 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
           // Tap Interaction
           Material(
             color: Colors.transparent,
-            child: InkWell(onTap: widget.onTap),
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius:
+                  BorderRadius.circular(AppTheme.cardPadding * 2.75 / 3),
+            ),
           ),
         ],
       ),

@@ -437,6 +437,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get date => 'तारीख';
 
   @override
+  String get time => 'समय';
+
+  @override
+  String get transactionVolume => 'लेनदेन राशि';
+
+  @override
   String get confirmedAt => 'पुष्ट किया गया समय';
 
   @override
@@ -801,6 +807,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sendNow => 'SEND NOW';
 
   @override
+  String get notEnoughFunds => 'Not enough funds';
+
+  @override
   String get recipient => 'Recipient';
 
   @override
@@ -1046,4 +1055,251 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get registrationWarning =>
       'Account registration had an issue. You can still use your wallet.';
+
+  @override
+  String get legalInformation => 'Legal Information';
+
+  @override
+  String get termsAndConditionsTitle1 => 'Terms and';
+
+  @override
+  String get termsAndConditionsTitle2 => 'Conditions';
+
+  @override
+  String get lastUpdated => 'Last Updated: December 2025';
+
+  @override
+  String get alphaVersion => 'Alpha Version';
+
+  @override
+  String get alphaVersionWarning =>
+      'This app is under development. Use at your own risk.';
+
+  @override
+  String get agbScopeTitle => 'Scope of Application';
+
+  @override
+  String get agbScopeContent =>
+      'These terms and conditions govern the use of the Bitcoin wallet app (hereinafter Lenda), provided by COBLOX PTY LTD. By using the app, you agree to these terms and conditions.';
+
+  @override
+  String get agbFunctionalityTitle => 'Functionality';
+
+  @override
+  String get agbFunctionalityContent =>
+      'The app allows users to receive, send, and manage Bitcoin. The app is not a bank and does not provide banking services. Additionally, Taproot Assets, also known as digital assets, are offered and sold as a service platform.';
+
+  @override
+  String get agbUserResponsibilityTitle => 'User Responsibility';
+
+  @override
+  String get agbUserResponsibilityContent =>
+      'The user is solely responsible for the security of their Bitcoin. The app provides security features such as password protection and two-factor authentication, but it is the user\'s responsibility to use these features carefully. COBLOX PTY LTD is not liable for losses resulting from carelessness, loss of devices, or user credentials.';
+
+  @override
+  String get agbFeesTitle => 'Fees';
+
+  @override
+  String get agbFeesContent =>
+      'Certain functions of the app may incur fees. These fees will be communicated to the user in advance and are visible in the app.';
+
+  @override
+  String get agbLiabilityTitle => 'Limitation of Liability';
+
+  @override
+  String get agbLiabilityContent =>
+      'COBLOX PTY LTD is only liable for damages caused by intentional or grossly negligent actions by COBLOX PTY LTD. COBLOX PTY LTD is not liable for damages resulting from the use of the app or the loss of Bitcoin.';
+
+  @override
+  String get agbChangesTitle => 'Changes';
+
+  @override
+  String get agbChangesContent =>
+      'COBLOX PTY LTD reserves the right to change these terms and conditions at any time. The user will be informed of such changes and must agree to them in order to continue using the app.';
+
+  @override
+  String get agbFinalProvisionsTitle => 'Final Provisions';
+
+  @override
+  String get agbFinalProvisionsContent =>
+      'These terms and conditions represent the entire agreement between the user and COBLOX PTY LTD. Should any provision be invalid, the remaining provisions shall remain in effect.';
+
+  @override
+  String get contact => 'Contact';
+
+  @override
+  String get responsibleForContent => 'Responsible for Content';
+
+  @override
+  String get disclaimer => 'Disclaimer';
+
+  @override
+  String get disclaimerContent =>
+      'The provider assumes no liability for the accuracy, correctness, completeness, or quality of the information provided. Liability claims against the provider are generally excluded unless there is proven intentional or grossly negligent fault.';
+
+  @override
+  String get allRightsReserved => 'All rights reserved';
+
+  @override
+  String get loansAndLeverage => 'ऋण बाज़ार';
+
+  @override
+  String get availableOffers => 'उपलब्ध ऑफर';
+
+  @override
+  String get myContracts => 'मेरे अनुबंध';
+
+  @override
+  String get signInRequired => 'साइन इन आवश्यक';
+
+  @override
+  String get signInToViewContracts =>
+      'अपने अनुबंध देखने और ऋण लेने के लिए साइन इन करें।';
+
+  @override
+  String get noArkadeOffersAvailable => 'कोई Arkade ऑफर उपलब्ध नहीं';
+
+  @override
+  String get signInToViewYourContracts =>
+      'अपने अनुबंध देखने के लिए साइन इन करें';
+
+  @override
+  String get noContractsMatchSearch => 'कोई अनुबंध आपकी खोज से मेल नहीं खाता';
+
+  @override
+  String get noContractsYet =>
+      'अभी कोई अनुबंध नहीं। शुरू करने के लिए ऑफर स्वीकार करें!';
+
+  @override
+  String get duration => 'अवधि';
+
+  @override
+  String get minLtv => 'न्यूनतम LTV';
+
+  @override
+  String get limitedTimeOffer => 'सीमित समय की पेशकश — बहुत सस्ता!';
+
+  @override
+  String get interest => 'ब्याज';
+
+  @override
+  String get due => 'देय';
+
+  @override
+  String get overdue => 'विलंबित';
+
+  @override
+  String get swapDetails => 'स्वैप विवरण';
+
+  @override
+  String get errorLoadingSwap => 'स्वैप लोड करने में त्रुटि';
+
+  @override
+  String get refundAddress => 'रिफंड पता';
+
+  @override
+  String get fundSwap => 'स्वैप फंड करें';
+
+  @override
+  String get youSend => 'आप भेजें';
+
+  @override
+  String get youReceive => 'आप प्राप्त करें';
+
+  @override
+  String get walletConnected => 'वॉलेट कनेक्टेड';
+
+  @override
+  String get switchWallet => 'बदलें';
+
+  @override
+  String get creatingSwap => 'स्वैप बनाया जा रहा है...';
+
+  @override
+  String get approvingToken => 'टोकन स्वीकृत किया जा रहा है...';
+
+  @override
+  String get creatingHtlc => 'HTLC बनाया जा रहा है...';
+
+  @override
+  String get swapFundedSuccessfully => 'स्वैप सफलतापूर्वक फंड हुआ!';
+
+  @override
+  String get feedback => 'प्रतिक्रिया';
+
+  @override
+  String get continueButton => 'जारी रखें';
+
+  @override
+  String get paste => 'पेस्ट';
+
+  @override
+  String get scanQr => 'QR स्कैन';
+
+  @override
+  String get youPay => 'आप भुगतान करें';
+
+  @override
+  String get totalFeesLabel => 'कुल शुल्क';
+
+  @override
+  String get beforeFees => 'शुल्क से पहले';
+
+  @override
+  String get networkFee => 'नेटवर्क';
+
+  @override
+  String get protocolFee => 'प्रोटोकॉल';
+
+  @override
+  String get receivingAddress => 'प्राप्त करने का पता';
+
+  @override
+  String get waitingForDeposit => 'जमा की प्रतीक्षा';
+
+  @override
+  String get processing => 'प्रोसेसिंग';
+
+  @override
+  String get completed => 'पूर्ण';
+
+  @override
+  String get expired => 'समाप्त';
+
+  @override
+  String get refundable => 'वापसी योग्य';
+
+  @override
+  String get refundedStatus => 'वापस';
+
+  @override
+  String get failed => 'विफल';
+
+  @override
+  String get confirmSwap => 'स्वैप की पुष्टि करें';
+
+  @override
+  String get unknownError => 'अज्ञात त्रुटि';
+
+  @override
+  String get sendFeedback => 'प्रतिक्रिया भेजें';
+
+  @override
+  String get sender => 'भेजने वाला';
+
+  @override
+  String get receiver => 'प्राप्तकर्ता';
+
+  @override
+  String get scan => 'स्कैन';
+
+  @override
+  String get aboutLendasat => 'About LendaSat';
+
+  @override
+  String get lendasatInfoDescription =>
+      'LendaSat is a Bitcoin peer-to-peer loan marketplace. We act as a platform that connects you with private lenders who provide the funds. Your Bitcoin is used as collateral, and you receive the loan amount directly. All transactions are secured through smart contracts on the Bitcoin network.';
+
+  @override
+  String get learnMoreAboutLendasat => 'Learn more about how LendaSat works';
 }

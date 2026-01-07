@@ -1,9 +1,12 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +37,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   int _currentStep = 0; // 0: warning, 1: show mnemonic, 2: confirm, 3: success
 
   // For confirmation step
-  final List<TextEditingController> _wordControllers = List.generate(12, (_) => TextEditingController());
+  final List<TextEditingController> _wordControllers =
+      List.generate(12, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(12, (_) => FocusNode());
   final PageController _confirmPageController = PageController();
   bool _onLastPage = false;
@@ -61,7 +65,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
 
   Future<void> _loadBipWords() async {
     try {
-      final String bipWordsText = await rootBundle.loadString('assets/textfiles/bip_words.txt');
+      final String bipWordsText =
+          await rootBundle.loadString('assets/textfiles/bip_words.txt');
       setState(() {
         _bipWords = bipWordsText.split(' ');
       });
@@ -129,7 +134,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
 
   void _moveToNextField() {
     int currentFocusIndex = _focusNodes.indexWhere((node) => node.hasFocus);
-    if (currentFocusIndex == -1 || currentFocusIndex == _focusNodes.length - 1) {
+    if (currentFocusIndex == -1 ||
+        currentFocusIndex == _focusNodes.length - 1) {
       return;
     }
 
@@ -197,7 +203,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   }
 
   void _proceedToShowMnemonic() {
-    logger.i("_proceedToShowMnemonic called, changing step from $_currentStep to 1");
+    logger.i(
+        "_proceedToShowMnemonic called, changing step from $_currentStep to 1");
     setState(() {
       _currentStep = 1; // Show mnemonic
     });
@@ -225,7 +232,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
     } else {
       setState(() {
         _isVerifying = false;
-        _verificationError = AppLocalizations.of(context)!.incorrectWordsPleaseTryAgain;
+        _verificationError =
+            AppLocalizations.of(context)!.incorrectWordsPleaseTryAgain;
       });
       // Reset to first page on error
       _clearWordControllers();
@@ -243,25 +251,50 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   }
 
   Future<void> _skipVerification() async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
+    // Show confirmation bottomsheet
+    final confirmed = await arkBottomSheet<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.skipVerification),
-        content: Text(AppLocalizations.of(context)!.skipVerificationWarning),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.errorColor,
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: AppTheme.errorColor,
+              size: 48,
             ),
-            child: Text(AppLocalizations.of(context)!.skipAtOwnRisk),
-          ),
-        ],
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              AppLocalizations.of(context)!.skipVerification,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              AppLocalizations.of(context)!.skipVerificationWarning,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+            LongButtonWidget(
+              buttonType: ButtonType.transparent,
+              title: AppLocalizations.of(context)!.cancel,
+              onTap: () => Navigator.pop(context, false),
+              customWidth: double.infinity,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            LongButtonWidget(
+              buttonType: ButtonType.solid,
+              title: AppLocalizations.of(context)!.skipAtOwnRisk,
+              onTap: () => Navigator.pop(context, true),
+              customWidth: double.infinity,
+              backgroundColor: AppTheme.errorColor,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+          ],
+        ),
       ),
     );
 
@@ -273,13 +306,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   void _copyToClipboard() {
     if (_mnemonic != null) {
       Clipboard.setData(ClipboardData(text: _mnemonic!));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.recoveryPhraseCopiedToClipboard,
-          ),
-          backgroundColor: AppTheme.successColor,
-        ),
+      OverlayService().showSuccess(
+        AppLocalizations.of(context)!.recoveryPhraseCopiedToClipboard,
       );
     }
   }
@@ -328,7 +356,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
               ),
             )
           : _errorMessage != null
@@ -338,7 +367,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   }
 
   Widget _buildCurrentStep(bool isDark) {
-    logger.i("_buildCurrentStep called with _currentStep: $_currentStep, _isLoading: $_isLoading");
+    logger.i(
+        "_buildCurrentStep called with _currentStep: $_currentStep, _isLoading: $_isLoading");
     switch (_currentStep) {
       case 0:
         return _buildWarningView(isDark);
@@ -437,7 +467,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.neverShareYourRecoveryKeyWithAnyone,
+                    AppLocalizations.of(context)!
+                        .neverShareYourRecoveryKeyWithAnyone,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -455,10 +486,14 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
             const SizedBox(height: AppTheme.cardPadding),
 
             // Instructions
-            _buildWarningPoint(context, Icons.person_off, 'Never share with anyone'),
-            _buildWarningPoint(context, Icons.screenshot_monitor, 'Never take screenshots'),
-            _buildWarningPoint(context, Icons.cloud_off, 'Never store digitally or online'),
-            _buildWarningPoint(context, Icons.edit_note, 'Write it down on paper and store safely'),
+            _buildWarningPoint(
+                context, Icons.person_off, 'Never share with anyone'),
+            _buildWarningPoint(
+                context, Icons.screenshot_monitor, 'Never take screenshots'),
+            _buildWarningPoint(
+                context, Icons.cloud_off, 'Never store digitally or online'),
+            _buildWarningPoint(context, Icons.edit_note,
+                'Write it down on paper and store safely'),
 
             const SizedBox(height: AppTheme.cardPadding * 2),
 
@@ -480,7 +515,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
 
   Widget _buildWarningPoint(BuildContext context, IconData icon, String text) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppTheme.elementSpacing * 0.5),
+      padding:
+          const EdgeInsets.symmetric(vertical: AppTheme.elementSpacing * 0.5),
       child: Row(
         children: [
           Icon(
@@ -522,7 +558,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
                     padding: const EdgeInsets.all(AppTheme.elementSpacing),
                     decoration: BoxDecoration(
                       color: AppTheme.colorBitcoin.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadiusSmall),
                     ),
                     child: const Icon(
                       Icons.shield,
@@ -536,17 +573,22 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppLocalizations.of(context)!.writeDownYourRecoveryPhrase,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          AppLocalizations.of(context)!
+                              .writeDownYourRecoveryPhrase,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           AppLocalizations.of(context)!.youWillNeedToConfirmIt,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: isDark ? AppTheme.white60 : AppTheme.black60,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: isDark
+                                        ? AppTheme.white60
+                                        : AppTheme.black60,
+                                  ),
                         ),
                       ],
                     ),
@@ -613,7 +655,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
                       child: OutlinedButton.icon(
                         onPressed: _copyToClipboard,
                         icon: const Icon(Icons.copy),
-                        label: Text(AppLocalizations.of(context)!.copyToClipboard),
+                        label:
+                            Text(AppLocalizations.of(context)!.copyToClipboard),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppTheme.colorBitcoin,
                           side: const BorderSide(color: AppTheme.colorBitcoin),
@@ -676,7 +719,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
                     padding: const EdgeInsets.all(AppTheme.elementSpacing),
                     decoration: BoxDecoration(
                       color: AppTheme.colorBitcoin.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadiusSmall),
                     ),
                     child: const Icon(
                       Icons.quiz_outlined,
@@ -690,17 +734,22 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppLocalizations.of(context)!.verifyYourRecoveryPhrase,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          AppLocalizations.of(context)!
+                              .verifyYourRecoveryPhrase,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           AppLocalizations.of(context)!.enterTheFollowingWords,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: isDark ? AppTheme.white60 : AppTheme.black60,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: isDark
+                                        ? AppTheme.white60
+                                        : AppTheme.black60,
+                                  ),
                         ),
                       ],
                     ),
@@ -740,11 +789,13 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   width: _confirmPageController.hasClients &&
-                         (_confirmPageController.page?.round() ?? 0) == index ? 24 : 8,
+                          (_confirmPageController.page?.round() ?? 0) == index
+                      ? 24
+                      : 8,
                   height: 8,
                   decoration: BoxDecoration(
                     color: _confirmPageController.hasClients &&
-                           (_confirmPageController.page?.round() ?? 0) == index
+                            (_confirmPageController.page?.round() ?? 0) == index
                         ? AppTheme.colorBitcoin
                         : Theme.of(context).hintColor.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(4),
@@ -780,9 +831,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
 
             // Action button
             LongButtonWidget(
-              title: _onLastPage
-                  ? AppLocalizations.of(context)!.verify
-                  : 'Next',
+              title:
+                  _onLastPage ? AppLocalizations.of(context)!.verify : 'Next',
               customWidth: double.infinity,
               customHeight: 56,
               isLoading: _isVerifying,
@@ -828,8 +878,10 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   Widget _buildConfirmWordField(int index) {
     final controller = _wordControllers[index];
     final focusNode = _focusNodes[index];
-    final bool isValid = controller.text.isNotEmpty && _isValidWord(controller.text);
-    final bool isInvalid = controller.text.isNotEmpty && !_isValidWord(controller.text);
+    final bool isValid =
+        controller.text.isNotEmpty && _isValidWord(controller.text);
+    final bool isInvalid =
+        controller.text.isNotEmpty && !_isValidWord(controller.text);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -839,13 +891,15 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
         style: TextStyle(
           color: isValid
               ? AppTheme.successColor
-              : (isInvalid ? AppTheme.errorColor : Theme.of(context).colorScheme.onSurface),
+              : (isInvalid
+                  ? AppTheme.errorColor
+                  : Theme.of(context).colorScheme.onSurface),
           fontSize: 16,
         ),
         decoration: InputDecoration(
-          hintText: '${index + 1}.',
+          hintText: 'Enter word',
           hintStyle: TextStyle(
-            color: Theme.of(context).hintColor,
+            color: Theme.of(context).hintColor.withValues(alpha: 0.5),
             fontSize: 16,
           ),
           prefixIcon: Container(
@@ -862,11 +916,13 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
           ),
           filled: true,
           fillColor: Theme.of(context).colorScheme.surface,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+              color:
+                  Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
             ),
           ),
           enabledBorder: OutlineInputBorder(
@@ -876,7 +932,10 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
                   ? AppTheme.successColor.withValues(alpha: 0.5)
                   : (isInvalid
                       ? AppTheme.errorColor.withValues(alpha: 0.5)
-                      : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
+                      : Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withValues(alpha: 0.2)),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -889,15 +948,20 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
             ),
           ),
         ),
-        textInputAction: index < 11 ? TextInputAction.next : TextInputAction.done,
+        textInputAction:
+            index < 11 ? TextInputAction.next : TextInputAction.done,
         autocorrect: false,
         enableSuggestions: false,
         onChanged: (value) {
           setState(() {});
           // Auto-advance if valid word is complete
           if (_isValidWord(value.trim().toLowerCase())) {
-            final matches = _bipWords.where((w) => w.startsWith(value.toLowerCase())).toList();
-            final longestMatch = matches.isEmpty ? 0 : matches.map((w) => w.length).reduce((a, b) => a > b ? a : b);
+            final matches = _bipWords
+                .where((w) => w.startsWith(value.toLowerCase()))
+                .toList();
+            final longestMatch = matches.isEmpty
+                ? 0
+                : matches.map((w) => w.length).reduce((a, b) => a > b ? a : b);
             if (value.length == longestMatch) {
               _moveToNextField();
             }
@@ -1017,7 +1081,8 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Center(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -83,12 +84,8 @@ class _WalletConnectButtonState extends State<WalletConnectButton> {
     } catch (e) {
       logger.e('Failed to open modal: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to open wallet modal: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        OverlayService()
+            .showError('Failed to open wallet modal: ${e.toString()}');
       }
     }
   }

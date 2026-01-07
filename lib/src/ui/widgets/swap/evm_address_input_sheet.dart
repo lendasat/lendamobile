@@ -2,7 +2,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
-import 'package:ark_flutter/src/ui/screens/qr_scanner_screen.dart';
+import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,6 +12,7 @@ class EvmAddressInputSheet extends StatefulWidget {
   final String tokenSymbol;
   final String network;
   final Function(String address) onAddressConfirmed;
+
   /// If true, this is the source address (where user sends from).
   /// If false (default), this is the destination address (where user receives).
   final bool isSourceAddress;
@@ -160,7 +161,8 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
                       decoration: InputDecoration(
                         hintText: '0x...',
                         hintStyle: TextStyle(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                         border: InputBorder.none,
                         errorText: _errorText,

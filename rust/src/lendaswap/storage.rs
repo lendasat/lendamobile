@@ -35,8 +35,9 @@ impl WalletStorage for FileWalletStorage {
     fn get_mnemonic(&self) -> StorageFuture<'_, Option<String>> {
         Box::pin(async move {
             // Read from the shared mnemonic file (same as Ark wallet)
-            let mnemonic = mnemonic_file::read_mnemonic_file(&self.data_dir)
-                .map_err(|e| lendaswap_core::Error::Other(format!("Failed to read mnemonic: {e}")))?;
+            let mnemonic = mnemonic_file::read_mnemonic_file(&self.data_dir).map_err(|e| {
+                lendaswap_core::Error::Other(format!("Failed to read mnemonic: {e}"))
+            })?;
 
             Ok(mnemonic.map(|m| m.to_string()))
         })
@@ -49,8 +50,9 @@ impl WalletStorage for FileWalletStorage {
             let parsed = mnemonic_file::parse_mnemonic(&mnemonic)
                 .map_err(|e| lendaswap_core::Error::Other(format!("Invalid mnemonic: {e}")))?;
 
-            mnemonic_file::write_mnemonic_file(&parsed, &self.data_dir)
-                .map_err(|e| lendaswap_core::Error::Other(format!("Failed to write mnemonic: {e}")))?;
+            mnemonic_file::write_mnemonic_file(&parsed, &self.data_dir).map_err(|e| {
+                lendaswap_core::Error::Other(format!("Failed to write mnemonic: {e}"))
+            })?;
 
             Ok(())
         })
@@ -103,7 +105,8 @@ impl FileSwapStorage {
                     if filename.ends_with(".json") {
                         let swap_id = filename.trim_end_matches(".json");
                         if let Ok(content) = fs::read_to_string(entry.path()) {
-                            if let Ok(data) = serde_json::from_str::<ExtendedSwapStorageData>(&content)
+                            if let Ok(data) =
+                                serde_json::from_str::<ExtendedSwapStorageData>(&content)
                             {
                                 cache.insert(swap_id.to_string(), data);
                             }

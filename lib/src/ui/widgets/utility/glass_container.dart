@@ -58,29 +58,37 @@ class GlassContainer extends StatelessWidget {
     }
 
     // Performance optimization: use RepaintBoundary to isolate repaints
+    // ClipRRect ensures InkWell ripples are properly clipped to border radius
     return RepaintBoundary(
-      child: Container(
-        margin: margin,
-        height: height,
-        width: width,
-        padding: padding,
-        decoration: BoxDecoration(
-          // Solid colors for better performance and cleaner look
-          color: customColor ??
-              (Theme.of(context).brightness == Brightness.light
-                  ? Colors.white.withValues(alpha: 0.9)
-                  : const Color(0xFF2A2A2A)), // Solid dark grey for dark mode
-          borderRadius: radius,
-          // Performance optimization: only apply shadows when needed
-          boxShadow: customShadow != null
-              ? customShadow!
-              : boxShadow != null
-                  ? boxShadow!
-                  : Theme.of(context).brightness == Brightness.light
-                      ? [] // No shadows in light mode
-                      : [AppTheme.boxShadowSuperSmall], // Minimal shadow in dark mode
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Container(
+          margin: margin,
+          height: height,
+          width: width,
+          padding: padding,
+          decoration: BoxDecoration(
+            // Semi-transparent colors - nested containers will appear darker
+            color: customColor ??
+                (Theme.of(context).brightness == Brightness.light
+                    ? Colors.white.withValues(alpha: 0.9)
+                    : const Color(0xFF2A2A2A).withValues(
+                        alpha:
+                            0.7)), // Semi-transparent dark grey - nested containers get darker
+            borderRadius: radius,
+            // Performance optimization: only apply shadows when needed
+            boxShadow: customShadow != null
+                ? customShadow!
+                : boxShadow != null
+                    ? boxShadow!
+                    : Theme.of(context).brightness == Brightness.light
+                        ? [] // No shadows in light mode
+                        : [
+                            AppTheme.boxShadowSuperSmall
+                          ], // Minimal shadow in dark mode
+          ),
+          child: child,
         ),
-        child: child,
       ),
     );
   }

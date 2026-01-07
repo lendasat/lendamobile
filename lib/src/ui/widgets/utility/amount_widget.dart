@@ -1,4 +1,4 @@
-import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
@@ -52,15 +52,18 @@ class AmountWidget extends StatefulWidget {
   State<AmountWidget> createState() => _AmountWidgetState();
 }
 
-class _AmountWidgetState extends State<AmountWidget> {
+class _AmountWidgetState extends State<AmountWidget>
+    with WidgetsBindingObserver {
   late AmountWidgetService _service;
+  bool _wasKeyboardVisible = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     widget.init?.call();
 
-    _service = AmountWidgetService(bitcoinPrice: widget.bitcoinPrice);
+    _service = AmountWidgetService();
 
     _service.initialize(
       btcController: widget.btcController,
@@ -87,13 +90,28 @@ class _AmountWidgetState extends State<AmountWidget> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _service.dispose();
     super.dispose();
   }
 
   @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    // Detect keyboard dismiss and unfocus the amount field
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+      if (_wasKeyboardVisible && !keyboardVisible) {
+        // Keyboard was just dismissed - unfocus amount field
+        widget.focusNode.unfocus();
+      }
+      _wasKeyboardVisible = keyboardVisible;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    
     final materialTheme = Theme.of(context);
     final bitcoinPrice = widget.bitcoinPrice;
     final currencyService = context.watch<CurrencyPreferenceService>();
@@ -110,7 +128,8 @@ class _AmountWidgetState extends State<AmountWidget> {
               children: [
                 // Swap button
                 IconButton(
-                  icon: Icon(Icons.swap_vert, color: Theme.of(context).colorScheme.onSurface),
+                  icon: Icon(Icons.swap_vert,
+                      color: Theme.of(context).colorScheme.onSurface),
                   onPressed: () {
                     _service.toggleSwapped(bitcoinPrice);
                     widget.focusNode.unfocus();
@@ -139,13 +158,13 @@ class _AmountWidgetState extends State<AmountWidget> {
                           widget.btcController.text = (double.tryParse(
                                     widget.satController.text,
                                   ) ??
-                                  0 / 100000000)
+                                  0 / BitcoinConstants.satsPerBtc)
                               .toStringAsFixed(8);
                         } else {
                           widget.satController.text =
                               ((double.tryParse(widget.btcController.text) ??
                                           0) *
-                                      100000000)
+                                      BitcoinConstants.satsPerBtc)
                                   .toInt()
                                   .toString();
                         }
@@ -183,7 +202,9 @@ class _AmountWidgetState extends State<AmountWidget> {
                                   currencyService.symbol,
                                   style: TextStyle(
                                     fontSize: 24,
-                                    color: Theme.of(context).colorScheme.onSurface
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
                                         .withValues(alpha: 0.7),
                                   ),
                                 ),
@@ -198,7 +219,10 @@ class _AmountWidgetState extends State<AmountWidget> {
                       counterText: "",
                       hintText: "0.0",
                       hintStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.5)),
                     ),
                     controller: _service.getCurrentController(),
                     autofocus: false,
@@ -234,8 +258,9 @@ class _AmountWidgetState extends State<AmountWidget> {
     if (bitcoinPrice == null) {
       return Text(
         "≈ ${currencyService.formatAmount(0.0)}",
-        style: materialTheme.textTheme.bodyLarge
-            ?.copyWith(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
+        style: materialTheme.textTheme.bodyLarge?.copyWith(
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
       );
     }
 
@@ -253,12 +278,18 @@ class _AmountWidgetState extends State<AmountWidget> {
             ) ??
             0.0;
 
-    double btcAmount =
-        _service.currentUnit == CurrencyType.sats ? amount / 100000000 : amount;
-    double usdAmount = btcAmount * bitcoinPrice;
+    double btcAmount = _service.currentUnit == CurrencyType.sats
+        ? amount / BitcoinConstants.satsPerBtc
+        : amount;
+    double fiatAmount = btcAmount * bitcoinPrice;
+
+    // Convert to user's selected currency for the text field
+    final exchangeRates = currencyService.exchangeRates;
+    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+    final localCurrencyAmount = fiatAmount * fiatRate;
 
     if (!_service.preventConversion) {
-      widget.currController.text = usdAmount.toStringAsFixed(2);
+      widget.currController.text = localCurrencyAmount.toStringAsFixed(2);
     }
 
     if (widget.autoConvert) {
@@ -269,10 +300,12 @@ class _AmountWidgetState extends State<AmountWidget> {
       _service.processAutoConvert(unitEquivalent);
     }
 
+    // formatAmount handles currency conversion internally
     return Text(
-      "≈ ${currencyService.formatAmount(usdAmount)}",
-      style: materialTheme.textTheme.bodyLarge
-          ?.copyWith(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
+      "≈ ${currencyService.formatAmount(fiatAmount)}",
+      style: materialTheme.textTheme.bodyLarge?.copyWith(
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
     );
   }
 
@@ -290,7 +323,10 @@ class _AmountWidgetState extends State<AmountWidget> {
           Text(
             "≈ 0.00",
             style: materialTheme.textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.7),
             ),
           ),
           _getCurrencyIcon(context, _service.currentUnit),
@@ -304,8 +340,13 @@ class _AmountWidgetState extends State<AmountWidget> {
               : widget.currController.text,
         ) ??
         0.0;
-    final btcAmount = currAmount / bitcoinPrice;
-    final satAmount = (btcAmount * 100000000).round();
+
+    // Convert from user's local currency to BTC
+    // currAmount is in local currency, need to convert to USD first, then to BTC
+    final exchangeRates = currencyService.exchangeRates;
+    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+    final btcAmount = currAmount / (bitcoinPrice * fiatRate);
+    final satAmount = (btcAmount * BitcoinConstants.satsPerBtc).round();
 
     if (!_service.preventConversion) {
       widget.btcController.text = btcAmount.toString();
@@ -352,8 +393,11 @@ class _AmountWidgetState extends State<AmountWidget> {
       children: [
         Text(
           "≈ $displayAmount",
-          style: materialTheme.textTheme.bodyLarge
-              ?.copyWith(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
+          style: materialTheme.textTheme.bodyLarge?.copyWith(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.7)),
         ),
         const SizedBox(width: 4),
         _getCurrencyIcon(context, _service.currentUnit),
@@ -361,8 +405,10 @@ class _AmountWidgetState extends State<AmountWidget> {
     );
   }
 
-  Widget _getCurrencyIcon(BuildContext context, CurrencyType type, {double? size}) {
-    final color = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
+  Widget _getCurrencyIcon(BuildContext context, CurrencyType type,
+      {double? size}) {
+    final color =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
     switch (type) {
       case CurrencyType.bitcoin:
         return Icon(
@@ -371,14 +417,9 @@ class _AmountWidgetState extends State<AmountWidget> {
           size: size,
         );
       case CurrencyType.sats:
-        return Text("sat",
-            style: TextStyle(
-                fontSize: size,
-                color: color));
+        return Text("sat", style: TextStyle(fontSize: size, color: color));
       case CurrencyType.usd:
-        return Icon(Icons.attach_money,
-            color: color,
-            size: size);
+        return Icon(Icons.attach_money, color: color, size: size);
     }
   }
 }

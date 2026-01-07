@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/mempool_new/bitcoin_data.dart';
@@ -101,11 +102,11 @@ class DataWidget extends StatelessWidget {
                     const SizedBox(height: AppTheme.elementSpacing),
                     isAccepted
                         ? Text(
-                            '${AppLocalizations.of(context)!.fee}: ~\$${((blockData!.extras?.medianFee ?? 0) * 140 / 100000000 * currentUSD).toStringAsFixed(2)}',
+                            '${AppLocalizations.of(context)!.fee}: ~\$${((blockData!.extras?.medianFee ?? 0) * 140 / BitcoinConstants.satsPerBtc * currentUSD).toStringAsFixed(2)}',
                             style: Theme.of(context).textTheme.bodyMedium,
                           )
                         : Text(
-                            '${AppLocalizations.of(context)!.fee}: ~\$${(mempoolBlocks!.medianFee * 140 / 100000000 * currentUSD).toStringAsFixed(2)}',
+                            '${AppLocalizations.of(context)!.fee}: ~\$${(mempoolBlocks!.medianFee * 140 / BitcoinConstants.satsPerBtc * currentUSD).toStringAsFixed(2)}',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                     const SizedBox(height: AppTheme.elementSpacing * 0.3),

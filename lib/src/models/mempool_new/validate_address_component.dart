@@ -6,11 +6,13 @@ import 'dart:convert';
 
 ValidateAddressComponentModel validateAddressComponentModelFromJson(
   String str,
-) => ValidateAddressComponentModel.fromJson(json.decode(str));
+) =>
+    ValidateAddressComponentModel.fromJson(json.decode(str));
 
 String validateAddressComponentModelToJson(
   ValidateAddressComponentModel data,
-) => json.encode(data.toJson());
+) =>
+    json.encode(data.toJson());
 
 class ValidateAddressComponentModel {
   bool isvalid;
@@ -37,10 +39,10 @@ class ValidateAddressComponentModel {
       );
 
   Map<String, dynamic> toJson() => {
-    "isvalid": isvalid,
-    "address": address,
-    "scriptPubKey": scriptPubKey,
-    "isscript": isscript,
-    "iswitness": iswitness,
-  };
+        "isvalid": isvalid,
+        "address": address,
+        "scriptPubKey": scriptPubKey,
+        "isscript": isscript,
+        "iswitness": iswitness,
+      };
 }

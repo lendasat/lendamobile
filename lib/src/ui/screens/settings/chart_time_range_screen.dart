@@ -79,7 +79,8 @@ class ChartTimeRangeScreen extends StatelessWidget {
                     color: isSelected
                         ? Colors.orange
                         : (isDark ? AppTheme.white90 : AppTheme.black90),
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
                     fontSize: 16,
                   ),
                   trailing: isSelected

@@ -47,7 +47,6 @@ class ArkListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     return Container(

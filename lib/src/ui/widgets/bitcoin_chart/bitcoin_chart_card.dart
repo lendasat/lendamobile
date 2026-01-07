@@ -34,7 +34,7 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
   void initState() {
     super.initState();
     _trackballDataNotifier = ValueNotifier<PriceData?>(null);
-    _loadData();
+    _loadAllData();
   }
 
   @override
@@ -43,6 +43,64 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
     super.dispose();
   }
 
+  /// Load all time ranges in parallel for instant switching.
+  Future<void> _loadAllData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    // Load the selected time range first for quick display
+    try {
+      final data = await fetchBitcoinPriceData(_selectedTimeRange);
+      data.sort((a, b) => a.time.compareTo(b.time));
+
+      if (mounted) {
+        setState(() {
+          _dataCache[_selectedTimeRange] = data;
+          _isLoading = false;
+          _trackballDataNotifier.value = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+      return; // Don't load others if first one fails
+    }
+
+    // Load remaining time ranges in parallel (background)
+    final remainingRanges =
+        TimeRange.values.where((r) => r != _selectedTimeRange).toList();
+
+    // Fire off all requests in parallel without awaiting
+    for (final range in remainingRanges) {
+      _loadSingleRange(range);
+    }
+  }
+
+  /// Load a single time range (used for background loading).
+  Future<void> _loadSingleRange(TimeRange range) async {
+    if (_dataCache.containsKey(range)) return;
+
+    try {
+      final data = await fetchBitcoinPriceData(range);
+      data.sort((a, b) => a.time.compareTo(b.time));
+
+      if (mounted) {
+        setState(() {
+          _dataCache[range] = data;
+        });
+      }
+    } catch (e) {
+      // Silently fail for background loads - user can retry by selecting
+    }
+  }
+
+  /// Load data for current selection (fallback if not cached).
   Future<void> _loadData() async {
     if (_dataCache.containsKey(_selectedTimeRange)) {
       setState(() {
@@ -62,16 +120,20 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
       final data = await fetchBitcoinPriceData(_selectedTimeRange);
       data.sort((a, b) => a.time.compareTo(b.time));
 
-      setState(() {
-        _dataCache[_selectedTimeRange] = data;
-        _isLoading = false;
-        _trackballDataNotifier.value = null;
-      });
+      if (mounted) {
+        setState(() {
+          _dataCache[_selectedTimeRange] = data;
+          _isLoading = false;
+          _trackballDataNotifier.value = null;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -125,9 +187,10 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
     return DateFormat('HH:mm').format(date);
   }
 
-  String _formatPrice(double price, BuildContext context) {
+  String _formatPrice(double priceUsd, BuildContext context) {
     final currencyService = context.watch<CurrencyPreferenceService>();
-    return currencyService.formatAmount(price);
+    // formatAmount handles USD to selected currency conversion
+    return currencyService.formatAmount(priceUsd);
   }
 
   String _calculatePriceChange(List<PriceData>? data, PriceData? current) {
@@ -154,7 +217,6 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
 
   @override
   Widget build(BuildContext context) {
-    
     final cachedData = _dataCache[_selectedTimeRange];
     final latestData = cachedData?.isNotEmpty == true ? cachedData!.last : null;
 
@@ -162,221 +224,218 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0),
       child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Section - matching BitnetGithub style
-            if (!_isLoading && _errorMessage == null)
-              ValueListenableBuilder<PriceData?>(
-                valueListenable: _trackballDataNotifier,
-                builder: (context, trackballData, child) {
-                  final displayData = trackballData ?? latestData;
-                  if (displayData == null) return const SizedBox.shrink();
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Section - matching BitnetGithub style
+          if (!_isLoading && _errorMessage == null)
+            ValueListenableBuilder<PriceData?>(
+              valueListenable: _trackballDataNotifier,
+              builder: (context, trackballData, child) {
+                final displayData = trackballData ?? latestData;
+                if (displayData == null) return const SizedBox.shrink();
 
-                  final priceChange =
-                      _calculatePriceChange(cachedData, displayData);
-                  final isPositive =
-                      _isPriceChangePositive(cachedData, displayData);
+                final priceChange =
+                    _calculatePriceChange(cachedData, displayData);
+                final isPositive =
+                    _isPriceChangePositive(cachedData, displayData);
 
-                  return Column(
-                    children: [
-                      // Top row: Bitcoin info + Date/Time
-                      Row(
-                        children: [
-                          // Bitcoin logo
-                          SizedBox(
-                            height: 45,
-                            width: 45,
-                            child: Image.asset(
-                              'assets/images/bitcoin.png',
-                              fit: BoxFit.contain,
-                            ),
+                return Column(
+                  children: [
+                    // Top row: Bitcoin info + Date/Time
+                    Row(
+                      children: [
+                        // Bitcoin logo
+                        SizedBox(
+                          height: 45,
+                          width: 45,
+                          child: Image.asset(
+                            'assets/images/bitcoin.png',
+                            fit: BoxFit.contain,
                           ),
-                          const SizedBox(width: 15),
-                          // Bitcoin name and symbol
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Bitcoin',
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.onSurface,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    Text(
-                                      _formatDate(displayData.time, context),
-                                      style: TextStyle(
-                                        color: Theme.of(context).hintColor,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'BTC',
-                                      style: TextStyle(
-                                        color: Theme.of(context).hintColor,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    Text(
-                                      _formatTime(displayData.time, context),
-                                      style: TextStyle(
-                                        color: Theme.of(context).hintColor,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // Price row: Large price + Percentage change
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _formatPrice(displayData.price, context),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          PercentageChangeWidget(
-                            percentage: priceChange,
-                            isPositive: isPositive,
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
-              )
-            else if (_isLoading)
-              // Loading header placeholder
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      SizedBox(
-                        height: 45,
-                        width: 45,
-                        child: Image.asset(
-                          'assets/images/bitcoin.png',
-                          fit: BoxFit.contain,
                         ),
-                      ),
-                      const SizedBox(width: 15),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Bitcoin',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        const SizedBox(width: 15),
+                        // Bitcoin name and symbol
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Bitcoin',
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    _formatDate(displayData.time, context),
+                                    style: TextStyle(
+                                      color: Theme.of(context).hintColor,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'BTC',
+                                    style: TextStyle(
+                                      color: Theme.of(context).hintColor,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  Text(
+                                    _formatTime(displayData.time, context),
+                                    style: TextStyle(
+                                      color: Theme.of(context).hintColor,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          Text(
-                            'BTC',
-                            style: TextStyle(
-                              color: Theme.of(context).hintColor,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Text(
-                        'Loading...',
-                        style: TextStyle(
-                          color: Theme.of(context).hintColor,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-            const SizedBox(height: 16),
-
-            // Chart Section - height matches BitNetGithub (cardPadding * 16)
-            SizedBox(
-              height: AppTheme.cardPadding * 16,
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.orange,
-                      ),
-                    )
-                  : _errorMessage != null
-                      ? Center(
-                          child: Text(
-                            'Error: $_errorMessage',
-                            style: TextStyle(color: Theme.of(context).hintColor),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Price row: Large price + Percentage change
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _formatPrice(displayData.price, context),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
                           ),
-                        )
-                      : ValueListenableBuilder<PriceData?>(
-                          valueListenable: _trackballDataNotifier,
-                          builder: (context, trackballData, child) {
-                            final isPositive = _isPriceChangePositive(
-                                cachedData, trackballData);
-                            return BitcoinPriceChart(
-                              data: cachedData ?? [],
-                              trackballDataNotifier: _trackballDataNotifier,
-                              onChartTouchEnd: () =>
-                                  _trackballDataNotifier.value = null,
-                              lineColor:
-                                  isPositive ? Colors.green : Colors.red,
-                              // Key for forcing rebuild on time range change
-                              chartKey: 'btc-chart-${_getTimeRangeKey(_selectedTimeRange)}',
-                            );
-                          },
                         ),
-            ),
-
-            // Time Period Chooser - matching BitnetGithub style
-            CustomizableTimeChooser(
-              timePeriods: const ['1D', '1W', '1M', '1J', 'Max'],
-              initialSelectedPeriod: _getTimeRangeKey(_selectedTimeRange),
-              onTimePeriodSelected: (String newTimeperiod) {
-                setState(() {
-                  _selectedTimeRange = _getTimeRangeFromKey(newTimeperiod);
-                  _trackballDataNotifier.value = null;
-                });
-                _loadData();
-              },
-              buttonBuilder: (context, period, isSelected, onPressed) {
-                return TimeChooserButton(
-                  timeperiod: period,
-                  timespan: isSelected ? period : null,
-                  onPressed: onPressed,
+                        PercentageChangeWidget(
+                          percentage: priceChange,
+                          isPositive: isPositive,
+                        ),
+                      ],
+                    ),
+                  ],
                 );
               },
+            )
+          else if (_isLoading)
+            // Loading header placeholder
+            Column(
+              children: [
+                Row(
+                  children: [
+                    SizedBox(
+                      height: 45,
+                      width: 45,
+                      child: Image.asset(
+                        'assets/images/bitcoin.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Bitcoin',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'BTC',
+                          style: TextStyle(
+                            color: Theme.of(context).hintColor,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(
+                      'Loading...',
+                      style: TextStyle(
+                        color: Theme.of(context).hintColor,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+
+          const SizedBox(height: 16),
+
+          // Chart Section
+          SizedBox(
+            height: AppTheme.cardPadding * 12,
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.orange,
+                    ),
+                  )
+                : _errorMessage != null
+                    ? Center(
+                        child: Text(
+                          'Error: $_errorMessage',
+                          style: TextStyle(color: Theme.of(context).hintColor),
+                        ),
+                      )
+                    : BitcoinPriceChart(
+                        data: cachedData ?? [],
+                        trackballDataNotifier: _trackballDataNotifier,
+                        onChartTouchEnd: () =>
+                            _trackballDataNotifier.value = null,
+                        lineColor: _isPriceChangePositive(cachedData, null)
+                            ? Colors.green
+                            : Colors.red,
+                        // Key for forcing rebuild on time range change
+                        chartKey:
+                            'btc-chart-${_getTimeRangeKey(_selectedTimeRange)}',
+                      ),
+          ),
+
+          // Time Period Chooser - matching BitnetGithub style
+          CustomizableTimeChooser(
+            timePeriods: const ['1D', '1W', '1M', '1J', 'Max'],
+            initialSelectedPeriod: _getTimeRangeKey(_selectedTimeRange),
+            onTimePeriodSelected: (String newTimeperiod) {
+              setState(() {
+                _selectedTimeRange = _getTimeRangeFromKey(newTimeperiod);
+                _trackballDataNotifier.value = null;
+              });
+              _loadData();
+            },
+            buttonBuilder: (context, period, isSelected, onPressed) {
+              return TimeChooserButton(
+                timeperiod: period,
+                timespan: isSelected ? period : null,
+                onPressed: onPressed,
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }

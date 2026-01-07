@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ark_flutter/src/rust/api.dart' as rust;
 import 'package:ark_flutter/src/rust/models/exchange_rates.dart';
@@ -199,16 +200,60 @@ class CurrencyPreferenceService extends ChangeNotifier {
     }
   }
 
-  /// Format amount in selected currency
+  /// Get the locale string for the current currency.
+  /// This determines the number formatting (thousand/decimal separators).
+  String get _localeForCurrency {
+    switch (_currentCurrency) {
+      case FiatCurrency.usd:
+        return 'en_US';
+      case FiatCurrency.eur:
+        return 'de_DE'; // German/European format: 1.234,56
+      case FiatCurrency.gbp:
+        return 'en_GB';
+      case FiatCurrency.jpy:
+        return 'ja_JP';
+      case FiatCurrency.cad:
+        return 'en_CA';
+      case FiatCurrency.aud:
+        return 'en_AU';
+      case FiatCurrency.chf:
+        return 'de_CH'; // Swiss format: 1'234.56 or 1.234,56
+      case FiatCurrency.cny:
+        return 'zh_CN';
+      case FiatCurrency.inr:
+        return 'en_IN';
+      case FiatCurrency.brl:
+        return 'pt_BR'; // Brazilian format: 1.234,56
+      case FiatCurrency.mxn:
+        return 'es_MX';
+      case FiatCurrency.krw:
+        return 'ko_KR';
+    }
+  }
+
+  /// Format amount in selected currency with proper thousand separators.
+  /// Converts from USD to the selected currency.
   String formatAmount(double usdAmount) {
     final convertedAmount = convertFromUsd(usdAmount);
-    final formatted = convertedAmount.toStringAsFixed(decimalPlaces);
+    return formatWithSymbol(convertedAmount);
+  }
 
-    // Some currencies put symbol after amount
+  /// Format an amount that is already in the selected currency.
+  /// Use this when you have already converted the amount yourself.
+  String formatWithSymbol(double amount) {
+    // Use NumberFormat for locale-aware formatting with thousand separators
+    final formatter = NumberFormat.decimalPatternDigits(
+      locale: _localeForCurrency,
+      decimalDigits: decimalPlaces,
+    );
+
+    final formatted = formatter.format(amount);
+
+    // Some currencies put symbol after amount (no space)
     switch (_currentCurrency) {
       case FiatCurrency.eur:
       case FiatCurrency.chf:
-        return '$formatted $symbol';
+        return '$formatted$symbol';
       default:
         return '$symbol$formatted';
     }

@@ -89,6 +89,16 @@ Future<Contract> lendasatGetContract({required String contractId}) =>
         .crateApiLendasatApiLendasatGetContract(contractId: contractId);
 
 /// Create a new loan contract by taking an offer.
+///
+/// IMPORTANT: This function uses the Ark identity public key as `borrower_pk`.
+/// This is critical because:
+/// 1. The collateral is sent to an Ark offchain address (VTXO)
+/// 2. VTXOs are locked to the Ark identity key
+/// 3. Claim PSBTs must be signed with the Ark identity key
+/// 4. Using the wrong key (e.g., Lendasat derivation path) causes claim failures
+///
+/// The Lendasat derivation path key is still used for authentication (sign_message),
+/// but collateral operations MUST use the Ark identity key.
 Future<Contract> lendasatCreateContract(
         {required String offerId,
         required double loanAmount,
@@ -121,21 +131,33 @@ Future<ClaimPsbtResponse> lendasatGetClaimPsbt(
     RustLib.instance.api.crateApiLendasatApiLendasatGetClaimPsbt(
         contractId: contractId, feeRate: feeRate);
 
-/// Sign a PSBT using the Lendasat wallet keypair.
+/// Finalize a signed PSBT and extract the raw transaction.
 ///
-/// This mirrors the iframe wallet-bridge `signPsbt` behavior:
-/// - Takes PSBT hex, collateral descriptor, and borrower public key
-/// - Verifies borrower_pk matches our wallet's key (warns if mismatch)
-/// - Signs all inputs with our keypair
-/// - Returns the signed PSBT hex
-Future<String> lendasatSignPsbt(
-        {required String psbtHex,
-        required String collateralDescriptor,
-        required String borrowerPk}) =>
-    RustLib.instance.api.crateApiLendasatApiLendasatSignPsbt(
-        psbtHex: psbtHex,
-        collateralDescriptor: collateralDescriptor,
-        borrowerPk: borrowerPk);
+/// CRITICAL: This step was missing and caused broadcast failures!
+/// After signing, the PSBT must be finalized (scriptSigs/witnesses constructed)
+/// and the raw transaction extracted before it can be broadcast.
+///
+/// The LendaSat API's broadcast-claim and broadcast-recover endpoints expect
+/// the RAW TRANSACTION hex, not the signed PSBT hex.
+Future<String> lendasatFinalizePsbt({required String signedPsbtHex}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatFinalizePsbt(signedPsbtHex: signedPsbtHex);
+
+/// Convert a PSBT from BASE64 to HEX format.
+///
+/// Use this for settle-ark PSBTs which come from the API in BASE64 format
+/// but need to be in HEX format for signing.
+Future<String> lendasatPsbtBase64ToHex({required String base64Psbt}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatPsbtBase64ToHex(base64Psbt: base64Psbt);
+
+/// Convert a PSBT from HEX to BASE64 format.
+///
+/// Use this to convert signed PSBTs back to BASE64 format
+/// for the finish-settle-ark API which expects BASE64.
+Future<String> lendasatPsbtHexToBase64({required String hexPsbt}) =>
+    RustLib.instance.api
+        .crateApiLendasatApiLendasatPsbtHexToBase64(hexPsbt: hexPsbt);
 
 /// Broadcast a signed claim transaction.
 Future<String> lendasatBroadcastClaimTx(
@@ -187,6 +209,22 @@ Future<String> lendasatBroadcastRecoverTx(
         {required String contractId, required String signedTx}) =>
     RustLib.instance.api.crateApiLendasatApiLendasatBroadcastRecoverTx(
         contractId: contractId, signedTx: signedTx);
+
+/// Get the Ark identity public key (compressed, 33 bytes as hex).
+///
+/// This is the public key used for:
+/// - Ark offchain address derivation
+/// - VTXO ownership (collateral)
+/// - Signing claim PSBTs
+///
+/// IMPORTANT: This key MUST be used as `borrower_pk` when creating LendaSat contracts
+/// because the collateral is locked to this key, not the Lendasat derivation path key.
+///
+/// Derives the STABLE identity key at path m/83696968'/11811'/0/0 from the mnemonic.
+/// This is equivalent to Arkade wallet's `SingleKey.fromHex(privateKey)` - always
+/// the same key, unlike vtxo.owner_pk() which changes when VTXOs are spent/created.
+Future<String> getArkIdentityPubkey() =>
+    RustLib.instance.api.crateApiLendasatApiGetArkIdentityPubkey();
 
 @freezed
 sealed class AuthResult with _$AuthResult {

@@ -43,9 +43,8 @@ class TransactionModel {
     weight = json['weight'];
     sigops = json['sigops'];
     fee = json['fee'];
-    status = json['status'] != null
-        ? new Status.fromJson(json['status'])
-        : null;
+    status =
+        json['status'] != null ? new Status.fromJson(json['status']) : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -106,34 +105,34 @@ class Vin {
   });
 
   factory Vin.fromJson(Map<String, dynamic> json) => Vin(
-    txid: json["txid"],
-    vout: json["vout"],
-    prevout: json["prevout"] == null ? null : Prevout.fromJson(json["prevout"]),
-    scriptsig: json["scriptsig"],
-    inner_redeemscript_asm: json["inner_redeemscript_asm"] ?? '',
-    inner_witnessscript_asm: json["inner_witnessscript_asm"] ?? '',
-    scriptsigAsm: json["scriptsig_asm"],
-    witness: json["witness"] == null
-        ? []
-        : List<String>.from(json["witness"]!.map((x) => x)),
-    isCoinbase: json["is_coinbase"],
-    sequence: json["sequence"],
-  );
+        txid: json["txid"],
+        vout: json["vout"],
+        prevout:
+            json["prevout"] == null ? null : Prevout.fromJson(json["prevout"]),
+        scriptsig: json["scriptsig"],
+        inner_redeemscript_asm: json["inner_redeemscript_asm"] ?? '',
+        inner_witnessscript_asm: json["inner_witnessscript_asm"] ?? '',
+        scriptsigAsm: json["scriptsig_asm"],
+        witness: json["witness"] == null
+            ? []
+            : List<String>.from(json["witness"]!.map((x) => x)),
+        isCoinbase: json["is_coinbase"],
+        sequence: json["sequence"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "txid": txid,
-    "vout": vout,
-    "prevout": prevout?.toJson(),
-    "scriptsig": scriptsig,
-    "scriptsig_asm": scriptsigAsm,
-    "inner_witnessscript_asm": inner_witnessscript_asm,
-    "inner_redeemscript_asm": inner_redeemscript_asm,
-    "witness": witness == null
-        ? []
-        : List<dynamic>.from(witness!.map((x) => x)),
-    "is_coinbase": isCoinbase,
-    "sequence": sequence,
-  };
+        "txid": txid,
+        "vout": vout,
+        "prevout": prevout?.toJson(),
+        "scriptsig": scriptsig,
+        "scriptsig_asm": scriptsigAsm,
+        "inner_witnessscript_asm": inner_witnessscript_asm,
+        "inner_redeemscript_asm": inner_redeemscript_asm,
+        "witness":
+            witness == null ? [] : List<dynamic>.from(witness!.map((x) => x)),
+        "is_coinbase": isCoinbase,
+        "sequence": sequence,
+      };
 }
 
 class Prevout {

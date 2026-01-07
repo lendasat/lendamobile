@@ -5,17 +5,17 @@
 //!
 //! Uses a dedicated derivation path for Lendasat keys: m/10101'/0'/0
 
-use crate::ark::mnemonic_file::{read_mnemonic_file, LENDASAT_DERIVATION_PATH};
-use anyhow::{anyhow, Result};
+use crate::ark::mnemonic_file::{LENDASAT_DERIVATION_PATH, read_mnemonic_file};
+use anyhow::{Result, anyhow};
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+use bitcoin::Network;
 use bitcoin::bip32::{DerivationPath, Xpriv};
-use bitcoin::hashes::{sha256, Hash};
+use bitcoin::consensus::encode::serialize_hex;
+use bitcoin::hashes::{Hash, sha256};
 use bitcoin::key::{Keypair, Secp256k1};
 use bitcoin::psbt::Psbt;
-use bitcoin::secp256k1::ecdsa::Signature;
 use bitcoin::secp256k1::Message;
-use bitcoin::Network;
-use bitcoin::PrivateKey;
-use std::collections::HashMap;
+use bitcoin::secp256k1::ecdsa::Signature;
 use std::str::FromStr;
 use std::sync::OnceLock;
 use tokio::sync::RwLock;
@@ -62,8 +62,8 @@ async fn get_or_derive_keypair(data_dir: &str, network: Network) -> Result<Keypa
 
     // Derive at Lendasat path: m/10101'/0'/0
     let path = format!("{}/0", LENDASAT_DERIVATION_PATH);
-    let derivation_path = DerivationPath::from_str(&path)
-        .map_err(|e| anyhow!("Invalid derivation path: {}", e))?;
+    let derivation_path =
+        DerivationPath::from_str(&path).map_err(|e| anyhow!("Invalid derivation path: {}", e))?;
 
     let derived = master
         .derive_priv(&secp, &derivation_path)
@@ -138,90 +138,115 @@ pub async fn clear_cached_keypair() {
     *guard = None;
 }
 
-/// Sign a PSBT using the Lendasat private key.
+/// Finalize a signed PSBT and extract the raw transaction.
 ///
-/// This function mirrors the iframe wallet-bridge `signPsbt` behavior:
-/// 1. Parse the PSBT from hex
-/// 2. Verify the borrower_pk matches our public key (warning if not)
-/// 3. Sign all inputs with our keypair
-/// 4. Return the signed PSBT as hex
+/// This is a CRITICAL step that the iframe does but was missing from lendamobile.
+/// After signing a PSBT, it must be finalized (scriptSigs/witnesses constructed)
+/// and the raw transaction extracted before it can be broadcast.
+///
+/// The iframe does this:
+/// ```javascript
+/// const psbtObj = bitcoin.Psbt.fromHex(signedPsbt);
+/// const finalizedPsbt = psbtObj.finalizeAllInputs();
+/// const rawTxHex = finalizedPsbt.extractTransaction().toHex();
+/// ```
 ///
 /// # Arguments
-/// * `psbt_hex` - The PSBT encoded as hex string
-/// * `collateral_descriptor` - The collateral descriptor (for context/logging)
-/// * `borrower_pk` - The borrower public key (for verification)
-/// * `data_dir` - Path to the app's data directory
-/// * `network` - Bitcoin network
+/// * `signed_psbt_hex` - The signed PSBT as hex string
 ///
 /// # Returns
-/// The signed PSBT as hex string
-pub async fn sign_psbt(
-    psbt_hex: &str,
-    _collateral_descriptor: &str,
-    borrower_pk: &str,
-    data_dir: &str,
-    network: Network,
-) -> Result<String> {
-    // Get our keypair
-    let keypair = get_or_derive_keypair(data_dir, network).await?;
-    let secp = Secp256k1::new();
-
-    // Get our public key as hex for comparison
-    let our_pk_bytes = keypair.public_key().serialize();
-    let our_pk_hex = hex::encode(our_pk_bytes);
-
-    // Verify borrower_pk matches our key (warn if not, but don't fail)
-    // This mirrors the iframe behavior which logs a warning
-    if borrower_pk != our_pk_hex {
-        tracing::warn!(
-            "Warning: Borrower PK {} doesn't match wallet PK {}",
-            &borrower_pk[..std::cmp::min(16, borrower_pk.len())],
-            &our_pk_hex[..16]
-        );
-    }
-
+/// The finalized raw transaction as hex string (ready for broadcast)
+pub fn finalize_psbt_and_extract_tx(signed_psbt_hex: &str) -> Result<String> {
     // Parse PSBT from hex
-    let psbt_bytes = hex::decode(psbt_hex)
-        .map_err(|e| anyhow!("Invalid PSBT hex: {}", e))?;
+    let psbt_bytes =
+        hex::decode(signed_psbt_hex).map_err(|e| anyhow!("Invalid signed PSBT hex: {}", e))?;
     let mut psbt = Psbt::deserialize(&psbt_bytes)
-        .map_err(|e| anyhow!("Failed to parse PSBT: {}", e))?;
+        .map_err(|e| anyhow!("Failed to parse signed PSBT: {}", e))?;
 
-    tracing::debug!("Signing PSBT with {} inputs", psbt.inputs.len());
+    tracing::debug!("Finalizing PSBT with {} inputs", psbt.inputs.len());
 
-    // Create a key map for signing
-    // The PSBT sign method requires a type that implements GetKey
-    // We use a HashMap<PublicKey, PrivateKey>
-    let private_key = PrivateKey::new(keypair.secret_key(), network);
-    let public_key = bitcoin::PublicKey::new(keypair.public_key());
-
-    let mut key_map: HashMap<bitcoin::PublicKey, PrivateKey> = HashMap::new();
-    key_map.insert(public_key, private_key);
-
-    // Sign all inputs that match our key
-    match psbt.sign(&key_map, &secp) {
-        Ok(signed_inputs) => {
-            tracing::debug!("Signed {} inputs", signed_inputs.len());
+    // Finalize all inputs
+    // This constructs the scriptSig/witness from the partial signatures
+    for (idx, input) in psbt.inputs.iter_mut().enumerate() {
+        // Check if input has a final script already
+        if input.final_script_sig.is_some() || input.final_script_witness.is_some() {
+            tracing::debug!("Input {} already finalized", idx);
+            continue;
         }
-        Err((signed_inputs, errors)) => {
-            // Partial success - some inputs may not need our key
-            tracing::debug!(
-                "Signed {} inputs, {} could not be signed (may not need our key)",
-                signed_inputs.len(),
-                errors.len()
+
+        // For P2WPKH (most common for us), we need to construct the witness
+        // from the partial signature and public key
+        if let Some((pubkey, sig)) = input.partial_sigs.iter().next() {
+            // P2WPKH witness: [signature, pubkey]
+            let mut witness = bitcoin::Witness::new();
+            witness.push(sig.to_vec());
+            witness.push(pubkey.to_bytes());
+            input.final_script_witness = Some(witness);
+
+            // Clear partial sigs after finalizing
+            input.partial_sigs.clear();
+
+            tracing::debug!("Input {} finalized as P2WPKH", idx);
+        } else if !input.partial_sigs.is_empty() {
+            // Handle other script types if needed
+            tracing::warn!(
+                "Input {} has partial sigs but couldn't finalize automatically",
+                idx
             );
-            for (idx, err) in &errors {
-                tracing::debug!("Input {} signing note: {:?}", idx, err);
-            }
+        } else {
+            // Input may not need our signature (e.g., other party's input)
+            tracing::debug!("Input {} has no partial sigs, may not need our key", idx);
         }
     }
 
-    // Serialize the signed PSBT back to hex
-    let signed_psbt_bytes = psbt.serialize();
-    let signed_psbt_hex = hex::encode(signed_psbt_bytes);
+    // Extract the raw transaction
+    let tx = psbt
+        .extract_tx()
+        .map_err(|e| anyhow!("Failed to extract transaction from PSBT: {:?}", e))?;
 
-    tracing::info!("PSBT signed successfully");
+    // Serialize to hex
+    let raw_tx_hex = serialize_hex(&tx);
 
-    Ok(signed_psbt_hex)
+    tracing::info!(
+        "PSBT finalized, raw tx size: {} bytes",
+        raw_tx_hex.len() / 2
+    );
+
+    Ok(raw_tx_hex)
+}
+
+/// Convert a PSBT from BASE64 to HEX format.
+///
+/// The settle-ark API returns PSBTs in BASE64 format, but our signing
+/// function expects HEX. This matches the iframe's conversion:
+/// ```javascript
+/// const psbtHex = bitcoin.Psbt.fromBase64(base64Psbt).toHex();
+/// ```
+pub fn psbt_base64_to_hex(base64_psbt: &str) -> Result<String> {
+    let psbt_bytes = BASE64
+        .decode(base64_psbt)
+        .map_err(|e| anyhow!("Invalid BASE64 PSBT: {}", e))?;
+
+    // Validate it's a valid PSBT
+    let _ = Psbt::deserialize(&psbt_bytes).map_err(|e| anyhow!("Invalid PSBT data: {}", e))?;
+
+    Ok(hex::encode(psbt_bytes))
+}
+
+/// Convert a PSBT from HEX to BASE64 format.
+///
+/// After signing, we need to convert back to BASE64 for the API.
+/// This matches the iframe's conversion:
+/// ```javascript
+/// const base64Psbt = bitcoin.Psbt.fromHex(hexPsbt).toBase64();
+/// ```
+pub fn psbt_hex_to_base64(hex_psbt: &str) -> Result<String> {
+    let psbt_bytes = hex::decode(hex_psbt).map_err(|e| anyhow!("Invalid HEX PSBT: {}", e))?;
+
+    // Validate it's a valid PSBT
+    let _ = Psbt::deserialize(&psbt_bytes).map_err(|e| anyhow!("Invalid PSBT data: {}", e))?;
+
+    Ok(BASE64.encode(psbt_bytes))
 }
 
 /// Verify a signature locally (for testing).
@@ -229,8 +254,7 @@ pub async fn sign_psbt(
 #[allow(dead_code)]
 pub fn verify_signature(pubkey_hex: &str, message: &str, signature_hex: &str) -> Result<bool> {
     // Decode public key
-    let pubkey_bytes =
-        hex::decode(pubkey_hex).map_err(|e| anyhow!("Invalid pubkey hex: {}", e))?;
+    let pubkey_bytes = hex::decode(pubkey_hex).map_err(|e| anyhow!("Invalid pubkey hex: {}", e))?;
     let pubkey = bitcoin::secp256k1::PublicKey::from_slice(&pubkey_bytes)
         .map_err(|e| anyhow!("Invalid public key: {}", e))?;
 
@@ -242,8 +266,8 @@ pub fn verify_signature(pubkey_hex: &str, message: &str, signature_hex: &str) ->
     // Decode signature
     let sig_bytes =
         hex::decode(signature_hex).map_err(|e| anyhow!("Invalid signature hex: {}", e))?;
-    let signature = Signature::from_der(&sig_bytes)
-        .map_err(|e| anyhow!("Invalid DER signature: {}", e))?;
+    let signature =
+        Signature::from_der(&sig_bytes).map_err(|e| anyhow!("Invalid DER signature: {}", e))?;
 
     // Verify
     let secp = Secp256k1::new();

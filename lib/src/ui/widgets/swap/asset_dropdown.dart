@@ -58,7 +58,8 @@ class AssetDropdown extends StatelessWidget {
                 color: isDarkMode ? Colors.white : Colors.black,
               ),
               const SizedBox(width: AppTheme.elementSpacing * 0.5),
-              TokenIcon(token: selectedToken, size: AppTheme.cardPadding * 1.25),
+              TokenIcon(
+                  token: selectedToken, size: AppTheme.cardPadding * 1.25),
             ],
           ),
         ),
@@ -235,18 +236,20 @@ class _TokenListItem extends StatelessWidget {
                       children: [
                         Text(
                           token.symbol,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           token.network,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: isDarkMode
-                                    ? AppTheme.white60
-                                    : AppTheme.black60,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: isDarkMode
+                                        ? AppTheme.white60
+                                        : AppTheme.black60,
+                                  ),
                         ),
                       ],
                     ),

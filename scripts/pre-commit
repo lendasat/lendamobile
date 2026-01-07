@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# Pre-commit hook for auto-formatting
+# Works in both Windows and WSL environments
+# Respects FVM (Flutter Version Manager) if configured
+
+echo "Running pre-commit formatting checks..."
+
+# Detect if we're in WSL
+is_wsl() {
+    grep -qi microsoft /proc/version 2>/dev/null
+}
+
+# Format a Dart file - handles WSL path conversion and FVM
+format_dart_file() {
+    local file="$1"
+    if is_wsl; then
+        # Convert WSL path to Windows path
+        local win_path=$(wslpath -w "$(pwd)/$file")
+        local project_path=$(wslpath -w "$(pwd)")
+
+        # Try FVM first (respects .fvmrc), then fall back to dart in PATH
+        # Using cmd /c with cd to ensure we're in project directory for FVM
+        if cmd.exe /c "cd /d $project_path && fvm dart format --output=write $win_path" >/dev/null 2>&1; then
+            return 0
+        elif cmd.exe /c "dart format --output=write $win_path" >/dev/null 2>&1; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        # Native Linux/Mac - try fvm first, then dart
+        if command -v fvm &> /dev/null && fvm dart format --output=write "$file" >/dev/null 2>&1; then
+            return 0
+        elif dart format --output=write "$file" >/dev/null 2>&1; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+}
+
+# Format a Rust file
+format_rust_file() {
+    local file="$1"
+    if is_wsl; then
+        local abs_path="$(pwd)/$file"
+        rustfmt +nightly "$abs_path" 2>/dev/null || rustfmt "$abs_path" 2>/dev/null || true
+    else
+        rustfmt +nightly "$file" 2>/dev/null || rustfmt "$file" 2>/dev/null || true
+    fi
+}
+
+# Get list of staged Dart files (excluding generated files)
+STAGED_DART_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.dart$' | grep -v '\.freezed\.dart$' | grep -v '\.g\.dart$' | grep -v 'frb_generated' || true)
+
+# Get list of staged Rust files (excluding generated files)
+STAGED_RUST_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.rs$' | grep -v 'frb_generated' || true)
+
+# Get list of staged config files
+STAGED_CONFIG_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(json|yaml|yml|toml|md)$' || true)
+
+# Format staged Dart files
+if [ -n "$STAGED_DART_FILES" ]; then
+    echo "Formatting Dart files..."
+    for file in $STAGED_DART_FILES; do
+        if [ -f "$file" ]; then
+            if format_dart_file "$file"; then
+                git add "$file"
+                echo "  ✓ $file"
+            else
+                echo "  ✗ $file (format failed)"
+            fi
+        fi
+    done
+fi
+
+# Format staged Rust files
+if [ -n "$STAGED_RUST_FILES" ]; then
+    echo "Formatting Rust files..."
+    for file in $STAGED_RUST_FILES; do
+        if [ -f "$file" ]; then
+            if format_rust_file "$file"; then
+                git add "$file"
+                echo "  ✓ $file"
+            else
+                echo "  ✗ $file (format failed)"
+            fi
+        fi
+    done
+fi
+
+# Format config files with dprint if available
+if command -v dprint &> /dev/null && [ -n "$STAGED_CONFIG_FILES" ]; then
+    echo "Formatting config files..."
+    for file in $STAGED_CONFIG_FILES; do
+        if [ -f "$file" ]; then
+            dprint fmt "$file" 2>/dev/null || true
+            git add "$file" 2>/dev/null || true
+            echo "  ✓ $file"
+        fi
+    done
+fi
+
+echo "Pre-commit formatting complete!"
+exit 0

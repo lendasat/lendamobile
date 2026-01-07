@@ -5,13 +5,13 @@
 use crate::lendasat::auth;
 use crate::lendasat::models::*;
 use crate::lendasat::storage::{self, StoredAuth};
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use bitcoin::Network;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::OnceLock;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::RwLock;
 
 // ============================================================================
@@ -20,18 +20,18 @@ use tokio::sync::RwLock;
 
 static LENDASAT_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
-struct LendasatState {
+pub(crate) struct LendasatState {
     http_client: reqwest::Client,
     base_url: String,
-    data_dir: String,
-    network: Network,
+    pub(crate) data_dir: String,
+    pub(crate) network: Network,
     jwt_token: Option<String>,
     api_key: Option<String>,
 }
 
 static LENDASAT_STATE: OnceLock<RwLock<Option<LendasatState>>> = OnceLock::new();
 
-fn get_state_lock() -> &'static RwLock<Option<LendasatState>> {
+pub(crate) fn get_state_lock() -> &'static RwLock<Option<LendasatState>> {
     LENDASAT_STATE.get_or_init(|| RwLock::new(None))
 }
 
@@ -60,14 +60,19 @@ pub async fn reset_lendasat_state() {
 /// - `api_url`: Lendasat API base URL (e.g., "https://apiborrow.lendasat.com")
 /// - `network`: Bitcoin network ("bitcoin", "testnet", "signet", "regtest")
 /// - `api_key`: Optional API key for authentication (alternative to JWT)
-pub async fn lendasat_init(data_dir: String, api_url: String, network: String, api_key: Option<String>) -> Result<()> {
+pub async fn lendasat_init(
+    data_dir: String,
+    api_url: String,
+    network: String,
+    api_key: Option<String>,
+) -> Result<()> {
     let http_client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .build()
         .map_err(|e| anyhow!("Failed to create HTTP client: {}", e))?;
 
-    let network = Network::from_str(&network)
-        .map_err(|e| anyhow!("Invalid network '{}': {}", network, e))?;
+    let network =
+        Network::from_str(&network).map_err(|e| anyhow!("Invalid network '{}': {}", network, e))?;
 
     // Try to load existing auth
     let jwt_token = storage::load_auth(&data_dir)?
@@ -102,7 +107,10 @@ pub fn lendasat_is_initialized() -> bool {
 pub async fn lendasat_is_authenticated() -> bool {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    guard.as_ref().map(|s| s.jwt_token.is_some()).unwrap_or(false)
+    guard
+        .as_ref()
+        .map(|s| s.jwt_token.is_some())
+        .unwrap_or(false)
 }
 
 // ============================================================================
@@ -113,7 +121,9 @@ pub async fn lendasat_is_authenticated() -> bool {
 pub async fn lendasat_get_public_key() -> Result<String> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
     auth::get_public_key(&state.data_dir, state.network).await
 }
 
@@ -135,7 +145,9 @@ pub async fn lendasat_authenticate() -> Result<AuthResult> {
     // Get public key from wallet
     let pubkey = {
         let guard = lock.read().await;
-        let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+        let state = guard
+            .as_ref()
+            .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
         auth::get_public_key(&state.data_dir, state.network).await?
     };
     tracing::info!("Authenticating with pubkey: {}...", &pubkey[..16]);
@@ -143,7 +155,9 @@ pub async fn lendasat_authenticate() -> Result<AuthResult> {
     // Request challenge from server
     let challenge = {
         let guard = lock.read().await;
-        let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+        let state = guard
+            .as_ref()
+            .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
         let url = format!("{}/api/auth/pubkey-challenge", state.base_url);
         let body = serde_json::json!({ "pubkey": pubkey });
@@ -176,7 +190,9 @@ pub async fn lendasat_authenticate() -> Result<AuthResult> {
     // Sign the challenge with wallet
     let signature = {
         let guard = lock.read().await;
-        let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+        let state = guard
+            .as_ref()
+            .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
         auth::sign_message(&challenge, &state.data_dir, state.network).await?
     };
     tracing::debug!("Signed challenge, signature length: {}", signature.len());
@@ -184,7 +200,9 @@ pub async fn lendasat_authenticate() -> Result<AuthResult> {
     // Verify signature and get JWT
     let (token, user) = {
         let guard = lock.read().await;
-        let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+        let state = guard
+            .as_ref()
+            .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
         let url = format!("{}/api/auth/pubkey-verify", state.base_url);
         let body = PubkeyVerifyRequest {
@@ -207,7 +225,9 @@ pub async fn lendasat_authenticate() -> Result<AuthResult> {
             let text = response.text().await.unwrap_or_default();
 
             // Check if user needs to register
-            if status.as_u16() == 401 || text.contains("not found") || text.contains("not registered")
+            if status.as_u16() == 401
+                || text.contains("not found")
+                || text.contains("not registered")
             {
                 return Ok(AuthResult::NeedsRegistration { pubkey });
             }
@@ -226,7 +246,9 @@ pub async fn lendasat_authenticate() -> Result<AuthResult> {
     // Store the token
     {
         let mut guard = lock.write().await;
-        let state = guard.as_mut().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+        let state = guard
+            .as_mut()
+            .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
         // Save to storage
         let stored_auth = StoredAuth {
@@ -256,17 +278,25 @@ pub async fn lendasat_authenticate() -> Result<AuthResult> {
 }
 
 /// Register a new user with the Lendasat platform.
-pub async fn lendasat_register(email: String, name: String, invite_code: Option<String>) -> Result<String> {
+pub async fn lendasat_register(
+    email: String,
+    name: String,
+    invite_code: Option<String>,
+) -> Result<String> {
     let lock = get_state_lock();
 
     let pubkey = {
         let guard = lock.read().await;
-        let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+        let state = guard
+            .as_ref()
+            .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
         auth::get_public_key(&state.data_dir, state.network).await?
     };
 
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let url = format!("{}/api/auth/pubkey-register", state.base_url);
     let body = PubkeyRegisterRequest {
@@ -296,7 +326,10 @@ pub async fn lendasat_register(email: String, name: String, invite_code: Option<
         .await
         .map_err(|e| anyhow!("Failed to parse register response: {}", e))?;
 
-    tracing::info!("Registration successful, user_id: {}", register_response.user_id);
+    tracing::info!(
+        "Registration successful, user_id: {}",
+        register_response.user_id
+    );
 
     Ok(register_response.user_id)
 }
@@ -305,7 +338,9 @@ pub async fn lendasat_register(email: String, name: String, invite_code: Option<
 pub async fn lendasat_logout() -> Result<()> {
     let lock = get_state_lock();
     let mut guard = lock.write().await;
-    let state = guard.as_mut().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_mut()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     storage::delete_auth(&state.data_dir)?;
     state.jwt_token = None;
@@ -323,7 +358,9 @@ pub async fn lendasat_logout() -> Result<()> {
 pub async fn lendasat_get_offers(filters: Option<OfferFilters>) -> Result<Vec<LoanOffer>> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let mut url = format!("{}/api/offers", state.base_url);
 
@@ -423,8 +460,7 @@ async fn get_auth_headers(state: &LendasatState) -> Result<HeaderMap> {
     } else if let Some(api_key) = &state.api_key {
         headers.insert(
             HeaderName::from_static("x-api-key"),
-            HeaderValue::from_str(api_key)
-                .map_err(|e| anyhow!("Invalid API key: {}", e))?,
+            HeaderValue::from_str(api_key).map_err(|e| anyhow!("Invalid API key: {}", e))?,
         );
     } else {
         bail!("Not authenticated: no JWT token or API key available");
@@ -434,10 +470,14 @@ async fn get_auth_headers(state: &LendasatState) -> Result<HeaderMap> {
 }
 
 /// Get user's contracts.
-pub async fn lendasat_get_contracts(filters: Option<ContractFilters>) -> Result<PaginatedContractsResponse> {
+pub async fn lendasat_get_contracts(
+    filters: Option<ContractFilters>,
+) -> Result<PaginatedContractsResponse> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
@@ -495,7 +535,9 @@ pub async fn lendasat_get_contracts(filters: Option<ContractFilters>) -> Result<
 pub async fn lendasat_get_contract(contract_id: String) -> Result<Contract> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
@@ -524,6 +566,16 @@ pub async fn lendasat_get_contract(contract_id: String) -> Result<Contract> {
 }
 
 /// Create a new loan contract by taking an offer.
+///
+/// IMPORTANT: This function uses the Ark identity public key as `borrower_pk`.
+/// This is critical because:
+/// 1. The collateral is sent to an Ark offchain address (VTXO)
+/// 2. VTXOs are locked to the Ark identity key
+/// 3. Claim PSBTs must be signed with the Ark identity key
+/// 4. Using the wrong key (e.g., Lendasat derivation path) causes claim failures
+///
+/// The Lendasat derivation path key is still used for authentication (sign_message),
+/// but collateral operations MUST use the Ark identity key.
 pub async fn lendasat_create_contract(
     offer_id: String,
     loan_amount: f64,
@@ -532,18 +584,33 @@ pub async fn lendasat_create_contract(
 ) -> Result<Contract> {
     let lock = get_state_lock();
 
-    let pubkey = {
-        let guard = lock.read().await;
-        let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
-        auth::get_public_key(&state.data_dir, state.network).await?
-    };
+    // CRITICAL: Use Ark identity pubkey for borrower_pk, NOT the Lendasat derivation path key!
+    // The collateral VTXO is locked to the Ark identity, so claim PSBTs expect this key.
+    let ark_identity_pubkey = get_ark_identity_pubkey().await?;
+
+    // Get the Lendasat derivation path for reference (authentication uses this path)
     let derivation_path = auth::get_derivation_path();
 
-    // Get Ark address for collateral
+    // Get Ark offchain address for collateral deposit
     let borrower_btc_address = get_ark_address().await?;
 
+    // Also get Lendasat pubkey for comparison logging
+    let lendasat_pubkey = lendasat_get_public_key()
+        .await
+        .unwrap_or_else(|_| "unknown".to_string());
+
+    // Clear logging to verify correct key is being used
+    tracing::info!("=== CONTRACT CREATION - KEY VERIFICATION ===");
+    tracing::info!("ARK IDENTITY PUBKEY (USING THIS): {}", &ark_identity_pubkey);
+    tracing::info!("LENDASAT PUBKEY (NOT using this): {}", &lendasat_pubkey);
+    tracing::info!("Ark collateral address: {}", &borrower_btc_address);
+    tracing::info!("Derivation path (for auth only): {}", derivation_path);
+    tracing::info!("============================================");
+
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
@@ -551,8 +618,8 @@ pub async fn lendasat_create_contract(
 
     let request = CreateContractRequest {
         id: offer_id,
-        borrower_btc_address,
-        borrower_pk: pubkey,
+        borrower_btc_address: borrower_btc_address.clone(),
+        borrower_pk: ark_identity_pubkey.clone(), // Use Ark identity, NOT Lendasat key!
         borrower_derivation_path: derivation_path,
         loan_amount,
         duration_days,
@@ -561,6 +628,12 @@ pub async fn lendasat_create_contract(
         borrower_npub: None, // TODO: Add nostr pubkey support
         client_contract_id: None,
     };
+
+    tracing::debug!(
+        "Contract request - borrower_pk: {}..., borrower_btc_address: {}...",
+        &request.borrower_pk[..16],
+        &request.borrower_btc_address[..20]
+    );
 
     let response = state
         .http_client
@@ -582,7 +655,11 @@ pub async fn lendasat_create_contract(
         .await
         .map_err(|e| anyhow!("Failed to parse contract: {}", e))?;
 
-    tracing::info!("Created contract: {}", contract.id);
+    tracing::info!("=== CONTRACT CREATED SUCCESSFULLY ===");
+    tracing::info!("Contract ID: {}", contract.id);
+    tracing::info!("borrower_pk used: {} (Ark identity)", &ark_identity_pubkey);
+    tracing::info!("This contract WILL be claimable with Ark identity key");
+    tracing::info!("======================================");
 
     Ok(contract)
 }
@@ -591,7 +668,9 @@ pub async fn lendasat_create_contract(
 pub async fn lendasat_cancel_contract(contract_id: String) -> Result<()> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
@@ -628,11 +707,16 @@ pub async fn lendasat_mark_installment_paid(
 ) -> Result<()> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
-    let url = format!("{}/api/contracts/{}/installment-paid", state.base_url, contract_id);
+    let url = format!(
+        "{}/api/contracts/{}/installment-paid",
+        state.base_url, contract_id
+    );
 
     let request = InstallmentPaidRequest {
         installment_id,
@@ -665,10 +749,15 @@ pub async fn lendasat_mark_installment_paid(
 // ============================================================================
 
 /// Get the PSBT for claiming collateral (standard Bitcoin).
-pub async fn lendasat_get_claim_psbt(contract_id: String, fee_rate: u32) -> Result<ClaimPsbtResponse> {
+pub async fn lendasat_get_claim_psbt(
+    contract_id: String,
+    fee_rate: u32,
+) -> Result<ClaimPsbtResponse> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
@@ -698,42 +787,48 @@ pub async fn lendasat_get_claim_psbt(contract_id: String, fee_rate: u32) -> Resu
 
     Ok(claim_response)
 }
-
-/// Sign a PSBT using the Lendasat wallet keypair.
+/// Finalize a signed PSBT and extract the raw transaction.
 ///
-/// This mirrors the iframe wallet-bridge `signPsbt` behavior:
-/// - Takes PSBT hex, collateral descriptor, and borrower public key
-/// - Verifies borrower_pk matches our wallet's key (warns if mismatch)
-/// - Signs all inputs with our keypair
-/// - Returns the signed PSBT hex
-pub async fn lendasat_sign_psbt(
-    psbt_hex: String,
-    collateral_descriptor: String,
-    borrower_pk: String,
-) -> Result<String> {
-    let lock = get_state_lock();
-    let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+/// CRITICAL: This step was missing and caused broadcast failures!
+/// After signing, the PSBT must be finalized (scriptSigs/witnesses constructed)
+/// and the raw transaction extracted before it can be broadcast.
+///
+/// The LendaSat API's broadcast-claim and broadcast-recover endpoints expect
+/// the RAW TRANSACTION hex, not the signed PSBT hex.
+pub fn lendasat_finalize_psbt(signed_psbt_hex: String) -> Result<String> {
+    auth::finalize_psbt_and_extract_tx(&signed_psbt_hex)
+}
 
-    auth::sign_psbt(
-        &psbt_hex,
-        &collateral_descriptor,
-        &borrower_pk,
-        &state.data_dir,
-        state.network,
-    )
-    .await
+/// Convert a PSBT from BASE64 to HEX format.
+///
+/// Use this for settle-ark PSBTs which come from the API in BASE64 format
+/// but need to be in HEX format for signing.
+pub fn lendasat_psbt_base64_to_hex(base64_psbt: String) -> Result<String> {
+    auth::psbt_base64_to_hex(&base64_psbt)
+}
+
+/// Convert a PSBT from HEX to BASE64 format.
+///
+/// Use this to convert signed PSBTs back to BASE64 format
+/// for the finish-settle-ark API which expects BASE64.
+pub fn lendasat_psbt_hex_to_base64(hex_psbt: String) -> Result<String> {
+    auth::psbt_hex_to_base64(&hex_psbt)
 }
 
 /// Broadcast a signed claim transaction.
 pub async fn lendasat_broadcast_claim_tx(contract_id: String, signed_tx: String) -> Result<String> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
-    let url = format!("{}/api/contracts/{}/broadcast-claim", state.base_url, contract_id);
+    let url = format!(
+        "{}/api/contracts/{}/broadcast-claim",
+        state.base_url, contract_id
+    );
 
     let request = BroadcastTxRequest { tx: signed_tx };
 
@@ -770,16 +865,20 @@ pub async fn lendasat_broadcast_claim_tx(contract_id: String, signed_tx: String)
 pub async fn lendasat_get_claim_ark_psbt(contract_id: String) -> Result<ArkClaimPsbtResponse> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
     let url = format!("{}/api/contracts/{}/claim-ark", state.base_url, contract_id);
 
+    // Use a longer timeout - this involves communication with Ark server
     let response = state
         .http_client
         .get(&url)
         .headers(headers)
+        .timeout(std::time::Duration::from_secs(120)) // 2 minutes for Ark operations
         .send()
         .await
         .map_err(|e| anyhow!("Failed to get Ark claim PSBTs: {}", e))?;
@@ -806,22 +905,29 @@ pub async fn lendasat_broadcast_claim_ark_tx(
 ) -> Result<String> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
-    let url = format!("{}/api/contracts/{}/broadcast-claim-ark", state.base_url, contract_id);
+    let url = format!(
+        "{}/api/contracts/{}/broadcast-claim-ark",
+        state.base_url, contract_id
+    );
 
     let request = BroadcastArkClaimRequest {
         ark_psbt: signed_ark_psbt,
         checkpoint_psbts: signed_checkpoint_psbts,
     };
 
+    // Use a longer timeout for Ark broadcast - involves Ark server communication
     let response = state
         .http_client
         .post(&url)
         .headers(headers)
         .json(&request)
+        .timeout(std::time::Duration::from_secs(120)) // 2 minutes for Ark operations
         .send()
         .await
         .map_err(|e| anyhow!("Failed to broadcast Ark claim tx: {}", e))?;
@@ -851,16 +957,23 @@ pub async fn lendasat_broadcast_claim_ark_tx(
 pub async fn lendasat_get_settle_ark_psbt(contract_id: String) -> Result<SettleArkPsbtResponse> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
-    let url = format!("{}/api/contracts/{}/settle-ark", state.base_url, contract_id);
+    let url = format!(
+        "{}/api/contracts/{}/settle-ark",
+        state.base_url, contract_id
+    );
 
+    // Use a longer timeout - this involves communication with Ark server
     let response = state
         .http_client
         .get(&url)
         .headers(headers)
+        .timeout(std::time::Duration::from_secs(120)) // 2 minutes for Ark operations
         .send()
         .await
         .map_err(|e| anyhow!("Failed to get settle Ark PSBTs: {}", e))?;
@@ -887,22 +1000,29 @@ pub async fn lendasat_finish_settle_ark(
 ) -> Result<String> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
-    let url = format!("{}/api/contracts/{}/finish-settle-ark", state.base_url, contract_id);
+    let url = format!(
+        "{}/api/contracts/{}/finish-settle-ark",
+        state.base_url, contract_id
+    );
 
     let request = FinishSettleArkRequest {
         intent_psbt: signed_intent_psbt,
         forfeit_psbts: signed_forfeit_psbts,
     };
 
+    // Use a longer timeout for settlement - the Ark batch protocol can take time
     let response = state
         .http_client
         .post(&url)
         .headers(headers)
         .json(&request)
+        .timeout(std::time::Duration::from_secs(120)) // 2 minutes for Ark settlement
         .send()
         .await
         .map_err(|e| anyhow!("Failed to finish settle Ark: {}", e))?;
@@ -918,7 +1038,10 @@ pub async fn lendasat_finish_settle_ark(
         .await
         .map_err(|e| anyhow!("Failed to parse finish settle response: {}", e))?;
 
-    tracing::info!("Ark settlement finished, commitment txid: {}", finish_response.commitment_txid);
+    tracing::info!(
+        "Ark settlement finished, commitment txid: {}",
+        finish_response.commitment_txid
+    );
 
     Ok(finish_response.commitment_txid)
 }
@@ -928,10 +1051,15 @@ pub async fn lendasat_finish_settle_ark(
 // ============================================================================
 
 /// Get the PSBT for recovering collateral from an expired contract.
-pub async fn lendasat_get_recover_psbt(contract_id: String, fee_rate: u32) -> Result<ClaimPsbtResponse> {
+pub async fn lendasat_get_recover_psbt(
+    contract_id: String,
+    fee_rate: u32,
+) -> Result<ClaimPsbtResponse> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
@@ -963,14 +1091,22 @@ pub async fn lendasat_get_recover_psbt(contract_id: String, fee_rate: u32) -> Re
 }
 
 /// Broadcast a signed recovery transaction.
-pub async fn lendasat_broadcast_recover_tx(contract_id: String, signed_tx: String) -> Result<String> {
+pub async fn lendasat_broadcast_recover_tx(
+    contract_id: String,
+    signed_tx: String,
+) -> Result<String> {
     let lock = get_state_lock();
     let guard = lock.read().await;
-    let state = guard.as_ref().ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+    let state = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
 
     let headers = get_auth_headers(state).await?;
 
-    let url = format!("{}/api/contracts/{}/broadcast-recover", state.base_url, contract_id);
+    let url = format!(
+        "{}/api/contracts/{}/broadcast-recover",
+        state.base_url, contract_id
+    );
 
     let request = BroadcastTxRequest { tx: signed_tx };
 
@@ -1025,6 +1161,65 @@ async fn get_ark_address() -> Result<String> {
             Ok(offchain_address.encode())
         }
     }
+}
+
+/// Get the Ark identity public key (compressed, 33 bytes as hex).
+///
+/// This is the public key used for:
+/// - Ark offchain address derivation
+/// - VTXO ownership (collateral)
+/// - Signing claim PSBTs
+///
+/// IMPORTANT: This key MUST be used as `borrower_pk` when creating LendaSat contracts
+/// because the collateral is locked to this key, not the Lendasat derivation path key.
+///
+/// Derives the STABLE identity key at path m/83696968'/11811'/0/0 from the mnemonic.
+/// This is equivalent to Arkade wallet's `SingleKey.fromHex(privateKey)` - always
+/// the same key, unlike vtxo.owner_pk() which changes when VTXOs are spent/created.
+pub async fn get_ark_identity_pubkey() -> Result<String> {
+    use crate::ark::mnemonic_file::{ARK_BASE_DERIVATION_PATH, read_mnemonic_file};
+    use bitcoin::key::Keypair;
+    use bitcoin::secp256k1::Secp256k1;
+
+    // Get the data_dir and network from Lendasat state
+    let (data_dir, network) = {
+        let lock = get_state_lock();
+        let guard = lock.read().await;
+        let state = guard
+            .as_ref()
+            .ok_or_else(|| anyhow!("Lendasat not initialized"))?;
+        (state.data_dir.clone(), state.network)
+    };
+
+    // Read mnemonic and derive the identity key at index 0
+    let mnemonic = read_mnemonic_file(&data_dir)?
+        .ok_or_else(|| anyhow!("No wallet found - mnemonic file missing"))?;
+
+    // Derive at path m/83696968'/11811'/0/0 (Ark base path + index 0)
+    let identity_path = format!("{}/0", ARK_BASE_DERIVATION_PATH);
+    let xpriv =
+        crate::ark::mnemonic_file::derive_xpriv_at_path(&mnemonic, &identity_path, network)?;
+
+    // Create keypair from the derived key
+    let secp = Secp256k1::new();
+    let keypair = Keypair::from_secret_key(&secp, &xpriv.private_key);
+    let identity_pk = keypair.x_only_public_key().0;
+
+    // Convert x-only pubkey to compressed pubkey (add 02 prefix for even y)
+    let x_only_bytes = identity_pk.serialize();
+    let mut compressed_bytes = [0u8; 33];
+    compressed_bytes[0] = 0x02; // Even y-coordinate prefix (standard for Taproot x-only keys)
+    compressed_bytes[1..].copy_from_slice(&x_only_bytes);
+    let pubkey_hex = hex::encode(compressed_bytes);
+
+    tracing::info!(
+        "Ark STABLE identity pubkey (path {}): {} (x-only: {})",
+        identity_path,
+        &pubkey_hex[..16],
+        identity_pk
+    );
+
+    Ok(pubkey_hex)
 }
 
 // ============================================================================

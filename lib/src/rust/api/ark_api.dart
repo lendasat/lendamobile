@@ -83,6 +83,13 @@ Future<List<BoardingUtxo>> getBoardingUtxos() =>
 Future<BigInt> getPendingBalance() =>
     RustLib.instance.api.crateApiArkApiGetPendingBalance();
 
+/// Settle only boarding UTXOs (on-chain funds) into the Ark protocol.
+/// This method settles ONLY the confirmed boarding UTXOs without including
+/// any existing VTXOs, avoiding the minExpiryGap rejection from the server.
+/// Use this for completing on-chain boarding when you have existing Ark balance.
+Future<void> settleBoarding() =>
+    RustLib.instance.api.crateApiArkApiSettleBoarding();
+
 /// Get the Nostr secret key (nsec) derived from the wallet mnemonic
 /// Note: Nostr keys are network-independent, so we use Bitcoin mainnet for derivation
 Future<String> nsec({required String dataDir}) =>
@@ -106,6 +113,18 @@ Future<String> getMnemonic({required String dataDir}) =>
 
 Future<void> resetWallet({required String dataDir}) =>
     RustLib.instance.api.crateApiArkApiResetWallet(dataDir: dataDir);
+
+/// Sign an Ark PSBT using the Ark SDK's key provider and signing functions.
+///
+/// This uses:
+/// - The SDK's key provider to get the keypair (not manual derivation)
+/// - ark_core::send::sign_ark_transaction for proper script-path signing
+///
+/// This matches exactly how Arkade wallet signs PSBTs - using the SDK's
+/// identity.sign() equivalent functionality.
+Future<String> signPsbtWithArkIdentity({required String psbtHex}) =>
+    RustLib.instance.api
+        .crateApiArkApiSignPsbtWithArkIdentity(psbtHex: psbtHex);
 
 Future<Info> information() => RustLib.instance.api.crateApiArkApiInformation();
 
@@ -172,18 +191,23 @@ class Balance {
 /// Represents a pending boarding UTXO (on-chain funds waiting to be settled)
 class BoardingUtxo {
   final String txid;
+  final int vout;
   final BigInt amountSats;
   final bool isConfirmed;
 
   const BoardingUtxo({
     required this.txid,
+    required this.vout,
     required this.amountSats,
     required this.isConfirmed,
   });
 
   @override
   int get hashCode =>
-      txid.hashCode ^ amountSats.hashCode ^ isConfirmed.hashCode;
+      txid.hashCode ^
+      vout.hashCode ^
+      amountSats.hashCode ^
+      isConfirmed.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -191,6 +215,7 @@ class BoardingUtxo {
       other is BoardingUtxo &&
           runtimeType == other.runtimeType &&
           txid == other.txid &&
+          vout == other.vout &&
           amountSats == other.amountSats &&
           isConfirmed == other.isConfirmed;
 }
@@ -331,4 +356,11 @@ sealed class Transaction with _$Transaction {
     required bool isSettled,
     required PlatformInt64 createdAt,
   }) = Transaction_Redeem;
+
+  /// On-chain send (collaborative redeem) - funds sent from Ark to on-chain address
+  const factory Transaction.offboard({
+    required String txid,
+    required PlatformInt64 amountSats,
+    PlatformInt64? confirmedAt,
+  }) = Transaction_Offboard;
 }

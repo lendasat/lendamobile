@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/lendaswap_api.dart' as lendaswap_api;
 import 'package:ark_flutter/src/rust/lendaswap.dart';
@@ -77,7 +78,8 @@ class LendaSwapService extends ChangeNotifier {
       // but the user has previous swaps associated with their mnemonic
       if (_swaps.isEmpty) {
         try {
-          logger.i('No local swaps found, attempting to recover from server...');
+          logger
+              .i('No local swaps found, attempting to recover from server...');
           final recoveredSwaps = await lendaswap_api.lendaswapRecoverSwaps();
           if (recoveredSwaps.isNotEmpty) {
             _swaps = recoveredSwaps;
@@ -85,8 +87,16 @@ class LendaSwapService extends ChangeNotifier {
             notifyListeners();
           }
         } catch (e) {
-          // Recovery is best-effort, don't fail initialization
-          logger.w('Could not recover swaps from server: $e');
+          // Check if this is a parsing error
+          final errorStr = e.toString();
+          if (_isParsingError(errorStr)) {
+            logger.w('[LendaSwap Dart] Parsing error during recovery: $e');
+            logger.w('[LendaSwap Dart] Will continue without swaps - they can be recovered later');
+            _swaps = [];
+          } else {
+            // Recovery is best-effort, don't fail initialization
+            logger.w('Could not recover swaps from server: $e');
+          }
         }
       }
     } catch (e) {
@@ -111,12 +121,62 @@ class LendaSwapService extends ChangeNotifier {
 
   /// Refresh all swaps from storage.
   Future<void> refreshSwaps() async {
+    logger.d('[LendaSwap Dart] refreshSwaps called');
     try {
       _swaps = await lendaswap_api.lendaswapListSwaps();
+      logger.i('[LendaSwap Dart] refreshSwaps SUCCESS - found ${_swaps.length} swaps');
+      for (final swap in _swaps) {
+        logger.d('[LendaSwap Dart] - swap ${swap.id}: status=${swap.status}, detailed=${swap.detailedStatus}');
+      }
       notifyListeners();
     } catch (e) {
-      logger.e('Error fetching swaps: $e');
+      // Check if this is a serialization/parsing error (RangeError with timestamp-like values)
+      final errorStr = e.toString();
+      if (_isParsingError(errorStr)) {
+        logger.w('[LendaSwap Dart] Swap parsing error detected: $e');
+        logger.w('[LendaSwap Dart] This may be caused by serialization mismatch. Attempting recovery...');
+        await _handleParsingError();
+        return;
+      }
+      logger.e('[LendaSwap Dart] refreshSwaps FAILED: $e');
       rethrow;
+    }
+  }
+
+  /// Check if an error is a parsing/serialization error.
+  bool _isParsingError(String errorStr) {
+    // RangeError with large values typically indicates serialization mismatch
+    // where a timestamp or other large value is being used as an enum index
+    if (errorStr.contains('RangeError')) {
+      // Extract the value if present
+      final match = RegExp(r'Value not in range: (\d+)').firstMatch(errorStr);
+      if (match != null) {
+        final value = int.tryParse(match.group(1) ?? '0') ?? 0;
+        // Unix timestamps are typically > 1000000000 (Sep 2001)
+        // Enum indices should be < 100
+        if (value > 1000) {
+          logger.w('[LendaSwap Dart] Detected likely timestamp value used as index: $value');
+          return true;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /// Handle parsing errors by recovering swaps from server.
+  Future<void> _handleParsingError() async {
+    try {
+      logger.i('[LendaSwap Dart] Recovering swaps from server...');
+      final recovered = await lendaswap_api.lendaswapRecoverSwaps();
+      _swaps = recovered;
+      logger.i('[LendaSwap Dart] Successfully recovered ${_swaps.length} swaps');
+      notifyListeners();
+    } catch (recoveryError) {
+      logger.e('[LendaSwap Dart] Recovery also failed: $recoveryError');
+      // Keep empty swaps list rather than crashing
+      _swaps = [];
+      notifyListeners();
     }
   }
 
@@ -147,21 +207,40 @@ class LendaSwapService extends ChangeNotifier {
     required String targetChain,
     String? referralCode,
   }) async {
+    logger.i('[LendaSwap Dart] createSellBtcSwap called');
+    logger.d('[LendaSwap Dart] targetEvmAddress: $targetEvmAddress');
+    logger.d('[LendaSwap Dart] targetAmount: $targetAmount');
+    logger.d('[LendaSwap Dart] targetToken: $targetToken');
+    logger.d('[LendaSwap Dart] targetChain: $targetChain');
+    logger.d('[LendaSwap Dart] referralCode: $referralCode');
+
     try {
+      logger.i('[LendaSwap Dart] calling lendaswapCreateBtcToEvmSwap...');
       final result = await lendaswap_api.lendaswapCreateBtcToEvmSwap(
         targetEvmAddress: targetEvmAddress,
-        targetAmountUsd: targetAmount, // API still uses this name but it's actually token amount
+        targetAmountUsd:
+            targetAmount, // API still uses this name but it's actually token amount
         targetToken: targetToken,
         targetChain: targetChain,
         referralCode: referralCode,
       );
 
+      logger.i('[LendaSwap Dart] createSellBtcSwap SUCCESS');
+      logger.i('[LendaSwap Dart] swap_id: ${result.swapId}');
+      logger.i('[LendaSwap Dart] ln_invoice: ${result.lnInvoice.substring(0, 50.clamp(0, result.lnInvoice.length))}...');
+      logger.i('[LendaSwap Dart] arkade_htlc_address: ${result.arkadeHtlcAddress}');
+      logger.i('[LendaSwap Dart] sats_to_send: ${result.satsToSend}');
+      logger.i('[LendaSwap Dart] target_amount_usd: ${result.targetAmountUsd}');
+      logger.i('[LendaSwap Dart] fee_sats: ${result.feeSats}');
+
       // Refresh swaps list
+      logger.d('[LendaSwap Dart] refreshing swaps list...');
       await refreshSwaps();
+      logger.d('[LendaSwap Dart] swaps list refreshed');
 
       return result;
     } catch (e) {
-      logger.e('Error creating BTC to EVM swap: $e');
+      logger.e('[LendaSwap Dart] createSellBtcSwap FAILED: $e');
       rethrow;
     }
   }
@@ -186,7 +265,8 @@ class LendaSwapService extends ChangeNotifier {
       final result = await lendaswap_api.lendaswapCreateEvmToBtcSwap(
         targetArkAddress: targetArkAddress,
         userEvmAddress: userEvmAddress,
-        sourceAmountUsd: sourceAmount, // API still uses this name but it's actually token amount
+        sourceAmountUsd:
+            sourceAmount, // API still uses this name but it's actually token amount
         sourceToken: sourceToken,
         sourceChain: sourceChain,
         referralCode: referralCode,
@@ -231,35 +311,52 @@ class LendaSwapService extends ChangeNotifier {
 
   /// Get swap details by ID.
   Future<SwapInfo> getSwap(String swapId) async {
+    logger.i('[LendaSwap Dart] getSwap called - swapId: $swapId');
     try {
       final swap = await lendaswap_api.lendaswapGetSwap(swapId: swapId);
+      logger.i('[LendaSwap Dart] getSwap SUCCESS');
+      logger.i('[LendaSwap Dart] swap.id: ${swap.id}');
+      logger.i('[LendaSwap Dart] swap.status: ${swap.status}');
+      logger.i('[LendaSwap Dart] swap.detailedStatus: ${swap.detailedStatus}');
+      logger.i('[LendaSwap Dart] swap.canClaimGelato: ${swap.canClaimGelato}');
+      logger.i('[LendaSwap Dart] swap.canClaimVhtlc: ${swap.canClaimVhtlc}');
+      logger.i('[LendaSwap Dart] swap.canRefund: ${swap.canRefund}');
+      logger.d('[LendaSwap Dart] refreshing swaps...');
       await refreshSwaps();
       return swap;
     } catch (e) {
-      logger.e('Error getting swap: $e');
+      logger.e('[LendaSwap Dart] getSwap FAILED: $e');
       rethrow;
     }
   }
 
   /// Claim a completed swap via Gelato (gasless).
   Future<void> claimGelato(String swapId) async {
+    logger.i('[LendaSwap Dart] claimGelato called - swapId: $swapId');
     try {
+      logger.i('[LendaSwap Dart] calling lendaswapClaimGelato...');
       await lendaswap_api.lendaswapClaimGelato(swapId: swapId);
+      logger.i('[LendaSwap Dart] claimGelato SUCCESS');
+      logger.d('[LendaSwap Dart] refreshing swaps...');
       await refreshSwaps();
     } catch (e) {
-      logger.e('Error claiming via Gelato: $e');
+      logger.e('[LendaSwap Dart] claimGelato FAILED: $e');
       rethrow;
     }
   }
 
   /// Claim VHTLC for an EVM to BTC swap.
   Future<String> claimVhtlc(String swapId) async {
+    logger.i('[LendaSwap Dart] claimVhtlc called - swapId: $swapId');
     try {
+      logger.i('[LendaSwap Dart] calling lendaswapClaimVhtlc...');
       final txid = await lendaswap_api.lendaswapClaimVhtlc(swapId: swapId);
+      logger.i('[LendaSwap Dart] claimVhtlc SUCCESS - txid: $txid');
+      logger.d('[LendaSwap Dart] refreshing swaps...');
       await refreshSwaps();
       return txid;
     } catch (e) {
-      logger.e('Error claiming VHTLC: $e');
+      logger.e('[LendaSwap Dart] claimVhtlc FAILED: $e');
       rethrow;
     }
   }
@@ -281,12 +378,21 @@ class LendaSwapService extends ChangeNotifier {
 
   /// Recover swaps from server (after mnemonic restore).
   Future<List<SwapInfo>> recoverSwaps() async {
+    logger.i('[LendaSwap Dart] recoverSwaps called');
     try {
       final swaps = await lendaswap_api.lendaswapRecoverSwaps();
+      logger.i('[LendaSwap Dart] recoverSwaps SUCCESS - recovered ${swaps.length} swaps');
       _swaps = swaps;
       notifyListeners();
       return swaps;
     } catch (e) {
+      final errorStr = e.toString();
+      if (_isParsingError(errorStr)) {
+        logger.w('[LendaSwap Dart] Parsing error during recovery: $e');
+        logger.w('[LendaSwap Dart] Attempting clear and recover...');
+        await _handleParsingError();
+        return _swaps;
+      }
       logger.e('Error recovering swaps: $e');
       rethrow;
     }
@@ -400,7 +506,8 @@ extension SwapInfoExtension on SwapInfo {
   }
 
   /// Get BTC amount in standard units (not sats).
-  double get btcAmount => sourceAmountSats.toInt() / 100000000.0;
+  double get btcAmount =>
+      sourceAmountSats.toInt() / BitcoinConstants.satsPerBtc;
 }
 
 /// Extension for TradingPair to provide convenient helper methods.

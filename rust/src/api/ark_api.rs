@@ -1,5 +1,6 @@
 use anyhow::Result;
 use bitcoin::Network;
+use bitcoin::key::Keypair;
 use nostr::ToBech32;
 use std::str::FromStr;
 
@@ -41,7 +42,15 @@ pub async fn restore_wallet(
     boltz_url: String,
 ) -> Result<String> {
     let network = Network::from_str(network.as_str())?;
-    crate::ark::restore_wallet(mnemonic_words, data_dir, network, esplora, server, boltz_url).await
+    crate::ark::restore_wallet(
+        mnemonic_words,
+        data_dir,
+        network,
+        esplora,
+        server,
+        boltz_url,
+    )
+    .await
 }
 
 pub struct Balance {
@@ -92,7 +101,10 @@ pub async fn address(amount: Option<u64>) -> Result<Addresses> {
         Some(sats) => {
             let btc = sats as f64 / 100_000_000.0;
             // Format with up to 8 decimal places, removing trailing zeros
-            let btc_str = format!("{:.8}", btc).trim_end_matches('0').trim_end_matches('.').to_string();
+            let btc_str = format!("{:.8}", btc)
+                .trim_end_matches('0')
+                .trim_end_matches('.')
+                .to_string();
             format!("&amount={}", btc_str)
         }
     };
@@ -134,6 +146,12 @@ pub enum Transaction {
         amount_sats: i64,
         is_settled: bool,
         created_at: i64,
+    },
+    /// On-chain send (collaborative redeem) - funds sent from Ark to on-chain address
+    Offboard {
+        txid: String,
+        amount_sats: i64,
+        confirmed_at: Option<i64>,
     },
 }
 
@@ -180,6 +198,19 @@ pub async fn tx_history() -> Result<Vec<Transaction>> {
                     created_at,
                 }
             }
+            ark_core::history::Transaction::Offboard {
+                commitment_txid,
+                amount,
+                confirmed_at,
+            } => {
+                tracing::debug!("TX HISTORY: Offboard/On-chain send tx {}", commitment_txid);
+                Transaction::Offboard {
+                    txid: commitment_txid.to_string(),
+                    // Offboard is always outgoing, so make amount negative
+                    amount_sats: -(amount.to_sat() as i64),
+                    confirmed_at,
+                }
+            }
         })
         .collect();
 
@@ -217,6 +248,7 @@ pub async fn settle() -> Result<()> {
 /// Represents a pending boarding UTXO (on-chain funds waiting to be settled)
 pub struct BoardingUtxo {
     pub txid: String,
+    pub vout: u32,
     pub amount_sats: u64,
     pub is_confirmed: bool,
 }
@@ -228,6 +260,7 @@ pub async fn get_boarding_utxos() -> Result<Vec<BoardingUtxo>> {
         .into_iter()
         .map(|u| BoardingUtxo {
             txid: u.txid,
+            vout: u.vout,
             amount_sats: u.amount.to_sat(),
             is_confirmed: u.is_confirmed,
         })
@@ -238,6 +271,15 @@ pub async fn get_boarding_utxos() -> Result<Vec<BoardingUtxo>> {
 pub async fn get_pending_balance() -> Result<u64> {
     let amount = crate::ark::client::get_pending_balance().await?;
     Ok(amount.to_sat())
+}
+
+/// Settle only boarding UTXOs (on-chain funds) into the Ark protocol.
+/// This method settles ONLY the confirmed boarding UTXOs without including
+/// any existing VTXOs, avoiding the minExpiryGap rejection from the server.
+/// Use this for completing on-chain boarding when you have existing Ark balance.
+pub async fn settle_boarding() -> Result<()> {
+    crate::ark::client::settle_boarding().await?;
+    Ok(())
 }
 
 /// Get the Nostr secret key (nsec) derived from the wallet mnemonic
@@ -284,6 +326,115 @@ pub async fn reset_wallet(data_dir: String) -> Result<()> {
 pub struct Info {
     pub server_pk: String,
     pub network: String,
+}
+
+/// Sign an Ark PSBT using the Ark SDK's key provider and signing functions.
+///
+/// This uses:
+/// - The SDK's key provider to get the keypair (not manual derivation)
+/// - ark_core::send::sign_ark_transaction for proper script-path signing
+///
+/// This matches exactly how Arkade wallet signs PSBTs - using the SDK's
+/// identity.sign() equivalent functionality.
+pub async fn sign_psbt_with_ark_identity(psbt_hex: String) -> Result<String> {
+    use ark_core::send::sign_ark_transaction;
+    use bitcoin::psbt::Psbt;
+    use bitcoin::secp256k1::Secp256k1;
+
+    // Parse PSBT from hex
+    let psbt_bytes =
+        hex::decode(&psbt_hex).map_err(|e| anyhow::anyhow!("Invalid PSBT hex: {}", e))?;
+    let mut psbt = Psbt::deserialize(&psbt_bytes)
+        .map_err(|e| anyhow::anyhow!("Failed to parse PSBT: {}", e))?;
+
+    let num_inputs = psbt.inputs.len();
+    tracing::info!(
+        "Signing Ark PSBT with {} inputs using stable identity key",
+        num_inputs
+    );
+
+    // Log PSBT details for debugging
+    for (idx, input) in psbt.inputs.iter().enumerate() {
+        tracing::debug!(
+            "Input {}: tap_scripts={} entries, tap_internal_key={:?}",
+            idx,
+            input.tap_scripts.len(),
+            input.tap_internal_key.map(|k| k.to_string())
+        );
+    }
+
+    // Get our STABLE identity keypair at path m/83696968'/11811'/0/0 (equivalent to Arkade's SingleKey)
+    // This key NEVER changes, unlike vtxo.owner_pk() which changes with each VTXO
+    // This ensures the signing key matches the borrower_pk used in contract creation
+    use crate::ark::mnemonic_file::{ARK_BASE_DERIVATION_PATH, read_mnemonic_file};
+
+    // Get data_dir from Lendasat state (which must be initialized for LendaSat operations)
+    let (data_dir, network) = {
+        let lock = crate::api::lendasat_api::get_state_lock();
+        let guard = lock.read().await;
+        let state = guard
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Lendasat not initialized - cannot get identity key"))?;
+        (state.data_dir.clone(), state.network)
+    };
+
+    // Read mnemonic and derive the identity key at index 0
+    let mnemonic = read_mnemonic_file(&data_dir)?
+        .ok_or_else(|| anyhow::anyhow!("No wallet found - mnemonic file missing"))?;
+
+    // Derive at path m/83696968'/11811'/0/0 (Ark base path + index 0)
+    let identity_path = format!("{}/0", ARK_BASE_DERIVATION_PATH);
+    let xpriv =
+        crate::ark::mnemonic_file::derive_xpriv_at_path(&mnemonic, &identity_path, network)?;
+
+    // Create keypair from the derived key
+    let secp_for_key = Secp256k1::new();
+    let ark_keypair = Keypair::from_secret_key(&secp_for_key, &xpriv.private_key);
+
+    let ark_pubkey = ark_keypair.x_only_public_key().0;
+    tracing::info!(
+        "Ark STABLE identity pubkey (path m/83696968'/11811'/0/0): {}",
+        ark_pubkey
+    );
+
+    let secp = Secp256k1::new();
+
+    // Sign each input using the SDK's sign_ark_transaction
+    // This handles script-path signing correctly
+    for input_idx in 0..num_inputs {
+        let kp = ark_keypair;
+        let sign_fn = |_input: &mut bitcoin::psbt::Input,
+                       msg: bitcoin::secp256k1::Message|
+         -> std::result::Result<
+            Vec<(
+                bitcoin::secp256k1::schnorr::Signature,
+                bitcoin::XOnlyPublicKey,
+            )>,
+            ark_core::Error,
+        > {
+            let sig = secp.sign_schnorr_no_aux_rand(&msg, &kp);
+            let pk = kp.x_only_public_key().0;
+            tracing::debug!("Signed with pubkey: {}", pk);
+            Ok(vec![(sig, pk)])
+        };
+
+        sign_ark_transaction(sign_fn, &mut psbt, input_idx)
+            .map_err(|e| anyhow::anyhow!("Failed to sign input {}: {}", input_idx, e))?;
+
+        tracing::info!("Input {}: Signed successfully via SDK", input_idx);
+    }
+
+    tracing::info!(
+        "Ark PSBT signing complete: {}/{} inputs signed via Ark SDK",
+        num_inputs,
+        num_inputs
+    );
+
+    // Serialize the signed PSBT back to hex
+    let signed_psbt_bytes = psbt.serialize();
+    let signed_psbt_hex = hex::encode(signed_psbt_bytes);
+
+    Ok(signed_psbt_hex)
 }
 
 pub async fn information() -> Result<Info> {

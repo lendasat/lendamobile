@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
@@ -37,7 +38,7 @@ class FeeDistributionWidget extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '\$${_formatAmount(((totalFees / 100000000) * currentUSD).toStringAsFixed(0))}',
+                  '\$${_formatAmount(((totalFees / BitcoinConstants.satsPerBtc) * currentUSD).toStringAsFixed(0))}',
                   style: const TextStyle(
                     color: AppTheme.successColor,
                     fontWeight: FontWeight.bold,
@@ -51,7 +52,7 @@ class FeeDistributionWidget extends StatelessWidget {
 
           // Median fee
           Text(
-            '${AppLocalizations.of(context)!.medianFee} ~\$${(((medianFee * 140) / 100000000) * currentUSD).toStringAsFixed(2)}',
+            '${AppLocalizations.of(context)!.medianFee} ~\$${(((medianFee * 140) / BitcoinConstants.satsPerBtc) * currentUSD).toStringAsFixed(2)}',
             style: Theme.of(context)
                 .textTheme
                 .bodyMedium!
@@ -106,13 +107,13 @@ class FeeDistributionWidget extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '\$${(((feeRange.first * 140) / 100000000) * currentUSD).toStringAsFixed(2)}',
+                        '\$${(((feeRange.first * 140) / BitcoinConstants.satsPerBtc) * currentUSD).toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               color: AppTheme.errorColor,
                             ),
                       ),
                       Text(
-                        '\$${(((feeRange.last * 140) / 100000000) * currentUSD).toStringAsFixed(2)}',
+                        '\$${(((feeRange.last * 140) / BitcoinConstants.satsPerBtc) * currentUSD).toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               color: AppTheme.successColor,
                             ),

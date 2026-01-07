@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/feedback_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -57,9 +59,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to pick image')),
-        );
+        OverlayService().showError('Failed to pick image');
       }
     }
   }
@@ -72,9 +72,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   Future<void> _submitFeedback() async {
     if (_messageController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your feedback message')),
-      );
+      OverlayService().showError('Please enter your feedback message');
       return;
     }
 
@@ -99,23 +97,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
         if (success) {
           if (_attachedImages.isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Email app opened. Please attach your images manually.',
-                ),
-                duration: Duration(seconds: 4),
-              ),
+            OverlayService().showSuccess(
+              'Email app opened. Please attach your images manually.',
             );
           }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Could not open email app. Please email support@lendasat.com directly.',
-              ),
-              duration: Duration(seconds: 4),
-            ),
+          OverlayService().showError(
+            'Could not open email app. Please email support@lendasat.com directly.',
           );
         }
       }
@@ -124,9 +112,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        OverlayService().showError('Error: $e');
       }
     }
   }
@@ -140,7 +126,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(
-        text: 'Feedback',
+        text: AppLocalizations.of(context)?.feedback ?? 'Feedback',
         context: context,
         hasBackButton: true,
         onTap: () => controller.switchTab('main'),
@@ -190,7 +176,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                               color: _getTypeColor(type),
                             ),
                             const SizedBox(width: 12),
-                            Text(type),
+                            Flexible(
+                              child: Text(
+                                type,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
                           ],
                         ),
                       );
@@ -245,16 +237,21 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Images (Optional)',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                Flexible(
+                  child: Text(
+                    'Images (Optional)',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
                 ),
                 if (_attachedImages.length < 5)
                   TextButton.icon(
                     onPressed: _pickImageFromGallery,
-                    icon: const Icon(Icons.add_photo_alternate_rounded, size: 20),
+                    icon:
+                        const Icon(Icons.add_photo_alternate_rounded, size: 20),
                     label: const Text('Add'),
                     style: TextButton.styleFrom(
                       foregroundColor: AppTheme.colorBitcoin,
@@ -280,14 +277,16 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         Icon(
                           Icons.add_photo_alternate_outlined,
                           size: 32,
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Tap to add images from gallery',
                           style: TextStyle(
-                            color:
-                                isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                           ),
                         ),
                       ],
@@ -329,7 +328,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                                   color: Colors.red,
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Theme.of(context).scaffoldBackgroundColor,
+                                    color: Theme.of(context)
+                                        .scaffoldBackgroundColor,
                                     width: 2,
                                   ),
                                 ),
@@ -417,7 +417,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
             // Submit Button
             LongButtonWidget(
-              title: 'Send Feedback',
+              title:
+                  AppLocalizations.of(context)?.sendFeedback ?? 'Send Feedback',
               customWidth: double.infinity,
               state: _isLoading ? ButtonState.loading : ButtonState.idle,
               onTap: _isLoading ? null : _submitFeedback,

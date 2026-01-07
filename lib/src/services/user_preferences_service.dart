@@ -18,7 +18,8 @@ class UserPreferencesService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _balancesVisible = prefs.getBool(_balancesVisibleKey) ?? true;
     final rangeIndex = prefs.getInt(_chartTimeRangeKey) ?? 0;
-    _chartTimeRange = ChartTimeRange.values[rangeIndex.clamp(0, ChartTimeRange.values.length - 1)];
+    _chartTimeRange = ChartTimeRange
+        .values[rangeIndex.clamp(0, ChartTimeRange.values.length - 1)];
     notifyListeners();
   }
 

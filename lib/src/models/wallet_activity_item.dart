@@ -9,7 +9,7 @@ sealed class WalletActivityItem {
   bool get isSwap;
 }
 
-/// A regular Ark transaction (boarding, round, or redeem).
+/// A regular Ark transaction (boarding, round, redeem, or offboard).
 class TransactionActivityItem implements WalletActivityItem {
   final Transaction transaction;
 
@@ -27,8 +27,22 @@ class TransactionActivityItem implements WalletActivityItem {
           // Unconfirmed boarding txs should be at the TOP of the history
           return (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 1;
         },
-        round: (tx) => tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
-        redeem: (tx) => tx.createdAt is BigInt ? (tx.createdAt as BigInt).toInt() : tx.createdAt as int,
+        round: (tx) => tx.createdAt is BigInt
+            ? (tx.createdAt as BigInt).toInt()
+            : tx.createdAt as int,
+        redeem: (tx) => tx.createdAt is BigInt
+            ? (tx.createdAt as BigInt).toInt()
+            : tx.createdAt as int,
+        offboard: (tx) {
+          // Offboard transactions use confirmedAt if available
+          if (tx.confirmedAt != null) {
+            return tx.confirmedAt is BigInt
+                ? (tx.confirmedAt as BigInt).toInt()
+                : tx.confirmedAt as int;
+          }
+          // Unconfirmed offboard txs should be at the TOP of the history
+          return (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 1;
+        },
       );
 
   @override
@@ -36,6 +50,7 @@ class TransactionActivityItem implements WalletActivityItem {
         boarding: (tx) => tx.txid,
         round: (tx) => tx.txid,
         redeem: (tx) => tx.txid,
+        offboard: (tx) => tx.txid,
       );
 
   @override
@@ -43,14 +58,22 @@ class TransactionActivityItem implements WalletActivityItem {
 
   int get amountSats => transaction.map(
         boarding: (tx) => tx.amountSats.toInt(),
-        round: (tx) => tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
-        redeem: (tx) => tx.amountSats is BigInt ? (tx.amountSats as BigInt).toInt() : tx.amountSats as int,
+        round: (tx) => tx.amountSats is BigInt
+            ? (tx.amountSats as BigInt).toInt()
+            : tx.amountSats as int,
+        redeem: (tx) => tx.amountSats is BigInt
+            ? (tx.amountSats as BigInt).toInt()
+            : tx.amountSats as int,
+        offboard: (tx) => tx.amountSats is BigInt
+            ? (tx.amountSats as BigInt).toInt()
+            : tx.amountSats as int,
       );
 
   bool get isSettled => transaction.map(
         boarding: (tx) => tx.confirmedAt != null,
         round: (tx) => true,
         redeem: (tx) => tx.isSettled,
+        offboard: (tx) => tx.confirmedAt != null,
       );
 }
 
@@ -63,7 +86,7 @@ class SwapActivityItem implements WalletActivityItem {
   @override
   int get timestamp {
     try {
-      // Handle format like "2025-12-21 19:04:15.0 +00:00:00"
+      // Handle format like "2025-12-21 19:04:15.0 +00:00:00" or "2025-12-24 3:24:25.0 +00:00:00"
       String dateStr = swap.createdAt;
 
       // Remove the unusual timezone format (+00:00:00 or -00:00:00)
@@ -72,6 +95,22 @@ class SwapActivityItem implements WalletActivityItem {
         if (parts.isNotEmpty) {
           dateStr = parts[0].trim();
         }
+      }
+
+      // Split into date and time parts
+      final dateTimeParts = dateStr.split(' ');
+      if (dateTimeParts.length == 2) {
+        final datePart = dateTimeParts[0];
+        var timePart = dateTimeParts[1];
+
+        // Pad single-digit hour (e.g., "3:24:25" -> "03:24:25")
+        final timeComponents = timePart.split(':');
+        if (timeComponents.isNotEmpty && timeComponents[0].length == 1) {
+          timeComponents[0] = '0${timeComponents[0]}';
+          timePart = timeComponents.join(':');
+        }
+
+        dateStr = '$datePart $timePart';
       }
 
       // Replace space between date and time with 'T' for ISO format
@@ -172,6 +211,75 @@ enum SwapDisplayStatus {
   refundable,
   refunded,
   failed,
+}
+
+/// Status of a pending transaction
+enum PendingTransactionStatus {
+  /// Transaction is being sent
+  sending,
+
+  /// Transaction was sent successfully
+  success,
+
+  /// Transaction failed
+  failed,
+}
+
+/// Represents a pending onchain transaction that is being processed in the background.
+class PendingTransaction {
+  final String id;
+  final String address;
+  final int amountSats;
+  final int createdAt;
+  PendingTransactionStatus status;
+  String? txid;
+  String? errorMessage;
+
+  PendingTransaction({
+    required this.id,
+    required this.address,
+    required this.amountSats,
+    required this.createdAt,
+    this.status = PendingTransactionStatus.sending,
+    this.txid,
+    this.errorMessage,
+  });
+
+  /// Check if this pending transaction matches a real transaction by txid
+  bool matchesTransaction(Transaction tx) {
+    if (txid == null) return false;
+    return tx.map(
+      boarding: (t) => t.txid == txid,
+      round: (t) => t.txid == txid,
+      redeem: (t) => t.txid == txid,
+      offboard: (t) => t.txid == txid,
+    );
+  }
+}
+
+/// A pending transaction activity item for display in the transaction history.
+class PendingActivityItem implements WalletActivityItem {
+  final PendingTransaction pending;
+
+  const PendingActivityItem(this.pending);
+
+  @override
+  int get timestamp =>
+      (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 2; // Float to very top
+
+  @override
+  String get id => pending.id;
+
+  @override
+  bool get isSwap => false;
+
+  int get amountSats => -pending.amountSats; // Negative for sends
+
+  bool get isSending => pending.status == PendingTransactionStatus.sending;
+  bool get isSuccess => pending.status == PendingTransactionStatus.success;
+  bool get isFailed => pending.status == PendingTransactionStatus.failed;
+
+  String get address => pending.address;
 }
 
 /// Extension to help with sorting and filtering.

@@ -103,6 +103,7 @@ enum SwapToken {
       case SwapToken.usdcEthereum:
         return 'USDC';
       case SwapToken.usdtPolygon:
+        return 'USDT0';
       case SwapToken.usdtEthereum:
         return 'USDT';
       case SwapToken.xautEthereum:
@@ -118,7 +119,7 @@ enum SwapToken {
       case SwapToken.usdcPolygon:
         return 'USDC (Polygon)';
       case SwapToken.usdtPolygon:
-        return 'USDT (Polygon)';
+        return 'USDT0 (Polygon)';
       case SwapToken.usdcEthereum:
         return 'USDC (Ethereum)';
       case SwapToken.usdtEthereum:

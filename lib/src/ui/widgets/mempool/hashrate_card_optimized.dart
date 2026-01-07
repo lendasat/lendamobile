@@ -135,9 +135,8 @@ class HashrateCardOptimized extends StatelessWidget {
               children: [
                 Icon(
                   isPositive ? Icons.trending_up : Icons.trending_down,
-                  color: isPositive
-                      ? AppTheme.successColor
-                      : AppTheme.errorColor,
+                  color:
+                      isPositive ? AppTheme.successColor : AppTheme.errorColor,
                   size: 16,
                 ),
                 const SizedBox(width: 4),

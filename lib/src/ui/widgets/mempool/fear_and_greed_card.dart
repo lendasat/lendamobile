@@ -281,8 +281,7 @@ class FearAndGreedCard extends StatelessWidget {
             children: [
               Icon(
                 isPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                color:
-                    isPositive ? AppTheme.successColor : AppTheme.errorColor,
+                color: isPositive ? AppTheme.successColor : AppTheme.errorColor,
                 size: 12,
               ),
               const SizedBox(width: 2),

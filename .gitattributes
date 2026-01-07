@@ -1,0 +1,47 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Force LF for all source files
+*.dart text eol=lf
+*.rs text eol=lf
+*.kt text eol=lf
+*.java text eol=lf
+*.swift text eol=lf
+*.m text eol=lf
+*.h text eol=lf
+
+# Config files
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.properties text eol=lf
+*.gradle text eol=lf
+*.toml text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+
+# Markdown and docs
+*.md text eol=lf
+
+# Git files
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Explicitly binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.otf binary
+*.zip binary
+*.jar binary
+*.so binary
+*.dylib binary
+*.a binary

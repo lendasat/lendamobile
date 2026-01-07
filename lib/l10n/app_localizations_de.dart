@@ -443,6 +443,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get date => 'Datum';
 
   @override
+  String get time => 'Uhrzeit';
+
+  @override
+  String get transactionVolume => 'Transaktionsvolumen';
+
+  @override
   String get confirmedAt => 'Bestätigt am';
 
   @override
@@ -807,6 +813,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sendNow => 'SEND NOW';
 
   @override
+  String get notEnoughFunds => 'Nicht genügend Guthaben';
+
+  @override
   String get recipient => 'Recipient';
 
   @override
@@ -1052,4 +1061,251 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get registrationWarning =>
       'Account registration had an issue. You can still use your wallet.';
+
+  @override
+  String get legalInformation => 'Rechtliches';
+
+  @override
+  String get termsAndConditionsTitle1 => 'Allgemeine';
+
+  @override
+  String get termsAndConditionsTitle2 => 'Geschäftsbedingungen';
+
+  @override
+  String get lastUpdated => 'Stand: Dezember 2025';
+
+  @override
+  String get alphaVersion => 'Alpha-Version';
+
+  @override
+  String get alphaVersionWarning =>
+      'Diese App befindet sich in der Entwicklung. Nutzung auf eigenes Risiko.';
+
+  @override
+  String get agbScopeTitle => 'Anwendungsbereich';
+
+  @override
+  String get agbScopeContent =>
+      'Diese Geschäftsbedingungen regeln die Nutzung der Bitcoin-Wallet-App (im Folgenden Lenda), die von COBLOX PTY LTD bereitgestellt wird. Durch die Nutzung der App erklären Sie sich mit diesen Geschäftsbedingungen einverstanden.';
+
+  @override
+  String get agbFunctionalityTitle => 'Funktionalität';
+
+  @override
+  String get agbFunctionalityContent =>
+      'Die App ermöglicht es Benutzern, Bitcoins zu empfangen, zu senden und zu verwalten. Die App ist keine Bank und bietet keine Bankdienstleistungen an. Zusätzlich werden Taproot Assets, auch bekannt als digitale Assets, als Dienstleistungsplattform angeboten und verkauft.';
+
+  @override
+  String get agbUserResponsibilityTitle => 'Verantwortung des Benutzers';
+
+  @override
+  String get agbUserResponsibilityContent =>
+      'Der Benutzer ist allein für die Sicherheit seiner Bitcoins verantwortlich. Die App bietet Schutzfunktionen wie Passwortschutz und Zwei-Faktor-Authentifizierung, aber es liegt in der Verantwortung des Benutzers, diese Funktionen sorgfältig zu verwenden. COBLOX PTY LTD haftet nicht für Verluste, die aufgrund von Unachtsamkeit, Verlust von Geräten oder Zugangsdaten des Benutzers entstehen.';
+
+  @override
+  String get agbFeesTitle => 'Gebühren';
+
+  @override
+  String get agbFeesContent =>
+      'Für bestimmte Funktionen der App können Gebühren anfallen. Diese Gebühren werden dem Benutzer im Vorfeld mitgeteilt und sind in der App ersichtlich.';
+
+  @override
+  String get agbLiabilityTitle => 'Haftungsbeschränkung';
+
+  @override
+  String get agbLiabilityContent =>
+      'COBLOX PTY LTD haftet nur für Schäden, die durch vorsätzliches oder grob fahrlässiges Handeln von COBLOX PTY LTD verursacht werden. COBLOX PTY LTD haftet nicht für Schäden, die aus der Nutzung der App oder dem Verlust von Bitcoins resultieren.';
+
+  @override
+  String get agbChangesTitle => 'Änderungen';
+
+  @override
+  String get agbChangesContent =>
+      'COBLOX PTY LTD behält sich das Recht vor, diese Geschäftsbedingungen jederzeit zu ändern. Der Benutzer wird über solche Änderungen informiert und muss diesen zustimmen, um die App weiterhin nutzen zu können.';
+
+  @override
+  String get agbFinalProvisionsTitle => 'Schlussbestimmungen';
+
+  @override
+  String get agbFinalProvisionsContent =>
+      'Diese Geschäftsbedingungen stellen die gesamte Vereinbarung zwischen dem Benutzer und COBLOX PTY LTD dar. Sollte eine Bestimmung unwirksam sein, bleiben die übrigen Bestimmungen in Kraft.';
+
+  @override
+  String get contact => 'Kontakt';
+
+  @override
+  String get responsibleForContent => 'Verantwortlich für den Inhalt';
+
+  @override
+  String get disclaimer => 'Haftungsausschluss';
+
+  @override
+  String get disclaimerContent =>
+      'Der Anbieter übernimmt keinerlei Gewähr für die Aktualität, Korrektheit, Vollständigkeit oder Qualität der bereitgestellten Informationen. Haftungsansprüche gegen den Anbieter sind grundsätzlich ausgeschlossen, sofern kein nachweislich vorsätzliches oder grob fahrlässiges Verschulden vorliegt.';
+
+  @override
+  String get allRightsReserved => 'Alle Rechte vorbehalten';
+
+  @override
+  String get loansAndLeverage => 'Kredit-Marktplatz';
+
+  @override
+  String get availableOffers => 'Verfügbare Angebote';
+
+  @override
+  String get myContracts => 'Meine Verträge';
+
+  @override
+  String get signInRequired => 'Anmeldung erforderlich';
+
+  @override
+  String get signInToViewContracts =>
+      'Melden Sie sich an, um Ihre Verträge anzuzeigen und Kredite aufzunehmen.';
+
+  @override
+  String get noArkadeOffersAvailable => 'Keine Arkade-Angebote verfügbar';
+
+  @override
+  String get signInToViewYourContracts =>
+      'Melden Sie sich an, um Ihre Verträge anzuzeigen';
+
+  @override
+  String get noContractsMatchSearch => 'Keine Verträge entsprechen Ihrer Suche';
+
+  @override
+  String get noContractsYet =>
+      'Noch keine Verträge. Nehmen Sie ein Angebot an!';
+
+  @override
+  String get duration => 'Dauer';
+
+  @override
+  String get minLtv => 'Min. LTV';
+
+  @override
+  String get limitedTimeOffer => 'Zeitlich begrenztes Angebot — super günstig!';
+
+  @override
+  String get interest => 'Zinsen';
+
+  @override
+  String get due => 'Fällig';
+
+  @override
+  String get overdue => 'Überfällig';
+
+  @override
+  String get swapDetails => 'Swap-Details';
+
+  @override
+  String get errorLoadingSwap => 'Fehler beim Laden des Swaps';
+
+  @override
+  String get refundAddress => 'Rückerstattungsadresse';
+
+  @override
+  String get fundSwap => 'Swap finanzieren';
+
+  @override
+  String get youSend => 'Sie senden';
+
+  @override
+  String get youReceive => 'Sie erhalten';
+
+  @override
+  String get walletConnected => 'Wallet verbunden';
+
+  @override
+  String get switchWallet => 'Wechseln';
+
+  @override
+  String get creatingSwap => 'Swap wird erstellt...';
+
+  @override
+  String get approvingToken => 'Token wird genehmigt...';
+
+  @override
+  String get creatingHtlc => 'HTLC wird erstellt...';
+
+  @override
+  String get swapFundedSuccessfully => 'Swap erfolgreich finanziert!';
+
+  @override
+  String get feedback => 'Feedback';
+
+  @override
+  String get continueButton => 'Weiter';
+
+  @override
+  String get paste => 'Einfügen';
+
+  @override
+  String get scanQr => 'QR scannen';
+
+  @override
+  String get youPay => 'Sie zahlen';
+
+  @override
+  String get totalFeesLabel => 'Gesamtgebühren';
+
+  @override
+  String get beforeFees => 'vor Gebühren';
+
+  @override
+  String get networkFee => 'Netzwerk';
+
+  @override
+  String get protocolFee => 'Protokoll';
+
+  @override
+  String get receivingAddress => 'Empfangsadresse';
+
+  @override
+  String get waitingForDeposit => 'Warte auf Einzahlung';
+
+  @override
+  String get processing => 'Wird verarbeitet';
+
+  @override
+  String get completed => 'Abgeschlossen';
+
+  @override
+  String get expired => 'Abgelaufen';
+
+  @override
+  String get refundable => 'Erstattungsfähig';
+
+  @override
+  String get refundedStatus => 'Erstattet';
+
+  @override
+  String get failed => 'Fehlgeschlagen';
+
+  @override
+  String get confirmSwap => 'Swap bestätigen';
+
+  @override
+  String get unknownError => 'Unbekannter Fehler';
+
+  @override
+  String get sendFeedback => 'Feedback senden';
+
+  @override
+  String get sender => 'Absender';
+
+  @override
+  String get receiver => 'Empfänger';
+
+  @override
+  String get scan => 'Scannen';
+
+  @override
+  String get aboutLendasat => 'Über LendaSat';
+
+  @override
+  String get lendasatInfoDescription =>
+      'LendaSat ist ein Bitcoin Peer-to-Peer Kreditmarktplatz. Wir fungieren als Plattform, die Sie mit privaten Kreditgebern verbindet, die das Kapital bereitstellen. Ihr Bitcoin dient als Sicherheit und Sie erhalten den Kreditbetrag direkt. Alle Transaktionen werden durch Smart Contracts im Bitcoin-Netzwerk abgesichert.';
+
+  @override
+  String get learnMoreAboutLendasat => 'Erfahren Sie mehr über LendaSat';
 }

@@ -1,5 +1,38 @@
 # Recompiling the App from Linux/WSL
 
+## IMPORTANT: When to Recompile Rust
+
+**Any changes to Rust code (`rust/src/**/*.rs`) require recompilation!**
+
+Flutter does NOT automatically rebuild Rust code. If you modify any `.rs` file, you MUST manually recompile before running the app, otherwise the old binary will be used.
+
+### Quick Recompile Command
+
+```bash
+# From WSL/Linux - run this after ANY Rust changes:
+export ANDROID_NDK_HOME=~/android-sdk/android-ndk-r27c && \
+cd /mnt/c/Users/tobia/StudioProjects/lendamobile/rust && \
+cargo ndk -t arm64-v8a -o ../android/app/src/main/jniLibs build --release
+```
+
+### How to Verify Your Changes Are Applied
+
+Check the library timestamp after building:
+```bash
+ls -la android/app/src/main/jniLibs/arm64-v8a/*.so
+```
+
+The timestamp should be recent (after your code changes).
+
+### Common Mistake
+
+If you see unexpected behavior after changing Rust code:
+1. Check if the `.so` file timestamp is older than your code changes
+2. If yes, you forgot to recompile - run the command above
+3. Then restart the app
+
+---
+
 This guide explains how to build the Rust native libraries from Linux/WSL when the Windows build fails due to OpenSSL/Perl compatibility issues.
 
 ## Problem
