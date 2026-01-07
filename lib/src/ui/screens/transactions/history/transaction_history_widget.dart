@@ -12,6 +12,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/utils/date_formatter.dart';
+import 'package:ark_flutter/src/utils/number_formatter.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
@@ -842,7 +843,7 @@ class _TransactionItemWidget extends StatelessWidget {
                               children: [
                                 Text(
                                   showBtcAsMain
-                                      ? '${amountSats.isNegative ? "" : "+"}${amountSats.abs()}'
+                                      ? NumberFormatter.formatSats(amountSats, showSign: true)
                                       : '${amountSats.isNegative ? "-" : "+"}${currencyService.formatAmount(fiatAmount.abs())}',
                                   overflow: TextOverflow.ellipsis,
                                   style:
