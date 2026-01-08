@@ -21,6 +21,7 @@ rust/src/ark/
 ```
 
 **Current flow:**
+
 ```rust
 // setup_new_wallet() in mod.rs
 let mut random_bytes = [0u8; 32];
@@ -30,6 +31,7 @@ write_seed_file(&sk, data_dir)?;  // Stores raw hex bytes
 ```
 
 **Current backup/restore:**
+
 - Export: `nsec` (Nostr bech32 encoding of raw secret key)
 - Import: Parse `nsec` → SecretKey → store
 
@@ -58,6 +60,7 @@ BIP39 Mnemonic (12 or 24 words)
 ```
 
 Both Ark SDK and LendaSwap SDK use the same BIP-85 prefix (`83696968`), with different application identifiers:
+
 - Ark: `11811`
 - LendaSwap: `121923` (encodes "LSW")
 
@@ -74,7 +77,7 @@ bip39 = "2.0"
 #### 2. Create new mnemonic storage (`rust/src/ark/mnemonic_file.rs`)
 
 ```rust
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
@@ -112,8 +115,7 @@ pub fn read_mnemonic_file(data_dir: &str) -> Result<Option<String>> {
         .map_err(|e| anyhow!("Failed to read mnemonic file: {}", e))?;
 
     // Validate mnemonic
-    bip39::Mnemonic::parse(&mnemonic)
-        .map_err(|e| anyhow!("Invalid mnemonic in file: {}", e))?;
+    bip39::Mnemonic::parse(&mnemonic).map_err(|e| anyhow!("Invalid mnemonic in file: {}", e))?;
 
     tracing::debug!(path = ?mnemonic_path, "Successfully read mnemonic from file");
     Ok(Some(mnemonic.trim().to_string()))
@@ -142,8 +144,8 @@ pub fn delete_mnemonic_file(data_dir: &str) -> Result<()> {
 ```rust
 mod mnemonic_file;
 
-use mnemonic_file::{write_mnemonic_file, read_mnemonic_file, mnemonic_exists};
-use bip39::{Mnemonic, Language};
+use bip39::{Language, Mnemonic};
+use mnemonic_file::{mnemonic_exists, read_mnemonic_file, write_mnemonic_file};
 
 /// Create a new wallet with mnemonic
 pub async fn setup_new_wallet(
@@ -165,14 +167,9 @@ pub async fn setup_new_wallet(
     write_mnemonic_file(&mnemonic_str, &data_dir)?;
 
     // Setup client with mnemonic (Ark SDK handles derivation)
-    let pubkey = setup_client_with_mnemonic(
-        &mnemonic_str,
-        network,
-        esplora,
-        server,
-        boltz_url,
-        data_dir,
-    ).await?;
+    let pubkey =
+        setup_client_with_mnemonic(&mnemonic_str, network, esplora, server, boltz_url, data_dir)
+            .await?;
 
     Ok(pubkey)
 }
@@ -189,21 +186,15 @@ pub async fn restore_wallet_from_mnemonic(
     crate::init_crypto_provider();
 
     // Validate mnemonic
-    Mnemonic::parse(&mnemonic)
-        .map_err(|e| anyhow!("Invalid mnemonic: {}", e))?;
+    Mnemonic::parse(&mnemonic).map_err(|e| anyhow!("Invalid mnemonic: {}", e))?;
 
     // Store mnemonic
     write_mnemonic_file(&mnemonic, &data_dir)?;
 
     // Setup client
-    let pubkey = setup_client_with_mnemonic(
-        &mnemonic,
-        network,
-        esplora,
-        server,
-        boltz_url,
-        data_dir,
-    ).await?;
+    let pubkey =
+        setup_client_with_mnemonic(&mnemonic, network, esplora, server, boltz_url, data_dir)
+            .await?;
 
     Ok(pubkey)
 }
@@ -221,13 +212,9 @@ pub async fn load_existing_wallet(
     // Try mnemonic first (new format)
     if let Some(mnemonic) = read_mnemonic_file(&data_dir)? {
         return setup_client_with_mnemonic(
-            &mnemonic,
-            network,
-            esplora,
-            server,
-            boltz_url,
-            data_dir,
-        ).await;
+            &mnemonic, network, esplora, server, boltz_url, data_dir,
+        )
+        .await;
     }
 
     // Fall back to legacy seed file
@@ -305,7 +292,8 @@ pub async fn create_wallet_with_mnemonic(
     boltz_url: String,
 ) -> Result<WalletCreationResult> {
     let network = parse_network(&network)?;
-    let pubkey = crate::ark::setup_new_wallet(data_dir.clone(), network, esplora, server, boltz_url).await?;
+    let pubkey =
+        crate::ark::setup_new_wallet(data_dir.clone(), network, esplora, server, boltz_url).await?;
     let mnemonic = crate::ark::export_mnemonic(data_dir)?;
 
     Ok(WalletCreationResult { pubkey, mnemonic })
@@ -326,7 +314,10 @@ pub async fn restore_wallet_from_mnemonic(
     boltz_url: String,
 ) -> Result<String> {
     let network = parse_network(&network)?;
-    crate::ark::restore_wallet_from_mnemonic(mnemonic, data_dir, network, esplora, server, boltz_url).await
+    crate::ark::restore_wallet_from_mnemonic(
+        mnemonic, data_dir, network, esplora, server, boltz_url,
+    )
+    .await
 }
 
 /// Export mnemonic for backup display
@@ -347,16 +338,20 @@ pub fn get_wallet_type(data_dir: String) -> Result<String> {
 ## Migration Strategy
 
 ### For new users
+
 - Automatically use mnemonic-based wallet
 - Show mnemonic backup screen after creation
 
 ### For existing users (legacy seed)
+
 Two options:
 
 **Option A: Automatic migration (if possible)**
+
 - Not recommended - would require deriving mnemonic from seed (not standard)
 
 **Option B: Manual migration (recommended)**
+
 1. Detect legacy wallet on app open
 2. Show migration prompt: "Upgrade to recovery phrase backup"
 3. User creates new mnemonic wallet

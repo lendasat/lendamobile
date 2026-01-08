@@ -322,8 +322,8 @@ class BoundInputFormatter extends TextInputFormatter {
           convertedNewValue =
               convertedNewValue / BitcoinConstants.satsPerBtc; // Convert to BTC
         } else {
-          convertedNewValue =
-              convertedNewValue * BitcoinConstants.satsPerBtc; // Convert to sats
+          convertedNewValue = convertedNewValue *
+              BitcoinConstants.satsPerBtc; // Convert to sats
         }
       }
 

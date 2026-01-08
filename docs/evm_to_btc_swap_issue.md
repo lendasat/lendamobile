@@ -39,6 +39,7 @@ The LendaSwap server detects deposits by listening for `SwapCreated` events emit
 The user's USDC/tokens are in their **external wallet** (MetaMask). The app doesn't have access to that wallet's private key. To execute any transaction from that wallet, we need the user's signature.
 
 Current app behavior (`lendaswap_service.dart:183`):
+
 ```dart
 userEvmAddress: '0x0000000000000000000000000000000000000000', // Dummy!
 ```
@@ -55,7 +56,7 @@ The LendaSwap SDK returns `create_swap_tx` which contains the calldata needed to
 // In lendaswap-core SDK (client-sdk/core/src/api/types.rs)
 pub struct EvmToBtcSwapResponse {
     // ... other fields ...
-    pub create_swap_tx: Option<String>,  // <-- This is the key field!
+    pub create_swap_tx: Option<String>, // <-- This is the key field!
     pub approve_tx: Option<String>,
     // ...
 }
@@ -92,6 +93,7 @@ User calls createSwap() → SwapCreated event emitted → Server detects → Swa
 ### Why WalletConnect is the Only Real Solution
 
 All other approaches have fundamental problems:
+
 - **Manual calldata:** Users will still just send tokens incorrectly
 - **Deep links to website:** Poor UX, context switching
 - **Gelato signatures:** Still needs WalletConnect to get the user's signature!
@@ -106,7 +108,7 @@ WalletConnect is the industry standard for connecting mobile apps to external wa
 # pubspec.yaml
 dependencies:
   walletconnect_flutter_v2: ^2.x.x
-  web3dart: ^2.x.x  # For transaction building
+  web3dart: ^2.x.x # For transaction building
 ```
 
 #### Step 2: Create Wallet Connection Service
@@ -203,9 +205,8 @@ Future<void> _fundEvmSwap(EvmToBtcSwapResult swap) async {
 // rust/src/api/lendaswap_api.rs
 pub struct EvmToBtcSwapResult {
     // ... existing fields ...
-
     /// Pre-built calldata for createSwap() contract call
-    pub create_swap_tx: Option<String>,  // ADD THIS
+    pub create_swap_tx: Option<String>, // ADD THIS
 }
 ```
 
@@ -222,11 +223,11 @@ The contracts already support this via `ERC2771Forwarder`.
 
 ### Flutter Packages to Use
 
-| Package | Purpose |
-|---------|---------|
-| `walletconnect_flutter_v2` | WalletConnect protocol |
-| `web3dart` | Ethereum transaction building |
-| `eth_sig_util` | EIP-712 signing (for Gelato) |
+| Package                    | Purpose                       |
+| -------------------------- | ----------------------------- |
+| `walletconnect_flutter_v2` | WalletConnect protocol        |
+| `web3dart`                 | Ethereum transaction building |
+| `eth_sig_util`             | EIP-712 signing (for Gelato)  |
 
 ### UI Flow
 

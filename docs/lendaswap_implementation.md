@@ -34,6 +34,7 @@ ark-secp256k1 = { git = "https://github.com/ArkLabsHQ/ark-rs.git", rev = "201aea
 **Why this works:** Both repositories (`arkade-os/rust-sdk` and `ArkLabsHQ/ark-rs`) use the same git revision `201aeac`, so the code is compatible. The patch redirects all lendaswap SDK dependencies to use the same ark-rs source as the mobile wallet, eliminating the native library conflict.
 
 **If you encounter issues after updating ark-rs:**
+
 1. Ensure both the mobile app's ark-rs and the patch use the same revision
 2. Run `cargo update` to refresh the lock file
 3. If revisions diverge, you may need to update the lendaswap SDK or coordinate the versions
@@ -101,12 +102,12 @@ pub use types::*;
 
 ```rust
 use anyhow::Result;
-use lendaswap_core::storage::{SwapStorage, WalletStorage};
 use lendaswap_core::client::ExtendedSwapStorageData;
+use lendaswap_core::storage::{SwapStorage, WalletStorage};
+use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use std::collections::HashMap;
 
 /// File-based wallet storage for LendaSwap
 pub struct FileWalletStorage {
@@ -213,16 +214,16 @@ impl SwapStorage for SqliteSwapStorage {
 #### Step 1.4: Create LendaSwap client wrapper (`rust/src/lendaswap/client.rs`)
 
 ```rust
+use crate::lendaswap::storage::{FileWalletStorage, SqliteSwapStorage};
 use anyhow::{Result, anyhow, bail};
-use lendaswap_core::{Client, Network};
 use lendaswap_core::api::{
-    AssetPair, BtcToEvmSwapResponse, EvmToBtcSwapResponse,
-    QuoteRequest, QuoteResponse, TokenId, EvmChain,
+    AssetPair, BtcToEvmSwapResponse, EvmChain, EvmToBtcSwapResponse, QuoteRequest, QuoteResponse,
+    TokenId,
 };
+use lendaswap_core::{Client, Network};
+use parking_lot::RwLock;
 use rust_decimal::Decimal;
 use std::sync::Arc;
-use parking_lot::RwLock;
-use crate::lendaswap::storage::{FileWalletStorage, SqliteSwapStorage};
 
 // Global LendaSwap client state
 use state::InitCell;
@@ -248,13 +249,7 @@ pub async fn init_lendaswap(
     let wallet_storage = FileWalletStorage::new(data_dir.clone());
     let swap_storage = SqliteSwapStorage::new(&data_dir).await?;
 
-    let client = Client::new(
-        api_url,
-        wallet_storage,
-        swap_storage,
-        network,
-        arkade_url,
-    );
+    let client = Client::new(api_url, wallet_storage, swap_storage, network, arkade_url);
 
     // Initialize with existing mnemonic (shared with Ark wallet)
     client.init(None).await?;
@@ -289,44 +284,48 @@ pub async fn get_quote(
 
 /// Create BTC → EVM swap (sell BTC for stablecoins)
 pub async fn create_btc_to_evm_swap(
-    target_address: String,      // User's EVM address to receive tokens
-    target_amount: f64,          // Amount of tokens to receive (e.g., 100.0 USDC)
-    target_token: TokenId,       // e.g., TokenId::UsdcPol
-    target_chain: EvmChain,      // e.g., EvmChain::Polygon
+    target_address: String, // User's EVM address to receive tokens
+    target_amount: f64,     // Amount of tokens to receive (e.g., 100.0 USDC)
+    target_token: TokenId,  // e.g., TokenId::UsdcPol
+    target_chain: EvmChain, // e.g., EvmChain::Polygon
 ) -> Result<BtcToEvmSwapResponse> {
     let client = get_client()?;
-    let amount = Decimal::try_from(target_amount)
-        .map_err(|e| anyhow!("Invalid amount: {}", e))?;
+    let amount = Decimal::try_from(target_amount).map_err(|e| anyhow!("Invalid amount: {}", e))?;
 
-    client.client().create_arkade_to_evm_swap(
-        target_address,
-        amount,
-        target_token,
-        target_chain,
-        None, // referral_code
-    ).await
+    client
+        .client()
+        .create_arkade_to_evm_swap(
+            target_address,
+            amount,
+            target_token,
+            target_chain,
+            None, // referral_code
+        )
+        .await
 }
 
 /// Create EVM → BTC swap (buy BTC with stablecoins)
 pub async fn create_evm_to_btc_swap(
-    target_address: String,      // User's Ark address to receive BTC
-    user_evm_address: String,    // User's EVM address (source of funds)
-    source_amount: f64,          // Amount of tokens to spend
-    source_token: TokenId,       // e.g., TokenId::UsdcPol
-    source_chain: EvmChain,      // e.g., EvmChain::Polygon
+    target_address: String,   // User's Ark address to receive BTC
+    user_evm_address: String, // User's EVM address (source of funds)
+    source_amount: f64,       // Amount of tokens to spend
+    source_token: TokenId,    // e.g., TokenId::UsdcPol
+    source_chain: EvmChain,   // e.g., EvmChain::Polygon
 ) -> Result<EvmToBtcSwapResponse> {
     let client = get_client()?;
-    let amount = Decimal::try_from(source_amount)
-        .map_err(|e| anyhow!("Invalid amount: {}", e))?;
+    let amount = Decimal::try_from(source_amount).map_err(|e| anyhow!("Invalid amount: {}", e))?;
 
-    client.client().create_evm_to_arkade_swap(
-        target_address,
-        user_evm_address,
-        amount,
-        source_token,
-        source_chain,
-        None, // referral_code
-    ).await
+    client
+        .client()
+        .create_evm_to_arkade_swap(
+            target_address,
+            user_evm_address,
+            amount,
+            source_token,
+            source_chain,
+            None, // referral_code
+        )
+        .await
 }
 
 /// Create EVM → Lightning swap (pay Lightning invoice with stablecoins)
@@ -338,13 +337,16 @@ pub async fn create_evm_to_lightning_swap(
 ) -> Result<EvmToBtcSwapResponse> {
     let client = get_client()?;
 
-    client.client().create_evm_to_lightning_swap(
-        bolt11_invoice,
-        user_evm_address,
-        source_token,
-        source_chain,
-        None, // referral_code
-    ).await
+    client
+        .client()
+        .create_evm_to_lightning_swap(
+            bolt11_invoice,
+            user_evm_address,
+            source_token,
+            source_chain,
+            None, // referral_code
+        )
+        .await
 }
 
 /// Get swap status by ID
@@ -374,7 +376,10 @@ pub async fn claim_vhtlc(swap_id: String) -> Result<String> {
 /// Refund VHTLC (for failed BTC → EVM swaps)
 pub async fn refund_vhtlc(swap_id: String, refund_address: String) -> Result<String> {
     let client = get_client()?;
-    client.client().refund_vhtlc(&swap_id, &refund_address).await
+    client
+        .client()
+        .refund_vhtlc(&swap_id, &refund_address)
+        .await
 }
 
 /// Recover swaps from server (after mnemonic restore)
@@ -439,7 +444,9 @@ impl SwapToken {
             SwapToken::BtcArkade => "Arkade",
             SwapToken::BtcLightning => "Lightning",
             SwapToken::UsdcPolygon | SwapToken::UsdtPolygon => "Polygon",
-            SwapToken::UsdcEthereum | SwapToken::UsdtEthereum | SwapToken::XautEthereum => "Ethereum",
+            SwapToken::UsdcEthereum | SwapToken::UsdtEthereum | SwapToken::XautEthereum => {
+                "Ethereum"
+            }
         }
     }
 
@@ -493,14 +500,14 @@ pub struct SwapInfo {
 #### Step 2.1: Create API module (`rust/src/api/lendaswap_api.rs`)
 
 ```rust
-use crate::lendaswap::{self, SwapToken, SwapInfo, SwapStatus};
+use crate::lendaswap::{self, SwapInfo, SwapStatus, SwapToken};
 use anyhow::Result;
 
 /// Initialize LendaSwap (call after wallet is loaded)
 pub async fn init_lendaswap(
     data_dir: String,
-    network: String,  // "bitcoin", "testnet", "regtest"
-    api_url: String,  // "https://api.lendaswap.com" or testnet URL
+    network: String, // "bitcoin", "testnet", "regtest"
+    api_url: String, // "https://api.lendaswap.com" or testnet URL
     arkade_url: String,
 ) -> Result<()> {
     let network = match network.as_str() {
@@ -515,18 +522,14 @@ pub async fn init_lendaswap(
 
 /// Get exchange rate quote
 pub async fn get_swap_quote(
-    from_token: String,  // "btc_arkade", "usdc_pol", etc.
+    from_token: String, // "btc_arkade", "usdc_pol", etc.
     to_token: String,
     amount_sats: u64,
 ) -> Result<SwapQuote> {
     let from = parse_token(&from_token)?;
     let to = parse_token(&to_token)?;
 
-    let quote = lendaswap::get_quote(
-        from.to_token_id(),
-        to.to_token_id(),
-        amount_sats,
-    ).await?;
+    let quote = lendaswap::get_quote(from.to_token_id(), to.to_token_id(), amount_sats).await?;
 
     Ok(SwapQuote {
         exchange_rate: quote.exchange_rate.parse().unwrap_or(0.0),
@@ -550,7 +553,7 @@ pub struct SwapQuote {
 pub async fn create_sell_btc_swap(
     target_evm_address: String,
     usd_amount: f64,
-    target_token: String,  // "usdc_pol", "usdt_eth", etc.
+    target_token: String, // "usdc_pol", "usdt_eth", etc.
 ) -> Result<SwapInfo> {
     let token = parse_token(&target_token)?;
     let chain = get_evm_chain(&token)?;
@@ -560,7 +563,8 @@ pub async fn create_sell_btc_swap(
         usd_amount,
         token.to_token_id(),
         chain,
-    ).await?;
+    )
+    .await?;
 
     // Convert to SwapInfo for Flutter
     Ok(SwapInfo {
@@ -592,7 +596,8 @@ pub async fn create_buy_btc_swap(
         usd_amount,
         token.to_token_id(),
         chain,
-    ).await?;
+    )
+    .await?;
 
     Ok(SwapInfo {
         id: response.common.id.to_string(),
@@ -645,7 +650,9 @@ fn parse_token(token: &str) -> Result<SwapToken> {
 
 fn get_evm_chain(token: &SwapToken) -> Result<lendaswap_core::api::EvmChain> {
     match token {
-        SwapToken::UsdcPolygon | SwapToken::UsdtPolygon => Ok(lendaswap_core::api::EvmChain::Polygon),
+        SwapToken::UsdcPolygon | SwapToken::UsdtPolygon => {
+            Ok(lendaswap_core::api::EvmChain::Polygon)
+        }
         SwapToken::UsdcEthereum | SwapToken::UsdtEthereum | SwapToken::XautEthereum => {
             Ok(lendaswap_core::api::EvmChain::Ethereum)
         }
@@ -666,11 +673,11 @@ fn convert_to_swap_info(data: lendaswap_core::client::ExtendedSwapStorageData) -
 // rust/src/api/mod.rs
 pub mod ark_api;
 pub mod bitcoin_api;
+pub mod lendaswap_api;
 pub mod mempool_api;
 pub mod mempool_block_tracker;
 pub mod mempool_ws;
-pub mod moonpay_api;
-pub mod lendaswap_api;  // Add this
+pub mod moonpay_api; // Add this
 ```
 
 ### Phase 3: Flutter UI Implementation
@@ -835,6 +842,7 @@ class LendaSwapConfig {
 ## Testing Checklist
 
 ### Unit Tests
+
 - [ ] Token parsing works correctly
 - [ ] Quote fetching returns valid data
 - [ ] Swap creation returns expected response
@@ -842,12 +850,14 @@ class LendaSwapConfig {
 - [ ] Claim/refund operations work
 
 ### Integration Tests
+
 - [ ] Full BTC → USDC swap flow on testnet
 - [ ] Full USDC → BTC swap flow on testnet
 - [ ] Swap recovery after app restart
 - [ ] Same mnemonic on web shows same swaps
 
 ### UI Tests
+
 - [ ] Asset selector shows all tokens
 - [ ] Amount input validates correctly
 - [ ] Address input validates EVM/Ark addresses

@@ -12,7 +12,9 @@ You are a senior integration architect with deep expertise in LendaSat protocol 
 ## Your Core Knowledge Areas
 
 ### LendaSat Integration Architecture
+
 You understand the complete LendaSat integration including:
+
 - How the iframe-based LendaSat interface communicates with the host application
 - Message passing protocols between the app and LendaSat iframe
 - Authentication and session management with LendaSat services
@@ -26,11 +28,11 @@ lendamobile uses a **dual-key architecture** that is intentional and secure:
 
 ### Key Derivation Paths
 
-| Derivation Path | Key Name | Purpose |
-|-----------------|----------|---------|
-| `m/83696968'/11811'/0/0` | **Ark Identity** | `borrower_pk`, VTXO ownership, ALL collateral operations |
-| `m/10101'/0'/0` | **Lendasat Auth** | Authentication ONLY (registration, login challenges) |
-| `m/44'/0'/0'/0/0` | Nostr | Nostr identity, PostHog user ID |
+| Derivation Path          | Key Name          | Purpose                                                  |
+| ------------------------ | ----------------- | -------------------------------------------------------- |
+| `m/83696968'/11811'/0/0` | **Ark Identity**  | `borrower_pk`, VTXO ownership, ALL collateral operations |
+| `m/10101'/0'/0`          | **Lendasat Auth** | Authentication ONLY (registration, login challenges)     |
+| `m/44'/0'/0'/0/0`        | Nostr             | Nostr identity, PostHog user ID                          |
 
 ### Why Two Keys? Security Isolation
 
@@ -48,18 +50,19 @@ LOW RISK                           HIGH VALUE
 ```
 
 **Benefits:**
+
 1. Compromising auth doesn't compromise collateral
 2. Clear separation of concerns
 3. Ark compatibility for collateral operations
 
 ### Comparison with Arkade Wallet
 
-| Operation | lendamobile | Arkade Wallet |
-|-----------|-------------|---------------|
-| Registration | Lendasat key | Ark identity |
-| Login signing | Lendasat key | Ark identity |
-| `borrower_pk` | **Ark identity** | Ark identity |
-| Claim signing | **Ark identity** | Ark identity |
+| Operation     | lendamobile      | Arkade Wallet |
+| ------------- | ---------------- | ------------- |
+| Registration  | Lendasat key     | Ark identity  |
+| Login signing | Lendasat key     | Ark identity  |
+| `borrower_pk` | **Ark identity** | Ark identity  |
+| Claim signing | **Ark identity** | Ark identity  |
 
 **Note:** Arkade uses ONE key for everything. lendamobile separates auth from collateral for security isolation.
 
@@ -70,12 +73,14 @@ LOW RISK                           HIGH VALUE
 **All LendaSat collateral uses Ark VTXOs (off-chain).** There is NO on-chain BTC collateral support.
 
 This means:
+
 - Collateral is deposited to Ark offchain addresses (VTXOs)
 - Collateral claims use Ark-specific flows (`claimArkCollateral`)
 - All signing uses the Ark identity key
 - The old on-chain claim/recover methods have been removed
 
 **Claim Flows:**
+
 1. **Offchain claim** (`_claimArkViaOffchain`) - For non-recoverable VTXOs
 2. **Settlement claim** (`_claimArkViaSettlement`) - For recoverable VTXOs requiring Ark settlement
 
@@ -96,6 +101,7 @@ Headers:
 ```
 
 The JWT token:
+
 - Obtained during login (signed with Lendasat key)
 - Contains user_id claim
 - Used for ALL subsequent API calls
@@ -111,6 +117,7 @@ Fetch:  JWT identifies user → returns contracts for that user_id
 ```
 
 This means:
+
 - The dual-key system does NOT affect contract retrieval
 - You see all contracts YOU created (via your JWT session)
 - `borrower_pk` is metadata for PSBT signing, not for user association
@@ -119,10 +126,10 @@ This means:
 
 Users have **SEPARATE accounts** on lendamobile vs Arkade:
 
-| Wallet | Registration Key | Result |
-|--------|------------------|--------|
-| lendamobile | Lendasat key | user_123 |
-| Arkade | Ark identity | user_456 |
+| Wallet      | Registration Key | Result   |
+| ----------- | ---------------- | -------- |
+| lendamobile | Lendasat key     | user_123 |
+| Arkade      | Ark identity     | user_456 |
 
 **Contracts do not transfer between wallets.** This is acceptable because each wallet is self-contained.
 
@@ -131,20 +138,24 @@ Users have **SEPARATE accounts** on lendamobile vs Arkade:
 ## Complete Loan Flow
 
 ### Step 1: Registration
+
 - User registers with Lendasat key (`m/10101'/0'/0`)
 - Signs challenge with Lendasat key
 - Receives JWT token
 
 ### Step 2: Create Contract
+
 - `borrower_pk` = Ark identity via `get_ark_identity_pubkey()`
 - `borrower_btc_address` = Ark offchain address
 - Request sent with JWT token
 
 ### Step 3: Pay Collateral
+
 - Send VTXO to Ark address
 - VTXO locked to Ark identity key
 
 ### Step 4: Claim Collateral
+
 - Server creates PSBT with `tap_internal_key` = `borrower_pk` (Ark identity)
 - Sign with `sign_psbt_with_ark_identity()`
 - Keys match → claim succeeds
@@ -154,10 +165,12 @@ Users have **SEPARATE accounts** on lendamobile vs Arkade:
 ## Reference Implementations
 
 You have studied two key reference implementations:
+
 1. **~/lendasat/iframe** - The iframe integration code showing how LendaSat's web interface is embedded
 2. **~/lendasat/wallet** - The Arkade wallet's successful LendaSat integration which serves as the reference implementation
 
 **Arkade wallet key usage** (`~/lendasat/wallet/src/screens/Apps/Lendasat/Index.tsx`):
+
 ```typescript
 onGetPublicKey: async () => {
   const pk = await svcWallet.identity.compressedPublicKey()  // Ark identity
@@ -175,20 +188,23 @@ onSignPsbt: async (psbtB64, ...) => {
 ## Key Files Reference
 
 ### LendaMobile (Rust)
-| File | Purpose |
-|------|---------|
-| `rust/src/api/lendasat_api.rs` | Contract creation, `get_ark_identity_pubkey()` |
-| `rust/src/api/ark_api.rs` | `sign_psbt_with_ark_identity()` |
-| `rust/src/ark/mnemonic_file.rs` | Derivation path constants |
-| `rust/src/lendasat/auth.rs` | Lendasat authentication (NOT for collateral) |
+
+| File                            | Purpose                                        |
+| ------------------------------- | ---------------------------------------------- |
+| `rust/src/api/lendasat_api.rs`  | Contract creation, `get_ark_identity_pubkey()` |
+| `rust/src/api/ark_api.rs`       | `sign_psbt_with_ark_identity()`                |
+| `rust/src/ark/mnemonic_file.rs` | Derivation path constants                      |
+| `rust/src/lendasat/auth.rs`     | Lendasat authentication (NOT for collateral)   |
 
 ### LendaMobile (Dart)
-| File | Purpose |
-|------|---------|
-| `lib/src/services/lendasat_service.dart` | `claimArkCollateral()`, `_claimArkViaOffchain()`, `_claimArkViaSettlement()` |
-| `lib/src/ui/screens/contract_detail_screen.dart` | Contract UI, claim/recover buttons |
+
+| File                                             | Purpose                                                                      |
+| ------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `lib/src/services/lendasat_service.dart`         | `claimArkCollateral()`, `_claimArkViaOffchain()`, `_claimArkViaSettlement()` |
+| `lib/src/ui/screens/contract_detail_screen.dart` | Contract UI, claim/recover buttons                                           |
 
 ### Local Rust SDK Modifications
+
 We added `get_keypair_for_pk()` to the local ark-client SDK (`/home/weltitob/lendasat/rust-sdk/ark-client/src/lib.rs`):
 
 ```rust
@@ -202,12 +218,14 @@ pub fn get_keypair_for_pk(&self, pk: &XOnlyPublicKey) -> Result<Keypair, Error> 
 This allows `sign_psbt_with_ark_identity()` to find the correct keypair for the PSBT's `tap_internal_key`.
 
 ### Reference Implementations
-| File | Purpose |
-|------|---------|
+
+| File                                                    | Purpose                     |
+| ------------------------------------------------------- | --------------------------- |
 | `~/lendasat/wallet/src/screens/Apps/Lendasat/Index.tsx` | Arkade LendaSat integration |
-| `~/lendasat/iframe/packages/api/src/client.ts` | API client reference |
+| `~/lendasat/iframe/packages/api/src/client.ts`          | API client reference        |
 
 ### Removed Code (no longer exists)
+
 - On-chain `claimCollateral()` and `recoverCollateral()` methods
 - `signPsbt()` using Lendasat key for collateral
 - `getClaimPsbt()`, `getRecoverPsbt()` for on-chain claims
@@ -218,24 +236,30 @@ This allows `sign_psbt_with_ark_identity()` to find the correct keypair for the 
 ## Troubleshooting Guide
 
 ### "No tap_internal_key found" Error
+
 **Cause:** Contract was created with wrong `borrower_pk` (not Ark identity)
 **Fix:** Ensure `lendasat_create_contract()` uses `get_ark_identity_pubkey()`
 
 ### "Could not find keypair for tap_internal_key" Error
+
 **Cause:** Mismatch between contract's `borrower_pk` and signing key
 **Check:**
+
 1. Contract's `borrower_pk` should be Ark identity
 2. Using `sign_psbt_with_ark_identity()` (not old methods)
 
 ### Contracts Not Appearing
+
 **Cause:** JWT token expired or wrong account
 **Fix:** Re-authenticate to get fresh JWT token
 
 ### Old Contracts Can't Be Claimed
+
 **Cause:** Contracts created before the fix used wrong `borrower_pk`
 **Solution:** Contact LendaSat support - permanent key mismatch
 
 ### Claim Works But Settlement Fails
+
 **Check:** Both `_claimArkViaOffchain()` and `_claimArkViaSettlement()` must use `ark_api.signPsbtWithArkIdentity()`
 
 ---

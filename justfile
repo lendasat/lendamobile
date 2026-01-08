@@ -34,12 +34,22 @@ clippy:
 run: check-env
     fvm flutter run --verbose {{dart-defines}}
 
-flutter-fmt:
-    dart format  --output=write .
-
 ## ------------------------
 ## formatting
 ## ------------------------
 
-fmt:
+rust-fmt:
     dprint fmt
+
+flutter-fmt:
+    fvm dart format  --output=write .
+
+fmt: rust-fmt flutter-fmt
+
+rust-fmt-check:
+    dprint check
+
+flutter-fmt-check:
+    fvm dart format --output=none --set-exit-if-changed .
+
+fmt-check: rust-fmt-check flutter-fmt-check
