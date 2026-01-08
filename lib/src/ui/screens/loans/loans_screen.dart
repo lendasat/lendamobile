@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
@@ -28,11 +30,13 @@ class LoansScreen extends StatefulWidget {
 
 class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   final LendasatService _lendasatService = LendasatService();
+  final SettingsService _settingsService = SettingsService();
   String _searchQuery = '';
   final FocusNode _searchFocusNode = FocusNode();
   bool _wasKeyboardVisible = false;
 
   bool _isLoading = true;
+  bool _isRegistering = false;
   String? _errorMessage;
   Timer? _autoRefreshTimer;
 
@@ -198,6 +202,194 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
       logger.e('Lendasat auto-auth error: $e');
       // Don't throw - user can still see offers without auth
     }
+  }
+
+  /// Show signup modal to register with Lendasat.
+  void _showSignupModal() {
+    final emailController = TextEditingController();
+    String? errorMessage;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+          final l10n = AppLocalizations.of(context)!;
+          final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: AppTheme.cardPadding,
+              right: AppTheme.cardPadding,
+              top: AppTheme.cardPadding,
+              bottom: AppTheme.cardPadding + bottomInset,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Handle bar
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: AppTheme.cardPadding),
+                    decoration: BoxDecoration(
+                      color: isDarkMode
+                          ? Colors.white.withValues(alpha: 0.3)
+                          : Colors.black.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Text(
+                  'Sign Up',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: AppTheme.elementSpacing),
+                Text(
+                  'Enter your email to access loans and contracts.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                      ),
+                ),
+                const SizedBox(height: AppTheme.cardPadding),
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  autofocus: true,
+                  enabled: !_isRegistering,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: l10n.email,
+                    hintText: 'you@example.com',
+                    prefixIcon: Icon(
+                      Icons.email_outlined,
+                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                    ),
+                    filled: true,
+                    fillColor: isDarkMode
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.03),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: isDarkMode
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : Colors.black.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: isDarkMode
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : Colors.black.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: AppTheme.colorBitcoin, width: 2),
+                    ),
+                    errorText: errorMessage,
+                  ),
+                  onChanged: (_) {
+                    if (errorMessage != null) {
+                      setModalState(() => errorMessage = null);
+                    }
+                  },
+                ),
+                const SizedBox(height: AppTheme.cardPadding),
+                LongButtonWidget(
+                  title: 'Sign Up',
+                  buttonType: ButtonType.solid,
+                  customWidth: double.infinity,
+                  isLoading: _isRegistering,
+                  onTap: () async {
+                    final email = emailController.text.trim().toLowerCase();
+
+                    // Validate email
+                    if (email.isEmpty) {
+                      setModalState(
+                          () => errorMessage = l10n.pleaseEnterEmail);
+                      return;
+                    }
+
+                    final emailRegex =
+                        RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                    if (!emailRegex.hasMatch(email)) {
+                      setModalState(() => errorMessage = l10n.invalidEmail);
+                      return;
+                    }
+
+                    setModalState(() => errorMessage = null);
+                    setState(() => _isRegistering = true);
+                    setModalState(() {});
+
+                    try {
+                      // Register with Lendasat
+                      logger.i('[SIGNUP] Registering with Lendasat...');
+                      await _lendasatService.register(
+                        email: email,
+                        name: 'Lendasat User',
+                        inviteCode: 'LAS-651K4',
+                      );
+
+                      // Save email
+                      await _settingsService.setUserEmail(email);
+                      logger.i('[SIGNUP] Registration successful');
+
+                      // Authenticate
+                      await _autoAuthenticate();
+
+                      // Refresh data
+                      await _loadData();
+
+                      if (mounted) {
+                        Navigator.of(context).pop();
+                        OverlayService().showSuccess('Registration successful!');
+                        setState(() => _isRegistering = false);
+                      }
+                    } catch (e) {
+                      logger.e('[SIGNUP] Registration failed: $e');
+                      setState(() => _isRegistering = false);
+
+                      // Check if already registered
+                      if (e.toString().toLowerCase().contains('already') ||
+                          e.toString().toLowerCase().contains('exists')) {
+                        // Try to authenticate anyway
+                        await _autoAuthenticate();
+                        if (_lendasatService.isAuthenticated) {
+                          await _loadData();
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                            setState(() {});
+                          }
+                          return;
+                        }
+                      }
+
+                      setModalState(() => errorMessage = e.toString());
+                    }
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _refresh() async {
@@ -427,7 +619,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildAuthBanner() {
-    // Not authenticated - show info banner with retry option
+    // Not authenticated - show info banner with signup option
     return GlassContainer(
       margin: const EdgeInsets.all(AppTheme.cardPadding),
       padding: const EdgeInsets.all(AppTheme.cardPadding),
@@ -440,14 +632,13 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: AppTheme.elementSpacing),
           Text(
-            AppLocalizations.of(context)?.signInRequired ?? 'Sign In Required',
+            'Sign Up to Access Loans',
             style: Theme.of(context).textTheme.titleLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppTheme.elementSpacing / 2),
           Text(
-            AppLocalizations.of(context)?.signInToViewContracts ??
-                'Sign in to view your contracts and take loans. You can still browse available offers.',
+            'Create an account to view your contracts and take loans. You can still browse available offers.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context)
                       .colorScheme
@@ -458,9 +649,9 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: AppTheme.cardPadding),
           LongButtonWidget(
-            title: AppLocalizations.of(context)?.retry ?? 'Retry',
+            title: 'Sign Up',
             buttonType: ButtonType.primary,
-            onTap: _initializeLendasat,
+            onTap: _showSignupModal,
             customHeight: 48,
           ),
         ],
