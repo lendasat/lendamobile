@@ -341,7 +341,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                                     AppTheme.elementSpacing *
                                                         0.5,
                                               ),
-                                              text: 'Transaction Volume',
+                                              text: 'Amount',
                                               trailing: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
@@ -839,7 +839,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
                                     horizontal: AppTheme.elementSpacing * 0.75,
                                     vertical: AppTheme.elementSpacing * 0.5,
                                   ),
-                                  text: 'Transaction Volume',
+                                  text: 'Amount',
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [

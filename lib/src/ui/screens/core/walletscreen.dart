@@ -12,10 +12,8 @@ import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/analytics/bitcoin_chart/bitcoin_chart_detail_screen.dart';
-import 'package:ark_flutter/src/ui/screens/buy/buy_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/receivescreen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
-import 'package:ark_flutter/src/ui/screens/sell/sell_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/send/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/settings.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/history/transaction_history_widget.dart';
@@ -23,10 +21,8 @@ import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart'
     show PriceData; // Only import the data type, not the chart widget
 import 'package:ark_flutter/src/ui/widgets/wallet/wallet_mini_chart.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_image_text_button.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/crypto_info_item.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/price_widgets.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
@@ -598,26 +594,6 @@ class WalletScreenState extends State<WalletScreen>
     fetchWalletData();
   }
 
-  void _handleBuy() {
-    logger.i("Buy button pressed");
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const BuyScreen(),
-      ),
-    );
-  }
-
-  void _handleSell() {
-    logger.i("Sell button pressed");
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const SellScreen(),
-      ),
-    );
-  }
-
   Future<void> _handleScan() async {
     logger.i("Scan button pressed");
     final result = await Navigator.push<String>(
@@ -736,79 +712,72 @@ class WalletScreenState extends State<WalletScreen>
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           // Extend body behind status bar so gradient fills notch area
           extendBodyBehindAppBar: true,
-          body: RefreshIndicator(
-            onRefresh: fetchWalletData,
-            child: CustomScrollView(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                // Main wallet header with gradient and chart
-                SliverToBoxAdapter(
-                  child: Stack(
-                    children: [
-                      // Dynamic gradient background - extends into status bar area
-                      _buildDynamicGradient(),
+          body: Column(
+            children: [
+              // Fixed header with gradient and chart
+              Stack(
+                children: [
+                  // Dynamic gradient background - extends into status bar area
+                  _buildDynamicGradient(),
 
-                      // Chart overlay
-                      Opacity(
-                        opacity: 0.1,
-                        child: _buildChartWidget(),
-                      ),
+                  // Chart overlay
+                  Opacity(
+                    opacity: 0.1,
+                    child: _buildChartWidget(),
+                  ),
 
-                      // Main content with SafeArea for proper padding
-                      SafeArea(
-                        child: Column(
-                          children: [
-                            const SizedBox(height: AppTheme.cardPadding),
-                            _buildTopBar(),
-                            const SizedBox(height: AppTheme.cardPadding * 1.5),
-                            _buildBalanceDisplay(),
-                            if (_lockedCollateralSats > 0) ...[
-                              const SizedBox(
-                                  height: AppTheme.elementSpacing * 0.5),
-                              _buildLockedCollateralDisplay(),
-                            ],
-                            if (_boardingBalanceSats > 0) ...[
-                              const SizedBox(
-                                  height: AppTheme.elementSpacing * 0.5),
-                              _buildBoardingBalanceDisplay(),
-                            ],
-                            const SizedBox(height: AppTheme.elementSpacing),
-                            _buildPriceChangeIndicators(),
-                            const SizedBox(height: AppTheme.cardPadding * 1.5),
-                            _buildActionButtons(),
-                            const SizedBox(height: AppTheme.cardPadding),
-                          ],
+                  // Main content with SafeArea for proper padding
+                  SafeArea(
+                    bottom: false,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: AppTheme.cardPadding),
+                        _buildTopBar(),
+                        const SizedBox(height: AppTheme.cardPadding * 1.5),
+                        _buildBalanceDisplay(),
+                        if (_lockedCollateralSats > 0) ...[
+                          const SizedBox(
+                              height: AppTheme.elementSpacing * 0.5),
+                          _buildLockedCollateralDisplay(),
+                        ],
+                        if (_boardingBalanceSats > 0) ...[
+                          const SizedBox(
+                              height: AppTheme.elementSpacing * 0.5),
+                          _buildBoardingBalanceDisplay(),
+                        ],
+                        const SizedBox(height: AppTheme.elementSpacing),
+                        _buildPriceChangeIndicators(),
+                        const SizedBox(height: AppTheme.cardPadding * 1.5),
+                        _buildActionButtons(),
+                        const SizedBox(height: AppTheme.cardPadding),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              // Scrollable transaction list
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: fetchWalletData,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: AppTheme.cardPadding),
+                        _buildTransactionList(),
+                        // Bottom padding with SafeArea for bottom inset
+                        const SafeArea(
+                          top: false,
+                          child: SizedBox(height: AppTheme.cardPadding * 2),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-
-                // Cryptos section
-                SliverToBoxAdapter(
-                  child: _buildCryptosSection(),
-                ),
-
-                // Spacing before transaction list
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: AppTheme.cardPadding),
-                ),
-
-                // Transaction list (TransactionHistoryWidget has its own header)
-                SliverToBoxAdapter(
-                  child: _buildTransactionList(),
-                ),
-
-                // Bottom padding with SafeArea for bottom inset
-                SliverToBoxAdapter(
-                  child: SafeArea(
-                    top: false,
-                    child: SizedBox(height: AppTheme.cardPadding * 2),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -853,18 +822,18 @@ class WalletScreenState extends State<WalletScreen>
         boarding: (t) =>
             (t.confirmedAt is BigInt
                 ? (t.confirmedAt as BigInt).toInt()
-                : t.confirmedAt as int?) ??
+                : t.confirmedAt) ??
             (DateTime.now().millisecondsSinceEpoch ~/ 1000),
         round: (t) => t.createdAt is BigInt
             ? (t.createdAt as BigInt).toInt()
-            : t.createdAt as int,
+            : t.createdAt,
         redeem: (t) => t.createdAt is BigInt
             ? (t.createdAt as BigInt).toInt()
-            : t.createdAt as int,
+            : t.createdAt,
         offboard: (t) =>
             (t.confirmedAt is BigInt
                 ? (t.confirmedAt as BigInt).toInt()
-                : t.confirmedAt as int?) ??
+                : t.confirmedAt) ??
             (DateTime.now().millisecondsSinceEpoch ~/ 1000),
       );
 
@@ -874,11 +843,11 @@ class WalletScreenState extends State<WalletScreen>
           boarding: (t) => t.amountSats.toInt(),
           round: (t) => t.amountSats is BigInt
               ? (t.amountSats as BigInt).toInt()
-              : t.amountSats as int,
+              : t.amountSats,
           // Redeem transactions already have the correct sign from the backend (negative for outgoing)
           redeem: (t) => t.amountSats is BigInt
               ? (t.amountSats as BigInt).toInt()
-              : t.amountSats as int,
+              : t.amountSats,
           offboard: (t) => t.amountSats.toInt(),
         );
         amountAfterTimestamp += amountSats / BitcoinConstants.satsPerBtc;
@@ -957,6 +926,16 @@ class WalletScreenState extends State<WalletScreen>
                       : FontAwesomeIcons.eye,
                   onTap: userPrefs.toggleBalancesVisible,
                 ),
+              ),
+              const SizedBox(width: AppTheme.elementSpacing * 0.5),
+
+              // Chart button
+              RoundedButtonWidget(
+                size: AppTheme.cardPadding * 1.5,
+                iconSize: AppTheme.cardPadding * 0.65,
+                buttonType: ButtonType.transparent,
+                iconData: FontAwesomeIcons.chartLine,
+                onTap: _handleBitcoinChart,
               ),
               const SizedBox(width: AppTheme.elementSpacing * 0.5),
 
@@ -1351,45 +1330,6 @@ class WalletScreenState extends State<WalletScreen>
           //     fallbackIconSize: AppTheme.iconSize * 1.5,
           //   ),
           // ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCryptosSection() {
-    // Convert selected balance to sats for display (matches top balance display)
-    final balanceInSats =
-        (_getSelectedBalance() * BitcoinConstants.satsPerBtc).toInt();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.cardPadding,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: AppTheme.cardPadding * 1.75),
-          Text(
-            "Cryptos",
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppTheme.paddingM),
-          CryptoInfoItem(
-            balance: balanceInSats.toString(),
-            defaultUnit: BitcoinUnits.SAT,
-            currency: Currency(
-              code: 'BTC',
-              name: 'Bitcoin',
-              icon: Image.asset("assets/images/bitcoin.png"),
-            ),
-            context: context,
-            onTap: _handleBitcoinChart,
-            bitcoinPrice: _getCurrentBtcPrice(),
-          ),
         ],
       ),
     );

@@ -11,6 +11,8 @@ import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/utils/date_formatter.dart';
+import 'package:ark_flutter/src/utils/number_formatter.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
@@ -661,12 +663,8 @@ class _TransactionItemWidget extends StatelessWidget {
         context,
         AppLocalizations.of(context)!.roundTransaction,
         tx.txid,
-        tx.createdAt is BigInt
-            ? (tx.createdAt as BigInt).toInt()
-            : tx.createdAt as int,
-        tx.amountSats is BigInt
-            ? (tx.amountSats as BigInt).toInt()
-            : tx.amountSats as int,
+        tx.createdAt,
+        tx.amountSats,
         showBtcAsMain,
         hideAmounts,
         'Arkade',
@@ -677,12 +675,8 @@ class _TransactionItemWidget extends StatelessWidget {
         context,
         AppLocalizations.of(context)!.redeemTransaction,
         tx.txid,
-        tx.createdAt is BigInt
-            ? (tx.createdAt as BigInt).toInt()
-            : tx.createdAt as int,
-        tx.amountSats is BigInt
-            ? (tx.amountSats as BigInt).toInt()
-            : tx.amountSats as int,
+        tx.createdAt,
+        tx.amountSats,
         showBtcAsMain,
         hideAmounts,
         // Ark virtual transactions stay within Arkade network
@@ -693,13 +687,8 @@ class _TransactionItemWidget extends StatelessWidget {
         context,
         'Onchain Send', // Offboard = collaborative redeem to on-chain
         tx.txid,
-        tx.confirmedAt is BigInt
-            ? (tx.confirmedAt as BigInt).toInt()
-            : (tx.confirmedAt as int?) ??
-                (DateTime.now().millisecondsSinceEpoch ~/ 1000),
-        tx.amountSats is BigInt
-            ? (tx.amountSats as BigInt).toInt()
-            : tx.amountSats as int,
+        tx.confirmedAt ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+        tx.amountSats,
         showBtcAsMain,
         hideAmounts,
         'Onchain',
@@ -802,24 +791,34 @@ class _TransactionItemWidget extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
+                              Text(
+                                DateFormatter.formatRelativeDateFromTimestamp(createdAt),
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: AppTheme.elementSpacing / 2,
                                 ),
-                                child: Image.asset(
-                                  "assets/images/bitcoin.png",
-                                  width: AppTheme.cardPadding * 0.6,
-                                  height: AppTheme.cardPadding * 0.6,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Icon(
-                                      Icons.currency_bitcoin,
-                                      size: AppTheme.cardPadding * 0.6,
-                                      color: AppTheme.colorBitcoin,
-                                    );
-                                  },
+                                child: Text(
+                                  '·',
+                                  style: Theme.of(context).textTheme.labelSmall,
                                 ),
                               ),
+                              Image.asset(
+                                "assets/images/bitcoin.png",
+                                width: AppTheme.cardPadding * 0.5,
+                                height: AppTheme.cardPadding * 0.5,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(
+                                    Icons.currency_bitcoin,
+                                    size: AppTheme.cardPadding * 0.5,
+                                    color: AppTheme.colorBitcoin,
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: AppTheme.elementSpacing / 4),
                               Text(
                                 network,
                                 overflow: TextOverflow.ellipsis,
@@ -844,7 +843,7 @@ class _TransactionItemWidget extends StatelessWidget {
                               children: [
                                 Text(
                                   showBtcAsMain
-                                      ? '${amountSats.isNegative ? "" : "+"}${amountSats.abs()}'
+                                      ? NumberFormatter.formatSats(amountSats, showSign: true)
                                       : '${amountSats.isNegative ? "-" : "+"}${currencyService.formatAmount(fiatAmount.abs())}',
                                   overflow: TextOverflow.ellipsis,
                                   style:

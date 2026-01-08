@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Bottom sheet widget for displaying transaction details.
 /// Uses the exact same UI as SingleTransactionScreen.
@@ -448,13 +449,6 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                     },
                                     trailing: Row(
                                       children: [
-                                        Icon(
-                                          Icons.copy,
-                                          color: AppTheme.white60,
-                                          size: AppTheme.cardPadding * 0.75,
-                                        ),
-                                        const SizedBox(
-                                            width: AppTheme.elementSpacing / 2),
                                         SizedBox(
                                           width: AppTheme.cardPadding * 5,
                                           child: Text(
@@ -463,6 +457,31 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                                 .textTheme
                                                 .bodyMedium,
                                             overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                            width: AppTheme.elementSpacing / 2),
+                                        Icon(
+                                          Icons.copy,
+                                          color: AppTheme.white60,
+                                          size: AppTheme.cardPadding * 0.75,
+                                        ),
+                                        const SizedBox(
+                                            width: AppTheme.elementSpacing / 2),
+                                        InkWell(
+                                          onTap: () async {
+                                            final url = Uri.parse(
+                                                'https://arkade.space/tx/$txID');
+                                            if (await canLaunchUrl(url)) {
+                                              await launchUrl(url,
+                                                  mode: LaunchMode
+                                                      .externalApplication);
+                                            }
+                                          },
+                                          child: const Icon(
+                                            Icons.open_in_new,
+                                            color: AppTheme.colorBitcoin,
+                                            size: AppTheme.cardPadding * 0.75,
                                           ),
                                         ),
                                       ],
@@ -593,14 +612,6 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                         vertical: AppTheme.elementSpacing * 0.5,
                                       ),
                                       text: l10n.time,
-                                      leading: Icon(
-                                        Icons.access_time,
-                                        size: AppTheme.cardPadding * 0.75,
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? AppTheme.white60
-                                            : AppTheme.black60,
-                                      ),
                                       trailing: Builder(
                                         builder: (context) {
                                           final loc = timezoneService.location;
@@ -911,15 +922,6 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                         : null,
                                     trailing: Row(
                                       children: [
-                                        if (txID != null)
-                                          Icon(
-                                            Icons.copy,
-                                            color: AppTheme.white60,
-                                            size: AppTheme.cardPadding * 0.75,
-                                          ),
-                                        const SizedBox(
-                                          width: AppTheme.elementSpacing / 2,
-                                        ),
                                         SizedBox(
                                           width: AppTheme.cardPadding * 5,
                                           child: Text(
@@ -930,6 +932,37 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
+                                        if (txID != null)
+                                          const SizedBox(
+                                            width: AppTheme.elementSpacing / 2,
+                                          ),
+                                        if (txID != null)
+                                          Icon(
+                                            Icons.copy,
+                                            color: AppTheme.white60,
+                                            size: AppTheme.cardPadding * 0.75,
+                                          ),
+                                        if (txID != null)
+                                          const SizedBox(
+                                            width: AppTheme.elementSpacing / 2,
+                                          ),
+                                        if (txID != null)
+                                          InkWell(
+                                            onTap: () async {
+                                              final url = Uri.parse(
+                                                  'https://arkade.space/tx/$txID');
+                                              if (await canLaunchUrl(url)) {
+                                                await launchUrl(url,
+                                                    mode: LaunchMode
+                                                        .externalApplication);
+                                              }
+                                            },
+                                            child: const Icon(
+                                              Icons.open_in_new,
+                                              color: AppTheme.colorBitcoin,
+                                              size: AppTheme.cardPadding * 0.75,
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ),
@@ -1035,14 +1068,6 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                         vertical: AppTheme.elementSpacing * 0.5,
                                       ),
                                       text: l10n.time,
-                                      leading: Icon(
-                                        Icons.access_time,
-                                        size: AppTheme.cardPadding * 0.75,
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? AppTheme.white60
-                                            : AppTheme.black60,
-                                      ),
                                       trailing: SizedBox(
                                         width: AppTheme.cardPadding * 7,
                                         child: Text(
