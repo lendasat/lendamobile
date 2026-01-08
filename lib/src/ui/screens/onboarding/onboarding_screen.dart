@@ -1,6 +1,8 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
+import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/screens/core/bottom_nav.dart';
-import 'package:ark_flutter/src/ui/screens/onboarding/email_signup_screen.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding/mnemonic_input_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/agbs_and_impressum_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -11,6 +13,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -20,9 +23,11 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class OnboardingScreenState extends State<OnboardingScreen> {
+  final SettingsService _settingsService = SettingsService();
   String _version = '';
   int _tapCount = 0;
   DateTime? _lastTapTime;
+  bool _isCreatingWallet = false;
 
   @override
   void initState() {
@@ -67,13 +72,64 @@ class OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  void _handleCreateWallet() {
-    logger.i('Navigating to email signup screen for new wallet');
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const EmailSignupScreen(isRestore: false),
-      ),
-    );
+  Future<void> _handleCreateWallet() async {
+    if (_isCreatingWallet) return;
+
+    setState(() {
+      _isCreatingWallet = true;
+    });
+
+    try {
+      logger.i('[CREATE] Step 1: Getting application support directory...');
+      final dataDir = await getApplicationSupportDirectory();
+
+      logger.i('[CREATE] Step 2: Loading settings...');
+      final esploraUrl = await _settingsService.getEsploraUrl();
+      final arkServerUrl = await _settingsService.getArkServerUrl();
+      final network = await _settingsService.getNetwork();
+      final boltzUrl = await _settingsService.getBoltzUrl();
+
+      logger.i('[CREATE] Step 3: Clearing previous recovery status...');
+      await _settingsService.clearWordRecoveryStatus();
+
+      logger.i('[CREATE] Step 4: Creating new wallet...');
+      final aspId = await setupNewWallet(
+        dataDir: dataDir.path,
+        network: network,
+        esplora: esploraUrl,
+        server: arkServerUrl,
+        boltzUrl: boltzUrl,
+      );
+      logger.i('[CREATE] Step 4 DONE: Wallet created, aspId: $aspId');
+
+      // Track wallet creation and identify user
+      logger.i('[CREATE] Step 5: Identifying user for analytics...');
+      await AnalyticsService().identifyUser();
+      await AnalyticsService().trackWalletCreated(isRestore: false);
+
+      logger.i('[CREATE] Step 6: Navigating to dashboard...');
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => BottomNav(aspId: aspId)),
+          (route) => false,
+        );
+      }
+      logger.i('[CREATE] COMPLETE!');
+    } catch (e, stackTrace) {
+      logger.e('[CREATE] FAILED with error: $e');
+      logger.e('[CREATE] Stack trace: $stackTrace');
+      if (mounted) {
+        setState(() {
+          _isCreatingWallet = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create wallet: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _handleRestoreWallet() {
@@ -142,6 +198,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 buttonType: ButtonType.solid,
                 title: AppLocalizations.of(context)!.createNewWallet,
                 customWidth: double.infinity,
+                isLoading: _isCreatingWallet,
                 onTap: _handleCreateWallet,
               ),
               // Spacer to push footer down
