@@ -1232,6 +1232,8 @@ class WalletScreenState extends State<WalletScreen>
 
   Widget _buildPriceChangeIndicators() {
     final currencyService = context.watch<CurrencyPreferenceService>();
+    final userPrefs = context.watch<UserPreferencesService>();
+    final isObscured = !userPrefs.balancesVisible;
 
     // Default values when no data is available
     double percentChange = 0.0;
@@ -1311,7 +1313,7 @@ class WalletScreenState extends State<WalletScreen>
                         size: 16,
                       ),
                       Text(
-                        _formatSatsAmount(balanceChangeInSats),
+                        isObscured ? '****' : _formatSatsAmount(balanceChangeInSats),
                         style: TextStyle(
                           color: isPositive
                               ? AppTheme.successColor
@@ -1320,28 +1322,30 @@ class WalletScreenState extends State<WalletScreen>
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(width: 2),
-                      Icon(
-                        AppTheme.satoshiIcon,
-                        size: 14,
-                        color: isPositive
-                            ? AppTheme.successColor
-                            : AppTheme.errorColor,
-                      ),
+                      if (!isObscured) ...[
+                        const SizedBox(width: 2),
+                        Icon(
+                          AppTheme.satoshiIcon,
+                          size: 14,
+                          color: isPositive
+                              ? AppTheme.successColor
+                              : AppTheme.errorColor,
+                        ),
+                      ],
                     ],
                   )
                 : ColoredPriceWidget(
                     price:
                         currencyService.formatAmount(balanceChangeInFiat.abs()),
                     isPositive: isPositive,
-                    shouldHideAmount: true,
+                    shouldHideAmount: isObscured,
                   ),
             const SizedBox(width: 8),
             BitNetPercentWidget(
               priceChange: percentChange.isInfinite
                   ? '+∞%'
                   : '${isPositive ? '+' : ''}${percentChange.toStringAsFixed(2)}%',
-              shouldHideAmount: true,
+              shouldHideAmount: isObscured,
             ),
           ],
         ),
