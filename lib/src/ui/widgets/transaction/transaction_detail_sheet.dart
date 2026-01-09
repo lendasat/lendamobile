@@ -6,6 +6,7 @@ import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/services/recipient_storage_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
@@ -278,6 +279,8 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     bool isSent,
   ) {
     final showCoinBalance = currencyService.showCoinBalance;
+    final userPrefs = context.watch<UserPreferencesService>();
+    final isObscured = !userPrefs.balancesVisible;
     final (formattedAmount, unit, isSatsUnit) =
         _formatAmountWithUnit(displayAmountSats);
 
@@ -368,7 +371,20 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                 ),
                                 const SizedBox(height: AppTheme.cardPadding),
                                 // Large amount - toggles between sats/BTC and fiat
-                                if (showCoinBalance)
+                                if (isObscured)
+                                  Text(
+                                    '****',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displayMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                        ),
+                                  )
+                                else if (showCoinBalance)
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment:
@@ -812,6 +828,8 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     bool isSent,
   ) {
     final showCoinBalance = currencyService.showCoinBalance;
+    final userPrefs = context.watch<UserPreferencesService>();
+    final isObscured = !userPrefs.balancesVisible;
     final (formattedAmount, unit, isSatsUnit) =
         _formatAmountWithUnit(displayAmountSats);
 
@@ -914,7 +932,20 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                 ),
                                 const SizedBox(height: AppTheme.cardPadding),
                                 // Large amount - toggles between sats/BTC and fiat
-                                if (showCoinBalance)
+                                if (isObscured)
+                                  Text(
+                                    '****',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displayMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                        ),
+                                  )
+                                else if (showCoinBalance)
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment:
