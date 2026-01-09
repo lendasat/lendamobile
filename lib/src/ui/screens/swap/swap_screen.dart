@@ -995,7 +995,7 @@ class SwapScreenState extends State<SwapScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: AppTheme.cardPadding * 3),
+                    const SizedBox(height: AppTheme.cardPadding * 4),
                     // Uniswap-style card stack with connected border
                     Container(
                       margin: const EdgeInsets.symmetric(
