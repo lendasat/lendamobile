@@ -9,6 +9,7 @@ import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -208,21 +209,17 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   void _showSignupModal() {
     final emailController = TextEditingController();
     String? errorMessage;
+    final l10n = AppLocalizations.of(context)!;
 
-    showModalBottomSheet(
+    arkBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => StatefulBuilder(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: StatefulBuilder(
         builder: (context, setModalState) {
           final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-          final l10n = AppLocalizations.of(context)!;
           final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-          return Padding(
+          return SingleChildScrollView(
             padding: EdgeInsets.only(
               left: AppTheme.cardPadding,
               right: AppTheme.cardPadding,
@@ -233,20 +230,6 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Handle bar
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: AppTheme.cardPadding),
-                    decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? Colors.white.withValues(alpha: 0.3)
-                          : Colors.black.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
                 Text(
                   'Sign Up',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
