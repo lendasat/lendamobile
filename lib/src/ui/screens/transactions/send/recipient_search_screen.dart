@@ -1,5 +1,9 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
+import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/recipient_storage_service.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/send/send_screen.dart';
@@ -10,12 +14,14 @@ import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/utils/address_validator.dart';
+import 'package:ark_flutter/src/utils/number_formatter.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:provider/provider.dart';
 
 /// RecipientSearchScreen - First screen in the send flow
 /// Allows user to search, paste, or scan a recipient address
@@ -43,11 +49,13 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
   // Recent recipients from storage (only reusable ones)
   List<StoredRecipient> _recentRecipients = [];
   bool _isLoading = true;
+  double? _bitcoinPrice;
 
   @override
   void initState() {
     super.initState();
     _loadRecentRecipients();
+    _fetchBitcoinPrice();
     // Auto-check clipboard for valid address
     _checkClipboard();
   }
@@ -101,6 +109,19 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _fetchBitcoinPrice() async {
+    try {
+      final priceData = await fetchBitcoinPriceData(TimeRange.day);
+      if (priceData.isNotEmpty && mounted) {
+        setState(() {
+          _bitcoinPrice = priceData.last.price;
+        });
+      }
+    } catch (e) {
+      logger.e('Error fetching bitcoin price: $e');
     }
   }
 
@@ -320,59 +341,116 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
 
   Widget _buildRecentRecipientItem(StoredRecipient recipient, bool isLast) {
     final l10n = AppLocalizations.of(context)!;
+    final currencyService = context.watch<CurrencyPreferenceService>();
+    final showBtcAsMain = currencyService.showCoinBalance;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => _navigateToSendScreen(recipient.address),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.elementSpacing,
-          vertical: AppTheme.elementSpacing * 0.75,
-        ),
-        child: Row(
-          children: [
-            // Avatar
-            _buildRecipientAvatar(),
-            const SizedBox(width: AppTheme.elementSpacing),
-            // Address and time ago
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _truncateAddress(recipient.address),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${_getTypeLabel(recipient.type)} • ${_formatTimeAgo(recipient.timestamp, l10n)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).hintColor,
-                        ),
-                  ),
-                ],
-              ),
+    // Calculate fiat amount
+    final amountBtc = recipient.amountSats / BitcoinConstants.satsPerBtc;
+    final btcPrice = _bitcoinPrice ?? 0;
+    final fiatAmount = amountBtc * btcPrice;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _navigateToSendScreen(recipient.address),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: AppTheme.elementSpacing,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(
+              left: AppTheme.elementSpacing * 0.75,
+              right: AppTheme.elementSpacing * 1,
             ),
-            // Amount
-            Text(
-              '${_formatAmount(recipient.amountSats)} sats',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).hintColor,
-                  ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // LEFT SIDE
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Avatar instead of arrow icon
+                    const Avatar(
+                      size: AppTheme.cardPadding * 2,
+                      fallbackIcon: Icons.person,
+                    ),
+                    const SizedBox(width: AppTheme.elementSpacing * 0.75),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: AppTheme.cardPadding * 6.5,
+                          child: Text(
+                            _truncateAddress(recipient.address),
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(
+                                  color: isDark
+                                      ? AppTheme.white90
+                                      : AppTheme.black90,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.elementSpacing / 2),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              _formatTimeAgo(recipient.timestamp, l10n),
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.elementSpacing / 2,
+                              ),
+                              child: Text(
+                                '·',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                            ),
+                            Text(
+                              _getTypeLabel(recipient.type),
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                // RIGHT SIDE - Amount
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          showBtcAsMain
+                              ? NumberFormatter.formatSats(recipient.amountSats)
+                              : currencyService.formatAmount(fiatAmount),
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        if (showBtcAsMain)
+                          Icon(
+                            AppTheme.satoshiIcon,
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildRecipientAvatar() {
-    return const Avatar(
-      size: AppTheme.cardPadding * 1.75,
-      fallbackIcon: Icons.person,
     );
   }
 
@@ -396,15 +474,6 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
       return address;
     }
     return '${address.substring(0, 10)}...${address.substring(address.length - 8)}';
-  }
-
-  String _formatAmount(int sats) {
-    if (sats >= 1000000) {
-      return '${(sats / 1000000).toStringAsFixed(2)}M';
-    } else if (sats >= 1000) {
-      return '${(sats / 1000).toStringAsFixed(1)}k';
-    }
-    return sats.toString();
   }
 
   String _formatTimeAgo(int timestamp, AppLocalizations l10n) {
