@@ -42,7 +42,7 @@ rust-fmt:
     dprint fmt
 
 flutter-fmt:
-    fvm dart format  --output=write .
+    find lib -name "*.dart" -not -path "lib/l10n/*" | xargs fvm dart format --output=write
 
 fmt: rust-fmt flutter-fmt
 
@@ -50,6 +50,6 @@ rust-fmt-check:
     dprint check
 
 flutter-fmt-check:
-    fvm dart format --output=none --set-exit-if-changed .
+    find lib -name "*.dart" -not -path "lib/l10n/*" | xargs fvm dart format --output=none --set-exit-if-changed
 
 fmt-check: rust-fmt-check flutter-fmt-check
