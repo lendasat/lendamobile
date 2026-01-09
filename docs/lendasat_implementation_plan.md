@@ -5,13 +5,17 @@
 This document describes the plan for integrating Lendasat (Bitcoin-collateralized lending) natively into the lendamobile Flutter app, replacing the iframe-based approach used on the web.
 
 ### What is Lendasat?
+
 Lendasat is a Bitcoin-collateralized lending platform where users can:
+
 1. **Borrow**: Lock BTC (via Bitcoin or Ark) as collateral and receive stablecoins (USDC/USDT on Polygon, Ethereum, etc.)
 2. **Repay**: Pay back the loan + interest to unlock collateral
 3. **Claim**: After repayment, sign a PSBT to withdraw collateral back to wallet
 
 ### Why Native vs iframe?
+
 The iframe implementation uses PostMessage to communicate between the iframe (Lendasat UI) and the parent wallet. Since lendamobile **IS** the wallet, we have direct access to:
+
 - Wallet keys (public key, signing)
 - Ark addresses
 - PSBT signing capabilities
@@ -24,6 +28,7 @@ This eliminates the need for the wallet-bridge abstraction layer.
 ## Architecture Comparison
 
 ### iframe Architecture (Web)
+
 ```
 ┌─────────────────────────────────────────┐
 │     Parent Wallet (sample-wallet)        │
@@ -42,6 +47,7 @@ This eliminates the need for the wallet-bridge abstraction layer.
 ```
 
 ### Native Architecture (lendamobile)
+
 ```
 ┌─────────────────────────────────────────┐
 │           lendamobile App                │
@@ -74,6 +80,7 @@ This eliminates the need for the wallet-bridge abstraction layer.
 ## Prerequisites & Dependencies
 
 ### Existing Components (Already Available)
+
 - ✅ Ark Client with KeyProvider (signing capabilities)
 - ✅ Ark addresses (offchain/boarding)
 - ✅ HTTP client (reqwest)
@@ -82,6 +89,7 @@ This eliminates the need for the wallet-bridge abstraction layer.
 - ✅ Flutter-Rust bridge
 
 ### New Components to Implement
+
 1. **Rust**: `lendasat_api.rs` - API client with auth
 2. **Rust**: `lendasat.rs` - Models/types
 3. **Dart**: `lendasat_service.dart` - Flutter service layer
@@ -95,6 +103,7 @@ This eliminates the need for the wallet-bridge abstraction layer.
 ### Phase 1: Rust API Client (Foundation)
 
 #### Step 1.1: Create Lendasat Models (`rust/src/lendasat/mod.rs`)
+
 ```rust
 // Types matching the OpenAPI schema
 pub enum LoanAsset { UsdcPol, UsdtPol, UsdcEth, ... }
@@ -107,6 +116,7 @@ pub struct Installment { ... }
 ```
 
 #### Step 1.2: Create Lendasat API Client (`rust/src/api/lendasat_api.rs`)
+
 ```rust
 // Core API client with JWT authentication
 pub struct LendasatClient {
@@ -118,7 +128,11 @@ pub struct LendasatClient {
 impl LendasatClient {
     // Auth endpoints
     pub async fn get_challenge(pubkey: &str) -> Result<String>;
-    pub async fn verify_signature(pubkey: &str, challenge: &str, signature: &str) -> Result<AuthResponse>;
+    pub async fn verify_signature(
+        pubkey: &str,
+        challenge: &str,
+        signature: &str,
+    ) -> Result<AuthResponse>;
 
     // Offers
     pub async fn get_offers(filters: OfferFilters) -> Result<Vec<LoanOffer>>;
@@ -130,7 +144,11 @@ impl LendasatClient {
     pub async fn cancel_contract(id: &str) -> Result<()>;
 
     // Repayment
-    pub async fn mark_installment_paid(contract_id: &str, installment_id: &str, txid: &str) -> Result<()>;
+    pub async fn mark_installment_paid(
+        contract_id: &str,
+        installment_id: &str,
+        txid: &str,
+    ) -> Result<()>;
 
     // Claim collateral
     pub async fn get_claim_psbt(contract_id: &str, fee_rate: u32) -> Result<ClaimPsbtResponse>;
@@ -143,7 +161,9 @@ impl LendasatClient {
 ```
 
 #### Step 1.3: Implement Message Signing for Auth
+
 The authentication requires ECDSA signature on a challenge message:
+
 ```rust
 // In ark/client.rs or new signing module
 pub async fn sign_message(message: &str) -> Result<String> {
@@ -161,6 +181,7 @@ pub fn get_compressed_public_key() -> Result<String> {
 ### Phase 2: Flutter Bridge & Service Layer
 
 #### Step 2.1: Create Dart Models (`lib/src/models/lendasat/`)
+
 ```dart
 // lendasat_models.dart
 enum LoanAsset { usdcPol, usdtPol, usdcEth, ... }
@@ -173,6 +194,7 @@ class Installment { ... }
 ```
 
 #### Step 2.2: Create Lendasat Service (`lib/src/services/lendasat_service.dart`)
+
 ```dart
 class LendasatService extends ChangeNotifier {
   bool _isAuthenticated = false;
@@ -208,22 +230,26 @@ class LendasatService extends ChangeNotifier {
 ### Phase 3: Flutter UI Screens
 
 #### Step 3.1: Offers Screen (`lib/src/ui/screens/lending/offers_screen.dart`)
+
 - Display available loan offers
 - Filter by: loan amount, duration, asset type, collateral type
 - "Take Offer" button → navigate to contract creation
 
 #### Step 3.2: Create Contract Screen (`lib/src/ui/screens/lending/create_contract_screen.dart`)
+
 - Select loan amount (within offer range)
 - Select duration (within offer range)
 - Show calculated: collateral required, interest, total repayment
 - Confirm → create contract
 
 #### Step 3.3: Contracts List Screen (`lib/src/ui/screens/lending/contracts_screen.dart`)
+
 - List all user's contracts
 - Show status, amounts, expiry
 - Navigate to contract details
 
 #### Step 3.4: Contract Details Screen (`lib/src/ui/screens/lending/contract_details_screen.dart`)
+
 - Full contract information
 - Actions based on status:
   - `Approved`: Show deposit address, wait for collateral
@@ -232,12 +258,14 @@ class LendasatService extends ChangeNotifier {
   - `CollateralRecoverable`: "Recover Collateral" button
 
 #### Step 3.5: Deposit Collateral Screen (`lib/src/ui/screens/lending/deposit_screen.dart`)
+
 - Show collateral address (Ark or Bitcoin)
 - QR code for easy scanning
 - Amount required
 - Wait for confirmation
 
 #### Step 3.6: Claim Collateral Screen (`lib/src/ui/screens/lending/claim_screen.dart`)
+
 - Fetch PSBT from API
 - Sign with wallet
 - Broadcast transaction
@@ -269,15 +297,17 @@ The iframe uses secp256k1 pubkey challenge-response:
 ### Key Implementation Details
 
 **Signing must match the iframe implementation:**
+
 ```typescript
 // iframe: signMessage signs SHA256(message) with ECDSA
 const signature = await client.signMessage(challenge);
 ```
 
 In Rust:
+
 ```rust
 use bitcoin::secp256k1::{Message, Secp256k1};
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 pub fn sign_message(message: &str, keypair: &Keypair) -> Result<String> {
     let secp = Secp256k1::new();
@@ -337,39 +367,44 @@ pub fn sign_message(message: &str, keypair: &Keypair) -> Result<String> {
 ## API Endpoints to Implement
 
 ### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/pubkey-challenge` | Request auth challenge |
-| POST | `/api/auth/pubkey-verify` | Verify signature, get JWT |
-| POST | `/api/auth/pubkey-register` | Register new user |
+
+| Method | Endpoint                     | Description               |
+| ------ | ---------------------------- | ------------------------- |
+| POST   | `/api/auth/pubkey-challenge` | Request auth challenge    |
+| POST   | `/api/auth/pubkey-verify`    | Verify signature, get JWT |
+| POST   | `/api/auth/pubkey-register`  | Register new user         |
 
 ### Offers
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/offers` | List available offers (with filters) |
+
+| Method | Endpoint      | Description                          |
+| ------ | ------------- | ------------------------------------ |
+| GET    | `/api/offers` | List available offers (with filters) |
 
 ### Contracts
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/contracts` | List user's contracts |
-| POST | `/api/contracts` | Create new contract (take offer) |
-| GET | `/api/contracts/{id}` | Get contract details |
-| DELETE | `/api/contracts/{id}` | Cancel contract (if Requested) |
-| PUT | `/api/contracts/{id}/installment-paid` | Mark repayment sent |
+
+| Method | Endpoint                               | Description                      |
+| ------ | -------------------------------------- | -------------------------------- |
+| GET    | `/api/contracts`                       | List user's contracts            |
+| POST   | `/api/contracts`                       | Create new contract (take offer) |
+| GET    | `/api/contracts/{id}`                  | Get contract details             |
+| DELETE | `/api/contracts/{id}`                  | Cancel contract (if Requested)   |
+| PUT    | `/api/contracts/{id}/installment-paid` | Mark repayment sent              |
 
 ### Claim Collateral
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/contracts/{id}/claim` | Get PSBT for claiming |
-| POST | `/api/contracts/{id}/broadcast-claim` | Broadcast signed TX |
-| GET | `/api/contracts/{id}/claim-ark` | Get Ark PSBTs for claiming |
-| POST | `/api/contracts/{id}/broadcast-claim-ark` | Broadcast Ark claim |
+
+| Method | Endpoint                                  | Description                |
+| ------ | ----------------------------------------- | -------------------------- |
+| GET    | `/api/contracts/{id}/claim`               | Get PSBT for claiming      |
+| POST   | `/api/contracts/{id}/broadcast-claim`     | Broadcast signed TX        |
+| GET    | `/api/contracts/{id}/claim-ark`           | Get Ark PSBTs for claiming |
+| POST   | `/api/contracts/{id}/broadcast-claim-ark` | Broadcast Ark claim        |
 
 ### Recovery (Expired Contracts)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/contracts/{id}/recover` | Get recovery PSBT |
-| POST | `/api/contracts/{id}/broadcast-recover` | Broadcast recovery TX |
+
+| Method | Endpoint                                | Description           |
+| ------ | --------------------------------------- | --------------------- |
+| GET    | `/api/contracts/{id}/recover`           | Get recovery PSBT     |
+| POST   | `/api/contracts/{id}/broadcast-recover` | Broadcast recovery TX |
 
 ---
 
@@ -410,6 +445,7 @@ lib/
 ## Testing Checklist
 
 ### Authentication
+
 - [ ] Can get public key from wallet
 - [ ] Can sign challenge message correctly (matches expected format)
 - [ ] Can authenticate and receive JWT
@@ -417,27 +453,32 @@ lib/
 - [ ] Token refresh works
 
 ### Offers
+
 - [ ] Can fetch available offers
 - [ ] Filters work correctly
 - [ ] Offer details display properly
 
 ### Contracts
+
 - [ ] Can create a contract from an offer
 - [ ] Contract list displays correctly
 - [ ] Contract details show all information
 - [ ] Can cancel a Requested contract
 
 ### Collateral Deposit
+
 - [ ] Correct address displayed (Ark vs Bitcoin)
 - [ ] Amount calculation is correct
 - [ ] Can detect when collateral is confirmed
 
 ### Repayment
+
 - [ ] Installment information displays correctly
 - [ ] Can mark installment as paid
 - [ ] Status updates after marking paid
 
 ### Claim
+
 - [ ] Can fetch claim PSBT
 - [ ] Can sign PSBT with wallet
 - [ ] Can broadcast signed transaction

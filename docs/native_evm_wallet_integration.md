@@ -6,13 +6,13 @@ For the initial release, we use **WalletConnect** to integrate with users' exist
 
 ### Why WalletConnect First?
 
-| Benefit | Description |
-|---------|-------------|
-| Faster to market | No need to build full EVM wallet infrastructure |
-| User's existing wallets | Users keep their familiar wallet setup |
-| Security delegation | Private key management handled by established wallets |
-| Lower maintenance | No EVM node/RPC management needed |
-| Focused scope | Stay focused on Bitcoin/Ark core functionality |
+| Benefit                 | Description                                           |
+| ----------------------- | ----------------------------------------------------- |
+| Faster to market        | No need to build full EVM wallet infrastructure       |
+| User's existing wallets | Users keep their familiar wallet setup                |
+| Security delegation     | Private key management handled by established wallets |
+| Lower maintenance       | No EVM node/RPC management needed                     |
+| Focused scope           | Stay focused on Bitcoin/Ark core functionality        |
 
 ### WalletConnect Flow
 
@@ -91,29 +91,29 @@ pub const EVM_DERIVATION_PATH: &str = "m/44'/60'/0'/0";
 ```toml
 # Cargo.toml additions
 [dependencies]
-alloy = { version = "0.1", features = ["full"] }  # Modern EVM library
+alloy = { version = "0.1", features = ["full"] } # Modern EVM library
 # OR
-ethers = { version = "2.0", features = ["rustls"] }  # Established alternative
+ethers = { version = "2.0", features = ["rustls"] } # Established alternative
 ```
 
 #### Core Functionality Needed
 
-| Feature | Library | Complexity |
-|---------|---------|------------|
-| Key derivation | `bip32` (already have) | Low |
-| Address generation | `alloy-primitives` | Low |
-| RPC connection | `alloy-provider` | Medium |
-| ERC-20 balances | `alloy-contract` | Medium |
-| Transaction signing | `alloy-signer` | Medium |
-| Transaction sending | `alloy-provider` | Medium |
+| Feature             | Library                | Complexity |
+| ------------------- | ---------------------- | ---------- |
+| Key derivation      | `bip32` (already have) | Low        |
+| Address generation  | `alloy-primitives`     | Low        |
+| RPC connection      | `alloy-provider`       | Medium     |
+| ERC-20 balances     | `alloy-contract`       | Medium     |
+| Transaction signing | `alloy-signer`         | Medium     |
+| Transaction sending | `alloy-provider`       | Medium     |
 
 #### Supported Tokens (Polygon)
 
-| Token | Contract Address | Decimals |
-|-------|------------------|----------|
-| USDC | `0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359` | 6 |
-| USDT | `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` | 6 |
-| DAI | `0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063` | 18 |
+| Token | Contract Address                             | Decimals |
+| ----- | -------------------------------------------- | -------- |
+| USDC  | `0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359` | 6        |
+| USDT  | `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` | 6        |
+| DAI   | `0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063` | 18       |
 
 ### Implementation Outline
 
@@ -135,21 +135,24 @@ pub struct EvmKeyProvider {
 
 impl EvmKeyProvider {
     pub fn new(master_xpriv: Xpriv) -> Self {
-        let base_path = DerivationPath::from_str(EVM_DERIVATION_PATH)
-            .expect("valid derivation path");
-        Self { master_xpriv, base_path }
+        let base_path =
+            DerivationPath::from_str(EVM_DERIVATION_PATH).expect("valid derivation path");
+        Self {
+            master_xpriv,
+            base_path,
+        }
     }
 
     pub fn get_signer(&self, index: u32) -> PrivateKeySigner {
         // Derive child key at index
         let path = format!("{}/{}", EVM_DERIVATION_PATH, index);
-        let derived = self.master_xpriv
+        let derived = self
+            .master_xpriv
             .derive_priv(&secp, &DerivationPath::from_str(&path).unwrap())
             .unwrap();
 
         // Convert to EVM signer
-        PrivateKeySigner::from_bytes(&derived.private_key.secret_bytes())
-            .expect("valid key")
+        PrivateKeySigner::from_bytes(&derived.private_key.secret_bytes()).expect("valid key")
     }
 
     pub fn get_address(&self, index: u32) -> Address {
@@ -163,8 +166,8 @@ impl EvmKeyProvider {
 ```rust
 // rust/src/evm/polygon_client.rs (future)
 
-use alloy::providers::{Provider, ProviderBuilder};
 use alloy::primitives::{Address, U256};
+use alloy::providers::{Provider, ProviderBuilder};
 
 pub struct PolygonClient {
     provider: impl Provider,
@@ -173,8 +176,7 @@ pub struct PolygonClient {
 
 impl PolygonClient {
     pub async fn new(rpc_url: &str, master_xpriv: Xpriv) -> Result<Self> {
-        let provider = ProviderBuilder::new()
-            .on_http(rpc_url.parse()?);
+        let provider = ProviderBuilder::new().on_http(rpc_url.parse()?);
 
         Ok(Self {
             provider,
@@ -247,30 +249,30 @@ Phase 3 (Full integration)
 
 Consider building native EVM wallet if:
 
-- [ ] >30% of users don't have an existing EVM wallet
+- [ ] 30% of users don't have an existing EVM wallet
 - [ ] User feedback explicitly requests integrated solution
 - [ ] WalletConnect UX proves to be a significant friction point
 - [ ] Competitor analysis shows integrated wallets winning
 
 ### Security Considerations
 
-| Aspect | WalletConnect | Native Wallet |
-|--------|---------------|---------------|
-| Key storage | User's wallet | Our secure storage |
-| Attack surface | Minimal | Increased |
-| Audit scope | Bitcoin/Ark only | + EVM signing |
-| User trust | Delegated | Full responsibility |
+| Aspect         | WalletConnect    | Native Wallet       |
+| -------------- | ---------------- | ------------------- |
+| Key storage    | User's wallet    | Our secure storage  |
+| Attack surface | Minimal          | Increased           |
+| Audit scope    | Bitcoin/Ark only | + EVM signing       |
+| User trust     | Delegated        | Full responsibility |
 
 ### RPC Providers (Polygon)
 
 For production native wallet:
 
-| Provider | Free Tier | Notes |
-|----------|-----------|-------|
-| Alchemy | 300M compute/month | Recommended |
-| Infura | 100k requests/day | Established |
-| QuickNode | 10M requests/month | Fast |
-| Public RPC | Unlimited | Less reliable |
+| Provider   | Free Tier          | Notes         |
+| ---------- | ------------------ | ------------- |
+| Alchemy    | 300M compute/month | Recommended   |
+| Infura     | 100k requests/day  | Established   |
+| QuickNode  | 10M requests/month | Fast          |
+| Public RPC | Unlimited          | Less reliable |
 
 ```
 Polygon Mainnet RPC:

@@ -736,13 +736,11 @@ class WalletScreenState extends State<WalletScreen>
                         const SizedBox(height: AppTheme.cardPadding * 1.5),
                         _buildBalanceDisplay(),
                         if (_lockedCollateralSats > 0) ...[
-                          const SizedBox(
-                              height: AppTheme.elementSpacing * 0.5),
+                          const SizedBox(height: AppTheme.elementSpacing * 0.5),
                           _buildLockedCollateralDisplay(),
                         ],
                         if (_boardingBalanceSats > 0) ...[
-                          const SizedBox(
-                              height: AppTheme.elementSpacing * 0.5),
+                          const SizedBox(height: AppTheme.elementSpacing * 0.5),
                           _buildBoardingBalanceDisplay(),
                         ],
                         const SizedBox(height: AppTheme.elementSpacing),

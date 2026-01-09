@@ -57,7 +57,8 @@ class _CryptoInfoItemState extends State<CryptoInfoItem> {
     final btcPriceUsd = widget.bitcoinPrice ?? 0.0;
     final exchangeRates = currencyService.exchangeRates;
     final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
-    final fiatValue = balanceValue / BitcoinConstants.satsPerBtc * btcPriceUsd * fiatRate;
+    final fiatValue =
+        balanceValue / BitcoinConstants.satsPerBtc * btcPriceUsd * fiatRate;
 
     return GlassContainer(
       height: AppTheme.cardPadding * 2.75,

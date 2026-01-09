@@ -21,6 +21,7 @@ The **Nostr public key** derived at path `m/44/0/0/0/0` is the **canonical user 
 - **Future features** - Any feature requiring a consistent user ID
 
 **Why Nostr pubkey?**
+
 - Nostr is designed as an identity/social layer
 - Network-independent (same key on mainnet/testnet)
 - Becoming a Bitcoin ecosystem identity standard
@@ -55,11 +56,11 @@ Master Xpriv (from BIP39 seed)
 
 ### Key Files
 
-| File | Purpose |
-|------|---------|
+| File                            | Purpose                                          |
+| ------------------------------- | ------------------------------------------------ |
 | `rust/src/ark/mnemonic_file.rs` | Mnemonic generation, storage, and key derivation |
-| `rust/src/ark/mod.rs` | Wallet setup with Bip32KeyProvider |
-| `rust/src/state.rs` | UnifiedKeyProvider for HD and legacy support |
+| `rust/src/ark/mod.rs`           | Wallet setup with Bip32KeyProvider               |
+| `rust/src/state.rs`             | UnifiedKeyProvider for HD and legacy support     |
 
 ## Architecture Diagram
 
@@ -108,12 +109,12 @@ Master Xpriv (from BIP39 seed)
 
 ### Summary Table
 
-| Service | Purpose | Derivation Path | Standard | Status |
-|---------|---------|-----------------|----------|--------|
-| **Nostr** | **User Identity (npub)** | `m/44/0/0/0/0` | LendaSat SDK | **Implemented** |
-| **Ark SDK** | HD Wallet | `m/83696968'/11811'/0/{i}` | Arkade Default | **Implemented** |
-| **Lendasat** | Contract keys | `m/10101'/0'/0` | Custom | **Implemented** |
-| **LendaSwap** | Swap keys | `m/83696968'/121923'/{i}'` | BIP-85 | **Implemented** |
+| Service       | Purpose                  | Derivation Path            | Standard       | Status          |
+| ------------- | ------------------------ | -------------------------- | -------------- | --------------- |
+| **Nostr**     | **User Identity (npub)** | `m/44/0/0/0/0`             | LendaSat SDK   | **Implemented** |
+| **Ark SDK**   | HD Wallet                | `m/83696968'/11811'/0/{i}` | Arkade Default | **Implemented** |
+| **Lendasat**  | Contract keys            | `m/10101'/0'/0`            | Custom         | **Implemented** |
+| **LendaSwap** | Swap keys                | `m/83696968'/121923'/{i}'` | BIP-85         | **Implemented** |
 
 > **Note:** The Nostr pubkey is listed first because it serves as the **canonical user identifier** across all services. All other keys are service-specific and isolated for security.
 
@@ -148,8 +149,8 @@ The Arkade SDK uses `Bip32KeyProvider` which handles HD key derivation internall
 // rust/src/ark/mod.rs
 
 pub async fn setup_client_hd(
-    master_xpriv: Xpriv,  // Master key from mnemonic
-    // ...
+    master_xpriv: Xpriv, // Master key from mnemonic
+                         // ...
 ) -> Result<String> {
     // Arkade handles key derivation at m/83696968'/11811'/0/{i}
     let base_path = DerivationPath::from_str(ARK_BASE_DERIVATION_PATH)?;
@@ -165,6 +166,7 @@ pub async fn setup_client_hd(
 ```
 
 **Key features of Bip32KeyProvider:**
+
 - `get_next_keypair()` - Automatically derives next key at path `/{index}`
 - `get_keypair_for_pk()` - Retrieves keypair by public key from cache
 - `supports_discovery()` - Enables BIP44-style gap limit discovery
@@ -195,14 +197,14 @@ pub(crate) async fn nsec(data_dir: String, network: Network) -> Result<nostr::Se
 
 /// Generate a new 12-word BIP39 mnemonic
 pub fn generate_mnemonic() -> Result<Mnemonic> {
-    let mut entropy = [0u8; 16];  // 128 bits = 12 words
+    let mut entropy = [0u8; 16]; // 128 bits = 12 words
     rand::thread_rng().fill_bytes(&mut entropy);
     Mnemonic::from_entropy(&entropy)
 }
 
 /// Derive the master extended private key from mnemonic
 pub fn derive_master_xpriv(mnemonic: &Mnemonic, network: Network) -> Result<Xpriv> {
-    let seed = mnemonic.to_seed("");  // Empty passphrase
+    let seed = mnemonic.to_seed(""); // Empty passphrase
     Xpriv::new_master(network, &seed)
 }
 
@@ -254,6 +256,7 @@ impl KeyProvider for UnifiedKeyProvider {
 - **Migration recommended:** Transfer funds to new HD wallet
 
 Check wallet type:
+
 ```rust
 pub fn is_hd_wallet(data_dir: &str) -> bool {
     mnemonic_exists(data_dir)
@@ -279,10 +282,10 @@ m/10101'/...              - Lendasat (custom prefix)
 
 ### Hardened vs Non-Hardened
 
-| Path Type | Security | Use Case |
-|-----------|----------|----------|
+| Path Type      | Security                       | Use Case                |
+| -------------- | ------------------------------ | ----------------------- |
 | Hardened (`'`) | Child key cannot derive parent | Financial keys, secrets |
-| Non-hardened | Xpub can derive child pubkeys | Address discovery |
+| Non-hardened   | Xpub can derive child pubkeys  | Address discovery       |
 
 ### Mnemonic Security
 
@@ -363,11 +366,11 @@ abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon 
 
 ### Expected Derivations (Bitcoin Mainnet)
 
-| Service | Path | Notes |
-|---------|------|-------|
-| Ark (index 0) | `m/83696968'/11811'/0/0` | First Ark address |
-| Ark (index 1) | `m/83696968'/11811'/0/1` | Second Ark address |
-| Nostr | `m/44/0/0/0/0` | LendaSat SDK identity |
+| Service       | Path                     | Notes                 |
+| ------------- | ------------------------ | --------------------- |
+| Ark (index 0) | `m/83696968'/11811'/0/0` | First Ark address     |
+| Ark (index 1) | `m/83696968'/11811'/0/1` | Second Ark address    |
+| Nostr         | `m/44/0/0/0/0`           | LendaSat SDK identity |
 
 ### Verification Code
 

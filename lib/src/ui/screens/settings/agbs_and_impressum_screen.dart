@@ -231,7 +231,7 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                // Contact Cards
+              // Contact Cards
               _buildContactCard(
                 context,
                 icon: Icons.location_on_outlined,

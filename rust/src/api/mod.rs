@@ -111,4 +111,3 @@ pub fn get_supported_currencies() -> Vec<FiatCurrency> {
 pub fn currency_code(currency: FiatCurrency) -> String {
     currency.code().to_string()
 }
-

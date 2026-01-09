@@ -27,6 +27,7 @@ lendaswap-core (Shared SDK)
 ```
 
 **Key characteristics:**
+
 - Uses `flutter_rust_bridge` to expose Rust functions to Flutter/Dart
 - All swap logic runs natively via FFI bindings
 - Global singleton client pattern with `OnceLock<RwLock<Option<LendaSwapClient>>>`
@@ -46,6 +47,7 @@ React/TypeScript Frontend (frontend/apps/lendaswap/)
 ```
 
 **Key characteristics:**
+
 - TypeScript SDK wraps WASM-compiled Rust core
 - Direct HTTP API calls for some operations (e.g., creating swaps)
 - Dexie (IndexedDB) for browser-based storage
@@ -53,11 +55,11 @@ React/TypeScript Frontend (frontend/apps/lendaswap/)
 
 ### Architecture Comparison
 
-| Aspect | Mobile | Web |
-|--------|--------|-----|
-| SDK Integration | Native Rust via FFI | WASM via TypeScript wrapper |
-| State Management | Flutter ChangeNotifier + Rust globals | React Context + IndexedDB |
-| Deployment | Compiled into native binary | WASM loaded at runtime |
+| Aspect           | Mobile                                | Web                         |
+| ---------------- | ------------------------------------- | --------------------------- |
+| SDK Integration  | Native Rust via FFI                   | WASM via TypeScript wrapper |
+| State Management | Flutter ChangeNotifier + Rust globals | React Context + IndexedDB   |
+| Deployment       | Compiled into native binary           | WASM loaded at runtime      |
 
 ---
 
@@ -68,26 +70,26 @@ Both implementations use the **same `lendaswap-core` Rust SDK** for cryptographi
 ### Derivation Constants (from `client-sdk/core/src/hd_wallet.rs`)
 
 ```rust
-const SIGNING_PREFIX: u32 = 83696968;   // BIP-85 prefix
-const ID_PREFIX: u32 = 9419;            // Identity prefix
-const LSW_IDENTIFIER: u32 = 121923;     // "LSW" encoded
+const SIGNING_PREFIX: u32 = 83696968; // BIP-85 prefix
+const ID_PREFIX: u32 = 9419; // Identity prefix
+const LSW_IDENTIFIER: u32 = 121923; // "LSW" encoded
 const PREIMAGE_TAG: &str = "lendaswap/preimage";
 ```
 
 ### Derivation Paths
 
-| Purpose | Path |
-|---------|------|
-| Swap Keys | `m/83696968'/121923'/{index}'` |
+| Purpose       | Path                                                               |
+| ------------- | ------------------------------------------------------------------ |
+| Swap Keys     | `m/83696968'/121923'/{index}'`                                     |
 | User Identity | `m/9419'/121923'/0'` (then `m/9419/121923/{index}` for derivation) |
 
 ### Key Difference
 
-| Aspect | Mobile | Web |
-|--------|--------|-----|
-| Mnemonic Source | Shared with Ark wallet (file-based) | Standalone (browser storage) |
-| Key Index File | `lendaswap_key_index` (filesystem) | localStorage |
-| Cross-Service | Same mnemonic for Ark + LendaSwap + Lendasat | Can be shared if imported |
+| Aspect          | Mobile                                       | Web                          |
+| --------------- | -------------------------------------------- | ---------------------------- |
+| Mnemonic Source | Shared with Ark wallet (file-based)          | Standalone (browser storage) |
+| Key Index File  | `lendaswap_key_index` (filesystem)           | localStorage                 |
+| Cross-Service   | Same mnemonic for Ark + LendaSwap + Lendasat | Can be shared if imported    |
 
 ---
 
@@ -119,27 +121,27 @@ IndexedDB is a **local database built into the user's web browser** - NOT a serv
 
 ```typescript
 export class LendaswapDatabase extends Dexie {
-    swaps!: EntityTable<StoredSwap, "id">;
+  swaps!: EntityTable<StoredSwap, "id">;
 
-    constructor() {
-        super("lendaswap-v1-do-not-use");
-        this.version(1).stores({
-            swaps: "id, status, created_at, direction",
-        });
-    }
+  constructor() {
+    super("lendaswap-v1-do-not-use");
+    this.version(1).stores({
+      swaps: "id, status, created_at, direction",
+    });
+  }
 }
 ```
 
 ### Storage Comparison
 
-| Aspect | Mobile | Web |
-|--------|--------|-----|
-| Technology | JSON files + in-memory cache | IndexedDB (Dexie) |
-| Schema | Ad-hoc JSON structure | Versioned schema with migrations |
-| Indexing | By filename (swap_id) | Indexed by id, status, direction, created_at |
-| Querying | List all, filter in Rust | Native IndexedDB queries |
-| Persistence | Files survive app reinstall (if not cleared) | Browser storage (can be cleared) |
-| Server involved? | **No** - local only | **No** - local only |
+| Aspect           | Mobile                                       | Web                                          |
+| ---------------- | -------------------------------------------- | -------------------------------------------- |
+| Technology       | JSON files + in-memory cache                 | IndexedDB (Dexie)                            |
+| Schema           | Ad-hoc JSON structure                        | Versioned schema with migrations             |
+| Indexing         | By filename (swap_id)                        | Indexed by id, status, direction, created_at |
+| Querying         | List all, filter in Rust                     | Native IndexedDB queries                     |
+| Persistence      | Files survive app reinstall (if not cleared) | Browser storage (can be cleared)             |
+| Server involved? | **No** - local only                          | **No** - local only                          |
 
 ---
 
@@ -171,19 +173,20 @@ if (_swaps.isEmpty) {
 
 ### Recovery Flow
 
-| Step | What Happens |
-|------|--------------|
-| 1 | User restores wallet with existing mnemonic |
-| 2 | LendaSwapService initializes (uses same mnemonic) |
-| 3 | Local swap storage is empty (fresh install) |
-| 4 | Service detects `_swaps.isEmpty` |
-| 5 | Calls `lendaswapRecoverSwaps()` → queries server using user's identity xpub |
-| 6 | Server returns all swaps associated with that identity |
-| 7 | Swaps are stored locally and displayed |
+| Step | What Happens                                                                |
+| ---- | --------------------------------------------------------------------------- |
+| 1    | User restores wallet with existing mnemonic                                 |
+| 2    | LendaSwapService initializes (uses same mnemonic)                           |
+| 3    | Local swap storage is empty (fresh install)                                 |
+| 4    | Service detects `_swaps.isEmpty`                                            |
+| 5    | Calls `lendaswapRecoverSwaps()` → queries server using user's identity xpub |
+| 6    | Server returns all swaps associated with that identity                      |
+| 7    | Swaps are stored locally and displayed                                      |
 
 ### Why Recovery Works
 
 The recovery is based on the **deterministic identity derived from the mnemonic**:
+
 - User ID xpub: `m/9419'/121923'/0'`
 - This identity is the same across any device with the same mnemonic
 - The LendaSwap server stores swaps indexed by this identity
@@ -219,10 +222,10 @@ Web can call API directly OR through SDK:
 const response = await api.create_arkade_to_evm_swap(request, targetChain);
 ```
 
-| Aspect | Mobile | Web |
-|--------|--------|-----|
-| API Abstraction | All through Rust SDK | Mix of direct API + SDK |
-| Error Handling | Rust -> Flutter bridge | TypeScript try/catch |
+| Aspect           | Mobile                 | Web                       |
+| ---------------- | ---------------------- | ------------------------- |
+| API Abstraction  | All through Rust SDK   | Mix of direct API + SDK   |
+| Error Handling   | Rust -> Flutter bridge | TypeScript try/catch      |
 | Request/Response | Serialized through FFI | Native JavaScript objects |
 
 ---
@@ -297,25 +300,25 @@ const response = await api.create_arkade_to_evm_swap(request, targetChain);
 
 ### Mobile App
 
-| File | Purpose |
-|------|---------|
-| `lib/src/services/lendaswap_service.dart` | Main Dart service wrapping Rust API |
-| `rust/src/api/lendaswap_api.rs` | FFI bindings for Flutter |
-| `rust/src/lendaswap/mod.rs` | Rust client wrapper |
-| `rust/src/lendaswap/storage.rs` | File-based storage adapters |
-| `lib/src/ui/screens/swap_screen.dart` | Main swap UI screen |
-| `lib/src/ui/screens/swap_processing_screen.dart` | Swap progress/polling screen |
-| `lib/src/ui/widgets/swap/` | Swap UI components |
+| File                                             | Purpose                             |
+| ------------------------------------------------ | ----------------------------------- |
+| `lib/src/services/lendaswap_service.dart`        | Main Dart service wrapping Rust API |
+| `rust/src/api/lendaswap_api.rs`                  | FFI bindings for Flutter            |
+| `rust/src/lendaswap/mod.rs`                      | Rust client wrapper                 |
+| `rust/src/lendaswap/storage.rs`                  | File-based storage adapters         |
+| `lib/src/ui/screens/swap_screen.dart`            | Main swap UI screen                 |
+| `lib/src/ui/screens/swap_processing_screen.dart` | Swap progress/polling screen        |
+| `lib/src/ui/widgets/swap/`                       | Swap UI components                  |
 
 ### Web Reference
 
-| File | Purpose |
-|------|---------|
-| `~/lendasat/lendaswap/frontend/apps/lendaswap/src/app/api.ts` | API calls |
-| `~/lendasat/lendaswap/frontend/apps/lendaswap/src/app/db.ts` | IndexedDB storage |
-| `~/lendasat/lendaswap/frontend/apps/lendaswap/src/app/App.tsx` | Main React app |
-| `~/lendasat/lendaswap/client-sdk/core/src/hd_wallet.rs` | Key derivation |
-| `~/lendasat/lendaswap/client-sdk/ts-sdk/` | TypeScript SDK |
+| File                                                           | Purpose           |
+| -------------------------------------------------------------- | ----------------- |
+| `~/lendasat/lendaswap/frontend/apps/lendaswap/src/app/api.ts`  | API calls         |
+| `~/lendasat/lendaswap/frontend/apps/lendaswap/src/app/db.ts`   | IndexedDB storage |
+| `~/lendasat/lendaswap/frontend/apps/lendaswap/src/app/App.tsx` | Main React app    |
+| `~/lendasat/lendaswap/client-sdk/core/src/hd_wallet.rs`        | Key derivation    |
+| `~/lendasat/lendaswap/client-sdk/ts-sdk/`                      | TypeScript SDK    |
 
 ---
 
@@ -351,6 +354,7 @@ When modifying `SwapInfo` or any FRB-exposed struct, THREE components must be in
 ### Why SSE Serialization is Fragile
 
 FRB uses **SSE (Simple Serialization)** - a position-based binary format:
+
 - Fields are serialized IN ORDER without field names
 - Both Rust and Dart must have EXACTLY the same field order and count
 - A mismatch causes data to be read into wrong fields
@@ -358,11 +362,13 @@ FRB uses **SSE (Simple Serialization)** - a position-based binary format:
 ### The RangeError Incident (What Went Wrong)
 
 **Symptom:**
+
 ```
 RangeError: Value not in range: 1711276624
 ```
 
 **What happened:**
+
 1. Added `evm_htlc_claim_txid` field to Rust struct (17 fields)
 2. Regenerated FRB bindings (Dart expects 17 fields)
 3. **FORGOT to rebuild native library** (still serializes 16 fields)
@@ -403,10 +409,10 @@ grep -c "final " lib/src/rust/lendaswap.dart  # Count Dart fields
 
 ### Field Reference
 
-| Swap Direction | User Sends | User Receives | Payment TX Field | Chain |
-|---------------|------------|---------------|------------------|-------|
-| BTC -> EVM | BTC | Stablecoins | `evm_htlc_claim_txid` | Polygon/ETH |
-| EVM -> BTC | Stablecoins | BTC | `bitcoin_htlc_claim_txid` | Bitcoin |
+| Swap Direction | User Sends  | User Receives | Payment TX Field          | Chain       |
+| -------------- | ----------- | ------------- | ------------------------- | ----------- |
+| BTC -> EVM     | BTC         | Stablecoins   | `evm_htlc_claim_txid`     | Polygon/ETH |
+| EVM -> BTC     | Stablecoins | BTC           | `bitcoin_htlc_claim_txid` | Bitcoin     |
 
 ### API Response Types (from lendaswap-core)
 
@@ -415,24 +421,25 @@ grep -c "final " lib/src/rust/lendaswap.dart  # Count Dart fields
 ```rust
 pub struct BtcToEvmSwapResponse {
     // Transaction IDs
-    pub bitcoin_htlc_claim_txid: Option<String>,  // Server claims user's BTC
-    pub bitcoin_htlc_fund_txid: Option<String>,   // User's BTC funding
-    pub evm_htlc_claim_txid: Option<String>,      // User claims stablecoins
-    pub evm_htlc_fund_txid: Option<String>,       // Server funds stablecoins
+    pub bitcoin_htlc_claim_txid: Option<String>, // Server claims user's BTC
+    pub bitcoin_htlc_fund_txid: Option<String>,  // User's BTC funding
+    pub evm_htlc_claim_txid: Option<String>,     // User claims stablecoins
+    pub evm_htlc_fund_txid: Option<String>,      // Server funds stablecoins
 }
 
 pub struct EvmToBtcSwapResponse {
     // Transaction IDs
-    pub bitcoin_htlc_fund_txid: Option<String>,   // Server funds BTC
-    pub bitcoin_htlc_claim_txid: Option<String>,  // User claims BTC <-- IMPORTANT
-    pub evm_htlc_claim_txid: Option<String>,      // Server claims stablecoins
-    pub evm_htlc_fund_txid: Option<String>,       // User funds stablecoins
+    pub bitcoin_htlc_fund_txid: Option<String>, // Server funds BTC
+    pub bitcoin_htlc_claim_txid: Option<String>, // User claims BTC <-- IMPORTANT
+    pub evm_htlc_claim_txid: Option<String>,    // Server claims stablecoins
+    pub evm_htlc_fund_txid: Option<String>,     // User funds stablecoins
 }
 ```
 
 ### When TXIDs Are Populated
 
 **EVM -> BTC (user receives BTC):**
+
 1. User deposits stablecoins -> `evm_htlc_fund_txid` set
 2. Server locks BTC in VHTLC -> `bitcoin_htlc_fund_txid` set
 3. User claims BTC via `claim_vhtlc()` -> `bitcoin_htlc_claim_txid` set
@@ -440,6 +447,7 @@ pub struct EvmToBtcSwapResponse {
 5. Next `get_swap()` returns the txid
 
 **BTC -> EVM (user receives stablecoins):**
+
 1. User pays LN invoice/Arkade HTLC -> `bitcoin_htlc_fund_txid` set
 2. Server funds EVM HTLC -> `evm_htlc_fund_txid` set
 3. User claims via Gelato -> `evm_htlc_claim_txid` set
@@ -449,11 +457,12 @@ pub struct EvmToBtcSwapResponse {
 ### Implementation in Mobile App
 
 **Current state (in `rust/src/lendaswap/mod.rs`):**
+
 ```rust
 pub struct SwapInfo {
     // ... other fields ...
-    pub evm_htlc_claim_txid: Option<String>,      // Implemented
-    // pub bitcoin_htlc_claim_txid: Option<String>,  // TODO: Add this
+    pub evm_htlc_claim_txid: Option<String>, // Implemented
+                                             // pub bitcoin_htlc_claim_txid: Option<String>,  // TODO: Add this
 }
 ```
 
@@ -484,6 +493,7 @@ ark-rest = { ... }    # DON'T PATCH - different swap implementation
 ```
 
 **Why:** lendaswap-core expects specific APIs from arkade-os/rust-sdk. Redirecting to ArkLabsHQ/ark-rs breaks swap creation with errors like:
+
 ```
 API error: failed to get LN invoice from Boltz with custom hash
 ```

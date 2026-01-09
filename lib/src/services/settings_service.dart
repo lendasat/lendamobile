@@ -11,18 +11,19 @@ class SettingsService {
   static const String _alphaWarningShownKey = 'alpha_warning_shown';
 
   // Default values from environment variables (injected via --dart-define)
-  static const String defaultEsploraUrl =
-      String.fromEnvironment('ESPLORA_URL', defaultValue: 'http://localhost:30000');
-  static const String defaultArkServerUrl =
-      String.fromEnvironment('ARK_SERVER_URL', defaultValue: 'http://localhost:7070');
+  static const String defaultEsploraUrl = String.fromEnvironment('ESPLORA_URL',
+      defaultValue: 'http://localhost:30000');
+  static const String defaultArkServerUrl = String.fromEnvironment(
+      'ARK_SERVER_URL',
+      defaultValue: 'http://localhost:7070');
   static const String defaultArkNetwork =
       String.fromEnvironment('ARK_NETWORK', defaultValue: 'regtest');
-  static const String defaultBoltzUrl =
-      String.fromEnvironment('BOLTZ_URL', defaultValue: 'http://localhost:9001');
-  static const String defaultBackendUrl =
-      String.fromEnvironment('BACKEND_URL', defaultValue: 'http://localhost:7337');
-  static const String defaultWebsiteUrl =
-      String.fromEnvironment('WEBSITE_URL', defaultValue: 'http://localhost:3000');
+  static const String defaultBoltzUrl = String.fromEnvironment('BOLTZ_URL',
+      defaultValue: 'http://localhost:9001');
+  static const String defaultBackendUrl = String.fromEnvironment('BACKEND_URL',
+      defaultValue: 'http://localhost:7337');
+  static const String defaultWebsiteUrl = String.fromEnvironment('WEBSITE_URL',
+      defaultValue: 'http://localhost:3000');
 
   // Singleton instance
   static final SettingsService _instance = SettingsService._internal();

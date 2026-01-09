@@ -91,7 +91,8 @@ class LendaSwapService extends ChangeNotifier {
           final errorStr = e.toString();
           if (_isParsingError(errorStr)) {
             logger.w('[LendaSwap Dart] Parsing error during recovery: $e');
-            logger.w('[LendaSwap Dart] Will continue without swaps - they can be recovered later');
+            logger.w(
+                '[LendaSwap Dart] Will continue without swaps - they can be recovered later');
             _swaps = [];
           } else {
             // Recovery is best-effort, don't fail initialization
@@ -124,9 +125,11 @@ class LendaSwapService extends ChangeNotifier {
     logger.d('[LendaSwap Dart] refreshSwaps called');
     try {
       _swaps = await lendaswap_api.lendaswapListSwaps();
-      logger.i('[LendaSwap Dart] refreshSwaps SUCCESS - found ${_swaps.length} swaps');
+      logger.i(
+          '[LendaSwap Dart] refreshSwaps SUCCESS - found ${_swaps.length} swaps');
       for (final swap in _swaps) {
-        logger.d('[LendaSwap Dart] - swap ${swap.id}: status=${swap.status}, detailed=${swap.detailedStatus}');
+        logger.d(
+            '[LendaSwap Dart] - swap ${swap.id}: status=${swap.status}, detailed=${swap.detailedStatus}');
       }
       notifyListeners();
     } catch (e) {
@@ -134,7 +137,8 @@ class LendaSwapService extends ChangeNotifier {
       final errorStr = e.toString();
       if (_isParsingError(errorStr)) {
         logger.w('[LendaSwap Dart] Swap parsing error detected: $e');
-        logger.w('[LendaSwap Dart] This may be caused by serialization mismatch. Attempting recovery...');
+        logger.w(
+            '[LendaSwap Dart] This may be caused by serialization mismatch. Attempting recovery...');
         await _handleParsingError();
         return;
       }
@@ -155,7 +159,8 @@ class LendaSwapService extends ChangeNotifier {
         // Unix timestamps are typically > 1000000000 (Sep 2001)
         // Enum indices should be < 100
         if (value > 1000) {
-          logger.w('[LendaSwap Dart] Detected likely timestamp value used as index: $value');
+          logger.w(
+              '[LendaSwap Dart] Detected likely timestamp value used as index: $value');
           return true;
         }
       }
@@ -170,7 +175,8 @@ class LendaSwapService extends ChangeNotifier {
       logger.i('[LendaSwap Dart] Recovering swaps from server...');
       final recovered = await lendaswap_api.lendaswapRecoverSwaps();
       _swaps = recovered;
-      logger.i('[LendaSwap Dart] Successfully recovered ${_swaps.length} swaps');
+      logger
+          .i('[LendaSwap Dart] Successfully recovered ${_swaps.length} swaps');
       notifyListeners();
     } catch (recoveryError) {
       logger.e('[LendaSwap Dart] Recovery also failed: $recoveryError');
@@ -227,8 +233,10 @@ class LendaSwapService extends ChangeNotifier {
 
       logger.i('[LendaSwap Dart] createSellBtcSwap SUCCESS');
       logger.i('[LendaSwap Dart] swap_id: ${result.swapId}');
-      logger.i('[LendaSwap Dart] ln_invoice: ${result.lnInvoice.substring(0, 50.clamp(0, result.lnInvoice.length))}...');
-      logger.i('[LendaSwap Dart] arkade_htlc_address: ${result.arkadeHtlcAddress}');
+      logger.i(
+          '[LendaSwap Dart] ln_invoice: ${result.lnInvoice.substring(0, 50.clamp(0, result.lnInvoice.length))}...');
+      logger.i(
+          '[LendaSwap Dart] arkade_htlc_address: ${result.arkadeHtlcAddress}');
       logger.i('[LendaSwap Dart] sats_to_send: ${result.satsToSend}');
       logger.i('[LendaSwap Dart] target_amount_usd: ${result.targetAmountUsd}');
       logger.i('[LendaSwap Dart] fee_sats: ${result.feeSats}');
@@ -381,7 +389,8 @@ class LendaSwapService extends ChangeNotifier {
     logger.i('[LendaSwap Dart] recoverSwaps called');
     try {
       final swaps = await lendaswap_api.lendaswapRecoverSwaps();
-      logger.i('[LendaSwap Dart] recoverSwaps SUCCESS - recovered ${swaps.length} swaps');
+      logger.i(
+          '[LendaSwap Dart] recoverSwaps SUCCESS - recovered ${swaps.length} swaps');
       _swaps = swaps;
       notifyListeners();
       return swaps;

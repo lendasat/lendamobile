@@ -293,7 +293,8 @@ class _MempoolHomeState extends State<MempoolHome> {
         debugPrint('RAPIDAPI_KEY not found');
         return;
       }
-      final fgiResponse = await mempool_api.getFearGreedIndex(apiKey: _rapidApiKey);
+      final fgiResponse =
+          await mempool_api.getFearGreedIndex(apiKey: _rapidApiKey);
 
       if (mounted) {
         setState(() {

@@ -5,6 +5,7 @@ This document outlines how to enable PostHog session recording in the Lenda mobi
 ## Current State
 
 The project has `posthog_flutter: ^5.6.0` installed with session replay now enabled:
+
 - API Key and Host are read from `.env` file
 - Lifecycle events: Enabled
 - Session Replay: **Enabled**
@@ -24,6 +25,7 @@ See `.env_sample` for reference.
 ## What Was Changed
 
 To enable session replay, we need to:
+
 1. Disable `AUTO_INIT` mode (required for session replay)
 2. Manually initialize PostHog with session replay configuration
 3. Wrap the app with `PostHogWidget` (required for screen capture)
@@ -213,19 +215,20 @@ class MyApp extends StatelessWidget {
 
 ## Session Replay Configuration Options
 
-| Option | Default | Our Setting | Description |
-|--------|---------|-------------|-------------|
-| `sessionReplay` | `false` | `true` | Enable/disable session replay |
-| `maskAllTexts` | `true` | `false` | Masks all text elements - we use `PostHogMaskWidget` instead for targeted masking |
-| `maskAllImages` | `true` | `false` | Masks all images - we use `PostHogMaskWidget` instead for targeted masking |
-| `screenshot` | `false` | `false` | Use screenshots instead of wireframes (more detail but less privacy) |
-| `throttleDelay` | `Duration(milliseconds: 1000)` | default | Minimum time between replay snapshots |
+| Option          | Default                        | Our Setting | Description                                                                       |
+| --------------- | ------------------------------ | ----------- | --------------------------------------------------------------------------------- |
+| `sessionReplay` | `false`                        | `true`      | Enable/disable session replay                                                     |
+| `maskAllTexts`  | `true`                         | `false`     | Masks all text elements - we use `PostHogMaskWidget` instead for targeted masking |
+| `maskAllImages` | `true`                         | `false`     | Masks all images - we use `PostHogMaskWidget` instead for targeted masking        |
+| `screenshot`    | `false`                        | `false`     | Use screenshots instead of wireframes (more detail but less privacy)              |
+| `throttleDelay` | `Duration(milliseconds: 1000)` | default     | Minimum time between replay snapshots                                             |
 
 ---
 
 ## Recording Modes
 
 ### Wireframe Mode (Default)
+
 - Uses native APIs to capture view hierarchy
 - Renders as HTML wireframe representation
 - More privacy-conscious
@@ -233,6 +236,7 @@ class MyApp extends StatelessWidget {
 - UI won't look exactly like the app but shows user behavior
 
 ### Screenshot Mode
+
 - Takes actual screenshots of the screen
 - More accurate visual representation
 - May contain sensitive information if not properly masked
@@ -246,16 +250,16 @@ class MyApp extends StatelessWidget {
 
 The following sensitive data is masked in session recordings using `PostHogMaskWidget`:
 
-| Screen | Masked Content |
-|--------|---------------|
+| Screen                       | Masked Content                    |
+| ---------------------------- | --------------------------------- |
 | `mnemonic_input_screen.dart` | All 12 mnemonic word input fields |
-| `recovery_key_view.dart` | Mnemonic phrase display grid |
-| `recovery_key_view.dart` | Verification word input fields |
-| `receivescreen.dart` | QR code (contains address) |
-| `receivescreen.dart` | Address/invoice display |
-| `walletscreen.dart` | Balance display (sats and fiat) |
-| `send_screen.dart` | Recipient address input field |
-| `send_screen.dart` | Recipient address display |
+| `recovery_key_view.dart`     | Mnemonic phrase display grid      |
+| `recovery_key_view.dart`     | Verification word input fields    |
+| `receivescreen.dart`         | QR code (contains address)        |
+| `receivescreen.dart`         | Address/invoice display           |
+| `walletscreen.dart`          | Balance display (sats and fiat)   |
+| `send_screen.dart`           | Recipient address input field     |
+| `send_screen.dart`           | Recipient address display         |
 
 ### Adding New Masked Views
 
@@ -271,6 +275,7 @@ PostHogMaskWidget(
 ### Network Recording Privacy
 
 When `captureNetworkTelemetry` is enabled:
+
 - Only captures metrics (speed, size, response codes)
 - Does NOT capture request/response body data
 - Automatically scrubs sensitive headers (`authorization`, `cookie`, etc.)
@@ -341,6 +346,7 @@ final isRecording = await Posthog().isSessionReplayActive();
 ## Troubleshooting
 
 ### Session recordings not appearing
+
 1. Ensure `AUTO_INIT` is set to `false` in both platforms
 2. Verify `PostHogWidget` wraps the entire app (must be root)
 3. Check that `MaterialApp` is a child of `PostHogWidget`
@@ -348,10 +354,12 @@ final isRecording = await Posthog().isSessionReplayActive();
 5. Wait 2-5 minutes for recordings to appear
 
 ### Blank or missing screens
+
 1. Check if `PosthogObserver` is added to `navigatorObservers`
 2. Ensure masked content isn't hiding everything
 
 ### Performance issues
+
 1. Increase `throttleDelay` to reduce snapshot frequency
 2. Use wireframe mode instead of screenshot mode
 3. Consider disabling session replay for performance-critical screens
