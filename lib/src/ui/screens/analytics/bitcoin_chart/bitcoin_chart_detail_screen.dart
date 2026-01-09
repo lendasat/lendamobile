@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_image_text_button.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
+import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 
 class BitcoinChartDetailScreen extends StatefulWidget {
@@ -36,15 +37,15 @@ class _BitcoinChartDetailScreenState extends State<BitcoinChartDetailScreen> {
       extendBodyBehindAppBar: true,
       appBar: BitNetAppBar(
         context: context,
+        hasBackButton: false,
         text: AppLocalizations.of(context)!.bitcoinPriceChart,
-        onTap: () => Navigator.of(context).pop(),
       ),
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
           // Spacer for AppBar
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 100),
+          SliverToBoxAdapter(
+            child: SizedBox(height: AppTheme.cardPadding * 2.75),
           ),
 
           // Chart Section

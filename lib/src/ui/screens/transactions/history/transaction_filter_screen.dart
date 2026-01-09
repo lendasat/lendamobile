@@ -45,13 +45,14 @@ class TransactionFilterScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Stack(
+      body: Column(
         children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(AppTheme.paddingM),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppTheme.paddingM),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 if (showFilterPills) ...[
                   Text(
                     'Filter Options',
@@ -195,14 +196,16 @@ class TransactionFilterScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 100),
               ],
+              ),
             ),
           ),
-          Positioned(
-            bottom: AppTheme.paddingL,
-            left: AppTheme.paddingM,
-            right: AppTheme.paddingM,
+          Padding(
+            padding: EdgeInsets.only(
+              left: AppTheme.paddingM,
+              right: AppTheme.paddingM,
+              bottom: MediaQuery.of(context).padding.bottom + AppTheme.paddingS,
+            ),
             child: SizedBox(
               width: double.infinity,
               child: LongButtonWidget(

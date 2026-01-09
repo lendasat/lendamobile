@@ -808,7 +808,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           Row(
             children: [
               Icon(Icons.description_rounded,
-                  size: 18, color: Theme.of(context).colorScheme.primary),
+                  size: 18, color: Theme.of(context).colorScheme.onSurface),
               const SizedBox(width: 8),
               Text(
                 'Loan Details',
@@ -863,8 +863,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.lock_rounded,
-                  size: 18, color: AppTheme.colorBitcoin),
+              Icon(Icons.lock_rounded,
+                  size: 18, color: Theme.of(context).colorScheme.onSurface),
               const SizedBox(width: 8),
               Text(
                 'Collateral Info',
@@ -956,7 +956,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           Row(
             children: [
               Icon(Icons.event_note_rounded,
-                  size: 18, color: Theme.of(context).colorScheme.primary),
+                  size: 18, color: Theme.of(context).colorScheme.onSurface),
               const SizedBox(width: 8),
               Text(
                 'Repayment Schedule',

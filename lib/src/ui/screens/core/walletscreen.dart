@@ -22,6 +22,7 @@ import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart'
     show PriceData; // Only import the data type, not the chart widget
 import 'package:ark_flutter/src/ui/widgets/wallet/wallet_mini_chart.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_image_text_button.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -532,26 +533,31 @@ class WalletScreenState extends State<WalletScreen>
     }
   }
 
-  void _toggleBalanceType() {
-    setState(() {
-      switch (_currentBalanceType) {
-        case BalanceType.total:
-          _currentBalanceType = BalanceType.pending;
-          break;
-        case BalanceType.pending:
-          _currentBalanceType = BalanceType.confirmed;
-          break;
-        case BalanceType.confirmed:
-          _currentBalanceType = BalanceType.total;
-          break;
-      }
-    });
+  // void _toggleBalanceType() {
+  //   setState(() {
+  //     switch (_currentBalanceType) {
+  //       case BalanceType.total:
+  //         _currentBalanceType = BalanceType.pending;
+  //         break;
+  //       case BalanceType.pending:
+  //         _currentBalanceType = BalanceType.confirmed;
+  //         break;
+  //       case BalanceType.confirmed:
+  //         _currentBalanceType = BalanceType.total;
+  //         break;
+  //     }
+  //   });
+  //
+  //   OverlayService().showOverlay(
+  //     AppLocalizations.of(context)!
+  //         .showingBalanceType(_currentBalanceType.name),
+  //     color: AppTheme.colorBitcoin,
+  //   );
+  // }
 
-    OverlayService().showOverlay(
-      AppLocalizations.of(context)!
-          .showingBalanceType(_currentBalanceType.name),
-      color: AppTheme.colorBitcoin,
-    );
+  void _toggleBalanceVisibility() {
+    HapticFeedback.lightImpact();
+    context.read<UserPreferencesService>().toggleBalancesVisible();
   }
 
   void _toggleDisplayUnit() {
@@ -637,10 +643,61 @@ class WalletScreenState extends State<WalletScreen>
 
   void _handleBitcoinChart() {
     logger.i("Bitcoin chart button pressed");
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const BitcoinChartDetailScreen(),
+    final l10n = AppLocalizations.of(context)!;
+
+    arkBottomSheet(
+      context: context,
+      height: MediaQuery.of(context).size.height * 0.9,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: Column(
+        children: [
+          // App bar at top
+          BitNetAppBar(
+            context: context,
+            hasBackButton: false,
+            text: l10n.bitcoinPriceChart,
+          ),
+          // Top spacing
+          SizedBox(height: AppTheme.cardPadding * 1.5),
+          // Chart content
+          Expanded(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+              child: const BitcoinChartCard(),
+            ),
+          ),
+          // About Bitcoin section
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.aboutBitcoin,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.bitcoinDescription,
+                  style: TextStyle(
+                    color: Theme.of(context).hintColor,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+        ],
       ),
     );
   }
@@ -654,7 +711,7 @@ class WalletScreenState extends State<WalletScreen>
 
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.7,
+      height: MediaQuery.of(context).size.height * 0.85,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Settings(aspId: widget.aspId),
     ).then((_) {
@@ -984,7 +1041,7 @@ class WalletScreenState extends State<WalletScreen>
           PostHogMaskWidget(
             child: GestureDetector(
               onTap: _toggleDisplayUnit,
-              onLongPress: _toggleBalanceType,
+              onLongPress: _toggleBalanceVisibility,
               behavior: HitTestBehavior.opaque,
               child: SizedBox(
                 width: double.infinity,
@@ -1297,9 +1354,8 @@ class WalletScreenState extends State<WalletScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Flexible(
+          Expanded(
             child: BitNetImageWithTextButton(
               AppLocalizations.of(context)?.send ?? "Send",
               _handleSend,
@@ -1308,7 +1364,7 @@ class WalletScreenState extends State<WalletScreen>
               fallbackIcon: Icons.arrow_upward_rounded,
             ),
           ),
-          Flexible(
+          Expanded(
             child: BitNetImageWithTextButton(
               AppLocalizations.of(context)?.receive ?? "Receive",
               _handleReceive,
@@ -1318,7 +1374,7 @@ class WalletScreenState extends State<WalletScreen>
             ),
           ),
           // Scan button (replaces Sell)
-          Flexible(
+          Expanded(
             child: BitNetImageWithTextButton(
               AppLocalizations.of(context)?.scan ?? "Scan",
               _handleScan,

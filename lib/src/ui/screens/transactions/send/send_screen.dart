@@ -789,7 +789,7 @@ class SendScreenState extends State<SendScreen> {
                           // Available balance display
                           _buildAvailableBalance(context, l10n),
                           // Transaction details preview
-                          const SizedBox(height: AppTheme.cardPadding),
+                          const SizedBox(height: AppTheme.cardPadding * 4),
                           _buildTransactionDetails(context, l10n),
                         ],
                       ),

@@ -99,6 +99,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
   void _copyTxId() {
     if (txID == null) return;
     Clipboard.setData(ClipboardData(text: txID!));
+    HapticFeedback.lightImpact();
     setState(() => _showTxIdCopied = true);
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) setState(() => _showTxIdCopied = false);
@@ -108,6 +109,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
   void _copyAddress() {
     if (_recipientAddress == null) return;
     Clipboard.setData(ClipboardData(text: _recipientAddress!));
+    HapticFeedback.lightImpact();
     setState(() => _showAddressCopied = true);
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) setState(() => _showAddressCopied = false);

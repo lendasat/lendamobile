@@ -972,7 +972,7 @@ class SwapScreenState extends State<SwapScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       behavior: HitTestBehavior.translucent,
-      child: ArkScaffold(
+      child: ArkScaffoldUnsafe(
         context: context,
         extendBodyBehindAppBar: true,
         resizeToAvoidBottomInset: true,
@@ -995,7 +995,7 @@ class SwapScreenState extends State<SwapScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: AppTheme.cardPadding * 2),
+                    const SizedBox(height: AppTheme.cardPadding * 3),
                     // Uniswap-style card stack with connected border
                     Container(
                       margin: const EdgeInsets.symmetric(
@@ -1616,7 +1616,7 @@ class _TokenSelectorSheetState extends State<_TokenSelectorSheet> {
             ? 'Select token to buy'
             : 'Select token';
 
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       context: context,
       extendBodyBehindAppBar: true,
       appBar: BitNetAppBar(

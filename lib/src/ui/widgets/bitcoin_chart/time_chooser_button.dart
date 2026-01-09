@@ -17,51 +17,43 @@ class TimeChooserButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isSelected = timespan == timeperiod;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: isSelected
-          ? Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  width: 1.5,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(12),
-                ),
-                color: Theme.of(context).colorScheme.secondary.withAlpha(25),
-              ),
-              child: _buildButtonContent(context, isSelected),
-            )
-          : _buildButtonContent(context, isSelected),
-    );
-  }
-
-  Widget _buildButtonContent(BuildContext context, bool isSelected) {
-    return TextButton(
-      style: TextButton.styleFrom(
-        padding: EdgeInsets.zero,
-        minimumSize: Size(50, isSelected ? 30 : 20),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        alignment: Alignment.center,
-      ),
-      onPressed: onPressed,
+    return GestureDetector(
+      onTap: onPressed,
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 6,
-          horizontal: 12,
-        ),
-        child: Text(
-          _getDisplayText(timeperiod),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: isSelected
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withAlpha(153), // 0.6 opacity
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              vertical: 6,
+              horizontal: 12,
+            ),
+            decoration: isSelected
+                ? BoxDecoration(
+                    border: Border.all(
+                      width: 1.5,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(12),
+                    ),
+                    color:
+                        Theme.of(context).colorScheme.secondary.withAlpha(25),
+                  )
+                : null,
+            child: Text(
+              _getDisplayText(timeperiod),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withAlpha(153), // 0.6 opacity
+              ),
+            ),
           ),
         ),
       ),
@@ -108,6 +100,15 @@ class _CustomizableTimeChooserState extends State<CustomizableTimeChooser> {
   }
 
   @override
+  void didUpdateWidget(CustomizableTimeChooser oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Sync with external changes
+    if (widget.initialSelectedPeriod != oldWidget.initialSelectedPeriod) {
+      selectedPeriod = widget.initialSelectedPeriod;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -120,23 +121,24 @@ class _CustomizableTimeChooserState extends State<CustomizableTimeChooser> {
   }
 
   Widget _buildButton(String period) {
-    return Flexible(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 0.0),
-        child: widget.buttonBuilder(
-          context,
-          period,
-          selectedPeriod == period,
-          () => _handleButtonPress(period),
-        ),
+    return Expanded(
+      child: widget.buttonBuilder(
+        context,
+        period,
+        selectedPeriod == period,
+        () => _handleButtonPress(period),
       ),
     );
   }
 
   void _handleButtonPress(String period) {
+    // Update UI immediately
     setState(() {
       selectedPeriod = period;
     });
-    widget.onTimePeriodSelected(period);
+    // Call parent callback after UI updates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onTimePeriodSelected(period);
+    });
   }
 }
