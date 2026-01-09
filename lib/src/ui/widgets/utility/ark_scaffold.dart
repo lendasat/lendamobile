@@ -39,108 +39,65 @@ class ArkScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
-    final useGradient = gradientColor != null;
-    final defaultBgColor = isLight
-        ? Theme.of(context).colorScheme.surface
-        : Theme.of(context).colorScheme.surface;
 
-    return Scaffold(
-      bottomNavigationBar: bottomSheet,
-      backgroundColor: backgroundColor ?? defaultBgColor,
-      // Always extend body behind app bar for seamless status bar
-      extendBodyBehindAppBar: true,
-      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-      body: Stack(
-        children: [
-          // Background container fills entire screen including status bar
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: useGradient ? null : (backgroundColor ?? defaultBgColor),
-            decoration: useGradient
-                ? BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [
-                        isLight
-                            ? lighten(
-                                Theme.of(context)
-                                    .colorScheme
-                                    .primaryContainer,
-                                50,
-                              )
-                            : darken(
-                                Theme.of(context)
-                                    .colorScheme
-                                    .primaryContainer,
-                                80,
-                              ),
-                        isLight
-                            ? lighten(
-                                Theme.of(context)
-                                    .colorScheme
-                                    .tertiaryContainer,
-                                50,
-                              )
-                            : darken(
-                                Theme.of(context)
-                                    .colorScheme
-                                    .tertiaryContainer,
-                                80,
-                              ),
-                      ],
-                    ),
-                  )
-                : null,
-          ),
-          // SafeArea wraps content, not the entire scaffold
-          SafeArea(
-            bottom: false, // Let content extend to bottom for custom handling
-            child: Padding(
-              padding: extendBodyBehindBottomNav
-                  ? const EdgeInsets.only(bottom: AppTheme.cardPadding * 3)
-                  : EdgeInsets.zero,
-              child: Container(margin: margin, child: body),
-            ),
-          ),
-          if (extendBodyBehindAppBar && !removeGradientColor && useGradient)
+    return SafeArea(
+      child: Scaffold(
+        bottomNavigationBar: bottomSheet,
+        backgroundColor: backgroundColor,
+        extendBodyBehindAppBar: extendBodyBehindAppBar,
+        resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+        body: Stack(
+          children: [
+            // Background container - pure black/white based on theme
             Container(
               width: double.infinity,
-              height: AppTheme.cardPadding * 3,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                  colors: _buildGradientColors(context, isLight),
-                ),
+              height: double.infinity,
+              color: isLight ? Colors.white : Colors.black,
+              child: Padding(
+                padding: extendBodyBehindBottomNav
+                    ? const EdgeInsets.only(bottom: AppTheme.cardPadding * 3)
+                    : EdgeInsets.zero,
+                child: Container(margin: margin, child: body),
               ),
             ),
-        ],
+            // Gradient fade overlay - shows when extendBodyBehindAppBar is true
+            extendBodyBehindAppBar
+                ? removeGradientColor
+                    ? Container()
+                    : Container(
+                        width: double.infinity,
+                        height: AppTheme.cardPadding * 3,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                            colors: _buildGradientColors(context, isLight),
+                          ),
+                        ),
+                      )
+                : Container(),
+          ],
+        ),
+        appBar: appBar,
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(bottom: AppTheme.cardPadding),
+          child: floatingActionButton,
+        ),
+        floatingActionButtonLocation: floatingActionButtonLocation,
       ),
-      appBar: appBar,
-      floatingActionButton: floatingActionButton != null
-          ? Padding(
-              padding: const EdgeInsets.only(bottom: AppTheme.cardPadding),
-              child: floatingActionButton,
-            )
-          : null,
-      floatingActionButtonLocation: floatingActionButtonLocation,
     );
   }
 
   List<Color> _buildGradientColors(BuildContext context, bool isLight) {
-    final baseColor = isLight
-        ? lighten(Theme.of(context).colorScheme.primaryContainer, 50)
-        : darken(Theme.of(context).colorScheme.primaryContainer, 80);
+    final baseColor = isLight ? Colors.white : Colors.black;
 
     return [
       baseColor,
-      baseColor.withValues(alpha: 0.9),
-      baseColor.withValues(alpha: 0.7),
-      baseColor.withValues(alpha: 0.4),
-      baseColor.withValues(alpha: 0.0001),
+      baseColor.withOpacity(0.9),
+      baseColor.withOpacity(0.7),
+      baseColor.withOpacity(0.4),
+      baseColor.withOpacity(0.0),
     ];
   }
 }
@@ -185,48 +142,19 @@ class ArkScaffoldUnsafe extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
-    final useGradient = gradientColor != null;
-    final defaultBgColor =
-        isLight ? AppTheme.colorBackground : AppTheme.colorBackground;
 
     return Scaffold(
       bottomNavigationBar: bottomSheet,
-      backgroundColor: backgroundColor ?? defaultBgColor,
+      backgroundColor: backgroundColor,
       extendBodyBehindAppBar: extendBodyBehindAppBar,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       body: Stack(
         children: [
+          // Background container - pure black/white based on theme
           Container(
             width: double.infinity,
             height: height ?? double.infinity,
-            decoration: useGradient
-                ? BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [
-                        isLight
-                            ? lighten(
-                                Theme.of(context).colorScheme.primaryContainer,
-                                50,
-                              )
-                            : darken(
-                                Theme.of(context).colorScheme.primaryContainer,
-                                80,
-                              ),
-                        isLight
-                            ? lighten(
-                                Theme.of(context).colorScheme.tertiaryContainer,
-                                50,
-                              )
-                            : darken(
-                                Theme.of(context).colorScheme.tertiaryContainer,
-                                80,
-                              ),
-                      ],
-                    ),
-                  )
-                : null,
+            color: isLight ? Colors.white : Colors.black,
             child: Padding(
               padding: extendBodyBehindBottomNav
                   ? const EdgeInsets.only(bottom: AppTheme.cardPadding * 3)
@@ -234,43 +162,43 @@ class ArkScaffoldUnsafe extends StatelessWidget {
               child: Container(margin: margin, child: body),
             ),
           ),
-          if (extendBodyBehindAppBar && !removeGradientColor && useGradient)
-            Container(
-              width: double.infinity,
-              height: AppTheme.cardPadding * 3,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                  colors: _buildGradientColors(context, isLight),
-                ),
-              ),
-            ),
+          // Gradient fade overlay - shows when extendBodyBehindAppBar is true
+          extendBodyBehindAppBar
+              ? removeGradientColor
+                  ? Container()
+                  : Container(
+                      width: double.infinity,
+                      height: AppTheme.cardPadding * 3,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                          colors: _buildGradientColors(context, isLight),
+                        ),
+                      ),
+                    )
+              : Container(),
         ],
       ),
       appBar: appBar,
-      floatingActionButton: floatingActionButton != null
-          ? Padding(
-              padding: const EdgeInsets.only(bottom: AppTheme.cardPadding),
-              child: floatingActionButton,
-            )
-          : null,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: AppTheme.cardPadding),
+        child: floatingActionButton,
+      ),
       floatingActionButtonLocation: floatingActionButtonLocation,
     );
   }
 
   List<Color> _buildGradientColors(BuildContext context, bool isLight) {
-    final baseColor = isLight
-        ? lighten(Theme.of(context).colorScheme.primaryContainer, 50)
-        : darken(Theme.of(context).colorScheme.primaryContainer, 80);
+    final baseColor = isLight ? Colors.white : Colors.black;
 
     return [
       baseColor,
-      baseColor.withValues(alpha: 0.9),
-      baseColor.withValues(alpha: 0.7),
-      baseColor.withValues(alpha: 0.4),
-      baseColor.withValues(alpha: 0.0001),
+      baseColor.withOpacity(0.9),
+      baseColor.withOpacity(0.7),
+      baseColor.withOpacity(0.4),
+      baseColor.withOpacity(0.0),
     ];
   }
 }
