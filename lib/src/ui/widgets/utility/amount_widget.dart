@@ -217,7 +217,7 @@ class _AmountWidgetState extends State<AmountWidget>
                             ),
                       border: InputBorder.none,
                       counterText: "",
-                      hintText: "0.0",
+                      hintText: "0",
                       hintStyle: TextStyle(
                           color: Theme.of(context)
                               .colorScheme
@@ -288,7 +288,11 @@ class _AmountWidgetState extends State<AmountWidget>
     final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
     final localCurrencyAmount = fiatAmount * fiatRate;
 
-    if (!_service.preventConversion) {
+    // Only update currController if there's actual content in the source
+    final hasSourceContent = _service.currentUnit == CurrencyType.bitcoin
+        ? widget.btcController.text.isNotEmpty
+        : widget.satController.text.isNotEmpty;
+    if (!_service.preventConversion && hasSourceContent) {
       widget.currController.text = localCurrencyAmount.toStringAsFixed(2);
     }
 
@@ -348,7 +352,8 @@ class _AmountWidgetState extends State<AmountWidget>
     final btcAmount = currAmount / (bitcoinPrice * fiatRate);
     final satAmount = (btcAmount * BitcoinConstants.satsPerBtc).round();
 
-    if (!_service.preventConversion) {
+    // Only update btc/sat controllers if there's actual content in currController
+    if (!_service.preventConversion && widget.currController.text.isNotEmpty) {
       widget.btcController.text = btcAmount.toString();
       widget.satController.text = satAmount.toString();
     }

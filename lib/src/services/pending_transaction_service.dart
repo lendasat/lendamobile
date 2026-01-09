@@ -186,6 +186,43 @@ class PendingTransactionService extends ChangeNotifier {
     _pendingTransactions.clear();
     notifyListeners();
   }
+
+  /// Show a success bottom sheet for completed transactions (e.g., Lightning payments)
+  /// This can be called directly without going through the pending transaction flow.
+  void showSuccessBottomSheet({
+    required String address,
+    required int amountSats,
+    String? txid,
+  }) {
+    final pending = PendingTransaction(
+      id: 'direct-success',
+      address: address,
+      amountSats: amountSats,
+      createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+    );
+    pending.status = PendingTransactionStatus.success;
+    pending.txid = txid;
+
+    _showCompletionBottomSheet(pending);
+  }
+
+  /// Show an error bottom sheet for failed transactions
+  void showErrorBottomSheet({
+    required String address,
+    required int amountSats,
+    required String errorMessage,
+  }) {
+    final pending = PendingTransaction(
+      id: 'direct-error',
+      address: address,
+      amountSats: amountSats,
+      createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+    );
+    pending.status = PendingTransactionStatus.failed;
+    pending.errorMessage = errorMessage;
+
+    _showCompletionBottomSheet(pending);
+  }
 }
 
 /// Bottom sheet widget showing send completion status
@@ -204,47 +241,55 @@ class _SendCompletionSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Status icon
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: isSuccess
-                  ? AppTheme.successColor.withValues(alpha: 0.15)
-                  : AppTheme.errorColor.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
+          // Bani image for success, error icon for failure
+          if (isSuccess)
+            SizedBox(
+              width: 150,
+              height: 150,
+              child: Image.asset(
+                'assets/images/bani/bani_success.png',
+                fit: BoxFit.contain,
+              ),
+            )
+          else
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: AppTheme.errorColor.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.close_rounded,
+                size: 56,
+                color: AppTheme.errorColor,
+              ),
             ),
-            child: Icon(
-              isSuccess ? Icons.check_rounded : Icons.close_rounded,
-              size: 40,
-              color: isSuccess ? AppTheme.successColor : AppTheme.errorColor,
-            ),
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
+          const SizedBox(height: AppTheme.cardPadding),
 
           // Title
           Text(
             isSuccess ? 'Transaction Sent!' : 'Transaction Failed',
-            style: theme.textTheme.titleLarge?.copyWith(
+            style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: AppTheme.elementSpacing / 2),
+          const SizedBox(height: AppTheme.elementSpacing),
 
           // Amount or error
           if (isSuccess) ...[
             Text(
               _formatSats(pending.amountSats),
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.primary,
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: AppTheme.elementSpacing / 2),
             Text(
-              'to ${_truncateAddress(pending.address)}',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              'sent successfully',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.hintColor,
               ),
             ),
           ] else ...[
@@ -265,7 +310,7 @@ class _SendCompletionSheet extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: AppTheme.elementSpacing),
+          const SizedBox(height: AppTheme.cardPadding),
 
           // Close button
           LongButtonWidget(
@@ -315,6 +360,15 @@ class _SendCompletionSheet extends StatelessWidget {
 
     if (cleaned.contains('minExpiryGap')) {
       return 'Your funds expire too soon to be used in this transaction. Please refresh your balance.';
+    }
+
+    // Handle coin selection failures - usually means pending funds aren't confirmed yet
+    if (cleaned.contains('failed to select coins') ||
+        cleaned.contains('insufficient funds')) {
+      if (cleaned.contains('selected = 0')) {
+        return 'No confirmed funds available. Your balance may include pending deposits that need to settle first.';
+      }
+      return 'Insufficient confirmed funds to complete this transaction.';
     }
 
     // Remove metadata JSON if present

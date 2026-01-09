@@ -521,6 +521,9 @@ pub struct LnPaymentResult {
 }
 
 /// Pay a Lightning invoice using Ark funds via Boltz submarine swap
+///
+/// Note: Zero-amount invoices are NOT supported by Boltz for security reasons.
+/// The user should be shown an error in the UI before this is called.
 pub async fn pay_ln_invoice(invoice: String) -> Result<LnPaymentResult> {
     let maybe_client = ARK_CLIENT.try_get();
 
@@ -539,9 +542,19 @@ pub async fn pay_ln_invoice(invoice: String) -> Result<LnPaymentResult> {
                 .parse()
                 .map_err(|e| anyhow!("Invalid BOLT11 invoice: {e}"))?;
 
+            let invoice_amount_msats = bolt11.amount_milli_satoshis().unwrap_or(0);
+
+            // Check for zero-amount invoice - Boltz doesn't support these for security reasons
+            if invoice_amount_msats == 0 {
+                bail!(
+                    "Zero-amount Lightning invoices are not supported. The invoice must specify an amount."
+                );
+            }
+
             tracing::info!(
-                "Paying Lightning invoice for {} msats",
-                bolt11.amount_milli_satoshis().unwrap_or(0)
+                "Paying Lightning invoice: amount={} msats ({} sats)",
+                invoice_amount_msats,
+                invoice_amount_msats / 1000
             );
 
             // Pay the invoice via submarine swap
