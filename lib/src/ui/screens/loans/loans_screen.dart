@@ -410,6 +410,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return ArkScaffold(
       context: context,
+      extendBodyBehindAppBar: true,
       appBar: BitNetAppBar(
         context: context,
         hasBackButton: false,
@@ -1034,48 +1035,6 @@ class _OfferCard extends StatelessWidget {
                   ],
                 ),
 
-                // Limited time offer badge
-                Container(
-                  margin: const EdgeInsets.only(top: 12),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.colorBitcoin.withValues(alpha: 0.15),
-                        Colors.red.withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppTheme.colorBitcoin.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        '🔥',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          AppLocalizations.of(context)?.limitedTimeOffer ??
-                              'Limited time offer — super cheap!',
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.colorBitcoin,
-                                  ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
