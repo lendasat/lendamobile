@@ -33,7 +33,7 @@ class ColoredPriceWidget extends StatelessWidget {
             size: 16,
           ),
           Text(
-            '${currencySymbol ?? ''}$price',
+            '****',
             style: textStyle ??
                 TextStyle(
                   color: color,
@@ -88,6 +88,7 @@ class BitNetPercentWidget extends StatelessWidget {
         percentage: priceChange,
         isPositive: isPositive,
         fontSize: 14,
+        isObscured: shouldHideAmount,
       ),
     );
   }
