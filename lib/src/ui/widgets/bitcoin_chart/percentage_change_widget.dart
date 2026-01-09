@@ -17,6 +17,14 @@ class PercentageChangeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Hide widget if percentage contains infinity
+    final lowerPercentage = percentage.toLowerCase();
+    if (lowerPercentage.contains('∞') ||
+        lowerPercentage.contains('infinity') ||
+        lowerPercentage.contains('inf')) {
+      return const SizedBox.shrink();
+    }
+
     // Fixed logic: Only treat zero percentages as positive, not all positive values
     final isReallyPositive = isPositive && !percentage.trim().startsWith('-');
     final color =
