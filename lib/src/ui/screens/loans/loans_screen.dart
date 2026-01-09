@@ -430,7 +430,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                       slivers: [
                         // Top padding
                         const SliverToBoxAdapter(
-                          child: SizedBox(height: AppTheme.cardPadding * 1.5),
+                          child: SizedBox(height: AppTheme.cardPadding * 2.5),
                         ),
 
                         // Debug info (development only)

@@ -552,59 +552,6 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
           children: [
             const SizedBox(height: AppTheme.cardPadding),
 
-            // Header section
-            Container(
-              padding: const EdgeInsets.all(AppTheme.cardPadding),
-              decoration: BoxDecoration(
-                color: AppTheme.colorBitcoin.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.elementSpacing),
-                    decoration: BoxDecoration(
-                      color: AppTheme.colorBitcoin.withValues(alpha: 0.2),
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.borderRadiusSmall),
-                    ),
-                    child: const Icon(
-                      Icons.shield,
-                      size: AppTheme.iconSize * 1.5,
-                      color: AppTheme.colorBitcoin,
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.elementSpacing),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!
-                              .writeDownYourRecoveryPhrase,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          AppLocalizations.of(context)!.youWillNeedToConfirmIt,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: isDark
-                                        ? AppTheme.white60
-                                        : AppTheme.black60,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-
             // Recovery phrase section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -725,59 +672,6 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: AppTheme.cardPadding),
-
-            // Header
-            Container(
-              padding: const EdgeInsets.all(AppTheme.cardPadding),
-              decoration: BoxDecoration(
-                color: AppTheme.colorBitcoin.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.elementSpacing),
-                    decoration: BoxDecoration(
-                      color: AppTheme.colorBitcoin.withValues(alpha: 0.2),
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.borderRadiusSmall),
-                    ),
-                    child: const Icon(
-                      Icons.quiz_outlined,
-                      size: AppTheme.iconSize * 1.5,
-                      color: AppTheme.colorBitcoin,
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.elementSpacing),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!
-                              .verifyYourRecoveryPhrase,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          AppLocalizations.of(context)!.enterTheFollowingWords,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: isDark
-                                        ? AppTheme.white60
-                                        : AppTheme.black60,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: AppTheme.cardPadding),
 
             // PageView for mnemonic input - masked for PostHog session replay

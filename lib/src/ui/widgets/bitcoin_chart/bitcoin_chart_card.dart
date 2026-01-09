@@ -6,6 +6,7 @@ import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/time_chooser_button.dar
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
+import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -235,6 +236,7 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
   Widget build(BuildContext context) {
     final cachedData = _dataCache[_selectedTimeRange];
     final latestData = cachedData?.isNotEmpty == true ? cachedData!.last : null;
+    final userPrefs = context.watch<UserPreferencesService>();
 
     // No box around the chart - matches BitnetGithub style
     return Padding(
@@ -339,6 +341,7 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
                         PercentageChangeWidget(
                           percentage: priceChange,
                           isPositive: isPositive,
+                          isObscured: !userPrefs.balancesVisible,
                         ),
                       ],
                     ),

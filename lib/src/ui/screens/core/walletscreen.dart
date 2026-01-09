@@ -1052,7 +1052,7 @@ class WalletScreenState extends State<WalletScreen>
                           Text(
                             userPrefs.balancesVisible
                                 ? formattedSats
-                                : '********',
+                                : '****',
                             style: Theme.of(context)
                                 .textTheme
                                 .displayLarge
@@ -1061,7 +1061,6 @@ class WalletScreenState extends State<WalletScreen>
                                       Theme.of(context).colorScheme.onSurface,
                                 ),
                           ),
-                          const SizedBox(width: 4),
                           Icon(
                             AppTheme.satoshiIcon,
                             size: 58,
@@ -1074,7 +1073,7 @@ class WalletScreenState extends State<WalletScreen>
                           userPrefs.balancesVisible
                               ? currencyService.formatAmount(
                                   _getSelectedBalance() * _getCurrentBtcPrice())
-                              : '${currencyService.symbol}****.**',
+                              : '${currencyService.symbol}****',
                           style: Theme.of(context)
                               .textTheme
                               .displayLarge

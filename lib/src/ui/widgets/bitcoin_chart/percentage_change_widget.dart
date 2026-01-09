@@ -6,6 +6,7 @@ class PercentageChangeWidget extends StatelessWidget {
   final bool isPositive;
   final bool showIcon;
   final double fontSize;
+  final bool isObscured;
 
   const PercentageChangeWidget({
     super.key,
@@ -13,6 +14,7 @@ class PercentageChangeWidget extends StatelessWidget {
     required this.isPositive,
     this.showIcon = false,
     this.fontSize = 14.0,
+    this.isObscured = false,
   });
 
   @override
@@ -51,12 +53,13 @@ class PercentageChangeWidget extends StatelessWidget {
             const SizedBox(width: 4),
           ],
           Text(
-            // Fix -0% display: always show 0% as positive
-            percentage.trim() == "-0%"
-                ? "0%"
-                : percentage.trim() == "0%"
+            isObscured
+                ? '****'
+                : percentage.trim() == "-0%"
                     ? "0%"
-                    : percentage,
+                    : percentage.trim() == "0%"
+                        ? "0%"
+                        : percentage,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontWeight: FontWeight.bold,
