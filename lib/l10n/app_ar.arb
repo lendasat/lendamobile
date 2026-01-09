@@ -197,6 +197,7 @@
   "status": "Status",
   "confirmed": "Confirmed",
   "pending": "Pending",
+  "spendable": "Spendable",
   "date": "التاريخ",
   "time": "الوقت",
   "transactionVolume": "حجم المعاملة",

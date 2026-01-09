@@ -172,6 +172,11 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
+    // If date is in the future, return empty string to avoid "just now" forever bug
+    if (difference.isNegative) {
+      return '';
+    }
+
     if (difference.inDays > 0) {
       return '${difference.inDays}d ago';
     } else if (difference.inHours > 0) {
@@ -232,7 +237,9 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
         context: context,
         hasBackButton: false,
       ),
-      bottomSheet: widget.isSettleable
+      // Only show settle button for boarding transactions that can be settled
+      bottomSheet: widget.isSettleable &&
+              widget.transactionType == l10n.boardingTransaction
           ? Container(
               padding: const EdgeInsets.all(AppTheme.cardPadding),
               decoration: BoxDecoration(
@@ -306,67 +313,116 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                     ),
                     child: Column(
                       children: [
-                        // Transaction header with sender and receiver
-                        Container(
-                          margin: const EdgeInsets.symmetric(
-                            vertical: AppTheme.cardPadding * 0.75,
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Column(
+                        // Transaction header - Clean amount display
+                        GestureDetector(
+                          onTap: () => currencyService.toggleShowCoinBalance(),
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                              vertical: AppTheme.cardPadding * 1.5,
+                            ),
+                            child: Column(
+                              children: [
+                                // Status pill
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.cardPadding * 0.75,
+                                    vertical: AppTheme.elementSpacing * 0.4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: (isSent
+                                            ? AppTheme.errorColor
+                                            : AppTheme.successColor)
+                                        .withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Avatar(
-                                        size: AppTheme.cardPadding * 4,
-                                        onTap: () {
-                                          _showInputsBottomSheet(context);
-                                        },
-                                        isNft: false,
+                                      Icon(
+                                        isSent
+                                            ? Icons.north_east_rounded
+                                            : Icons.south_west_rounded,
+                                        size: 14,
+                                        color: isSent
+                                            ? AppTheme.errorColor
+                                            : AppTheme.successColor,
                                       ),
-                                      const SizedBox(
-                                        height: AppTheme.elementSpacing * 0.5,
-                                      ),
+                                      const SizedBox(width: 4),
                                       Text(
-                                        "${l10n.sender} (${transactionModel?.vin.where((v) => v.prevout != null).length})",
+                                        isSent ? l10n.sent : l10n.received,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium
+                                            ?.copyWith(
+                                              color: isSent
+                                                  ? AppTheme.errorColor
+                                                  : AppTheme.successColor,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(
-                                    width: AppTheme.cardPadding * 0.75,
-                                  ),
-                                  Icon(
-                                    Icons.double_arrow_rounded,
-                                    size: AppTheme.cardPadding * 2.5,
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? AppTheme.white80
-                                        : AppTheme.black60,
-                                  ),
-                                  const SizedBox(
-                                    width: AppTheme.cardPadding * 0.75,
-                                  ),
-                                  Column(
+                                ),
+                                const SizedBox(height: AppTheme.cardPadding),
+                                // Large amount - toggles between sats/BTC and fiat
+                                if (showCoinBalance)
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
-                                      Avatar(
-                                        size: AppTheme.cardPadding * 4,
-                                        isNft: false,
-                                        onTap: () {
-                                          _showOutputsBottomSheet(context);
-                                        },
-                                      ),
-                                      const SizedBox(
-                                        height: AppTheme.elementSpacing * 0.5,
-                                      ),
                                       Text(
-                                        "${l10n.receiver} (${transactionModel?.vout.length})",
+                                        '${isSent ? '-' : '+'}$formattedAmount',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .displayMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
+                                            ),
                                       ),
+                                      const SizedBox(width: 4),
+                                      if (isSatsUnit)
+                                        Icon(
+                                          AppTheme.satoshiIcon,
+                                          size: 48,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                        )
+                                      else
+                                        Text(
+                                          unit,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headlineSmall
+                                              ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                        ),
                                     ],
+                                  )
+                                else
+                                  Text(
+                                    '${isSent ? '-' : '+'}${currencyService.formatAmount(fiatAmount)}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displayMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                        ),
                                   ),
-                                ],
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
 
@@ -388,91 +444,6 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  // Transaction Volume (tappable to toggle currency)
-                                  ArkListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal:
-                                          AppTheme.elementSpacing * 0.75,
-                                      vertical: AppTheme.elementSpacing * 0.5,
-                                    ),
-                                    text: l10n.transactionVolume,
-                                    onTap: widget.bitcoinPrice != null
-                                        ? () => currencyService
-                                            .toggleShowCoinBalance()
-                                        : null,
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        if (showCoinBalance) ...[
-                                          Text(
-                                            '${isSent ? '-' : '+'}$formattedAmount',
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium,
-                                          ),
-                                          if (isSatsUnit)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 2),
-                                              child: Icon(
-                                                AppTheme.satoshiIcon,
-                                                size: 16,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface,
-                                              ),
-                                            )
-                                          else
-                                            Text(
-                                              ' $unit',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall,
-                                            ),
-                                        ] else ...[
-                                          Text(
-                                            '${isSent ? '-' : '+'}${currencyService.formatAmount(fiatAmount)}',
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-
-                                  // Direction
-                                  if (widget.amountSats != null)
-                                    ArkListTile(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                        horizontal:
-                                            AppTheme.elementSpacing * 0.75,
-                                        vertical: AppTheme.elementSpacing * 0.5,
-                                      ),
-                                      text: l10n.direction,
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            isSent
-                                                ? Icons.north_east
-                                                : Icons.south_west,
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            isSent ? l10n.sent : l10n.received,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
                                   // Transaction ID
                                   ArkListTile(
                                     contentPadding: const EdgeInsets.symmetric(
@@ -658,6 +629,9 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                   ),
 
                                   // Status
+                                  // For Arkade transactions, show "Spendable" (green) if not fully
+                                  // settled, "Confirmed" (green) if settled. This hides technical
+                                  // complexity - users can spend funds immediately in Arkade.
                                   ArkListTile(
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal:
@@ -668,47 +642,39 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                     trailing: Row(
                                       children: [
                                         BlinkingDot(
-                                          color:
-                                              transactionModel!.status.confirmed
+                                          color: widget.networkType == 'Arkade'
+                                              ? AppTheme.successColor
+                                              : (transactionModel!
+                                                      .status.confirmed
                                                   ? AppTheme.successColor
-                                                  : AppTheme.colorBitcoin,
+                                                  : AppTheme.colorBitcoin),
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          transactionModel!.status.confirmed
-                                              ? l10n.confirmed
-                                              : l10n.pending,
+                                          widget.networkType == 'Arkade'
+                                              ? (widget.isSettleable
+                                                  ? l10n.confirmed
+                                                  : l10n.spendable)
+                                              : (transactionModel!
+                                                      .status.confirmed
+                                                  ? l10n.confirmed
+                                                  : l10n.pending),
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleMedium!
                                               .copyWith(
-                                                color: transactionModel!
-                                                        .status.confirmed
+                                                color: widget.networkType ==
+                                                        'Arkade'
                                                     ? AppTheme.successColor
-                                                    : AppTheme.colorBitcoin,
+                                                    : (transactionModel!
+                                                            .status.confirmed
+                                                        ? AppTheme.successColor
+                                                        : AppTheme.colorBitcoin),
                                               ),
                                         ),
                                       ],
                                     ),
                                   ),
-
-                                  // Transaction Type
-                                  if (widget.transactionType != null)
-                                    ArkListTile(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                        horizontal:
-                                            AppTheme.elementSpacing * 0.75,
-                                        vertical: AppTheme.elementSpacing * 0.5,
-                                      ),
-                                      text: l10n.type,
-                                      trailing: Text(
-                                        widget.transactionType!,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium,
-                                      ),
-                                    ),
 
                                   // Network
                                   ArkListTile(
@@ -758,20 +724,24 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                       text: l10n.time,
                                       trailing: Builder(
                                         builder: (context) {
-                                          final loc = timezoneService.location;
+                                          if (widget.createdAt == null) {
+                                            return const SizedBox.shrink();
+                                          }
                                           final datetime = DateTime
                                               .fromMillisecondsSinceEpoch(
-                                            transactionModel!.status.blockTime!
-                                                    .toInt() *
-                                                1000,
-                                          ).toUtc().add(Duration(
-                                              milliseconds:
-                                                  loc.currentTimeZone.offset));
+                                            widget.createdAt! * 1000,
+                                          );
+                                          final timeAgo =
+                                              _formatTimeAgo(datetime);
+                                          final formattedDateTime = timeAgo
+                                                  .isEmpty
+                                              ? DateFormat('yyyy-MM-dd HH:mm')
+                                                  .format(datetime)
+                                              : '${DateFormat('yyyy-MM-dd HH:mm').format(datetime)} ($timeAgo)';
                                           return SizedBox(
                                             width: AppTheme.cardPadding * 7,
                                             child: Text(
-                                              '${DateFormat('yyyy-MM-dd HH:mm').format(datetime)}'
-                                              ' (${_formatTimeAgo(datetime)})',
+                                              formattedDateTime,
                                               overflow: TextOverflow.ellipsis,
                                               maxLines: 2,
                                               textAlign: TextAlign.end,
@@ -850,12 +820,13 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
 
     String formattedDate = '--';
     if (widget.createdAt != null) {
-      final loc = timezoneService.location;
       final datetime = DateTime.fromMillisecondsSinceEpoch(
         widget.createdAt! * 1000,
-      ).toUtc().add(Duration(milliseconds: loc.currentTimeZone.offset));
-      formattedDate =
-          '${DateFormat('yyyy-MM-dd HH:mm').format(datetime)} (${_formatTimeAgo(datetime)})';
+      );
+      final timeAgo = _formatTimeAgo(datetime);
+      formattedDate = timeAgo.isEmpty
+          ? DateFormat('yyyy-MM-dd HH:mm').format(datetime)
+          : '${DateFormat('yyyy-MM-dd HH:mm').format(datetime)} ($timeAgo)';
     }
 
     return NotificationListener<OverscrollNotification>(
@@ -888,57 +859,116 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                     ),
                     child: Column(
                       children: [
-                        // Transaction header
-                        Container(
-                          margin: const EdgeInsets.symmetric(
-                            vertical: AppTheme.cardPadding * 0.75,
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Column(
+                        // Transaction header - Clean amount display
+                        GestureDetector(
+                          onTap: () => currencyService.toggleShowCoinBalance(),
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                              vertical: AppTheme.cardPadding * 1.5,
+                            ),
+                            child: Column(
+                              children: [
+                                // Status pill
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.cardPadding * 0.75,
+                                    vertical: AppTheme.elementSpacing * 0.4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: (isSent
+                                            ? AppTheme.errorColor
+                                            : AppTheme.successColor)
+                                        .withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Avatar(
-                                        size: AppTheme.cardPadding * 4,
-                                        isNft: false,
+                                      Icon(
+                                        isSent
+                                            ? Icons.north_east_rounded
+                                            : Icons.south_west_rounded,
+                                        size: 14,
+                                        color: isSent
+                                            ? AppTheme.errorColor
+                                            : AppTheme.successColor,
                                       ),
-                                      const SizedBox(
-                                        height: AppTheme.elementSpacing * 0.5,
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        isSent ? l10n.sent : l10n.received,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium
+                                            ?.copyWith(
+                                              color: isSent
+                                                  ? AppTheme.errorColor
+                                                  : AppTheme.successColor,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                       ),
-                                      Text(l10n.sender),
                                     ],
                                   ),
-                                  const SizedBox(
-                                    width: AppTheme.cardPadding * 0.75,
-                                  ),
-                                  Icon(
-                                    Icons.double_arrow_rounded,
-                                    size: AppTheme.cardPadding * 2.5,
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? AppTheme.white80
-                                        : AppTheme.black60,
-                                  ),
-                                  const SizedBox(
-                                    width: AppTheme.cardPadding * 0.75,
-                                  ),
-                                  Column(
+                                ),
+                                const SizedBox(height: AppTheme.cardPadding),
+                                // Large amount - toggles between sats/BTC and fiat
+                                if (showCoinBalance)
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
-                                      const Avatar(
-                                        size: AppTheme.cardPadding * 4,
-                                        isNft: false,
+                                      Text(
+                                        '${isSent ? '-' : '+'}$formattedAmount',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .displayMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
+                                            ),
                                       ),
-                                      const SizedBox(
-                                        height: AppTheme.elementSpacing * 0.5,
-                                      ),
-                                      Text(l10n.receiver),
+                                      const SizedBox(width: 4),
+                                      if (isSatsUnit)
+                                        Icon(
+                                          AppTheme.satoshiIcon,
+                                          size: 48,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                        )
+                                      else
+                                        Text(
+                                          unit,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headlineSmall
+                                              ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                        ),
                                     ],
+                                  )
+                                else
+                                  Text(
+                                    '${isSent ? '-' : '+'}${currencyService.formatAmount(fiatAmount)}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displayMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                        ),
                                   ),
-                                ],
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
 
@@ -960,91 +990,6 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  // Transaction Volume (tappable to toggle currency)
-                                  ArkListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal:
-                                          AppTheme.elementSpacing * 0.75,
-                                      vertical: AppTheme.elementSpacing * 0.5,
-                                    ),
-                                    text: l10n.transactionVolume,
-                                    onTap: widget.bitcoinPrice != null
-                                        ? () => currencyService
-                                            .toggleShowCoinBalance()
-                                        : null,
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        if (showCoinBalance) ...[
-                                          Text(
-                                            '${isSent ? '-' : '+'}$formattedAmount',
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium,
-                                          ),
-                                          if (isSatsUnit)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 2),
-                                              child: Icon(
-                                                AppTheme.satoshiIcon,
-                                                size: 16,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface,
-                                              ),
-                                            )
-                                          else
-                                            Text(
-                                              ' $unit',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall,
-                                            ),
-                                        ] else ...[
-                                          Text(
-                                            '${isSent ? '-' : '+'}${currencyService.formatAmount(fiatAmount)}',
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-
-                                  // Direction
-                                  if (widget.amountSats != null)
-                                    ArkListTile(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                        horizontal:
-                                            AppTheme.elementSpacing * 0.75,
-                                        vertical: AppTheme.elementSpacing * 0.5,
-                                      ),
-                                      text: l10n.direction,
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            isSent
-                                                ? Icons.north_east
-                                                : Icons.south_west,
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            isSent ? l10n.sent : l10n.received,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
                                   // Transaction ID
                                   ArkListTile(
                                     contentPadding: const EdgeInsets.symmetric(
@@ -1218,29 +1163,10 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                       ),
                                     ),
 
-                                  // Transaction Type
-                                  if (widget.transactionType != null)
-                                    ArkListTile(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                        horizontal:
-                                            AppTheme.elementSpacing * 0.75,
-                                        vertical: AppTheme.elementSpacing * 0.5,
-                                      ),
-                                      text: l10n.type,
-                                      trailing: Row(
-                                        children: [
-                                          Text(
-                                            widget.transactionType!,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
                                   // Status
+                                  // For Arkade transactions, show "Spendable" (green) if not fully
+                                  // settled, "Confirmed" (green) if settled. This hides technical
+                                  // complexity - users can spend funds immediately in Arkade.
                                   ArkListTile(
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal:
@@ -1251,23 +1177,32 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                     trailing: Row(
                                       children: [
                                         BlinkingDot(
-                                          color: widget.isConfirmed == true
+                                          color: widget.networkType == 'Arkade'
                                               ? AppTheme.successColor
-                                              : AppTheme.colorBitcoin,
+                                              : (widget.isConfirmed == true
+                                                  ? AppTheme.successColor
+                                                  : AppTheme.colorBitcoin),
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          widget.isConfirmed == true
-                                              ? l10n.confirmed
-                                              : l10n.pending,
+                                          widget.networkType == 'Arkade'
+                                              ? (widget.isSettleable
+                                                  ? l10n.confirmed
+                                                  : l10n.spendable)
+                                              : (widget.isConfirmed == true
+                                                  ? l10n.confirmed
+                                                  : l10n.pending),
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleMedium!
                                               .copyWith(
-                                                color:
-                                                    widget.isConfirmed == true
+                                                color: widget.networkType ==
+                                                        'Arkade'
+                                                    ? AppTheme.successColor
+                                                    : (widget.isConfirmed ==
+                                                            true
                                                         ? AppTheme.successColor
-                                                        : AppTheme.colorBitcoin,
+                                                        : AppTheme.colorBitcoin),
                                               ),
                                         ),
                                       ],

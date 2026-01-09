@@ -197,6 +197,7 @@
   "status": "Status",
   "confirmed": "Confirmed",
   "pending": "Pending",
+  "spendable": "Spendable",
   "date": "तारीख",
   "confirmedAt": "पुष्ट किया गया समय",
   "transactionPendingFundsWillBeNonReversibleAfterSettlement": "लेनदेन लंबित है। निपटान के बाद धन अपरिवर्तनीय होगा।",

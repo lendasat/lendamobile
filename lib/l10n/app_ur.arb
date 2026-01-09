@@ -197,6 +197,7 @@
   "status": "Status",
   "confirmed": "Confirmed",
   "pending": "Pending",
+  "spendable": "Spendable",
   "date": "تاریخ",
   "confirmedAt": "تصدیق کی گئی تاریخ",
   "transactionPendingFundsWillBeNonReversibleAfterSettlement": "ٹرانزیکشن زیر التواء ہے۔ مکمل ہونے کے بعد رقم واپس نہیں کی جا سکے گی۔",
