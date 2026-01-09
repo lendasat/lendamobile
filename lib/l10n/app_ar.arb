@@ -366,5 +366,6 @@
   "sendFeedback": "إرسال ملاحظات",
   "sender": "المرسل",
   "receiver": "المستلم",
-  "scan": "مسح"
+  "scan": "مسح",
+  "copied": "تم النسخ"
 }

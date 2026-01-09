@@ -366,5 +366,6 @@
   "transactionVolume": "Volume Transaksi",
   "sender": "Pengirim",
   "receiver": "Penerima",
-  "scan": "Pindai"
+  "scan": "Pindai",
+  "copied": "Disalin"
 }
