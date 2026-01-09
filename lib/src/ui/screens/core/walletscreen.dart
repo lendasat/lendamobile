@@ -1004,10 +1004,10 @@ class WalletScreenState extends State<WalletScreen>
                                       Theme.of(context).colorScheme.onSurface,
                                 ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 4),
                           Icon(
                             AppTheme.satoshiIcon,
-                            size: 40,
+                            size: 58,
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ],
