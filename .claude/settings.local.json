@@ -44,7 +44,8 @@
       "Bash(sudo apt install:*)",
       "Bash(\"/mnt/c/Program Files/Android/Android Studio/jbr/bin/java.exe\" -version)",
       "Bash(powershell.exe -Command \"cd ''''C:\\\\Users\\\\tobia\\\\StudioProjects\\\\lendamobile''''; flutter build apk --debug\")",
-      "Bash(1 --manifest-path /mnt/c/Users/tobia/StudioProjects/lendamobile/rust/Cargo.toml)"
+      "Bash(1 --manifest-path /mnt/c/Users/tobia/StudioProjects/lendamobile/rust/Cargo.toml)",
+      "Bash(git worktree:*)"
     ],
     "deny": [],
     "ask": []

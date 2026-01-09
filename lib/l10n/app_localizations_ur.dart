@@ -816,6 +816,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get unknown => 'Unknown';
 
   @override
+  String get fromClipboard => 'from clipboard';
+
+  @override
   String get walletAddressCopied => 'Wallet address copied';
 
   @override
@@ -1302,6 +1305,58 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get learnMoreAboutLendasat => 'Learn more about how LendaSat works';
+
+  @override
+  String get sendingStatus => 'Sending...';
+
+  @override
+  String get sentStatus => 'Sent!';
+
+  @override
+  String get failedStatus => 'Failed';
+
+  @override
+  String get chooseRecipient => 'Choose Recipient';
+
+  @override
+  String get searchRecipient => 'Search or paste address...';
+
+  @override
+  String get recent => 'Recent';
+
+  @override
+  String get pasteOrScanAddress => 'Paste or scan a Bitcoin address';
+
+  @override
+  String get supportedFormats =>
+      'Supports Bitcoin, Lightning, Ark, and LNURL addresses';
+
+  @override
+  String get justNow => 'Just now';
+
+  @override
+  String get minuteAgo => 'minute ago';
+
+  @override
+  String get hourAgo => 'hour ago';
+
+  @override
+  String get dayAgo => 'day ago';
+
+  @override
+  String get monthAgo => 'month ago';
+
+  @override
+  String get monthsAgo => 'months ago';
+
+  @override
+  String get yearAgo => 'year ago';
+
+  @override
+  String get yearsAgo => 'years ago';
+
+  @override
+  String get selectNetwork => 'Select Network';
 
   @override
   String get copied => 'کاپی ہو گیا';
