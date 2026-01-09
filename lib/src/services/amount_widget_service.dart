@@ -255,6 +255,8 @@ class AmountWidgetService extends ChangeNotifier {
     if (_currentUnit == CurrencyType.sats && !_swapped) {
       formatters.add(FilteringTextInputFormatter.allow(RegExp(r'(^\d+)')));
     } else {
+      // Allow both comma and dot as decimal separators, convert comma to dot
+      formatters.add(const CommaToDecimalFormatter());
       formatters.add(
         FilteringTextInputFormatter.allow(RegExp(r'(^\d*\.?\d*)')),
       );
@@ -381,6 +383,31 @@ class NumericalRangeFormatter extends TextInputFormatter {
     }
 
     return newValue;
+  }
+}
+
+/// Input formatter that converts comma to dot for decimal input
+/// This allows users with European/Apple keyboards to use comma as decimal separator
+class CommaToDecimalFormatter extends TextInputFormatter {
+  const CommaToDecimalFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Replace comma with dot
+    final newText = newValue.text.replaceAll(',', '.');
+
+    if (newText == newValue.text) {
+      return newValue;
+    }
+
+    // Adjust cursor position if text changed
+    return TextEditingValue(
+      text: newText,
+      selection: newValue.selection,
+    );
   }
 }
 

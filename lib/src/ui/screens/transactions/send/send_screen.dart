@@ -225,12 +225,7 @@ class SendScreenState extends State<SendScreen> {
         setState(() {
           _lnurlParams = params;
           _isFetchingLnurl = false;
-          // Set default amount to minimum if no amount entered
-          if (_satController.text.isEmpty || _satController.text == '0') {
-            _satController.text = params.minSats.toString();
-            _btcController.text = (params.minSats / BitcoinConstants.satsPerBtc)
-                .toStringAsFixed(8);
-          }
+          // Don't auto-fill amount - let user enter it manually (like Ark addresses)
           // Set description from LNURL metadata if available
           if (params.description != null && _description == null) {
             _description = params.description;
