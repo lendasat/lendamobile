@@ -550,8 +550,7 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: AppTheme.cardPadding),
-
+            const SizedBox(height: AppTheme.cardPadding * 2),
             // Recovery phrase section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
