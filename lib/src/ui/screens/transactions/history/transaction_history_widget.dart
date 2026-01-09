@@ -1053,6 +1053,7 @@ class _PendingTransactionItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final amountSats = pendingItem.amountSats;
 
@@ -1064,13 +1065,13 @@ class _PendingTransactionItemWidget extends StatelessWidget {
     String statusText;
     Color statusColor;
     if (isSending) {
-      statusText = 'Sending...';
+      statusText = l10n.sendingStatus;
       statusColor = AppTheme.colorBitcoin;
     } else if (isSuccess) {
-      statusText = 'Sent!';
+      statusText = l10n.sentStatus;
       statusColor = AppTheme.successColor;
     } else {
-      statusText = 'Failed';
+      statusText = l10n.failedStatus;
       statusColor = AppTheme.errorColor;
     }
 
@@ -1118,7 +1119,7 @@ class _PendingTransactionItemWidget extends StatelessWidget {
                         SizedBox(
                           width: AppTheme.cardPadding * 6.5,
                           child: Text(
-                            'Onchain Send',
+                            l10n.send,
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context)
                                 .textTheme

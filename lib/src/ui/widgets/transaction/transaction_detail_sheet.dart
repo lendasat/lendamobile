@@ -6,6 +6,7 @@ import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/recipient_storage_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
@@ -60,6 +61,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
   bool hasError = false;
   String? txID;
   bool _isSettling = false;
+  String? _recipientAddress;
 
   @override
   void initState() {
@@ -67,8 +69,26 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     txID = widget.txid;
     if (txID != null) {
       _loadTransaction();
+      _loadRecipientAddress();
     } else {
       isLoading = false;
+    }
+  }
+
+  Future<void> _loadRecipientAddress() async {
+    if (txID == null) return;
+
+    try {
+      final recipients = await RecipientStorageService.getRecipients();
+      // Find recipient by txid
+      final match = recipients.where((r) => r.txid == txID).firstOrNull;
+      if (match != null && mounted) {
+        setState(() {
+          _recipientAddress = match.address;
+        });
+      }
+    } catch (e) {
+      // Silently fail - address is optional
     }
   }
 
@@ -487,6 +507,46 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                       ],
                                     ),
                                   ),
+
+                                  // Recipient Address (if available from storage)
+                                  if (_recipientAddress != null)
+                                    ArkListTile(
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal:
+                                            AppTheme.elementSpacing * 0.75,
+                                        vertical: AppTheme.elementSpacing * 0.5,
+                                      ),
+                                      text: l10n.address,
+                                      onTap: () async {
+                                        await Clipboard.setData(
+                                            ClipboardData(text: _recipientAddress!));
+                                        if (context.mounted) {
+                                          OverlayService().showSuccess(
+                                              l10n.copiedToClipboard);
+                                        }
+                                      },
+                                      trailing: Row(
+                                        children: [
+                                          SizedBox(
+                                            width: AppTheme.cardPadding * 5,
+                                            child: Text(
+                                              _recipientAddress!,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                              width: AppTheme.elementSpacing / 2),
+                                          Icon(
+                                            Icons.copy,
+                                            color: AppTheme.white60,
+                                            size: AppTheme.cardPadding * 0.75,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
 
                                   // Block
                                   ArkListTile(
@@ -966,6 +1026,46 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                       ],
                                     ),
                                   ),
+
+                                  // Recipient Address (if available from storage)
+                                  if (_recipientAddress != null)
+                                    ArkListTile(
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal:
+                                            AppTheme.elementSpacing * 0.75,
+                                        vertical: AppTheme.elementSpacing * 0.5,
+                                      ),
+                                      text: l10n.address,
+                                      onTap: () async {
+                                        await Clipboard.setData(
+                                            ClipboardData(text: _recipientAddress!));
+                                        if (context.mounted) {
+                                          OverlayService().showSuccess(
+                                              l10n.copiedToClipboard);
+                                        }
+                                      },
+                                      trailing: Row(
+                                        children: [
+                                          SizedBox(
+                                            width: AppTheme.cardPadding * 5,
+                                            child: Text(
+                                              _recipientAddress!,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                              width: AppTheme.elementSpacing / 2),
+                                          Icon(
+                                            Icons.copy,
+                                            color: AppTheme.white60,
+                                            size: AppTheme.cardPadding * 0.75,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
 
                                   // Transaction Type
                                   if (widget.transactionType != null)
