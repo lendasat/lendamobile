@@ -262,12 +262,28 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   // Default amount for Lightning invoices (Boltz minimum is 333 sats)
   static const int _defaultLightningAmount = 10000;
 
+  // Boltz fee constants for reverse swaps (receiving Lightning)
+  static const double _boltzServiceFeePercent = 0.25;
+  static const int _boltzClaimFeeSats = 250;
+
+  /// Calculate the gross invoice amount needed to receive a specific net amount
+  /// Formula: Gross = (Net + ClaimFee) / (1 - ServiceFeePercent/100)
+  int _calculateGrossAmount(int netAmount) {
+    return ((netAmount + _boltzClaimFeeSats) /
+            (1 - _boltzServiceFeePercent / 100))
+        .ceil();
+  }
+
   Future<void> _fetchLightningInvoice() async {
     try {
       // Boltz requires minimum 333 sats, use default if no amount set
-      final int amount =
+      final int requestedAmount =
           (_currentAmount ?? 0) > 0 ? _currentAmount! : _defaultLightningAmount;
-      final BigInt amountSats = BigInt.from(amount);
+
+      // Calculate gross amount so receiver gets exactly what they requested
+      // Sender covers the Boltz fees
+      final int grossAmount = _calculateGrossAmount(requestedAmount);
+      final BigInt amountSats = BigInt.from(grossAmount);
       final addresses = await address(amount: amountSats);
 
       setState(() {
@@ -535,7 +551,73 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                       },
                     ),
                   ),
-                  const SizedBox(height: AppTheme.cardPadding),
+                  // Show Boltz fee breakdown for Lightning
+                  if (isLightning && amount >= _defaultLightningAmount) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.cardPadding,
+                      ),
+                      child: Builder(
+                        builder: (context) {
+                          // Calculate gross amount (what sender pays)
+                          final int grossAmount = _calculateGrossAmount(amount);
+                          final int serviceFee =
+                              (grossAmount * _boltzServiceFeePercent / 100)
+                                  .round();
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
+
+                          return Container(
+                            padding: const EdgeInsets.all(AppTheme.cardPadding),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.05)
+                                  : Colors.black.withValues(alpha: 0.03),
+                              borderRadius: AppTheme.cardRadiusSmall,
+                            ),
+                            child: Column(
+                              children: [
+                                _buildFeeRow(
+                                  context,
+                                  'You receive',
+                                  '$amount sats',
+                                  isDark,
+                                  isTotal: true,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Divider(height: 1),
+                                ),
+                                _buildFeeRow(
+                                  context,
+                                  'Service fee (0.25%)',
+                                  '+$serviceFee sats',
+                                  isDark,
+                                ),
+                                const SizedBox(height: 8),
+                                _buildFeeRow(
+                                  context,
+                                  'Claim fee',
+                                  '+$_boltzClaimFeeSats sats',
+                                  isDark,
+                                ),
+                                const SizedBox(height: 8),
+                                _buildFeeRow(
+                                  context,
+                                  'Sender pays',
+                                  '~$grossAmount sats',
+                                  isDark,
+                                  isTotal: true,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.cardPadding),
+                  ] else
+                    const SizedBox(height: AppTheme.cardPadding),
                   LongButtonWidget(
                     title: isBelowMinimum
                         ? 'Amount too low'
@@ -1004,5 +1086,35 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     if (type == ReceiveType.lightning) {
       _fetchLightningInvoice();
     }
+  }
+
+  Widget _buildFeeRow(
+    BuildContext context,
+    String label,
+    String value,
+    bool isDark, {
+    bool isTotal = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: isDark ? AppTheme.white60 : AppTheme.black60,
+                fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
+              ),
+        ),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: isTotal
+                    ? (isDark ? Colors.white : Colors.black)
+                    : (isDark ? AppTheme.white60 : AppTheme.black60),
+                fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
+              ),
+        ),
+      ],
+    );
   }
 }
