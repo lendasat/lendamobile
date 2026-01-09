@@ -45,6 +45,9 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
 
   /// Load all time ranges in parallel for instant switching.
   Future<void> _loadAllData() async {
+    // Capture the initial range to avoid race conditions
+    final initialRange = _selectedTimeRange;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -52,18 +55,23 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
 
     // Load the selected time range first for quick display
     try {
-      final data = await fetchBitcoinPriceData(_selectedTimeRange);
+      final data = await fetchBitcoinPriceData(initialRange);
       data.sort((a, b) => a.time.compareTo(b.time));
 
       if (mounted) {
-        setState(() {
-          _dataCache[_selectedTimeRange] = data;
-          _isLoading = false;
-          _trackballDataNotifier.value = null;
-        });
+        // Always cache the data
+        _dataCache[initialRange] = data;
+
+        // Only update loading state if still on the same range
+        if (_selectedTimeRange == initialRange) {
+          setState(() {
+            _isLoading = false;
+            _trackballDataNotifier.value = null;
+          });
+        }
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && _selectedTimeRange == initialRange) {
         setState(() {
           _errorMessage = e.toString();
           _isLoading = false;
@@ -74,7 +82,7 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
 
     // Load remaining time ranges in parallel (background)
     final remainingRanges =
-        TimeRange.values.where((r) => r != _selectedTimeRange).toList();
+        TimeRange.values.where((r) => r != initialRange).toList();
 
     // Fire off all requests in parallel without awaiting
     for (final range in remainingRanges) {
@@ -102,7 +110,10 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
 
   /// Load data for current selection (fallback if not cached).
   Future<void> _loadData() async {
-    if (_dataCache.containsKey(_selectedTimeRange)) {
+    // Capture the range at start to avoid race conditions
+    final rangeToLoad = _selectedTimeRange;
+
+    if (_dataCache.containsKey(rangeToLoad)) {
       setState(() {
         _isLoading = false;
         _errorMessage = null;
@@ -117,18 +128,23 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
     });
 
     try {
-      final data = await fetchBitcoinPriceData(_selectedTimeRange);
+      final data = await fetchBitcoinPriceData(rangeToLoad);
       data.sort((a, b) => a.time.compareTo(b.time));
 
-      if (mounted) {
+      // Only update if still on the same range (user didn't switch)
+      if (mounted && _selectedTimeRange == rangeToLoad) {
         setState(() {
-          _dataCache[_selectedTimeRange] = data;
+          _dataCache[rangeToLoad] = data;
           _isLoading = false;
           _trackballDataNotifier.value = null;
         });
+      } else if (mounted) {
+        // Still cache the data for later use, but don't update loading state
+        _dataCache[rangeToLoad] = data;
       }
     } catch (e) {
-      if (mounted) {
+      // Only show error if still on the same range
+      if (mounted && _selectedTimeRange == rangeToLoad) {
         setState(() {
           _errorMessage = e.toString();
           _isLoading = false;

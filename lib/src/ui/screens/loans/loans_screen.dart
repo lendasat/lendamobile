@@ -408,7 +408,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       context: context,
       extendBodyBehindAppBar: true,
       appBar: BitNetAppBar(
@@ -428,6 +428,11 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                     onRefresh: _refresh,
                     child: CustomScrollView(
                       slivers: [
+                        // Top padding
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: AppTheme.cardPadding * 1.5),
+                        ),
+
                         // Debug info (development only)
                         if (_showDebugInfo)
                           SliverToBoxAdapter(child: _buildDebugCard(context)),
