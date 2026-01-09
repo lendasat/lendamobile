@@ -186,6 +186,12 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
     if (data.toLowerCase().startsWith('lightning:')) {
       address = data.substring(10);
     }
+    // Handle Arkade address with query params (ark1...?amount=0.0001)
+    else if ((data.startsWith('ark1') || data.startsWith('tark1')) &&
+        data.contains('?')) {
+      // Extract just the address part for validation
+      address = data.split('?').first;
+    }
     // Handle BIP21 URI - extract best address
     else if (data.toLowerCase().startsWith('bitcoin:')) {
       final uri = Uri.tryParse(data);
@@ -235,7 +241,8 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: kToolbarHeight + AppTheme.cardPadding * 2),
+                const SizedBox(
+                    height: kToolbarHeight + AppTheme.cardPadding * 2),
                 // Search field
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -288,7 +295,8 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
                         vertical: AppTheme.elementSpacing / 2,
                       ),
                       child: Column(
-                        children: List.generate(_recentRecipients.length, (index) {
+                        children:
+                            List.generate(_recentRecipients.length, (index) {
                           final recipient = _recentRecipients[index];
                           return _buildRecentRecipientItem(
                               recipient, index == _recentRecipients.length - 1);
@@ -371,7 +379,7 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
   String _getTypeLabel(RecipientType type) {
     switch (type) {
       case RecipientType.ark:
-        return 'Ark';
+        return 'Arkade';
       case RecipientType.lightning:
         return 'Lightning';
       case RecipientType.lightningInvoice:

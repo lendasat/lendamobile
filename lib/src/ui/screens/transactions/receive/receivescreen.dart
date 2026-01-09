@@ -217,15 +217,28 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     });
 
     try {
-      // Only pass amount when fetching Lightning invoice
-      // Passing null skips Lightning/Boltz entirely
+      // Pass amount only when fetching Lightning invoice
+      // (Rust API generates Lightning when amount is provided)
       final BigInt? amountSats = includeLightning && (_currentAmount ?? 0) > 0
           ? BigInt.from(_currentAmount!)
           : null;
 
       final addresses = await address(amount: amountSats);
+
+      // Construct BIP21 with amount if set (for non-Lightning types)
+      String bip21 = addresses.bip21;
+      if (!includeLightning && (_currentAmount ?? 0) > 0) {
+        // Add amount to BIP21 if not already present
+        final amountBtc = _currentAmount! / 100000000.0;
+        if (!bip21.contains('?')) {
+          bip21 = '$bip21?amount=$amountBtc';
+        } else if (!bip21.contains('amount=')) {
+          bip21 = '$bip21&amount=$amountBtc';
+        }
+      }
+
       setState(() {
-        _bip21Address = addresses.bip21;
+        _bip21Address = bip21;
         _arkAddress = addresses.offchain;
         _btcAddress = addresses.boarding;
         _boltzSwapId = addresses.lightning?.swapId;
@@ -369,8 +382,18 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       case ReceiveType.combined:
         return _bip21Address;
       case ReceiveType.ark:
+        // Return Arkade address with amount if set
+        if ((_currentAmount ?? 0) > 0) {
+          final amountBtc = _currentAmount! / 100000000.0;
+          return '$_arkAddress?amount=$amountBtc';
+        }
         return _arkAddress;
       case ReceiveType.onchain:
+        // Return BIP21 URI with amount if set
+        if ((_currentAmount ?? 0) > 0) {
+          final amountBtc = _currentAmount! / 100000000.0;
+          return 'bitcoin:$_btcAddress?amount=$amountBtc';
+        }
         return _btcAddress;
       case ReceiveType.lightning:
         // Prefix with lightning: for proper QR code scanning
@@ -393,14 +416,25 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     }
   }
 
-  /// Get the raw address/invoice for copying (without URI prefix)
+  /// Get the raw address/invoice for copying
+  /// Includes amount query param when set
   String _getRawAddress() {
     switch (_receiveType) {
       case ReceiveType.combined:
         return _bip21Address;
       case ReceiveType.ark:
+        // Return Arkade address with amount if set
+        if ((_currentAmount ?? 0) > 0) {
+          final amountBtc = _currentAmount! / 100000000.0;
+          return '$_arkAddress?amount=$amountBtc';
+        }
         return _arkAddress;
       case ReceiveType.onchain:
+        // Return BIP21 URI with amount if set
+        if ((_currentAmount ?? 0) > 0) {
+          final amountBtc = _currentAmount! / 100000000.0;
+          return 'bitcoin:$_btcAddress?amount=$amountBtc';
+        }
         return _btcAddress;
       case ReceiveType.lightning:
         return _lightningInvoice ?? "";
@@ -419,7 +453,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       _showCopied = true;
     });
 
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
           _showCopied = false;
@@ -434,11 +468,22 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   }
 
   void _showAmountSheet() {
-    _satController.text = _currentAmount?.toString() ?? "0";
+    // Only pre-fill if there's an actual amount set (not 0)
+    // Empty string shows hint text "0"
+    if (_currentAmount != null && _currentAmount! > 0) {
+      _satController.text = _currentAmount.toString();
+    } else {
+      _satController.clear();
+    }
+
+    // Auto-focus the text field after the sheet is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _amountFocusNode.requestFocus();
+    });
 
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: MediaQuery.of(context).size.height * 0.85,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ArkScaffold(
         context: context,
@@ -618,6 +663,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                             // Amount tile
                             _buildAmountTile(l10n),
                             const SizedBox(height: AppTheme.cardPadding * 2),
+                            // Share button
+                            _buildShareButton(),
+                            const SizedBox(height: AppTheme.cardPadding * 2),
                           ],
                         ),
                 ),
@@ -625,6 +673,22 @@ class _ReceiveScreenState extends State<ReceiveScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildShareButton() {
+    final qrData = _getCurrentQrData();
+    final isLoading = qrData.isEmpty;
+
+    return Center(
+      child: LongButtonWidget(
+        customHeight: AppTheme.cardPadding * 2,
+        customWidth: AppTheme.cardPadding * 5,
+        title: AppLocalizations.of(context)!.share,
+        leadingIcon: const Icon(Icons.share_rounded),
+        onTap: isLoading ? null : _shareAddress,
+        buttonType: ButtonType.transparent,
       ),
     );
   }
@@ -688,14 +752,6 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 ),
               ),
             ),
-            LongButtonWidget(
-              customHeight: AppTheme.cardPadding * 2,
-              customWidth: AppTheme.cardPadding * 5,
-              title: AppLocalizations.of(context)!.share,
-              leadingIcon: const Icon(Icons.share_rounded),
-              onTap: isLoading ? null : _shareAddress,
-              buttonType: ButtonType.transparent,
-            ),
           ],
         ),
       ),
@@ -709,47 +765,43 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
     return ArkListTile(
       text: label,
-      trailing: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        child: _showCopied
-            ? Row(
-                key: const ValueKey('copied'),
+      trailing: _showCopied
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const Icon(
+                  Icons.check,
+                  color: AppTheme.successColor,
+                  size: AppTheme.cardPadding * 0.75,
+                ),
+                const SizedBox(width: AppTheme.elementSpacing / 2),
+                Text(
+                  AppLocalizations.of(context)!.copied,
+                  style: TextStyle(
+                    color: AppTheme.successColor,
+                    fontSize: Theme.of(context).textTheme.bodySmall?.fontSize,
+                  ),
+                ),
+              ],
+            )
+          : PostHogMaskWidget(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.check,
-                    color: AppTheme.successColor,
+                  Icon(
+                    Icons.copy,
+                    color: Theme.of(context).hintColor,
                     size: AppTheme.cardPadding * 0.75,
                   ),
                   const SizedBox(width: AppTheme.elementSpacing / 2),
                   Text(
-                    AppLocalizations.of(context)!.copied,
-                    style: TextStyle(
-                      color: AppTheme.successColor,
-                      fontSize: Theme.of(context).textTheme.bodySmall?.fontSize,
-                    ),
+                    _trimAddress(_getRawAddress()),
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
-              )
-            : PostHogMaskWidget(
-                key: const ValueKey('address'),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.copy,
-                      color: Theme.of(context).hintColor,
-                      size: AppTheme.cardPadding * 0.75,
-                    ),
-                    const SizedBox(width: AppTheme.elementSpacing / 2),
-                    Text(
-                      _trimAddress(_getRawAddress()),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
               ),
-      ),
+            ),
       onTap: _copyAddress,
     );
   }
@@ -781,74 +833,126 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   }
 
   Widget _buildTypeSelector() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
-      child: Row(
-        children: ReceiveType.values.map((type) {
-          final isSelected = _receiveType == type;
-          final label = switch (type) {
-            ReceiveType.combined => 'Unified',
-            ReceiveType.ark => 'Ark',
-            ReceiveType.onchain => 'Onchain',
-            ReceiveType.lightning => 'Lightning',
-          };
-          final icon = switch (type) {
-            ReceiveType.combined => FontAwesomeIcons.qrcode,
-            ReceiveType.ark => FontAwesomeIcons.water,
-            ReceiveType.onchain => FontAwesomeIcons.link,
-            ReceiveType.lightning => FontAwesomeIcons.bolt,
-          };
+    final selectedIndex = ReceiveType.values.indexOf(_receiveType);
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    const double containerPadding = 4;
+    const double indicatorMargin = 2;
 
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => _onTypeSelected(type),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.elementSpacing / 4,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppTheme.elementSpacing,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
-                      : Colors.transparent,
-                  borderRadius: AppTheme.cardRadiusSmall,
-                  border: Border.all(
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).dividerColor,
-                    width: isSelected ? 1.5 : 1,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.elementSpacing),
+      child: Container(
+        height: 48,
+        padding: const EdgeInsets.all(containerPadding),
+        decoration: BoxDecoration(
+          color: isLight
+              ? Colors.black.withValues(alpha: 0.05)
+              : Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final tabWidth = constraints.maxWidth / 4;
+            final indicatorHeight = constraints.maxHeight;
+            return Stack(
+              children: [
+                // Animated sliding pill indicator
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeOutExpo,
+                  left: selectedIndex * tabWidth + indicatorMargin,
+                  top: 0,
+                  height: indicatorHeight,
+                  width: tabWidth - (indicatorMargin * 2),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isLight
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black
+                              .withValues(alpha: isLight ? 0.08 : 0.15),
+                          blurRadius: 6,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      icon,
-                      size: AppTheme.cardPadding * 0.75,
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).hintColor,
-                    ),
-                    const SizedBox(height: AppTheme.elementSpacing / 2),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).hintColor,
+                // Tab items
+                Row(
+                  children: ReceiveType.values.map((type) {
+                    final isSelected = _receiveType == type;
+                    final icon = switch (type) {
+                      ReceiveType.combined => FontAwesomeIcons.qrcode,
+                      ReceiveType.ark => FontAwesomeIcons.spaceAwesome,
+                      ReceiveType.onchain => FontAwesomeIcons.link,
+                      ReceiveType.lightning => FontAwesomeIcons.bolt,
+                    };
+                    final label = switch (type) {
+                      ReceiveType.combined => 'Unified',
+                      ReceiveType.ark => 'Arkade',
+                      ReceiveType.onchain => 'Onchain',
+                      ReceiveType.lightning => 'Lightning',
+                    };
+
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => _onTypeSelected(type),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          height: double.infinity,
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: indicatorMargin),
+                          alignment: Alignment.center,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  icon,
+                                  size: 12,
+                                  color: isSelected
+                                      ? (isLight
+                                          ? Colors.black87
+                                          : Colors.white)
+                                      : (isLight
+                                          ? Colors.black38
+                                          : Colors.white38),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  label,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                    color: isSelected
+                                        ? (isLight
+                                            ? Colors.black87
+                                            : Colors.white)
+                                        : (isLight
+                                            ? Colors.black38
+                                            : Colors.white38),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    );
+                  }).toList(),
                 ),
-              ),
-            ),
-          );
-        }).toList(),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -856,11 +960,20 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   void _onTypeSelected(ReceiveType type) {
     if (type == _receiveType) return;
 
+    final wasLightning = _receiveType == ReceiveType.lightning;
+    final hadDefaultLightningAmount = _currentAmount == _defaultLightningAmount;
+
     setState(() {
       _receiveType = type;
-      // Set default amount for Lightning if not already set
-      if (type == ReceiveType.lightning && (_currentAmount ?? 0) <= 0) {
-        _currentAmount = _defaultLightningAmount;
+
+      if (type == ReceiveType.lightning) {
+        // Set default amount for Lightning if not already set
+        if ((_currentAmount ?? 0) <= 0) {
+          _currentAmount = _defaultLightningAmount;
+        }
+      } else if (wasLightning && hadDefaultLightningAmount) {
+        // Reset amount when leaving Lightning if it was the auto-set default
+        _currentAmount = 0;
       }
     });
 
