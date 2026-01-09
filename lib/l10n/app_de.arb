@@ -423,5 +423,6 @@
   "yearAgo": "Jahr",
   "yearsAgo": "Jahre",
   "selectNetwork": "Netzwerk wählen",
-  "fromClipboard": "aus Zwischenablage"
+  "fromClipboard": "aus Zwischenablage",
+  "copied": "Kopiert"
 }

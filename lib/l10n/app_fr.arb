@@ -366,5 +366,6 @@
   "sendFeedback": "Envoyer des commentaires",
   "sender": "Expéditeur",
   "receiver": "Destinataire",
-  "scan": "Scanner"
+  "scan": "Scanner",
+  "copied": "Copié"
 }

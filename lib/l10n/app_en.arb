@@ -499,5 +499,6 @@
   "monthsAgo": "months ago",
   "yearAgo": "year ago",
   "yearsAgo": "years ago",
-  "selectNetwork": "Select Network"
+  "selectNetwork": "Select Network",
+  "copied": "Copied"
 }
