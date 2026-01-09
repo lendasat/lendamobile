@@ -366,5 +366,6 @@
   "sendFeedback": "フィードバックを送信",
   "sender": "送信者",
   "receiver": "受信者",
-  "scan": "スキャン"
+  "scan": "スキャン",
+  "copied": "コピーしました"
 }
