@@ -464,6 +464,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   void _copyAddress() {
     final address = _getRawAddress();
     Clipboard.setData(ClipboardData(text: address));
+    HapticFeedback.lightImpact();
 
     setState(() {
       _showCopied = true;

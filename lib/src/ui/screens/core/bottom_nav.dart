@@ -72,17 +72,21 @@ class _BottomNavState extends State<BottomNav> {
 
   Widget _buildNavItem(int index, IconData icon, bool isLight) {
     final isSelected = _selectedIndex == index;
-    return GestureDetector(
-      onTap: () => _onItemTapped(index),
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 60,
-        child: Icon(
-          icon,
-          size: 24,
-          color: isSelected
-              ? (isLight ? Colors.black : Colors.white)
-              : (isLight ? Colors.grey.shade600 : Colors.grey.shade400),
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _onItemTapped(index),
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          height: double.infinity,
+          child: Center(
+            child: Icon(
+              icon,
+              size: 24,
+              color: isSelected
+                  ? (isLight ? Colors.black : Colors.white)
+                  : (isLight ? Colors.grey.shade600 : Colors.grey.shade400),
+            ),
+          ),
         ),
       ),
     );
@@ -107,7 +111,6 @@ class _BottomNavState extends State<BottomNav> {
               child: GlassContainer(
                 height: AppTheme.cardPadding * 2.75,
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     _buildNavItem(0, FontAwesomeIcons.wallet, isLight),

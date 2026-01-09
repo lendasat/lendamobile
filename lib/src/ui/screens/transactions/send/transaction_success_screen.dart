@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 
@@ -30,6 +31,7 @@ class _TransactionSuccessScreenState extends State<TransactionSuccessScreen> {
   @override
   void initState() {
     super.initState();
+    HapticFeedback.mediumImpact();
     _trackTransaction();
   }
 

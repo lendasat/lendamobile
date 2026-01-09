@@ -45,6 +45,7 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   bool _isVerifying = false;
   String? _verificationError;
   List<String> _bipWords = [];
+  bool _showCopied = false;
 
   @override
   void initState() {
@@ -306,9 +307,17 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   void _copyToClipboard() {
     if (_mnemonic != null) {
       Clipboard.setData(ClipboardData(text: _mnemonic!));
-      OverlayService().showSuccess(
-        AppLocalizations.of(context)!.recoveryPhraseCopiedToClipboard,
-      );
+      HapticFeedback.lightImpact();
+      setState(() {
+        _showCopied = true;
+      });
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            _showCopied = false;
+          });
+        }
+      });
     }
   }
 
@@ -489,13 +498,11 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
             _buildWarningPoint(
                 context, Icons.person_off, 'Never share with anyone'),
             _buildWarningPoint(
-                context, Icons.screenshot_monitor, 'Never take screenshots'),
-            _buildWarningPoint(
                 context, Icons.cloud_off, 'Never store digitally or online'),
             _buildWarningPoint(context, Icons.edit_note,
                 'Write it down on paper and store safely'),
 
-            const SizedBox(height: AppTheme.cardPadding * 2),
+            const SizedBox(height: AppTheme.cardPadding),
 
             // Continue button
             LongButtonWidget(
@@ -654,12 +661,26 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
                       width: double.infinity,
                       child: OutlinedButton.icon(
                         onPressed: _copyToClipboard,
-                        icon: const Icon(Icons.copy),
-                        label:
-                            Text(AppLocalizations.of(context)!.copyToClipboard),
+                        icon: Icon(
+                          _showCopied ? Icons.check : Icons.copy,
+                          color: _showCopied
+                              ? AppTheme.successColor
+                              : AppTheme.colorBitcoin,
+                        ),
+                        label: Text(
+                          _showCopied
+                              ? AppLocalizations.of(context)!.copied
+                              : AppLocalizations.of(context)!.copyToClipboard,
+                        ),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.colorBitcoin,
-                          side: const BorderSide(color: AppTheme.colorBitcoin),
+                          foregroundColor: _showCopied
+                              ? AppTheme.successColor
+                              : AppTheme.colorBitcoin,
+                          side: BorderSide(
+                            color: _showCopied
+                                ? AppTheme.successColor
+                                : AppTheme.colorBitcoin,
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),

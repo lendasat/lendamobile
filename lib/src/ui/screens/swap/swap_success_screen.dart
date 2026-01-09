@@ -39,6 +39,7 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
   @override
   void initState() {
     super.initState();
+    HapticFeedback.mediumImpact();
     _trackSwap();
   }
 

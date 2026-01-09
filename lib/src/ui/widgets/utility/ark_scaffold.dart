@@ -142,6 +142,7 @@ class ArkScaffoldUnsafe extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
       bottomNavigationBar: bottomSheet,
@@ -163,12 +164,13 @@ class ArkScaffoldUnsafe extends StatelessWidget {
             ),
           ),
           // Gradient fade overlay - shows when extendBodyBehindAppBar is true
+          // Includes topPadding to extend into status bar/notch area
           extendBodyBehindAppBar
               ? removeGradientColor
                   ? Container()
                   : Container(
                       width: double.infinity,
-                      height: AppTheme.cardPadding * 3,
+                      height: AppTheme.cardPadding * 3 + topPadding,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,

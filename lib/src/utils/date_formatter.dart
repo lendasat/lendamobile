@@ -37,6 +37,11 @@ class DateFormatter {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
+    // If date is in the future, return empty string to avoid "just now" forever bug
+    if (difference.isNegative) {
+      return '';
+    }
+
     if (difference.inDays > 0) {
       return '${difference.inDays}d ago';
     } else if (difference.inHours > 0) {
