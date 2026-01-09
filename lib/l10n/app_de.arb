@@ -197,6 +197,7 @@
   "status": "Status",
   "confirmed": "Confirmed",
   "pending": "Pending",
+  "spendable": "Spendable",
   "date": "Datum",
   "time": "Uhrzeit",
   "transactionVolume": "Transaktionsvolumen",

@@ -629,7 +629,7 @@ class _TransactionItemWidget extends StatelessWidget {
     FocusScope.of(context).unfocus();
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.95,
+      height: MediaQuery.of(context).size.height * 0.75,
       backgroundColor: Theme.of(context).colorScheme.surface,
       child: TransactionDetailSheet(
         txid: txid,
@@ -644,6 +644,10 @@ class _TransactionItemWidget extends StatelessWidget {
     );
   }
 
+  // NOTE: All Arkade transactions are shown as "confirmed" immediately, even if
+  // the underlying on-chain transaction is still pending. This was requested by
+  // users - since funds are spendable in Arkade right away, showing "pending"
+  // states only confuses users with technical complexity they don't need to see.
   @override
   Widget build(BuildContext context) {
     return transaction.map(
@@ -655,8 +659,8 @@ class _TransactionItemWidget extends StatelessWidget {
         tx.amountSats.toInt(),
         showBtcAsMain,
         hideAmounts,
-        'Onchain',
-        isConfirmed: tx.confirmedAt != null,
+        'Arkade',
+        isConfirmed: true, // Always confirmed - funds are spendable immediately
         isSettleable: tx.confirmedAt != null,
       ),
       round: (tx) => _buildTransactionTile(
@@ -668,8 +672,8 @@ class _TransactionItemWidget extends StatelessWidget {
         showBtcAsMain,
         hideAmounts,
         'Arkade',
-        isConfirmed:
-            true, // Round transactions are instantly confirmed in Arkade
+        isConfirmed: true, // Always confirmed - instant in Arkade
+        isSettleable: true, // Round transactions are instantly settled
       ),
       redeem: (tx) => _buildTransactionTile(
         context,
@@ -679,9 +683,9 @@ class _TransactionItemWidget extends StatelessWidget {
         tx.amountSats,
         showBtcAsMain,
         hideAmounts,
-        // Ark virtual transactions stay within Arkade network
         'Arkade',
-        isConfirmed: tx.isSettled,
+        isConfirmed: true, // Always confirmed - funds are spendable immediately
+        isSettleable: tx.isSettled, // True when fully settled on-chain
       ),
       offboard: (tx) => _buildTransactionTile(
         context,
@@ -692,7 +696,7 @@ class _TransactionItemWidget extends StatelessWidget {
         showBtcAsMain,
         hideAmounts,
         'Onchain',
-        isConfirmed: tx.confirmedAt != null,
+        isConfirmed: tx.confirmedAt != null, // Only on-chain sends show pending
       ),
     );
   }
@@ -792,8 +796,7 @@ class _TransactionItemWidget extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                DateFormatter.formatRelativeDateFromTimestamp(
-                                    createdAt),
+                                DateFormatter.formatTimeAgoFromTimestamp(createdAt),
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),
@@ -889,7 +892,7 @@ class _SwapItemWidget extends StatelessWidget {
     FocusScope.of(context).unfocus();
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.95,
+      height: MediaQuery.of(context).size.height * 0.75,
       backgroundColor: Theme.of(context).colorScheme.surface,
       child: SwapDetailSheet(
         swapId: swapItem.id,

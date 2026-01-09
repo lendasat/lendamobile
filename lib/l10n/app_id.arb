@@ -197,6 +197,7 @@
   "status": "Status",
   "confirmed": "Confirmed",
   "pending": "Pending",
+  "spendable": "Spendable",
   "date": "Tanggal",
   "confirmedAt": "Dikonfirmasi Pada",
   "transactionPendingFundsWillBeNonReversibleAfterSettlement": "Transaksi tertunda. Dana tidak dapat dibatalkan setelah penyelesaian.",
