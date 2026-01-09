@@ -569,7 +569,7 @@ abstract class AppLocalizations {
   /// No description provided for @bitcoinOrArkAddress.
   ///
   /// In en, this message translates to:
-  /// **'Bitcoin or Ark address'**
+  /// **'Bitcoin or Arkade address'**
   String get bitcoinOrArkAddress;
 
   /// No description provided for @available.
@@ -1676,6 +1676,12 @@ abstract class AppLocalizations {
   /// **'Unknown'**
   String get unknown;
 
+  /// No description provided for @fromClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'from clipboard'**
+  String get fromClipboard;
+
   /// No description provided for @walletAddressCopied.
   ///
   /// In en, this message translates to:
@@ -2593,6 +2599,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Learn more about how LendaSat works'**
   String get learnMoreAboutLendasat;
+
+  /// No description provided for @sendingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending...'**
+  String get sendingStatus;
+
+  /// No description provided for @sentStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent!'**
+  String get sentStatus;
+
+  /// No description provided for @failedStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get failedStatus;
+
+  /// No description provided for @chooseRecipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Recipient'**
+  String get chooseRecipient;
+
+  /// No description provided for @searchRecipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Search or paste address...'**
+  String get searchRecipient;
+
+  /// No description provided for @recent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get recent;
+
+  /// No description provided for @pasteOrScanAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste or scan a Bitcoin address'**
+  String get pasteOrScanAddress;
+
+  /// No description provided for @supportedFormats.
+  ///
+  /// In en, this message translates to:
+  /// **'Supports Bitcoin, Lightning, Ark, and LNURL addresses'**
+  String get supportedFormats;
+
+  /// No description provided for @justNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get justNow;
+
+  /// No description provided for @minuteAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'minute ago'**
+  String get minuteAgo;
+
+  /// No description provided for @hourAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'hour ago'**
+  String get hourAgo;
+
+  /// No description provided for @dayAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'day ago'**
+  String get dayAgo;
+
+  /// No description provided for @monthAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'month ago'**
+  String get monthAgo;
+
+  /// No description provided for @monthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'months ago'**
+  String get monthsAgo;
+
+  /// No description provided for @yearAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'year ago'**
+  String get yearAgo;
+
+  /// No description provided for @yearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'years ago'**
+  String get yearsAgo;
+
+  /// No description provided for @selectNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Network'**
+  String get selectNetwork;
 
   /// No description provided for @copied.
   ///

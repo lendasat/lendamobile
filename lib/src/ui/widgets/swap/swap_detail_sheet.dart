@@ -457,8 +457,9 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                       Text(
                         'Sent',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color:
-                                  isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
                             ),
                       ),
                       Text(
@@ -471,8 +472,9 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                       Text(
                         '${sourceToken.symbol} (${sourceToken.network})',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color:
-                                  isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
                             ),
                       ),
                     ],
@@ -521,8 +523,9 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                       Text(
                         'Received',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color:
-                                  isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
                             ),
                       ),
                       Text(
@@ -539,8 +542,9 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                       Text(
                         '${targetToken.symbol} (${targetToken.network})',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color:
-                                  isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
                             ),
                       ),
                     ],
@@ -929,7 +933,7 @@ class _RefundAddressSheetState extends State<_RefundAddressSheet> {
         _errorText = null;
         _isValid = false;
       } else if (!_validateAddress(value)) {
-        _errorText = 'Invalid Bitcoin/Ark address';
+        _errorText = 'Invalid Bitcoin/Arkade address';
         _isValid = false;
       } else {
         _errorText = null;
@@ -964,7 +968,7 @@ class _RefundAddressSheetState extends State<_RefundAddressSheet> {
           ),
           const SizedBox(height: AppTheme.cardPadding),
           Text(
-            'Enter the Bitcoin or Ark address where you want to receive your refund.',
+            'Enter the Bitcoin or Arkade address where you want to receive your refund.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                 ),
@@ -991,7 +995,8 @@ class _RefundAddressSheetState extends State<_RefundAddressSheet> {
                       decoration: InputDecoration(
                         hintText: 'ark1... or bc1...',
                         hintStyle: TextStyle(
-                          color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                         border: InputBorder.none,
                         errorText: _errorText,

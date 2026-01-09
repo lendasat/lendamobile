@@ -108,14 +108,22 @@ class AddressValidator {
       return AddressValidationResult.valid(PaymentAddressType.lightningAddress);
     }
 
-    // Ark mainnet (ark1...)
-    if (_arkMainnetPattern.hasMatch(lower)) {
-      return AddressValidationResult.valid(PaymentAddressType.ark);
+    // Ark mainnet (ark1...) - may have query params like ?amount=
+    if (lower.startsWith('ark1')) {
+      final addressPart = lower.contains('?') ? lower.split('?').first : lower;
+      if (_arkMainnetPattern.hasMatch(addressPart)) {
+        return AddressValidationResult.valid(PaymentAddressType.ark);
+      }
+      return AddressValidationResult.invalid('Invalid Ark address');
     }
 
-    // Ark testnet (tark1...)
-    if (_arkTestnetPattern.hasMatch(lower)) {
-      return AddressValidationResult.valid(PaymentAddressType.arkTestnet);
+    // Ark testnet (tark1...) - may have query params like ?amount=
+    if (lower.startsWith('tark1')) {
+      final addressPart = lower.contains('?') ? lower.split('?').first : lower;
+      if (_arkTestnetPattern.hasMatch(addressPart)) {
+        return AddressValidationResult.valid(PaymentAddressType.arkTestnet);
+      }
+      return AddressValidationResult.invalid('Invalid Ark testnet address');
     }
 
     // Bitcoin mainnet P2PKH (starts with 1)

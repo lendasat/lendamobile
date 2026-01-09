@@ -138,7 +138,7 @@
   "sendLower": "Send",
   "receiveLower": "Receive",
   "recipientAddress": "Recipient address",
-  "bitcoinOrArkAddress": "Bitcoin or Ark address",
+  "bitcoinOrArkAddress": "Bitcoin or Arkade address",
   "available": "available",
   "esploraUrlSavedWillOnlyTakeEffectAfterARestart": "Esplora URL saved  - will only take effect after a restart",
   "failedToSaveEsploraUrl": "Failed to save Esplora URL",

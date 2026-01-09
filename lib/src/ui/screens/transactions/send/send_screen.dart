@@ -159,13 +159,18 @@ class SendScreenState extends State<SendScreen> {
 
     // If it looks like a complete invoice/URI with an amount, parse it
     // Only parse if the amount field is empty/zero to avoid overwriting user input
-    // Check for URI patterns OR Lightning invoices (which may have embedded amounts)
+    // Check for URI patterns, Lightning invoices, or Arkade addresses with query params
     final isUri = text.toLowerCase().startsWith('bitcoin:') ||
         text.toLowerCase().startsWith('lightning:');
+    final isArkadeWithAmount =
+        (text.startsWith('ark1') || text.startsWith('tark1')) &&
+            text.contains('?amount=');
     final isLightningInvoice = _isLightningInvoice(text);
     final amountIsDefault =
         _satController.text.isEmpty || _satController.text == '0';
-    if (isValid && (isUri || isLightningInvoice) && amountIsDefault) {
+    if (isValid &&
+        (isUri || isLightningInvoice || isArkadeWithAmount) &&
+        amountIsDefault) {
       _tryParseAmountFromAddress(text);
     }
 
@@ -263,6 +268,28 @@ class SendScreenState extends State<SendScreen> {
       networks['Lightning'] = address;
       selectedNetwork = 'Lightning';
     }
+    // Handle Arkade address with amount query param (ark1...?amount=0.0001)
+    else if ((text.startsWith('ark1') || text.startsWith('tark1')) &&
+        text.contains('?')) {
+      final parts = text.split('?');
+      address = parts[0];
+      addressExtracted = true;
+      networks['Arkade'] = address;
+      selectedNetwork = 'Arkade';
+
+      // Parse amount from query string
+      if (parts.length > 1) {
+        final queryString = parts[1];
+        final params = Uri.splitQueryString(queryString);
+        if (params.containsKey('amount')) {
+          final btcAmount = double.tryParse(params['amount'] ?? '');
+          if (btcAmount != null) {
+            amount = (btcAmount * BitcoinConstants.satsPerBtc).round();
+            logger.i("Extracted amount from Arkade address: $amount sats");
+          }
+        }
+      }
+    }
     // Parse BIP21 URI for amount and all available networks
     else if (text.toLowerCase().startsWith('bitcoin:')) {
       final uri = Uri.tryParse(text);
@@ -275,18 +302,18 @@ class SendScreenState extends State<SendScreen> {
           networks['Lightning'] = uri.queryParameters['lightning']!;
         }
         if (uri.queryParameters.containsKey('ark')) {
-          networks['Ark'] = uri.queryParameters['ark']!;
+          networks['Arkade'] = uri.queryParameters['ark']!;
         } else if (uri.queryParameters.containsKey('arkade')) {
-          networks['Ark'] = uri.queryParameters['arkade']!;
+          networks['Arkade'] = uri.queryParameters['arkade']!;
         }
 
         // Priority order for address selection (lower fees first):
         // 1. Ark address (lowest fees)
         // 2. Lightning invoice
         // 3. Bitcoin address (highest fees)
-        if (networks.containsKey('Ark')) {
-          address = networks['Ark']!;
-          selectedNetwork = 'Ark';
+        if (networks.containsKey('Arkade')) {
+          address = networks['Arkade']!;
+          selectedNetwork = 'Arkade';
           logger.i("Using Ark address from BIP21 for lower fees");
         } else if (networks.containsKey('Lightning')) {
           address = networks['Lightning']!;
@@ -319,12 +346,14 @@ class SendScreenState extends State<SendScreen> {
         if (btcAmount > 0) {
           amount = (btcAmount * BitcoinConstants.satsPerBtc).round();
           amountFromInvoice = true;
-          logger.i("Extracted amount from Lightning invoice: $amount sats (locked)");
+          logger.i(
+              "Extracted amount from Lightning invoice: $amount sats (locked)");
         } else {
           // Zero-amount invoice - NOT SUPPORTED by SDK
           // The Ark SDK's Boltz submarine swap implementation only reads amount from the invoice
           isZeroAmountInvoice = true;
-          logger.w("Zero-amount Lightning invoice detected - NOT SUPPORTED by SDK");
+          logger.w(
+              "Zero-amount Lightning invoice detected - NOT SUPPORTED by SDK");
         }
       } catch (e) {
         // Ignore parse errors for incomplete invoices
@@ -364,7 +393,8 @@ class SendScreenState extends State<SendScreen> {
       });
       // Re-validate and update state
       _onAddressChanged();
-      logger.i("Switched to $network network: ${newAddress.substring(0, 20)}...");
+      logger
+          .i("Switched to $network network: ${newAddress.substring(0, 20)}...");
     }
   }
 
@@ -379,7 +409,7 @@ class SendScreenState extends State<SendScreen> {
     } else if (_isOnChainBitcoinAddress(address)) {
       return 'Onchain';
     } else if (_hasValidAddress) {
-      return 'Ark';
+      return 'Arkade';
     }
     return 'Unknown';
   }
@@ -804,7 +834,9 @@ class SendScreenState extends State<SendScreen> {
                       _addressError != null
                           ? _addressError!
                           : _hasValidAddress
-                              ? (_isLightningPayment ? 'Lightning' : l10n.recipient)
+                              ? (_isLightningPayment
+                                  ? 'Lightning'
+                                  : l10n.recipient)
                               : l10n.unknown,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             color: _addressError != null
@@ -821,14 +853,17 @@ class SendScreenState extends State<SendScreen> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).hintColor.withValues(alpha: 0.15),
+                          color: Theme.of(context)
+                              .hintColor
+                              .withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           l10n.fromClipboard,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Theme.of(context).hintColor,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: Theme.of(context).hintColor,
+                                  ),
                         ),
                       ),
                     ],
@@ -850,12 +885,10 @@ class SendScreenState extends State<SendScreen> {
                           const SizedBox(width: 4),
                           Text(
                             _truncateAddress(_addressController.text),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(context).hintColor,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).hintColor,
+                                    ),
                           ),
                         ],
                       ),
@@ -952,7 +985,7 @@ class SendScreenState extends State<SendScreen> {
   int _getEstimatedFees() {
     final currentNetwork = _getCurrentNetworkName();
     switch (currentNetwork) {
-      case 'Ark':
+      case 'Arkade':
         // Ark has no fees
         return 0;
       case 'Lightning':
@@ -1251,7 +1284,7 @@ class SendScreenState extends State<SendScreen> {
     final networks = _availableNetworks.keys.toList();
     // Sort: Ark first, then Lightning, then Bitcoin
     networks.sort((a, b) {
-      const order = {'Ark': 0, 'Lightning': 1, 'Onchain': 2};
+      const order = {'Arkade': 0, 'Lightning': 1, 'Onchain': 2};
       return (order[a] ?? 3).compareTo(order[b] ?? 3);
     });
 
@@ -1313,8 +1346,8 @@ class SendScreenState extends State<SendScreen> {
         return FontAwesomeIcons.bolt;
       case 'Onchain':
         return FontAwesomeIcons.link;
-      case 'Ark':
-        return FontAwesomeIcons.water;
+      case 'Arkade':
+        return FontAwesomeIcons.spaceAwesome;
       default:
         return FontAwesomeIcons.question;
     }
@@ -1322,7 +1355,7 @@ class SendScreenState extends State<SendScreen> {
 
   String _getNetworkFeeHint(String network) {
     switch (network) {
-      case 'Ark':
+      case 'Arkade':
         return 'Instant, no fees';
       case 'Lightning':
         return '~0.25% swap fee';
@@ -1381,7 +1414,12 @@ class SendScreenState extends State<SendScreen> {
               bottom: AppTheme.cardPadding,
             ),
             child: _buildSendButtonContent(
-                context, l10n, canSend, hasInsufficientFunds, isBelowLightningMinimum, _isZeroAmountLightningInvoice),
+                context,
+                l10n,
+                canSend,
+                hasInsufficientFunds,
+                isBelowLightningMinimum,
+                _isZeroAmountLightningInvoice),
           ),
         ],
       ),
@@ -1408,7 +1446,8 @@ class SendScreenState extends State<SendScreen> {
       buttonText = l10n.sendNow;
     }
 
-    final isDisabledState = hasInsufficientFunds || isBelowLightningMinimum || isZeroAmountInvoice;
+    final isDisabledState =
+        hasInsufficientFunds || isBelowLightningMinimum || isZeroAmountInvoice;
 
     return GestureDetector(
       onTap: canSend ? _handleSend : null,
@@ -1452,7 +1491,8 @@ class SendScreenState extends State<SendScreen> {
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       canSend
-                          ? const Color(0xFF1A0A00) // Dark brown/orange like button text
+                          ? const Color(
+                              0xFF1A0A00) // Dark brown/orange like button text
                           : Theme.of(context).hintColor,
                     ),
                   ),
