@@ -44,84 +44,89 @@ class ArkScaffold extends StatelessWidget {
         ? Theme.of(context).colorScheme.surface
         : Theme.of(context).colorScheme.surface;
 
-    return SafeArea(
-      child: Scaffold(
-        bottomNavigationBar: bottomSheet,
-        backgroundColor: backgroundColor ?? defaultBgColor,
-        extendBodyBehindAppBar: extendBodyBehindAppBar,
-        resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-        body: Stack(
-          children: [
+    return Scaffold(
+      bottomNavigationBar: bottomSheet,
+      backgroundColor: backgroundColor ?? defaultBgColor,
+      // Always extend body behind app bar for seamless status bar
+      extendBodyBehindAppBar: true,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+      body: Stack(
+        children: [
+          // Background container fills entire screen including status bar
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: useGradient ? null : (backgroundColor ?? defaultBgColor),
+            decoration: useGradient
+                ? BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        isLight
+                            ? lighten(
+                                Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                                50,
+                              )
+                            : darken(
+                                Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                                80,
+                              ),
+                        isLight
+                            ? lighten(
+                                Theme.of(context)
+                                    .colorScheme
+                                    .tertiaryContainer,
+                                50,
+                              )
+                            : darken(
+                                Theme.of(context)
+                                    .colorScheme
+                                    .tertiaryContainer,
+                                80,
+                              ),
+                      ],
+                    ),
+                  )
+                : null,
+          ),
+          // SafeArea wraps content, not the entire scaffold
+          SafeArea(
+            bottom: false, // Let content extend to bottom for custom handling
+            child: Padding(
+              padding: extendBodyBehindBottomNav
+                  ? const EdgeInsets.only(bottom: AppTheme.cardPadding * 3)
+                  : EdgeInsets.zero,
+              child: Container(margin: margin, child: body),
+            ),
+          ),
+          if (extendBodyBehindAppBar && !removeGradientColor && useGradient)
             Container(
               width: double.infinity,
-              height: double.infinity,
-              decoration: useGradient
-                  ? BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          isLight
-                              ? lighten(
-                                  Theme.of(context)
-                                      .colorScheme
-                                      .primaryContainer,
-                                  50,
-                                )
-                              : darken(
-                                  Theme.of(context)
-                                      .colorScheme
-                                      .primaryContainer,
-                                  80,
-                                ),
-                          isLight
-                              ? lighten(
-                                  Theme.of(context)
-                                      .colorScheme
-                                      .tertiaryContainer,
-                                  50,
-                                )
-                              : darken(
-                                  Theme.of(context)
-                                      .colorScheme
-                                      .tertiaryContainer,
-                                  80,
-                                ),
-                        ],
-                      ),
-                    )
-                  : null,
-              child: Padding(
-                padding: extendBodyBehindBottomNav
-                    ? const EdgeInsets.only(bottom: AppTheme.cardPadding * 3)
-                    : EdgeInsets.zero,
-                child: Container(margin: margin, child: body),
-              ),
-            ),
-            if (extendBodyBehindAppBar && !removeGradientColor && useGradient)
-              Container(
-                width: double.infinity,
-                height: AppTheme.cardPadding * 3,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                    colors: _buildGradientColors(context, isLight),
-                  ),
+              height: AppTheme.cardPadding * 3,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                  colors: _buildGradientColors(context, isLight),
                 ),
               ),
-          ],
-        ),
-        appBar: appBar,
-        floatingActionButton: floatingActionButton != null
-            ? Padding(
-                padding: const EdgeInsets.only(bottom: AppTheme.cardPadding),
-                child: floatingActionButton,
-              )
-            : null,
-        floatingActionButtonLocation: floatingActionButtonLocation,
+            ),
+        ],
       ),
+      appBar: appBar,
+      floatingActionButton: floatingActionButton != null
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.cardPadding),
+              child: floatingActionButton,
+            )
+          : null,
+      floatingActionButtonLocation: floatingActionButtonLocation,
     );
   }
 
