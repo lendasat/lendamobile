@@ -481,70 +481,92 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       _amountFocusNode.requestFocus();
     });
 
+    final isLightning = _receiveType == ReceiveType.lightning;
+
     arkBottomSheet(
       context: context,
       height: MediaQuery.of(context).size.height * 0.85,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      child: ArkScaffold(
-        context: context,
-        appBar: BitNetAppBar(
-          context: context,
-          hasBackButton: false,
-          text: AppLocalizations.of(context)!.setAmount,
-          actions: [
-            IconButton(
-              icon: Icon(Icons.close,
-                  color: Theme.of(context).colorScheme.onSurface),
-              onPressed: () {
-                _unfocusAll();
-                Navigator.pop(context);
-              },
+      child: StatefulBuilder(
+        builder: (context, setSheetState) {
+          final amountText = _satController.text.trim();
+          final amount = int.tryParse(amountText) ?? 0;
+          final isBelowMinimum =
+              isLightning && amount < _defaultLightningAmount;
+
+          return ArkScaffold(
+            context: context,
+            appBar: BitNetAppBar(
+              context: context,
+              hasBackButton: false,
+              text: AppLocalizations.of(context)!.setAmount,
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.close,
+                      color: Theme.of(context).colorScheme.onSurface),
+                  onPressed: () {
+                    _unfocusAll();
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppTheme.cardPadding * 2,
-                  horizontal: AppTheme.cardPadding,
-                ),
-                child: AmountWidget(
-                  enabled: () => true,
-                  btcController: _btcController,
-                  satController: _satController,
-                  currController: _currController,
-                  focusNode: _amountFocusNode,
-                  bitcoinUnit: CurrencyType.sats,
-                  swapped: false,
-                  autoConvert: true,
-                  bitcoinPrice: _bitcoinPrice,
-                ),
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppTheme.cardPadding * 2,
+                      horizontal: AppTheme.cardPadding,
+                    ),
+                    child: AmountWidget(
+                      enabled: () => true,
+                      btcController: _btcController,
+                      satController: _satController,
+                      currController: _currController,
+                      focusNode: _amountFocusNode,
+                      bitcoinUnit: CurrencyType.sats,
+                      swapped: false,
+                      autoConvert: true,
+                      bitcoinPrice: _bitcoinPrice,
+                      onAmountChange: (_, __) {
+                        // Rebuild the sheet to update button state
+                        setSheetState(() {});
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.cardPadding),
+                  LongButtonWidget(
+                    title: isBelowMinimum
+                        ? 'Amount too low'
+                        : AppLocalizations.of(context)!.apply,
+                    buttonType: isBelowMinimum
+                        ? ButtonType.transparent
+                        : ButtonType.primary,
+                    customWidth: AppTheme.cardPadding * 10,
+                    customHeight: AppTheme.cardPadding * 2,
+                    onTap: isBelowMinimum
+                        ? null
+                        : () {
+                            final amountText = _satController.text.trim();
+                            final amount = int.tryParse(amountText) ?? 0;
+                            setState(() =>
+                                _currentAmount = amount >= 0 ? amount : 0);
+                            _unfocusAll();
+                            Navigator.pop(context);
+                            // Re-fetch Lightning invoice if on Lightning, otherwise fetch addresses
+                            if (_receiveType == ReceiveType.lightning) {
+                              _fetchLightningInvoice();
+                            } else {
+                              _fetchAddresses();
+                            }
+                          },
+                  ),
+                ],
               ),
-              const SizedBox(height: AppTheme.cardPadding),
-              LongButtonWidget(
-                title: AppLocalizations.of(context)!.apply,
-                buttonType: ButtonType.primary,
-                customWidth: AppTheme.cardPadding * 10,
-                customHeight: AppTheme.cardPadding * 2,
-                onTap: () {
-                  final amountText = _satController.text.trim();
-                  final amount = int.tryParse(amountText) ?? 0;
-                  setState(() => _currentAmount = amount >= 0 ? amount : 0);
-                  _unfocusAll();
-                  Navigator.pop(context);
-                  // Re-fetch Lightning invoice if on Lightning, otherwise fetch addresses
-                  if (_receiveType == ReceiveType.lightning) {
-                    _fetchLightningInvoice();
-                  } else {
-                    _fetchAddresses();
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     ).whenComplete(() {
       // Ensure keyboard is dismissed when bottom sheet closes by any means
@@ -967,8 +989,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       _receiveType = type;
 
       if (type == ReceiveType.lightning) {
-        // Set default amount for Lightning if not already set
-        if ((_currentAmount ?? 0) <= 0) {
+        // Lightning requires minimum amount (Boltz minimum is 333 sats, we use 10k default)
+        // Auto-adjust to 10k if amount is not set or below minimum
+        if ((_currentAmount ?? 0) < _defaultLightningAmount) {
           _currentAmount = _defaultLightningAmount;
         }
       } else if (wasLightning && hadDefaultLightningAmount) {
