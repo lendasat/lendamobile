@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/theme.dart';
@@ -83,6 +84,9 @@ class PendingTransactionService extends ChangeNotifier {
       pending.status = PendingTransactionStatus.success;
       pending.txid = txid;
       notifyListeners();
+
+      // Trigger wallet refresh to show the new transaction
+      PaymentMonitoringService().triggerWalletRefresh();
 
       // Show success bottom sheet
       _showCompletionBottomSheet(pending);
