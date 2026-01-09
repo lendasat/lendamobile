@@ -197,6 +197,7 @@
   "status": "Status",
   "confirmed": "Confirmed",
   "pending": "Pending",
+  "spendable": "Spendable",
   "date": "日付",
   "time": "時間",
   "transactionVolume": "取引量",
