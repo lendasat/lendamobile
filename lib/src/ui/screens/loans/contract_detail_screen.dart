@@ -48,6 +48,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   bool _isMarkingPaid = false;
   String? _errorMessage;
   Timer? _pollTimer;
+  bool _showAddressCopied = false;
 
   @override
   void initState() {
@@ -121,6 +122,24 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     if (mounted) {
       OverlayService().showOverlay('$label copied to clipboard');
     }
+  }
+
+  void _copyContractAddress() {
+    if (_contract?.contractAddress == null) return;
+    Clipboard.setData(ClipboardData(text: _contract!.contractAddress!));
+    HapticFeedback.lightImpact();
+
+    setState(() {
+      _showAddressCopied = true;
+    });
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showAddressCopied = false;
+        });
+      }
+    });
   }
 
   Future<void> _openSupportDiscord() async {
@@ -900,47 +919,81 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           ),
           if (_contract!.contractAddress != null) ...[
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'CONTRACT ADDRESS',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color:
-                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 8,
-                        ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _contract!.contractAddress!,
-                          style: const TextStyle(
-                              fontFamily: 'monospace', fontSize: 10),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+            GestureDetector(
+              onTap: _copyContractAddress,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CONTRACT ADDRESS',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  color: isDarkMode
+                                      ? AppTheme.white60
+                                      : AppTheme.black60,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 8,
+                                ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _contract!.contractAddress!,
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 10,
+                              color: isDarkMode
+                                  ? AppTheme.white90
+                                  : AppTheme.black90,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: () => _copyToClipboard(
-                            _contract!.contractAddress!, 'Address'),
-                        child: Icon(Icons.copy_rounded,
+                    ),
+                    const SizedBox(width: 12),
+                    _showAddressCopied
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.check,
+                                color: AppTheme.successColor,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Copied',
+                                style: TextStyle(
+                                  color: AppTheme.successColor,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Icon(
+                            Icons.copy_rounded,
                             size: 14,
-                            color: Theme.of(context).colorScheme.primary),
-                      ),
-                    ],
-                  ),
-                ],
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
+                          ),
+                  ],
+                ),
               ),
             ),
           ],
