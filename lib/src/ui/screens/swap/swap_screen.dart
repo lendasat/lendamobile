@@ -105,6 +105,7 @@ class SwapScreenState extends State<SwapScreen> {
           _availableBalanceSats = balance.offchain.totalSats;
           _isLoadingBalance = false;
         });
+        logger.d("Swap screen balance loaded: $_availableBalanceSats sats");
       }
     } catch (e) {
       if (mounted) {
@@ -113,6 +114,11 @@ class SwapScreenState extends State<SwapScreen> {
         });
       }
     }
+  }
+
+  /// Public method to refresh balance - called when tab becomes visible
+  void refreshBalance() {
+    _loadBalance();
   }
 
   Future<void> _loadBitcoinPrice() async {
@@ -595,8 +601,8 @@ class SwapScreenState extends State<SwapScreen> {
       final protocolFee = _quote!.protocolFeeSats.toInt();
       return inputSats + networkFee + protocolFee;
     }
-    // Estimate fees if no quote yet (~1% for protocol + ~500 sats network)
-    return inputSats + (inputSats * 0.01).round() + 500;
+    // Estimate fees if no quote yet (~0.5% for protocol + ~250 sats network)
+    return inputSats + (inputSats * 0.005).round() + 250;
   }
 
   /// Check if user has insufficient funds for the swap including fees
@@ -646,10 +652,17 @@ class SwapScreenState extends State<SwapScreen> {
       return;
     }
 
-    // Estimate fees: ~1% protocol fee + ~500 sats network fee
-    // This is conservative - actual fees will be calculated in quote
-    final estimatedFees = (availableSats * 0.01).round() + 500;
+    // Estimate fees based on typical quote values:
+    // - Protocol fee: ~0.5% (actual varies, but this is typical)
+    // - Network fee: ~250 sats (actual varies based on mempool)
+    // The confirmation sheet will show exact fees from the quote
+    final estimatedProtocolFee = (availableSats * 0.005).round();
+    const estimatedNetworkFee = 250;
+    final estimatedFees = estimatedProtocolFee + estimatedNetworkFee;
     final maxSwapSats = (availableSats - estimatedFees).clamp(0, availableSats);
+
+    logger.i(
+        "Max calculation - balance: $availableSats, estimated fees: $estimatedFees (protocol: $estimatedProtocolFee, network: $estimatedNetworkFee), max: $maxSwapSats");
 
     // Always set the max amount, even if below minimum
     // The button will show "Amount too small" if below minimum
