@@ -13,6 +13,7 @@ class RoundedButtonWidget extends StatelessWidget {
   final Color? backgroundColor;
   final bool isLoading;
   final bool enabled;
+  final double hitSlop;
 
   const RoundedButtonWidget({
     super.key,
@@ -25,6 +26,7 @@ class RoundedButtonWidget extends StatelessWidget {
     this.backgroundColor,
     this.isLoading = false,
     this.enabled = true,
+    this.hitSlop = 0,
   });
 
   @override
@@ -81,35 +83,43 @@ class RoundedButtonWidget extends StatelessWidget {
       fgColor = Theme.of(context).hintColor;
     }
 
-    return GestureDetector(
-      onTap: enabled && !isLoading ? onTap : null,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(size / 3),
-          border: border,
-        ),
-        child: isLoading
-            ? Center(
-                child: SizedBox(
-                  width: size * 0.5,
-                  height: size * 0.5,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(fgColor),
-                  ),
-                ),
-              )
-            : Center(
-                child: Icon(
-                  iconData,
-                  color: fgColor,
-                  size: iconSize ?? size * 0.5,
+    final button = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(size / 3),
+        border: border,
+      ),
+      child: isLoading
+          ? Center(
+              child: SizedBox(
+                width: size * 0.5,
+                height: size * 0.5,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(fgColor),
                 ),
               ),
-      ),
+            )
+          : Center(
+              child: Icon(
+                iconData,
+                color: fgColor,
+                size: iconSize ?? size * 0.5,
+              ),
+            ),
+    );
+
+    return GestureDetector(
+      onTap: enabled && !isLoading ? onTap : null,
+      behavior: HitTestBehavior.opaque,
+      child: hitSlop > 0
+          ? Padding(
+              padding: EdgeInsets.all(hitSlop),
+              child: button,
+            )
+          : button,
     );
   }
 }

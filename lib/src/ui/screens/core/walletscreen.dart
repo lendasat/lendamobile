@@ -669,8 +669,8 @@ class WalletScreenState extends State<WalletScreen>
           ),
           // About Bitcoin section
           Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.cardPadding),
+            padding:
+                const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -734,6 +734,7 @@ class WalletScreenState extends State<WalletScreen>
         RoundedButtonWidget(
           size: AppTheme.cardPadding * 1.5,
           buttonType: ButtonType.transparent,
+          hitSlop: 4,
           iconData: Icons.settings,
           onTap: _handleSettings,
         ),
@@ -996,19 +997,20 @@ class WalletScreenState extends State<WalletScreen>
                   size: AppTheme.cardPadding * 1.5,
                   iconSize: AppTheme.cardPadding * 0.65,
                   buttonType: ButtonType.transparent,
+                  hitSlop: 4,
                   iconData: userPrefs.balancesVisible
                       ? FontAwesomeIcons.eyeSlash
                       : FontAwesomeIcons.eye,
                   onTap: userPrefs.toggleBalancesVisible,
                 ),
               ),
-              const SizedBox(width: AppTheme.elementSpacing * 0.5),
 
               // Chart button
               RoundedButtonWidget(
                 size: AppTheme.cardPadding * 1.5,
                 iconSize: AppTheme.cardPadding * 0.65,
                 buttonType: ButtonType.transparent,
+                hitSlop: 4,
                 iconData: FontAwesomeIcons.chartLine,
                 onTap: _handleBitcoinChart,
               ),
@@ -1050,9 +1052,7 @@ class WalletScreenState extends State<WalletScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            userPrefs.balancesVisible
-                                ? formattedSats
-                                : '****',
+                            userPrefs.balancesVisible ? formattedSats : '****',
                             style: Theme.of(context)
                                 .textTheme
                                 .displayLarge
@@ -1313,7 +1313,9 @@ class WalletScreenState extends State<WalletScreen>
                         size: 16,
                       ),
                       Text(
-                        isObscured ? '****' : _formatSatsAmount(balanceChangeInSats),
+                        isObscured
+                            ? '****'
+                            : _formatSatsAmount(balanceChangeInSats),
                         style: TextStyle(
                           color: isPositive
                               ? AppTheme.successColor
