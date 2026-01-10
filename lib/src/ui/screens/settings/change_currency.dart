@@ -23,7 +23,7 @@ class _ChangeCurrencyState extends State<ChangeCurrency> {
   @override
   Widget build(BuildContext context) {
     final controller = context.read<SettingsController>();
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(
@@ -111,7 +111,7 @@ class _CurrencyPickerBodyState extends State<_CurrencyPickerBody> {
     final selectedCurrency = currencyService.currentCurrency;
     final currencies = rust.getSupportedCurrencies();
 
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       context: context,
       resizeToAvoidBottomInset: false,
       body: Padding(
