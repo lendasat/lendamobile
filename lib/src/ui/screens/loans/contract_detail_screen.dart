@@ -833,7 +833,6 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           _buildDetailRow(
             'INTEREST RATE',
             '${(_contract!.interestRate * 100).toStringAsFixed(2)}% APY',
-            highlight: true,
           ),
           _buildDetailRow('DURATION', '${_contract!.durationDays} days'),
           Padding(
@@ -886,7 +885,6 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             'AMOUNT',
             '${collateralSats.toStringAsFixed(0)} sats',
             subtext: '${collateralBtc.toStringAsFixed(8)} BTC',
-            highlight: true,
           ),
           _buildDetailRow(
             'INITIAL LTV',
