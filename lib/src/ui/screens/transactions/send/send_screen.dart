@@ -550,7 +550,15 @@ class SendScreenState extends State<SendScreen> {
       return;
     }
 
-    if (amount > widget.availableSats) {
+    // Calculate fees to include in balance check
+    int fees = 0;
+    if (_isOnChainAddress) {
+      fees = _estimatedNetworkFeeSats;
+    } else if (_isLightningPayment) {
+      fees = _calculateBoltzFee(amount);
+    }
+
+    if (amount + fees > widget.availableSats) {
       _showSnackBar(l10n.insufficientFunds);
       return;
     }
@@ -1685,7 +1693,20 @@ class SendScreenState extends State<SendScreen> {
     AppLocalizations l10n,
   ) {
     final amountSats = double.tryParse(_satController.text) ?? 0;
-    final hasInsufficientFunds = amountSats > widget.availableSats;
+
+    // Calculate network fees to include in balance check
+    int networkFees = 0;
+    if (amountSats > 0) {
+      if (_isOnChainAddress) {
+        networkFees = _estimatedNetworkFeeSats;
+      } else if (_isLightningPayment) {
+        networkFees = _calculateBoltzFee(amountSats);
+      }
+    }
+    final totalWithFees = amountSats + networkFees;
+
+    // Check if total (amount + fees) exceeds available balance
+    final hasInsufficientFunds = totalWithFees > widget.availableSats;
     final isBelowLightningMinimum =
         _isLightningPayment && amountSats > 0 && amountSats < _minLightningSats;
     final canSend = _hasValidAddress &&
