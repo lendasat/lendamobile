@@ -162,7 +162,8 @@ class SendScreenState extends State<SendScreen> {
   /// Debounced address change handler - delays processing until user stops typing
   void _onAddressChanged() {
     _addressChangeTimer?.cancel();
-    _addressChangeTimer = Timer(const Duration(milliseconds: 300), _processAddressChange);
+    _addressChangeTimer =
+        Timer(const Duration(milliseconds: 300), _processAddressChange);
   }
 
   /// Process address changes (validation, LNURL fetching, fee fetching)
@@ -1021,19 +1022,23 @@ class SendScreenState extends State<SendScreen> {
     final maxSats = (widget.availableSats - estimatedFees).floor();
     final safeMax = maxSats > 0 ? maxSats : 0;
 
+    // Calculate all values from sats (source of truth)
+    final btcAmount = safeMax / BitcoinConstants.satsPerBtc;
+
+    // Calculate fiat from sats for display
+    double fiatAmount = 0;
+    if (_bitcoinPrice != null) {
+      final currencyService = context.read<CurrencyPreferenceService>();
+      final exchangeRates = currencyService.exchangeRates;
+      final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+      fiatAmount = btcAmount * _bitcoinPrice! * fiatRate;
+    }
+
     setState(() {
+      // Set all controllers - sats is the authoritative source
       _satController.text = safeMax.toString();
-      // Update BTC controller
-      final btcAmount = safeMax / BitcoinConstants.satsPerBtc;
       _btcController.text = btcAmount.toStringAsFixed(8);
-      // Update currency controller if we have bitcoin price
-      if (_bitcoinPrice != null) {
-        final currencyService = context.read<CurrencyPreferenceService>();
-        final exchangeRates = currencyService.exchangeRates;
-        final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
-        final fiatAmount = btcAmount * _bitcoinPrice! * fiatRate;
-        _currController.text = fiatAmount.toStringAsFixed(2);
-      }
+      _currController.text = fiatAmount.toStringAsFixed(2);
     });
   }
 
