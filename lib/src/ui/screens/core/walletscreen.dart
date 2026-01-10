@@ -12,6 +12,7 @@ import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/analytics/bitcoin_chart/bitcoin_chart_detail_screen.dart';
+import 'package:ark_flutter/src/ui/screens/buy/buy_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/receivescreen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/send/recipient_search_screen.dart';
@@ -639,6 +640,16 @@ class WalletScreenState extends State<WalletScreen>
         ),
       );
     }
+  }
+
+  void _handleBuy() {
+    logger.i("Buy button pressed");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BuyScreen(),
+      ),
+    );
   }
 
   void _handleBitcoinChart() {
@@ -1398,17 +1409,17 @@ class WalletScreenState extends State<WalletScreen>
           //     fallbackIcon: Icons.sell_outlined,
           //   ),
           // ),
-          // Buy button - commented out for now (feature not stable)
-          // Flexible(
-          //   child: BitNetImageWithTextButton(
-          //     "Buy",
-          //     _handleBuy,
-          //     width: AppTheme.cardPadding * 2.5,
-          //     height: AppTheme.cardPadding * 2.5,
-          //     fallbackIcon: FontAwesomeIcons.btc,
-          //     fallbackIconSize: AppTheme.iconSize * 1.5,
-          //   ),
-          // ),
+          // Buy button
+          Flexible(
+            child: BitNetImageWithTextButton(
+              "Buy",
+              _handleBuy,
+              width: AppTheme.cardPadding * 2.5,
+              height: AppTheme.cardPadding * 2.5,
+              fallbackIcon: FontAwesomeIcons.btc,
+              fallbackIconSize: AppTheme.iconSize * 1.5,
+            ),
+          ),
         ],
       ),
     );
