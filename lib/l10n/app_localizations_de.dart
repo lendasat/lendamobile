@@ -1109,14 +1109,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get agbFunctionalityContent =>
-      'Die App ermöglicht es Benutzern, Bitcoins zu empfangen, zu senden und zu verwalten. Die App ist keine Bank und bietet keine Bankdienstleistungen an. Zusätzlich werden Taproot Assets, auch bekannt als digitale Assets, als Dienstleistungsplattform angeboten und verkauft.';
+      'Die App ermöglicht es Benutzern, Bitcoins zu empfangen, zu senden und zu verwalten. Die App ist keine Bank und bietet keine Bankdienstleistungen an.';
 
   @override
   String get agbUserResponsibilityTitle => 'Verantwortung des Benutzers';
 
   @override
   String get agbUserResponsibilityContent =>
-      'Der Benutzer ist allein für die Sicherheit seiner Bitcoins verantwortlich. Die App bietet Schutzfunktionen wie Passwortschutz und Zwei-Faktor-Authentifizierung, aber es liegt in der Verantwortung des Benutzers, diese Funktionen sorgfältig zu verwenden. COBLOX PTY LTD haftet nicht für Verluste, die aufgrund von Unachtsamkeit, Verlust von Geräten oder Zugangsdaten des Benutzers entstehen.';
+      'Der Benutzer trägt die volle Eigenverantwortung für die Nutzung der Anwendung und die Sicherheit seiner Bitcoins. Der Benutzer erkennt an, dass der Verlust seiner Wiederherstellungsphrase (Mnemonic) einem Verlust seiner Guthaben gleichkommt. COBLOX PTY LTD haftet nicht für Verluste, die aufgrund von Unachtsamkeit, Verlust von Geräten oder Verlust der Wiederherstellungsphrase entstehen.';
 
   @override
   String get agbFeesTitle => 'Gebühren';
@@ -1137,7 +1137,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get agbChangesContent =>
-      'COBLOX PTY LTD behält sich das Recht vor, diese Geschäftsbedingungen jederzeit zu ändern. Der Benutzer wird über solche Änderungen informiert und muss diesen zustimmen, um die App weiterhin nutzen zu können.';
+      'COBLOX PTY LTD behält sich das Recht vor, diese Geschäftsbedingungen jederzeit zu ändern. Die fortgesetzte Nutzung der App gilt als Zustimmung zu aktualisierten Bedingungen.';
 
   @override
   String get agbFinalProvisionsTitle => 'Schlussbestimmungen';
