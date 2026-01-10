@@ -205,7 +205,7 @@ class _ClaimSatsScreenState extends State<ClaimSatsScreen> {
     final controller = context.read<SettingsController>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(

@@ -59,7 +59,7 @@ class _EmergencyRecoveryViewState extends State<EmergencyRecoveryView> {
       progressColor = AppTheme.errorColor;
     }
 
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(
