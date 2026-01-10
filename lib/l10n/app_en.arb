@@ -420,6 +420,8 @@
   "agbUserResponsibilityContent": "The user is fully self-responsible for using the application and the security of their Bitcoin. The user acknowledges that loss of their recovery phrase (mnemonic) is equivalent to loss of their funds. COBLOX PTY LTD is not liable for any losses resulting from carelessness, loss of devices, or loss of the recovery phrase.",
   "agbFeesTitle": "Fees",
   "agbFeesContent": "Certain functions of the app may incur fees. These fees will be communicated to the user in advance and are visible in the app.",
+  "agbBuyingSelling": "Buying and Selling Bitcoin",
+  "agbBuyingSellingContent": "Buying and selling Bitcoin is facilitated through third-party providers. COBLOX PTY LTD is not involved in these transactions and bears no responsibility for them. Any issues, disputes, or inquiries related to buying or selling Bitcoin must be directed to and resolved with the respective third-party provider.",
   "agbLiabilityTitle": "Limitation of Liability",
   "agbLiabilityContent": "COBLOX PTY LTD is only liable for damages caused by intentional or grossly negligent actions by COBLOX PTY LTD. COBLOX PTY LTD is not liable for damages resulting from the use of the app or the loss of Bitcoin.",
   "agbChangesTitle": "Changes",

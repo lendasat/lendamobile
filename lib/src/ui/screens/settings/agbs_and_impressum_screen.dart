@@ -195,6 +195,12 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
           ),
           _buildSection(
             context,
+            icon: Icons.swap_horiz_outlined,
+            title: AppLocalizations.of(context)!.agbBuyingSelling,
+            content: AppLocalizations.of(context)!.agbBuyingSellingContent,
+          ),
+          _buildSection(
+            context,
             icon: Icons.gavel_outlined,
             title: AppLocalizations.of(context)!.agbLiabilityTitle,
             content: AppLocalizations.of(context)!.agbLiabilityContent,
@@ -231,7 +237,7 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                // Contact Cards
+              // Contact Cards
               _buildContactCard(
                 context,
                 icon: Icons.location_on_outlined,

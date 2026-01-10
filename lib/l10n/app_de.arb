@@ -339,6 +339,8 @@
   "agbUserResponsibilityContent": "Der Benutzer trägt die volle Eigenverantwortung für die Nutzung der Anwendung und die Sicherheit seiner Bitcoins. Der Benutzer erkennt an, dass der Verlust seiner Wiederherstellungsphrase (Mnemonic) einem Verlust seiner Guthaben gleichkommt. COBLOX PTY LTD haftet nicht für Verluste, die aufgrund von Unachtsamkeit, Verlust von Geräten oder Verlust der Wiederherstellungsphrase entstehen.",
   "agbFeesTitle": "Gebühren",
   "agbFeesContent": "Für bestimmte Funktionen der App können Gebühren anfallen. Diese Gebühren werden dem Benutzer im Vorfeld mitgeteilt und sind in der App ersichtlich.",
+  "agbBuyingSelling": "Kauf und Verkauf von Bitcoin",
+  "agbBuyingSellingContent": "Der Kauf und Verkauf von Bitcoin erfolgt über Drittanbieter. COBLOX PTY LTD ist an diesen Transaktionen nicht beteiligt und übernimmt keine Verantwortung dafür. Alle Probleme, Streitigkeiten oder Anfragen im Zusammenhang mit dem Kauf oder Verkauf von Bitcoin müssen an den jeweiligen Drittanbieter gerichtet und mit diesem geklärt werden.",
   "agbLiabilityTitle": "Haftungsbeschränkung",
   "agbLiabilityContent": "COBLOX PTY LTD haftet nur für Schäden, die durch vorsätzliches oder grob fahrlässiges Handeln von COBLOX PTY LTD verursacht werden. COBLOX PTY LTD haftet nicht für Schäden, die aus der Nutzung der App oder dem Verlust von Bitcoins resultieren.",
   "agbChangesTitle": "Änderungen",
