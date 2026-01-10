@@ -16,7 +16,6 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/evm_address_input_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/swap_confirmation_sheet.dart';
-import 'package:ark_flutter/src/ui/screens/swap/swap_processing_screen.dart';
 import 'package:ark_flutter/src/ui/screens/swap/evm_swap_funding_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -24,6 +23,7 @@ import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
+import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -76,6 +76,10 @@ class SwapScreenState extends State<SwapScreen> {
   bool _isLoadingQuote = false;
   Timer? _quoteDebounceTimer;
 
+  // Balance state (for insufficient funds checking)
+  BigInt _availableBalanceSats = BigInt.zero;
+  bool _isLoadingBalance = true;
+
   // Swap service
   final LendaSwapService _swapService = LendaSwapService();
 
@@ -89,6 +93,26 @@ class SwapScreenState extends State<SwapScreen> {
   void initState() {
     super.initState();
     _loadBitcoinPrice();
+    _loadBalance();
+  }
+
+  /// Load wallet balance for insufficient funds checking
+  Future<void> _loadBalance() async {
+    try {
+      final balance = await ark_api.balance();
+      if (mounted) {
+        setState(() {
+          _availableBalanceSats = balance.offchain.totalSats;
+          _isLoadingBalance = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingBalance = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadBitcoinPrice() async {
@@ -561,18 +585,86 @@ class SwapScreenState extends State<SwapScreen> {
     return sats > 0 && sats < _minSwapSats;
   }
 
+  /// Get total sats required including fees (from quote)
+  int get _totalRequiredSats {
+    final btc = double.tryParse(btcAmount) ?? 0;
+    final inputSats = (btc * BitcoinConstants.satsPerBtc).round();
+    if (_quote != null) {
+      // Use actual fees from quote
+      final networkFee = _quote!.networkFeeSats.toInt();
+      final protocolFee = _quote!.protocolFeeSats.toInt();
+      return inputSats + networkFee + protocolFee;
+    }
+    // Estimate fees if no quote yet (~1% for protocol + ~500 sats network)
+    return inputSats + (inputSats * 0.01).round() + 500;
+  }
+
+  /// Check if user has insufficient funds for the swap including fees
+  bool get _hasInsufficientFunds {
+    if (_isLoadingBalance || !sourceToken.isBtc) return false;
+    final btc = double.tryParse(btcAmount) ?? 0;
+    if (btc <= 0) return false;
+    return BigInt.from(_totalRequiredSats) > _availableBalanceSats;
+  }
+
   /// Check if amount is valid for swap
   bool get _isAmountValid {
     final btc = double.tryParse(btcAmount) ?? 0;
     final sats = (btc * BitcoinConstants.satsPerBtc).round();
-    return sats >= _minSwapSats;
+    return sats >= _minSwapSats && !_hasInsufficientFunds;
   }
 
   String _getButtonTitle() {
+    if (_hasInsufficientFunds) {
+      return "Not enough funds";
+    }
     if (_isAmountTooSmall) {
       return "Amount too small (min 1,000 sats)";
     }
     return "Swap ${sourceToken.symbol} to ${targetToken.symbol}";
+  }
+
+  /// Set the maximum swappable amount (balance minus estimated fees)
+  void _setMaxAmount() {
+    if (!sourceToken.isBtc || _isLoadingBalance) return;
+
+    final availableSats = _availableBalanceSats.toInt();
+    if (availableSats <= 0) return;
+
+    // Estimate fees: ~1% protocol fee + ~500 sats network fee
+    // This is conservative - actual fees will be calculated in quote
+    final estimatedFees = (availableSats * 0.01).round() + 500;
+    final maxSwapSats = availableSats - estimatedFees;
+
+    if (maxSwapSats < _minSwapSats) {
+      OverlayService()
+          .showError('Balance too low to swap (min 1,000 sats + fees)');
+      return;
+    }
+
+    setState(() {
+      // Set sats amount
+      satsAmount = maxSwapSats.toString();
+      // Convert to BTC
+      final btcValue = maxSwapSats / BitcoinConstants.satsPerBtc;
+      btcAmount = btcValue.toStringAsFixed(8);
+      // Convert to USD
+      final usdValue = btcValue * btcUsdPrice;
+      usdAmount = usdValue.toStringAsFixed(2);
+
+      // Update the source controller based on current display mode
+      if (sourceShowUsd) {
+        _sourceController.text = usdAmount;
+      } else if (_sourceBtcUnit == CurrencyType.sats) {
+        _sourceController.text = satsAmount;
+      } else {
+        _sourceController.text = btcAmount;
+      }
+    });
+
+    // Update target and fetch new quote
+    _updateTargetAmount();
+    _fetchQuoteDebounced();
   }
 
   List<SwapToken> _getAvailableSourceTokens() {
@@ -852,39 +944,26 @@ class SwapScreenState extends State<SwapScreen> {
         return; // Exit early - funding screen handles the rest
       }
 
-      // Navigate to processing screen
+      // Navigate back to wallet and show success message
+      // Swap processing happens in the background
       if (mounted) {
-        // For display, use the correct amount based on token type
-        String displaySourceAmount;
-        String displayTargetAmount;
+        // Clear the input fields
+        _sourceController.clear();
+        _targetController.clear();
+        setState(() {
+          btcAmount = '';
+          usdAmount = '';
+          satsAmount = '';
+          tokenAmount = '';
+          _quote = null;
+        });
 
-        if (sourceToken.isBtc) {
-          displaySourceAmount = btcAmount;
-        } else if (sourceToken.isStablecoin) {
-          displaySourceAmount = usdAmount;
-        } else {
-          displaySourceAmount = tokenAmount; // XAUT and other non-stablecoins
-        }
+        // Switch to wallet tab (this also refreshes wallet data)
+        PaymentMonitoringService().switchToWalletTab();
 
-        if (targetToken.isBtc) {
-          displayTargetAmount = btcAmount;
-        } else if (targetToken.isStablecoin) {
-          displayTargetAmount = usdAmount;
-        } else {
-          displayTargetAmount = tokenAmount; // XAUT and other non-stablecoins
-        }
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SwapProcessingScreen(
-              swapId: swapId,
-              sourceToken: sourceToken,
-              targetToken: targetToken,
-              sourceAmount: displaySourceAmount,
-              targetAmount: displayTargetAmount,
-            ),
-          ),
+        // Show success message
+        OverlayService().showSuccess(
+          'Swap initiated! Processing in background...',
         );
       }
     } catch (e) {
@@ -1023,6 +1102,8 @@ class SwapScreenState extends State<SwapScreen> {
                                 label: 'sell',
                                 isTopCard: true,
                                 btcUnit: _sourceBtcUnit,
+                                onMaxTap:
+                                    sourceToken.isBtc ? _setMaxAmount : null,
                               ),
                               const SizedBox(height: 4),
                               // TARGET CARD (You Buy)
@@ -1105,7 +1186,7 @@ class SwapScreenState extends State<SwapScreen> {
                         : ButtonType.transparent,
                     state: isLoading
                         ? ButtonState.loading
-                        : (_isAmountTooSmall
+                        : ((_isAmountTooSmall || _hasInsufficientFunds)
                             ? ButtonState.disabled
                             : ButtonState.idle),
                     onTap: _isAmountValid ? _initiateSwap : null,
@@ -1255,6 +1336,7 @@ class _SwapAmountCard extends StatelessWidget {
   final String? label;
   final bool isTopCard;
   final CurrencyType btcUnit; // Current BTC unit (sats or bitcoin)
+  final VoidCallback? onMaxTap; // Max button callback
 
   const _SwapAmountCard({
     required this.token,
@@ -1271,6 +1353,7 @@ class _SwapAmountCard extends StatelessWidget {
     this.label,
     this.isTopCard = true,
     this.btcUnit = CurrencyType.sats,
+    this.onMaxTap,
   });
 
   void _showTokenSelector(BuildContext context) {
@@ -1321,162 +1404,204 @@ class _SwapAmountCard extends StatelessWidget {
                       ),
                 ),
                 const SizedBox(height: AppTheme.elementSpacing * 0.5),
-                // Amount input row
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Dollar sign prefix (if showing USD)
-                    if (showDollarPrefix)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 4.0),
-                        child: Text(
-                          "\$",
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: isDarkMode ? Colors.white : Colors.black,
-                          ),
-                        ),
-                      ),
-                    // Sats/BTC icon prefix (switches based on btcUnit)
-                    if (showBtcPrefix)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 4.0),
-                        child: Icon(
-                          btcUnit == CurrencyType.sats
-                              ? AppTheme.satoshiIcon
-                              : Icons.currency_bitcoin,
-                          size: 32,
-                          color: isDarkMode ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    // Amount input
-                    Expanded(
-                      child: TextField(
-                        controller: controller,
-                        focusNode: focusNode,
-                        keyboardType: TextInputType.numberWithOptions(
-                          decimal: !(token.isBtc &&
-                              !showUsdMode &&
-                              btcUnit == CurrencyType.sats),
-                        ),
-                        inputFormatters: [
-                          // Use digits only for sats, decimals for BTC/USD
-                          if (token.isBtc &&
-                              !showUsdMode &&
-                              btcUnit == CurrencyType.sats)
-                            FilteringTextInputFormatter.digitsOnly
-                          else
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,8}$'),
-                            ),
-                        ],
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: isDarkMode ? Colors.white : Colors.black,
-                        ),
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                          isDense: true,
-                          hintText: _getPlaceholder(),
-                          hintStyle: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: isDarkMode
-                                ? AppTheme.white60.withValues(alpha: 0.3)
-                                : AppTheme.black60.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        onChanged: onAmountChanged,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.elementSpacing * 0.5),
-                // Conversion text (clickable if toggle is available)
+                // Amount input row - wrapped in GestureDetector for larger tap target
                 GestureDetector(
-                  onTap: onToggleMode,
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => focusNode?.requestFocus(),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 4,
-                      horizontal: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.borderRadiusSmall),
-                      color: isDarkMode
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.black.withValues(alpha: 0.03),
-                    ),
+                    // Minimum height for better tap target
+                    constraints: const BoxConstraints(minHeight: 48),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Show Bitcoin icon if conversion text shows BTC
-                        if (conversionText.endsWith('BTC')) ...[
-                          Icon(
-                            Icons.currency_bitcoin,
-                            size: 14,
-                            color: isDarkMode
-                                ? AppTheme.white60
-                                : AppTheme.black60,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            conversionText.replaceAll(' BTC', ''),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: isDarkMode
-                                  ? AppTheme.white60
-                                  : AppTheme.black60,
+                        // Dollar sign prefix (if showing USD)
+                        if (showDollarPrefix)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4.0),
+                            child: Text(
+                              "\$",
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: isDarkMode ? Colors.white : Colors.black,
+                              ),
                             ),
                           ),
-                        ] else if (conversionText.endsWith('sats')) ...[
-                          // Show Satoshi icon for sats
-                          Icon(
-                            AppTheme.satoshiIcon,
-                            size: 14,
-                            color: isDarkMode
-                                ? AppTheme.white60
-                                : AppTheme.black60,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            conversionText.replaceAll(' sats', ''),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: isDarkMode
-                                  ? AppTheme.white60
-                                  : AppTheme.black60,
+                        // Sats/BTC icon prefix (switches based on btcUnit)
+                        if (showBtcPrefix)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4.0),
+                            child: Icon(
+                              btcUnit == CurrencyType.sats
+                                  ? AppTheme.satoshiIcon
+                                  : Icons.currency_bitcoin,
+                              size: 32,
+                              color: isDarkMode ? Colors.white : Colors.black,
                             ),
                           ),
-                        ] else
-                          Text(
-                            conversionText,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: isDarkMode
-                                  ? AppTheme.white60
-                                  : AppTheme.black60,
+                        // Amount input
+                        Expanded(
+                          child: TextField(
+                            controller: controller,
+                            focusNode: focusNode,
+                            keyboardType: TextInputType.numberWithOptions(
+                              decimal: !(token.isBtc &&
+                                  !showUsdMode &&
+                                  btcUnit == CurrencyType.sats),
                             ),
+                            inputFormatters: [
+                              // Use digits only for sats, decimals for BTC/USD
+                              if (token.isBtc &&
+                                  !showUsdMode &&
+                                  btcUnit == CurrencyType.sats)
+                                FilteringTextInputFormatter.digitsOnly
+                              else
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d*\.?\d{0,8}$'),
+                                ),
+                            ],
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: isDarkMode ? Colors.white : Colors.black,
+                            ),
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 8),
+                              isDense: false,
+                              hintText: _getPlaceholder(),
+                              hintStyle: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: isDarkMode
+                                    ? AppTheme.white60.withValues(alpha: 0.3)
+                                    : AppTheme.black60.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            onChanged: onAmountChanged,
                           ),
-                        if (onToggleMode != null) ...[
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.swap_vert,
-                            size: 14,
-                            color: isDarkMode
-                                ? AppTheme.white60
-                                : AppTheme.black60,
-                          ),
-                        ],
+                        ),
                       ],
                     ),
                   ),
+                ),
+                const SizedBox(height: AppTheme.elementSpacing * 0.5),
+                // Conversion text row with optional Max button
+                Row(
+                  children: [
+                    // Conversion text (clickable if toggle is available)
+                    GestureDetector(
+                      onTap: onToggleMode,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.borderRadiusSmall),
+                          color: isDarkMode
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.03),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Show Bitcoin icon if conversion text shows BTC
+                            if (conversionText.endsWith('BTC')) ...[
+                              Icon(
+                                Icons.currency_bitcoin,
+                                size: 14,
+                                color: isDarkMode
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                conversionText.replaceAll(' BTC', ''),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDarkMode
+                                      ? AppTheme.white60
+                                      : AppTheme.black60,
+                                ),
+                              ),
+                            ] else if (conversionText.endsWith('sats')) ...[
+                              // Show Satoshi icon for sats
+                              Icon(
+                                AppTheme.satoshiIcon,
+                                size: 14,
+                                color: isDarkMode
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                conversionText.replaceAll(' sats', ''),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDarkMode
+                                      ? AppTheme.white60
+                                      : AppTheme.black60,
+                                ),
+                              ),
+                            ] else
+                              Text(
+                                conversionText,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDarkMode
+                                      ? AppTheme.white60
+                                      : AppTheme.black60,
+                                ),
+                              ),
+                            if (onToggleMode != null) ...[
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.swap_vert,
+                                size: 14,
+                                color: isDarkMode
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Max button (only shown when onMaxTap is provided)
+                    if (onMaxTap != null) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: onMaxTap,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 4,
+                            horizontal: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                                AppTheme.borderRadiusSmall),
+                            color: isDarkMode
+                                ? AppTheme.colorBitcoin.withValues(alpha: 0.15)
+                                : AppTheme.colorBitcoin.withValues(alpha: 0.1),
+                          ),
+                          child: const Text(
+                            'Max',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.colorBitcoin,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),

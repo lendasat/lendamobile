@@ -55,6 +55,13 @@ class _BottomNavState extends State<BottomNav> {
         _walletKey.currentState?.fetchWalletData();
       },
     );
+
+    // Set up callback for switching to wallet tab (used by swap screen)
+    paymentService.onSwitchToWalletTab = () {
+      logger.i("Switching to wallet tab");
+      _onItemTapped(0);
+      _walletKey.currentState?.fetchWalletData();
+    };
   }
 
   void _onItemTapped(int index) {

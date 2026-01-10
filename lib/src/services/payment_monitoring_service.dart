@@ -48,6 +48,9 @@ class PaymentMonitoringService extends ChangeNotifier
   // Callback for wallet refresh (set by BottomNav or other parent widget)
   VoidCallback? onWalletRefreshNeeded;
 
+  // Callback for switching to wallet tab (set by BottomNav)
+  VoidCallback? onSwitchToWalletTab;
+
   // Context for showing overlays (set when starting monitoring)
   BuildContext? _overlayContext;
 
@@ -305,6 +308,12 @@ class PaymentMonitoringService extends ChangeNotifier
   /// Useful when other parts of the app detect balance changes.
   void triggerWalletRefresh() {
     onWalletRefreshNeeded?.call();
+  }
+
+  /// Switch to the wallet tab.
+  /// Useful after completing actions like swaps that should return user to wallet.
+  void switchToWalletTab() {
+    onSwitchToWalletTab?.call();
   }
 
   /// Stop monitoring and clean up resources.
