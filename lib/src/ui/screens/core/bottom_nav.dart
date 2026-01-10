@@ -72,6 +72,12 @@ class _BottomNavState extends State<BottomNav> {
     FocusScope.of(context).unfocus();
     _swapKey.currentState?.unfocusAll();
     _loansKey.currentState?.unfocusAll();
+
+    // Refresh balance when switching to swap tab
+    if (index == 1) {
+      _swapKey.currentState?.refreshBalance();
+    }
+
     setState(() {
       _selectedIndex = index;
     });

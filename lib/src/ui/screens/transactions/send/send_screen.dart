@@ -1089,18 +1089,23 @@ class SendScreenState extends State<SendScreen> {
             const SizedBox(width: AppTheme.elementSpacing),
             GestureDetector(
               onTap: _setMaxAmount,
-              child: GlassContainer(
-                opacity: 0.1,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.elementSpacing,
-                  vertical: AppTheme.elementSpacing / 4,
-                ),
-                child: Text(
-                  'Max',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                // Extra padding around the button for larger hit area
+                padding: const EdgeInsets.all(AppTheme.elementSpacing / 2),
+                child: GlassContainer(
+                  opacity: 0.1,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.elementSpacing * 1.25,
+                    vertical: AppTheme.elementSpacing / 2,
+                  ),
+                  child: Text(
+                    'Max',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
                 ),
               ),
             ),
