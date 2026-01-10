@@ -485,6 +485,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   Widget build(BuildContext context) {
     return ArkScaffold(
       context: context,
+      extendBodyBehindAppBar: true,
       appBar: BitNetAppBar(
         context: context,
         text: 'Contract Details',
@@ -577,7 +578,12 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     return RefreshIndicator(
       onRefresh: _loadContract,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        padding: const EdgeInsets.only(
+          top: AppTheme.cardPadding * 3,
+          left: AppTheme.cardPadding,
+          right: AppTheme.cardPadding,
+          bottom: AppTheme.cardPadding,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
