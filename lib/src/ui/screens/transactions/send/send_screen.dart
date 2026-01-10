@@ -802,8 +802,9 @@ class SendScreenState extends State<SendScreen> {
                               ),
                             ),
                           ],
-                          // Available balance display
-                          _buildAvailableBalance(context, l10n),
+                          // Available balance display (hide when amount is locked from invoice)
+                          if (!_isAmountLocked)
+                            _buildAvailableBalance(context, l10n),
                         ],
                       ),
                     ],
@@ -970,9 +971,10 @@ class SendScreenState extends State<SendScreen> {
           // Show locked indicator when amount is from invoice
           if (_isAmountLocked)
             Padding(
-              padding: const EdgeInsets.only(top: AppTheme.elementSpacing / 2),
+              padding: const EdgeInsets.only(
+                  top: AppTheme.elementSpacing / 2, left: AppTheme.cardPadding),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Icon(
                     CupertinoIcons.lock_fill,
