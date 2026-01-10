@@ -629,7 +629,7 @@ class _TransactionItemWidget extends StatelessWidget {
     FocusScope.of(context).unfocus();
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: MediaQuery.of(context).size.height * 0.85,
       backgroundColor: Theme.of(context).colorScheme.surface,
       child: TransactionDetailSheet(
         txid: txid,
@@ -796,7 +796,8 @@ class _TransactionItemWidget extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                DateFormatter.formatTimeAgoFromTimestamp(createdAt),
+                                DateFormatter.formatTimeAgoFromTimestamp(
+                                    createdAt),
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),
@@ -822,7 +823,8 @@ class _TransactionItemWidget extends StatelessWidget {
                                   );
                                 },
                               ),
-                              const SizedBox(width: AppTheme.elementSpacing / 4),
+                              const SizedBox(
+                                  width: AppTheme.elementSpacing / 4),
                               Text(
                                 network,
                                 overflow: TextOverflow.ellipsis,
@@ -847,7 +849,8 @@ class _TransactionItemWidget extends StatelessWidget {
                               children: [
                                 Text(
                                   showBtcAsMain
-                                      ? NumberFormatter.formatSats(amountSats, showSign: true)
+                                      ? NumberFormatter.formatSats(amountSats,
+                                          showSign: true)
                                       : '${amountSats.isNegative ? "-" : "+"}${currencyService.formatAmount(fiatAmount.abs())}',
                                   overflow: TextOverflow.ellipsis,
                                   style:
