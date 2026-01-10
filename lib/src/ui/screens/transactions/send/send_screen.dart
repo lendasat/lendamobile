@@ -123,9 +123,12 @@ class SendScreenState extends State<SendScreen> {
     if (widget.initialAddress != null && widget.initialAddress!.isNotEmpty) {
       _addressController.text = widget.initialAddress!;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _onAddressChanged();
-        // Autofocus amount field and open keyboard
-        _amountFocusNode.requestFocus();
+        // Process address synchronously first to determine if amount is locked
+        _processAddressChange();
+        // Only autofocus amount field if amount is NOT locked (from invoice)
+        if (!_isAmountLocked) {
+          _amountFocusNode.requestFocus();
+        }
       });
     }
 
@@ -153,9 +156,25 @@ class SendScreenState extends State<SendScreen> {
         setState(() {
           _bitcoinPrice = priceData.last.price;
         });
+        // Update fiat controller if there's already an amount set (e.g., from invoice)
+        _updateFiatFromSats();
       }
     } catch (e) {
       logger.e('Error fetching bitcoin price: $e');
+    }
+  }
+
+  /// Update the fiat controller based on current sats value
+  void _updateFiatFromSats() {
+    if (_bitcoinPrice == null) return;
+    final sats = int.tryParse(_satController.text) ?? 0;
+    if (sats > 0) {
+      final btcAmount = sats / BitcoinConstants.satsPerBtc;
+      final currencyService = context.read<CurrencyPreferenceService>();
+      final exchangeRates = currencyService.exchangeRates;
+      final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+      final fiatAmount = btcAmount * _bitcoinPrice! * fiatRate;
+      _currController.text = fiatAmount.toStringAsFixed(2);
     }
   }
 
@@ -397,13 +416,7 @@ class SendScreenState extends State<SendScreen> {
       _satController.text = amount.toString();
       _btcController.text = btcAmount.toStringAsFixed(8);
       // Also set fiat controller so it works when user is in fiat mode
-      if (_bitcoinPrice != null) {
-        final currencyService = context.read<CurrencyPreferenceService>();
-        final exchangeRates = currencyService.exchangeRates;
-        final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
-        final fiatAmount = btcAmount * _bitcoinPrice! * fiatRate;
-        _currController.text = fiatAmount.toStringAsFixed(2);
-      }
+      _updateFiatFromSats();
     }
   }
 
