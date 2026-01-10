@@ -2213,7 +2213,7 @@ abstract class AppLocalizations {
   /// No description provided for @agbFunctionalityContent.
   ///
   /// In en, this message translates to:
-  /// **'The app allows users to receive, send, and manage Bitcoin. The app is not a bank and does not provide banking services. Additionally, Taproot Assets, also known as digital assets, are offered and sold as a service platform.'**
+  /// **'The app allows users to receive, send, and manage Bitcoin. The app is not a bank and does not provide banking services.'**
   String get agbFunctionalityContent;
 
   /// No description provided for @agbUserResponsibilityTitle.
@@ -2225,7 +2225,7 @@ abstract class AppLocalizations {
   /// No description provided for @agbUserResponsibilityContent.
   ///
   /// In en, this message translates to:
-  /// **'The user is solely responsible for the security of their Bitcoin. The app provides security features such as password protection and two-factor authentication, but it is the user\'s responsibility to use these features carefully. COBLOX PTY LTD is not liable for losses resulting from carelessness, loss of devices, or user credentials.'**
+  /// **'The user is fully self-responsible for using the application and the security of their Bitcoin. The user acknowledges that loss of their recovery phrase (mnemonic) is equivalent to loss of their funds. COBLOX PTY LTD is not liable for any losses resulting from carelessness, loss of devices, or loss of the recovery phrase.'**
   String get agbUserResponsibilityContent;
 
   /// No description provided for @agbFeesTitle.
@@ -2261,7 +2261,7 @@ abstract class AppLocalizations {
   /// No description provided for @agbChangesContent.
   ///
   /// In en, this message translates to:
-  /// **'COBLOX PTY LTD reserves the right to change these terms and conditions at any time. The user will be informed of such changes and must agree to them in order to continue using the app.'**
+  /// **'COBLOX PTY LTD reserves the right to change these terms and conditions at any time. Continued use of the app constitutes acceptance of any updated terms.'**
   String get agbChangesContent;
 
   /// No description provided for @agbFinalProvisionsTitle.
