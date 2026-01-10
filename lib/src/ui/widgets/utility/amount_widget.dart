@@ -154,6 +154,11 @@ class _AmountWidgetState extends State<AmountWidget>
         oldWidget.bitcoinPrice != widget.bitcoinPrice) {
       _formattersNeedUpdate = true;
     }
+    // Update enabled state when it changes (e.g., when invoice amount is locked)
+    final newEnabled = widget.enabled?.call() ?? true;
+    if (_service.enabled != newEnabled) {
+      _service.enabled = newEnabled;
+    }
   }
 
   @override

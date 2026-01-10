@@ -393,9 +393,17 @@ class SendScreenState extends State<SendScreen> {
 
     // Update amount fields if we extracted an amount
     if (amount != null && amount > 0) {
+      final btcAmount = amount / BitcoinConstants.satsPerBtc;
       _satController.text = amount.toString();
-      _btcController.text =
-          (amount / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
+      _btcController.text = btcAmount.toStringAsFixed(8);
+      // Also set fiat controller so it works when user is in fiat mode
+      if (_bitcoinPrice != null) {
+        final currencyService = context.read<CurrencyPreferenceService>();
+        final exchangeRates = currencyService.exchangeRates;
+        final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+        final fiatAmount = btcAmount * _bitcoinPrice! * fiatRate;
+        _currController.text = fiatAmount.toStringAsFixed(2);
+      }
     }
   }
 
