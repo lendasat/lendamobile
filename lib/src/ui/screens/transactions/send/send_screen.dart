@@ -1028,6 +1028,7 @@ class SendScreenState extends State<SendScreen> {
   }
 
   /// Calculate estimated fees for the current network type
+  /// Used by Max button to calculate maximum sendable amount
   int _getEstimatedFees() {
     final currentNetwork = _getCurrentNetworkName();
     switch (currentNetwork) {
@@ -1035,9 +1036,12 @@ class SendScreenState extends State<SendScreen> {
         // Ark has no fees
         return 0;
       case 'Lightning':
-        // Lightning via Boltz: ~0.25% swap fee + small base fee
-        // Use 0.5% to be safe (includes routing fees)
-        return (widget.availableSats * 0.005).ceil();
+        // Lightning via Boltz: 0.25% swap fee
+        // To find max amount: amount + fee = balance, where fee = amount * 0.0025
+        // So: amount * 1.0025 = balance => amount = balance / 1.0025
+        // Fee = balance - amount = balance - (balance / 1.0025)
+        final maxAmount = widget.availableSats / (1 + _boltzFeePercent / 100);
+        return (widget.availableSats - maxAmount).ceil();
       case 'Onchain':
         // On-chain: estimate based on fee rate
         // Typical P2WPKH transaction is ~140 vbytes
