@@ -21,7 +21,9 @@ class SwapConfirmationSheet extends StatefulWidget {
   final String targetAmountUsd;
   final double exchangeRate;
   final int networkFeeSats;
+  final int protocolFeeSats; // Protocol fee in sats for total calculation
   final double protocolFeePercent;
+  final int sourceAmountSats; // Input amount in sats for total calculation
   final String? targetAddress;
   final VoidCallback onConfirm;
   final bool isLoading;
@@ -36,7 +38,9 @@ class SwapConfirmationSheet extends StatefulWidget {
     required this.targetAmountUsd,
     required this.exchangeRate,
     required this.networkFeeSats,
+    required this.protocolFeeSats,
     required this.protocolFeePercent,
+    required this.sourceAmountSats,
     this.targetAddress,
     required this.onConfirm,
     this.isLoading = false,
@@ -57,17 +61,35 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
 
   /// Calculate protocol fee in USD
   double get _protocolFeeUsd {
-    final usd = double.tryParse(widget.sourceAmountUsd) ?? 0;
-    return usd * widget.protocolFeePercent / 100;
+    return (widget.protocolFeeSats / BitcoinConstants.satsPerBtc) *
+        widget.exchangeRate;
   }
+
+  /// Total fees in sats
+  int get _totalFeesSats => widget.networkFeeSats + widget.protocolFeeSats;
 
   /// Total fees in USD
   double get _totalFeesUsd => _networkFeeUsd + _protocolFeeUsd;
+
+  /// Total amount deducted from balance (input + fees) in sats
+  int get _totalFromBalanceSats => widget.sourceAmountSats + _totalFeesSats;
+
+  /// Total amount deducted from balance in USD
+  double get _totalFromBalanceUsd {
+    return (_totalFromBalanceSats / BitcoinConstants.satsPerBtc) *
+        widget.exchangeRate;
+  }
 
   /// Net amount after fees (what user actually receives)
   double get _netReceiveUsd {
     final gross = double.tryParse(widget.targetAmountUsd) ?? 0;
     return gross - _totalFeesUsd;
+  }
+
+  /// Format sats with thousands separator
+  String _formatSats(int sats) {
+    return sats.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
   }
 
   @override
@@ -229,6 +251,9 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
   }
 
   Widget _buildFeesSection(BuildContext context, bool isDarkMode) {
+    // Only show for BTC source (where we deduct from balance)
+    final showTotalFromBalance = widget.sourceToken.isBtc;
+
     return GlassContainer(
       borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
       child: Column(
@@ -257,7 +282,7 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                   Row(
                     children: [
                       Text(
-                        '~\$${_totalFeesUsd.toStringAsFixed(2)}',
+                        '${_formatSats(_totalFeesSats)} sats (~\$${_totalFeesUsd.toStringAsFixed(2)})',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -300,15 +325,15 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                   const SizedBox(height: AppTheme.elementSpacing),
                   _buildFeeRow(
                     context,
-                    AppLocalizations.of(context)?.networkFee ?? 'Network',
-                    '~\$${_networkFeeUsd.toStringAsFixed(2)}',
+                    AppLocalizations.of(context)?.networkFee ?? 'Network fee',
+                    '${_formatSats(widget.networkFeeSats)} sats',
                     isDarkMode,
                   ),
                   const SizedBox(height: AppTheme.elementSpacing * 0.5),
                   _buildFeeRow(
                     context,
-                    '${AppLocalizations.of(context)?.protocolFee ?? 'Protocol'} (${widget.protocolFeePercent}%)',
-                    '~\$${_protocolFeeUsd.toStringAsFixed(2)}',
+                    '${AppLocalizations.of(context)?.protocolFee ?? 'Protocol fee'} (${widget.protocolFeePercent.toStringAsFixed(1)}%)',
+                    '${_formatSats(widget.protocolFeeSats)} sats',
                     isDarkMode,
                   ),
                 ],
@@ -319,6 +344,52 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                 : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 200),
           ),
+          // Total from balance (always visible, outside collapsible)
+          if (showTotalFromBalance) ...[
+            Divider(
+              height: 1,
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.1),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppTheme.cardPadding),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total from balance',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${_formatSats(_totalFromBalanceSats)} sats',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      Text(
+                        '~\$${_totalFromBalanceUsd.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

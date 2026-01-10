@@ -614,6 +614,11 @@ class SwapScreenState extends State<SwapScreen> {
     return sats >= _minSwapSats && !_hasInsufficientFunds;
   }
 
+  /// Check if swap can actually be executed (amount valid and not loading)
+  bool get _canSwap {
+    return _isAmountValid && !isLoading && !_isLoadingQuote;
+  }
+
   String _getButtonTitle() {
     if (_hasInsufficientFunds) {
       return "Not enough funds";
@@ -626,22 +631,28 @@ class SwapScreenState extends State<SwapScreen> {
 
   /// Set the maximum swappable amount (balance minus estimated fees)
   void _setMaxAmount() {
-    if (!sourceToken.isBtc || _isLoadingBalance) return;
+    logger.i(
+        "Max tapped - isBtc: ${sourceToken.isBtc}, isLoadingBalance: $_isLoadingBalance, balance: $_availableBalanceSats");
+
+    if (!sourceToken.isBtc || _isLoadingBalance) {
+      logger.w(
+          "Max button early return - isBtc: ${sourceToken.isBtc}, isLoadingBalance: $_isLoadingBalance");
+      return;
+    }
 
     final availableSats = _availableBalanceSats.toInt();
-    if (availableSats <= 0) return;
+    if (availableSats <= 0) {
+      logger.w("Max button early return - availableSats: $availableSats");
+      return;
+    }
 
     // Estimate fees: ~1% protocol fee + ~500 sats network fee
     // This is conservative - actual fees will be calculated in quote
     final estimatedFees = (availableSats * 0.01).round() + 500;
-    final maxSwapSats = availableSats - estimatedFees;
+    final maxSwapSats = (availableSats - estimatedFees).clamp(0, availableSats);
 
-    if (maxSwapSats < _minSwapSats) {
-      OverlayService()
-          .showError('Balance too low to swap (min 1,000 sats + fees)');
-      return;
-    }
-
+    // Always set the max amount, even if below minimum
+    // The button will show "Amount too small" if below minimum
     setState(() {
       // Set sats amount
       satsAmount = maxSwapSats.toString();
@@ -660,6 +671,9 @@ class SwapScreenState extends State<SwapScreen> {
       } else {
         _sourceController.text = btcAmount;
       }
+
+      logger.i(
+          "Max set - sats: $satsAmount, btc: $btcAmount, usd: $usdAmount, controller: ${_sourceController.text}");
     });
 
     // Update target and fetch new quote
@@ -791,6 +805,10 @@ class SwapScreenState extends State<SwapScreen> {
       displayTargetAmount = tokenAmount; // XAUT
     }
 
+    // Calculate source amount in sats for total from balance display
+    final btc = double.tryParse(btcAmount) ?? 0;
+    final sourceAmountSats = (btc * BitcoinConstants.satsPerBtc).round();
+
     arkBottomSheet(
       context: context,
       child: SwapConfirmationSheet(
@@ -802,7 +820,9 @@ class SwapScreenState extends State<SwapScreen> {
         targetAmountUsd: usdAmount,
         exchangeRate: btcUsdPrice,
         networkFeeSats: _quote?.networkFeeSats.toInt() ?? 0,
+        protocolFeeSats: _quote?.protocolFeeSats.toInt() ?? 0,
         protocolFeePercent: _quote?.protocolFeePercent ?? 0.0,
+        sourceAmountSats: sourceAmountSats,
         targetAddress: displayAddress,
         isLoading: isLoading,
         onConfirm: () => _executeSwap(targetEvmAddress: targetEvmAddress),
@@ -1181,15 +1201,14 @@ class SwapScreenState extends State<SwapScreen> {
                     title: _getButtonTitle(),
                     customWidth: MediaQuery.of(context).size.width -
                         AppTheme.cardPadding * 2,
-                    buttonType: _isAmountValid
-                        ? ButtonType.solid
-                        : ButtonType.transparent,
+                    buttonType:
+                        _canSwap ? ButtonType.solid : ButtonType.transparent,
                     state: isLoading
                         ? ButtonState.loading
                         : ((_isAmountTooSmall || _hasInsufficientFunds)
                             ? ButtonState.disabled
                             : ButtonState.idle),
-                    onTap: _isAmountValid ? _initiateSwap : null,
+                    onTap: _canSwap ? _initiateSwap : null,
                   ),
                 ),
               ),
@@ -1357,8 +1376,10 @@ class _SwapAmountCard extends StatelessWidget {
   });
 
   void _showTokenSelector(BuildContext context) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
     arkBottomSheet(
       context: context,
+      height: screenHeight * 0.45, // Half height for token selector
       child: _TokenSelectorSheet(
         selectedToken: token,
         availableTokens: availableTokens,
@@ -1577,6 +1598,7 @@ class _SwapAmountCard extends StatelessWidget {
                     if (onMaxTap != null) ...[
                       const SizedBox(width: 8),
                       GestureDetector(
+                        behavior: HitTestBehavior.opaque,
                         onTap: onMaxTap,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -1587,15 +1609,17 @@ class _SwapAmountCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(
                                 AppTheme.borderRadiusSmall),
                             color: isDarkMode
-                                ? AppTheme.colorBitcoin.withValues(alpha: 0.15)
-                                : AppTheme.colorBitcoin.withValues(alpha: 0.1),
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : Colors.black.withValues(alpha: 0.05),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Max',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: AppTheme.colorBitcoin,
+                              color: isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
                             ),
                           ),
                         ),
@@ -1704,37 +1728,38 @@ class _TokenSelectorSheet extends StatefulWidget {
 }
 
 class _TokenSelectorSheetState extends State<_TokenSelectorSheet> {
-  late TextEditingController _searchController;
-  String _searchQuery = '';
+  // TODO: Re-enable search when more currencies are supported
+  // late TextEditingController _searchController;
+  // String _searchQuery = '';
 
-  @override
-  void initState() {
-    super.initState();
-    _searchController = TextEditingController();
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _searchController = TextEditingController();
+  // }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   _searchController.dispose();
+  //   super.dispose();
+  // }
 
-  List<SwapToken> get _filteredTokens {
-    if (_searchQuery.isEmpty) {
-      return widget.availableTokens;
-    }
-    final query = _searchQuery.toLowerCase();
-    return widget.availableTokens.where((token) {
-      return token.symbol.toLowerCase().contains(query) ||
-          token.network.toLowerCase().contains(query) ||
-          token.displayName.toLowerCase().contains(query) ||
-          token.tokenId.toLowerCase().contains(query);
-    }).toList();
-  }
+  // List<SwapToken> get _filteredTokens {
+  //   if (_searchQuery.isEmpty) {
+  //     return widget.availableTokens;
+  //   }
+  //   final query = _searchQuery.toLowerCase();
+  //   return widget.availableTokens.where((token) {
+  //     return token.symbol.toLowerCase().contains(query) ||
+  //         token.network.toLowerCase().contains(query) ||
+  //         token.displayName.toLowerCase().contains(query) ||
+  //         token.tokenId.toLowerCase().contains(query);
+  //   }).toList();
+  // }
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    // final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final title = widget.label == 'sell'
         ? 'Select token to sell'
         : widget.label == 'buy'
@@ -1752,51 +1777,52 @@ class _TokenSelectorSheetState extends State<_TokenSelectorSheet> {
       body: Column(
         children: [
           const SizedBox(height: AppTheme.cardPadding * 2),
-          // Search field
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.cardPadding,
-            ),
-            child: GlassContainer(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Search by name or network...',
-                  hintStyle: TextStyle(
-                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.cardPadding,
-                    vertical: AppTheme.elementSpacing,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
+          // TODO: Re-enable search field when more currencies are supported
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(
+          //     horizontal: AppTheme.cardPadding,
+          //   ),
+          //   child: GlassContainer(
+          //     borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+          //     child: TextField(
+          //       controller: _searchController,
+          //       onChanged: (value) {
+          //         setState(() {
+          //           _searchQuery = value;
+          //         });
+          //       },
+          //       style: TextStyle(
+          //         color: isDarkMode ? Colors.white : Colors.black,
+          //       ),
+          //       decoration: InputDecoration(
+          //         hintText: 'Search by name or network...',
+          //         hintStyle: TextStyle(
+          //           color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+          //         ),
+          //         prefixIcon: Icon(
+          //           Icons.search,
+          //           color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+          //         ),
+          //         border: InputBorder.none,
+          //         contentPadding: const EdgeInsets.symmetric(
+          //           horizontal: AppTheme.cardPadding,
+          //           vertical: AppTheme.elementSpacing,
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
+          // const SizedBox(height: AppTheme.elementSpacing),
+          const SizedBox(height: AppTheme.cardPadding * 2.5),
           // Token list
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppTheme.cardPadding,
               ),
-              itemCount: _filteredTokens.length,
+              itemCount: widget.availableTokens.length,
               itemBuilder: (context, index) {
-                final token = _filteredTokens[index];
+                final token = widget.availableTokens[index];
                 final isSelected = token == widget.selectedToken;
 
                 return _TokenListItem(
