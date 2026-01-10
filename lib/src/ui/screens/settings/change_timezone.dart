@@ -23,7 +23,6 @@ class _ChangeTimezoneState extends State<ChangeTimezone> {
   Widget build(BuildContext context) {
     final controller = context.read<SettingsController>();
     return ArkScaffoldUnsafe(
-      extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(
         text: AppLocalizations.of(context)!.timezone,
