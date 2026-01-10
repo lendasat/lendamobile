@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
@@ -101,6 +103,9 @@ class SendScreenState extends State<SendScreen> {
   // Amount input state (tracks whether showing fiat or bitcoin)
   String _amountInputState = 'sats'; // 'sats', 'bitcoin', or 'currency'
 
+  // Debounce timer for address changes (prevents heavy processing on every keystroke)
+  Timer? _addressChangeTimer;
+
   @override
   void initState() {
     super.initState();
@@ -130,6 +135,7 @@ class SendScreenState extends State<SendScreen> {
 
   @override
   void dispose() {
+    _addressChangeTimer?.cancel();
     _addressController.removeListener(_onAddressChanged);
     _addressController.dispose();
     _btcController.dispose();
@@ -153,7 +159,15 @@ class SendScreenState extends State<SendScreen> {
     }
   }
 
+  /// Debounced address change handler - delays processing until user stops typing
   void _onAddressChanged() {
+    _addressChangeTimer?.cancel();
+    _addressChangeTimer = Timer(const Duration(milliseconds: 300), _processAddressChange);
+  }
+
+  /// Process address changes (validation, LNURL fetching, fee fetching)
+  /// Called after debounce delay to avoid processing on every keystroke
+  void _processAddressChange() {
     final text = _addressController.text.trim();
     final validationResult = AddressValidator.validate(text);
     final isValid = validationResult.isValid;
