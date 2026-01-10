@@ -1126,6 +1126,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Für bestimmte Funktionen der App können Gebühren anfallen. Diese Gebühren werden dem Benutzer im Vorfeld mitgeteilt und sind in der App ersichtlich.';
 
   @override
+  String get agbBuyingSelling => 'Kauf und Verkauf von Bitcoin';
+
+  @override
+  String get agbBuyingSellingContent =>
+      'Der Kauf und Verkauf von Bitcoin erfolgt über Drittanbieter. COBLOX PTY LTD ist an diesen Transaktionen nicht beteiligt und übernimmt keine Verantwortung dafür. Alle Probleme, Streitigkeiten oder Anfragen im Zusammenhang mit dem Kauf oder Verkauf von Bitcoin müssen an den jeweiligen Drittanbieter gerichtet und mit diesem geklärt werden.';
+
+  @override
   String get agbLiabilityTitle => 'Haftungsbeschränkung';
 
   @override

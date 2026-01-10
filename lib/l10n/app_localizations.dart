@@ -2240,6 +2240,18 @@ abstract class AppLocalizations {
   /// **'Certain functions of the app may incur fees. These fees will be communicated to the user in advance and are visible in the app.'**
   String get agbFeesContent;
 
+  /// No description provided for @agbBuyingSelling.
+  ///
+  /// In en, this message translates to:
+  /// **'Buying and Selling Bitcoin'**
+  String get agbBuyingSelling;
+
+  /// No description provided for @agbBuyingSellingContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Buying and selling Bitcoin is facilitated through third-party providers. COBLOX PTY LTD is not involved in these transactions and bears no responsibility for them. Any issues, disputes, or inquiries related to buying or selling Bitcoin must be directed to and resolved with the respective third-party provider.'**
+  String get agbBuyingSellingContent;
+
   /// No description provided for @agbLiabilityTitle.
   ///
   /// In en, this message translates to:
