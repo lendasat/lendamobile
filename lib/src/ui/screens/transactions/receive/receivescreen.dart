@@ -709,6 +709,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
               context: context,
               hasBackButton: false,
               text: AppLocalizations.of(context)!.setAmount,
+              transparent: false,
               actions: [
                 IconButton(
                   icon: Icon(Icons.close,
@@ -828,7 +829,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                           customWidth: AppTheme.cardPadding * 4,
                           leadingIcon: Icon(
                             FontAwesomeIcons.arrowsRotate,
-                            color: isLight ? AppTheme.black60 : AppTheme.white80,
+                            color:
+                                isLight ? AppTheme.black60 : AppTheme.white80,
                             size: AppTheme.elementSpacing * 1.5,
                           ),
                           title: timerValue,
