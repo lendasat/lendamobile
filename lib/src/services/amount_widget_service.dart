@@ -28,6 +28,13 @@ class AmountWidgetService extends ChangeNotifier {
   bool get swapped => _swapped;
   bool get preventConversion => _preventConversion;
   bool get enabled => _enabled;
+  set enabled(bool value) {
+    if (_enabled != value) {
+      _enabled = value;
+      notifyListeners();
+    }
+  }
+
   CurrencyType get currentUnit => _currentUnit;
   String get cachedFiatDisplay => _cachedFiatDisplay;
   String get cachedBtcDisplay => _cachedBtcDisplay;
