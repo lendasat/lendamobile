@@ -770,6 +770,24 @@ abstract class AppLocalizations {
   /// **'Choose your preferred currency'**
   String get chooseYourPreferredCurrency;
 
+  /// No description provided for @preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get preferences;
+
+  /// No description provided for @autoReadClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-read clipboard'**
+  String get autoReadClipboard;
+
+  /// No description provided for @autoReadClipboardDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically check clipboard for Bitcoin addresses when sending'**
+  String get autoReadClipboardDescription;
+
   /// No description provided for @serverConfiguration.
   ///
   /// In en, this message translates to:

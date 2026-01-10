@@ -7,12 +7,15 @@ enum ChartTimeRange { day, week, month, year, max }
 class UserPreferencesService extends ChangeNotifier {
   static const String _balancesVisibleKey = 'balances_visible';
   static const String _chartTimeRangeKey = 'chart_time_range';
+  static const String _autoReadClipboardKey = 'auto_read_clipboard';
 
   bool _balancesVisible = true;
   ChartTimeRange _chartTimeRange = ChartTimeRange.day;
+  bool _autoReadClipboard = false; // Default OFF
 
   bool get balancesVisible => _balancesVisible;
   ChartTimeRange get chartTimeRange => _chartTimeRange;
+  bool get autoReadClipboard => _autoReadClipboard;
 
   Future<void> loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
@@ -20,6 +23,7 @@ class UserPreferencesService extends ChangeNotifier {
     final rangeIndex = prefs.getInt(_chartTimeRangeKey) ?? 0;
     _chartTimeRange = ChartTimeRange
         .values[rangeIndex.clamp(0, ChartTimeRange.values.length - 1)];
+    _autoReadClipboard = prefs.getBool(_autoReadClipboardKey) ?? false;
     notifyListeners();
   }
 
@@ -48,6 +52,19 @@ class UserPreferencesService extends ChangeNotifier {
     await prefs.setInt(_chartTimeRangeKey, range.index);
 
     notifyListeners();
+  }
+
+  Future<void> setAutoReadClipboard(bool value) async {
+    _autoReadClipboard = value;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoReadClipboardKey, value);
+
+    notifyListeners();
+  }
+
+  Future<void> toggleAutoReadClipboard() async {
+    await setAutoReadClipboard(!_autoReadClipboard);
   }
 
   String getChartTimeRangeLabel() {

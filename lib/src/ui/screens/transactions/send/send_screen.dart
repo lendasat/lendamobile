@@ -712,7 +712,7 @@ class SendScreenState extends State<SendScreen> {
     return ArkScaffold(
       context: context,
       extendBodyBehindAppBar: true,
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       appBar: BitNetAppBar(
         context: context,
         text: l10n.sendBitcoin,
@@ -1481,12 +1481,16 @@ class SendScreenState extends State<SendScreen> {
                                       size: AppTheme.cardPadding * 0.75,
                                       color: Theme.of(context).hintColor,
                                     ),
-                                    const SizedBox(width: AppTheme.elementSpacing / 2),
+                                    const SizedBox(
+                                        width: AppTheme.elementSpacing / 2),
                                     Text(
                                       currentNetwork,
-                                      style: Theme.of(context).textTheme.bodyMedium,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
                                     ),
-                                    const SizedBox(width: AppTheme.elementSpacing / 2),
+                                    const SizedBox(
+                                        width: AppTheme.elementSpacing / 2),
                                     Icon(
                                       Icons.keyboard_arrow_down,
                                       size: 16,
@@ -1504,11 +1508,17 @@ class SendScreenState extends State<SendScreen> {
                                   size: AppTheme.cardPadding * 0.75,
                                   color: Theme.of(context).hintColor,
                                 ),
-                                const SizedBox(width: AppTheme.elementSpacing / 2),
+                                const SizedBox(
+                                    width: AppTheme.elementSpacing / 2),
                                 Text(
                                   currentNetwork,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurface,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
                                       ),
                                 ),
                               ],
@@ -1545,8 +1555,12 @@ class SendScreenState extends State<SendScreen> {
                             ),
                           Text(
                             feeText,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                           ),
                         ],
