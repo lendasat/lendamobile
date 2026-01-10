@@ -775,12 +775,12 @@ class SendScreenState extends State<SendScreen> {
                     children: [
                       Column(
                         children: [
-                          const SizedBox(height: AppTheme.cardPadding * 2),
+                          const SizedBox(height: AppTheme.cardPadding * 1.25),
                           // Bitcoin amount widget
                           Center(
                             child: _buildBitcoinWidget(context),
                           ),
-                          const SizedBox(height: AppTheme.cardPadding * 1.75),
+                          const SizedBox(height: AppTheme.cardPadding * 1.25),
                           // Description if available
                           if (_description != null &&
                               _description!.isNotEmpty) ...[
