@@ -130,14 +130,30 @@ class AmountWidgetService extends ChangeNotifier {
     // Check if fiat controller has input
     final hasFiatInput = _currController!.text.isNotEmpty;
 
-    if (!hasFiatInput || bitcoinPrice == null || fiatRate == null) {
+    // Check for null or zero values that would cause division issues
+    if (!hasFiatInput ||
+        bitcoinPrice == null ||
+        fiatRate == null ||
+        bitcoinPrice <= 0 ||
+        fiatRate <= 0) {
       _cachedBtcDisplay = "";
       return;
     }
 
     final currAmount = double.tryParse(_currController!.text) ?? 0.0;
 
-    final btcAmount = currAmount / (bitcoinPrice * fiatRate);
+    final divisor = bitcoinPrice * fiatRate;
+    if (divisor <= 0) {
+      _cachedBtcDisplay = "";
+      return;
+    }
+
+    final btcAmount = currAmount / divisor;
+    // Check for infinity or NaN before converting to int
+    if (btcAmount.isInfinite || btcAmount.isNaN) {
+      _cachedBtcDisplay = "";
+      return;
+    }
     final newSatAmount = (btcAmount * BitcoinConstants.satsPerBtc).round();
 
     // Get current sats value to compare
