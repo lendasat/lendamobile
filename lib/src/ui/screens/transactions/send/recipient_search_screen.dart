@@ -171,6 +171,7 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
           availableSats: widget.availableSats,
           initialAddress: address,
           fromClipboard: fromClipboard,
+          bitcoinPrice: _bitcoinPrice,
         ),
       ),
     );

@@ -653,6 +653,7 @@ class WalletScreenState extends State<WalletScreen>
             aspId: widget.aspId,
             availableSats: _getSelectedBalance() * BitcoinConstants.satsPerBtc,
             initialAddress: result,
+            bitcoinPrice: _getCurrentBtcPrice(),
           ),
         ),
       );
