@@ -161,9 +161,12 @@ class AmountWidgetService extends ChangeNotifier {
 
     // IMPORTANT: Preserve sats when reconverting from fiat if the difference is just rounding error
     // This prevents "not enough funds" errors when Max button sets exact sats
-    // and prevents rounding issues when invoice sets exact amount (e.g., 123 sats -> 122 after fiat conversion)
-    final isWithinRoundingTolerance =
-        currentSatAmount > 0 && (newSatAmount - currentSatAmount).abs() <= 2;
+    // and prevents rounding issues when invoice sets exact amount
+    // Fiat displays with 2 decimal places, so rounding error can be significant for small amounts
+    // Use 1% tolerance with floor of 5 sats and ceiling of 50 sats
+    final toleranceSats = (currentSatAmount * 0.01).clamp(5, 50).round();
+    final isWithinRoundingTolerance = currentSatAmount > 0 &&
+        (newSatAmount - currentSatAmount).abs() <= toleranceSats;
     final satAmount =
         isWithinRoundingTolerance ? currentSatAmount : newSatAmount;
 
