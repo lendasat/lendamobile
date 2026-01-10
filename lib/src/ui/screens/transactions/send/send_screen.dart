@@ -1040,8 +1040,9 @@ class SendScreenState extends State<SendScreen> {
         // To find max amount: amount + fee = balance, where fee = amount * 0.0025
         // So: amount * 1.0025 = balance => amount = balance / 1.0025
         // Fee = balance - amount = balance - (balance / 1.0025)
+        // Use round() to match _calculateBoltzFee() rounding
         final maxAmount = widget.availableSats / (1 + _boltzFeePercent / 100);
-        return (widget.availableSats - maxAmount).ceil();
+        return (widget.availableSats - maxAmount).round();
       case 'Onchain':
         // On-chain: estimate based on fee rate
         // Typical P2WPKH transaction is ~140 vbytes
