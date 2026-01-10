@@ -156,8 +156,10 @@ class SendScreenState extends State<SendScreen> {
         setState(() {
           _bitcoinPrice = priceData.last.price;
         });
-        // Update fiat controller if there's already an amount set (e.g., from invoice)
-        _updateFiatFromSats();
+        // Update fiat controller after widget rebuilds (so enabled state is synced)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _updateFiatFromSats();
+        });
       }
     } catch (e) {
       logger.e('Error fetching bitcoin price: $e');
