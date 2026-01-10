@@ -1434,6 +1434,7 @@ class SendScreenState extends State<SendScreen> {
           context: context,
           hasBackButton: false,
           text: 'Confirm',
+          transparent: false,
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),

@@ -17,6 +17,10 @@ class BitNetAppBar extends StatefulWidget implements PreferredSizeWidget {
   final IconData? customIcon;
   final ButtonType? buttonType;
 
+  /// When true, uses transparent background (for use with extendBodyBehindAppBar).
+  /// When false, uses solid background color (black in dark mode, white in light mode).
+  final bool transparent;
+
   const BitNetAppBar({
     super.key,
     required this.context,
@@ -28,6 +32,7 @@ class BitNetAppBar extends StatefulWidget implements PreferredSizeWidget {
     this.customLeading,
     this.customIcon,
     this.buttonType = ButtonType.transparent,
+    this.transparent = true,
   });
 
   @override
@@ -69,6 +74,11 @@ class _BitNetAppBarState extends State<BitNetAppBar> {
                 : AppTheme.columnWidth * 0.65
             : AppTheme.columnWidth;
 
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final bgColor = widget.transparent
+        ? Colors.transparent
+        : (isLight ? Colors.white : Colors.black);
+
     return AppBar(
       automaticallyImplyLeading: false,
       scrolledUnderElevation: 0,
@@ -78,7 +88,7 @@ class _BitNetAppBarState extends State<BitNetAppBar> {
       elevation: 0,
       centerTitle: true,
       titleTextStyle: Theme.of(context).textTheme.titleLarge,
-      backgroundColor: Colors.transparent,
+      backgroundColor: bgColor,
       title: widget.customTitle ??
           (widget.text != null && widget.text!.isNotEmpty
               ? _animateText
