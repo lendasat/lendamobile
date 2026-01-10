@@ -629,7 +629,7 @@ class _TransactionItemWidget extends StatelessWidget {
     FocusScope.of(context).unfocus();
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: MediaQuery.of(context).size.height * 0.85,
       backgroundColor: Theme.of(context).colorScheme.surface,
       child: TransactionDetailSheet(
         txid: txid,
@@ -796,7 +796,8 @@ class _TransactionItemWidget extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                DateFormatter.formatTimeAgoFromTimestamp(createdAt),
+                                DateFormatter.formatTimeAgoFromTimestamp(
+                                    createdAt),
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),
