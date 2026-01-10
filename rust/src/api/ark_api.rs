@@ -60,6 +60,8 @@ pub struct Balance {
 pub struct OffchainBalance {
     pub pending_sats: u64,
     pub confirmed_sats: u64,
+    pub expired_sats: u64,
+    pub recoverable_sats: u64,
     pub total_sats: u64,
 }
 
@@ -69,6 +71,8 @@ pub async fn balance() -> Result<Balance> {
         offchain: OffchainBalance {
             pending_sats: balance.offchain.pre_confirmed().to_sat(),
             confirmed_sats: balance.offchain.confirmed().to_sat(),
+            expired_sats: balance.offchain.expired().to_sat(),
+            recoverable_sats: balance.offchain.recoverable().to_sat(),
             total_sats: balance.offchain.total().to_sat(),
         },
     })

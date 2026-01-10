@@ -293,17 +293,25 @@ class LnPaymentResult {
 class OffchainBalance {
   final BigInt pendingSats;
   final BigInt confirmedSats;
+  final BigInt expiredSats;
+  final BigInt recoverableSats;
   final BigInt totalSats;
 
   const OffchainBalance({
     required this.pendingSats,
     required this.confirmedSats,
+    required this.expiredSats,
+    required this.recoverableSats,
     required this.totalSats,
   });
 
   @override
   int get hashCode =>
-      pendingSats.hashCode ^ confirmedSats.hashCode ^ totalSats.hashCode;
+      pendingSats.hashCode ^
+      confirmedSats.hashCode ^
+      expiredSats.hashCode ^
+      recoverableSats.hashCode ^
+      totalSats.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -312,6 +320,8 @@ class OffchainBalance {
           runtimeType == other.runtimeType &&
           pendingSats == other.pendingSats &&
           confirmedSats == other.confirmedSats &&
+          expiredSats == other.expiredSats &&
+          recoverableSats == other.recoverableSats &&
           totalSats == other.totalSats;
 }
 

@@ -87,6 +87,10 @@ class WalletScreenState extends State<WalletScreen>
   double _confirmedBalance = 0.0;
   double _totalBalance = 0.0;
 
+  // Recoverable/expired VTXOs (need settle to recover)
+  int _recoverableSats = 0;
+  int _expiredSats = 0;
+
   // Display preferences
   BalanceType _currentBalanceType = BalanceType.total;
 
@@ -383,6 +387,12 @@ class WalletScreenState extends State<WalletScreen>
       if (_boardingBalanceSats > 0 && !_isSettling) {
         _settleBoarding();
       }
+
+      // Auto-settle if there are recoverable or expired VTXOs
+      // These VTXOs can't be spent normally and need to be settled to recover
+      if ((_recoverableSats > 0 || _expiredSats > 0) && !_isSettling) {
+        _settleRecoverableVtxos();
+      }
     } finally {
       _isRefreshing = false;
     }
@@ -489,6 +499,38 @@ class WalletScreenState extends State<WalletScreen>
     }
   }
 
+  /// Settle recoverable/expired VTXOs back into spendable balance
+  Future<void> _settleRecoverableVtxos() async {
+    if (_isSettling || (_recoverableSats == 0 && _expiredSats == 0)) return;
+
+    setState(() {
+      _isSettling = true;
+    });
+
+    final totalToRecover = _recoverableSats + _expiredSats;
+    try {
+      logger.i("Settling $totalToRecover sats from recoverable/expired VTXOs...");
+      await settle();
+      logger.i("Recoverable VTXOs settled successfully!");
+
+      // Refresh balance after settle
+      await _fetchBalance();
+
+      if (mounted && totalToRecover > 0) {
+        OverlayService().showSuccess('Recovered $totalToRecover sats!');
+      }
+    } catch (e) {
+      logger.e("Error settling recoverable VTXOs: $e");
+      // Don't show error to user - settle will be retried on next refresh
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSettling = false;
+        });
+      }
+    }
+  }
+
   Future<void> _fetchTransactions() async {
     try {
       setState(() {
@@ -531,12 +573,14 @@ class WalletScreenState extends State<WalletScreen>
               BitcoinConstants.satsPerBtc;
           _totalBalance = balanceResult.offchain.totalSats.toDouble() /
               BitcoinConstants.satsPerBtc;
+          _recoverableSats = balanceResult.offchain.recoverableSats.toInt();
+          _expiredSats = balanceResult.offchain.expiredSats.toInt();
           _isBalanceLoading = false;
         });
       }
 
       logger.i(
-          "Balance updated: Total: $_totalBalance BTC, Confirmed: $_confirmedBalance BTC, Pending: $_pendingBalance BTC");
+          "Balance updated: Total: $_totalBalance BTC, Confirmed: $_confirmedBalance BTC, Pending: $_pendingBalance BTC, Recoverable: $_recoverableSats sats, Expired: $_expiredSats sats");
     } catch (e) {
       logger.e("Error fetching balance: $e");
       if (mounted) {
