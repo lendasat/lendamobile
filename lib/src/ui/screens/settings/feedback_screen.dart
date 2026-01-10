@@ -122,7 +122,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     final controller = context.read<SettingsController>();
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(

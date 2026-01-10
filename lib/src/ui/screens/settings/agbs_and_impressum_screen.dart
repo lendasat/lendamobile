@@ -43,7 +43,7 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       context: context,
       appBar: BitNetAppBar(
         text: AppLocalizations.of(context)!.legalInformation,

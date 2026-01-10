@@ -1,4 +1,5 @@
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
+import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
@@ -122,127 +123,120 @@ class _AmountWidgetState extends State<AmountWidget>
         final currencyType =
             _service.swapped ? currencyService.code : _service.currentUnit.name;
 
-        return Column(
-          children: [
-            Row(
-              children: [
-                // Swap button
-                IconButton(
-                  icon: Icon(Icons.swap_vert,
-                      color: Theme.of(context).colorScheme.onSurface),
-                  onPressed: () {
-                    _service.toggleSwapped(bitcoinPrice);
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Input field
+              TextField(
+                enabled: _service.enabled,
+                focusNode: widget.focusNode,
+                onTapOutside: (_) {
+                  if (widget.focusNode.hasFocus) {
                     widget.focusNode.unfocus();
-                    if (widget.onAmountChange != null) {
-                      widget.onAmountChange!(
-                        _service.currentUnit.name,
-                        widget.btcController.text,
-                      );
+                  }
+                },
+                textAlign: TextAlign.left,
+                onChanged: (text) {
+                  if (!_service.swapped) {
+                    if (_service.currentUnit == CurrencyType.sats) {
+                      widget.btcController.text = (double.tryParse(
+                                widget.satController.text,
+                              ) ??
+                              0 / BitcoinConstants.satsPerBtc)
+                          .toStringAsFixed(8);
+                    } else {
+                      widget.satController.text =
+                          ((double.tryParse(widget.btcController.text) ?? 0) *
+                                  BitcoinConstants.satsPerBtc)
+                              .toInt()
+                              .toString();
                     }
-                  },
+                  }
+                  if (widget.onAmountChange != null && !_service.swapped) {
+                    widget.onAmountChange!(
+                      currencyType,
+                      widget.btcController.text.isEmpty
+                          ? '0'
+                          : widget.btcController.text,
+                    );
+                  }
+                },
+                maxLength: widget.lowerBound != null ? 20 : 10,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
                 ),
-                // Input field
-                Expanded(
-                  child: TextField(
-                    enabled: _service.enabled,
-                    focusNode: widget.focusNode,
-                    onTapOutside: (_) {
-                      if (widget.focusNode.hasFocus) {
-                        widget.focusNode.unfocus();
-                      }
-                    },
-                    textAlign: TextAlign.center,
-                    onChanged: (text) {
-                      if (!_service.swapped) {
-                        if (_service.currentUnit == CurrencyType.sats) {
-                          widget.btcController.text = (double.tryParse(
-                                    widget.satController.text,
-                                  ) ??
-                                  0 / BitcoinConstants.satsPerBtc)
-                              .toStringAsFixed(8);
-                        } else {
-                          widget.satController.text =
-                              ((double.tryParse(widget.btcController.text) ??
-                                          0) *
-                                      BitcoinConstants.satsPerBtc)
-                                  .toInt()
-                                  .toString();
-                        }
-                      }
-                      if (widget.onAmountChange != null && !_service.swapped) {
-                        widget.onAmountChange!(
-                          currencyType,
-                          widget.btcController.text.isEmpty
-                              ? '0'
-                              : widget.btcController.text,
-                        );
-                      }
-                    },
-                    maxLength: widget.lowerBound != null ? 20 : 10,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: _service.getInputFormatters(
-                      hasBoundType: widget.boundType != null,
-                      context: context,
-                      bitcoinPrice: bitcoinPrice,
-                      lowerBound: widget.lowerBound,
-                      upperBound: widget.upperBound,
-                      boundType: widget.boundType,
-                      overBoundCallback: widget.overBoundFunc,
-                      underBoundCallback: widget.underBoundFunc,
-                      inBoundCallback: widget.inBoundFunc,
-                    ),
-                    decoration: InputDecoration(
-                      suffixIcon: _service.swapped
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  currencyService.symbol,
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.7),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : _getCurrencyIcon(
-                              context,
-                              _service.currentUnit,
-                              size: 24.0,
+                inputFormatters: _service.getInputFormatters(
+                  hasBoundType: widget.boundType != null,
+                  context: context,
+                  bitcoinPrice: bitcoinPrice,
+                  lowerBound: widget.lowerBound,
+                  upperBound: widget.upperBound,
+                  boundType: widget.boundType,
+                  overBoundCallback: widget.overBoundFunc,
+                  underBoundCallback: widget.underBoundFunc,
+                  inBoundCallback: widget.inBoundFunc,
+                ),
+                decoration: InputDecoration(
+                  suffixIcon: _service.swapped
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              currencyService.symbol,
+                              style: TextStyle(
+                                fontSize: 24,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.7),
+                              ),
                             ),
-                      border: InputBorder.none,
-                      counterText: "",
-                      hintText: "0",
-                      hintStyle: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.5)),
-                    ),
-                    controller: _service.getCurrentController(),
-                    autofocus: false,
-                    style: materialTheme.textTheme.displayLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
+                          ],
+                        )
+                      : _getCurrencyIcon(
+                          context,
+                          _service.currentUnit,
+                          size: 24.0,
+                        ),
+                  border: InputBorder.none,
+                  counterText: "",
+                  hintText: "0",
+                  hintStyle: TextStyle(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5)),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8.0),
-            // Conversion display
-            Center(
-              child: !_service.swapped
-                  ? _buildBitcoinToMoneyWidget(
-                      context, bitcoinPrice, currencyService)
-                  : _buildMoneyToBitcoinWidget(
-                      context, bitcoinPrice, currencyService),
-            ),
-          ],
+                controller: _service.getCurrentController(),
+                autofocus: false,
+                style: materialTheme.textTheme.displayLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              // Conversion display - tap to swap
+              GestureDetector(
+                onTap: () {
+                  _service.toggleSwapped(bitcoinPrice);
+                  widget.focusNode.unfocus();
+                  if (widget.onAmountChange != null) {
+                    widget.onAmountChange!(
+                      _service.currentUnit.name,
+                      widget.btcController.text,
+                    );
+                  }
+                },
+                behavior: HitTestBehavior.opaque,
+                child: !_service.swapped
+                    ? _buildBitcoinToMoneyWidget(
+                        context, bitcoinPrice, currencyService)
+                    : _buildMoneyToBitcoinWidget(
+                        context, bitcoinPrice, currencyService),
+              ),
+            ],
+          ),
         );
       },
     );

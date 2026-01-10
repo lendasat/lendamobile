@@ -344,7 +344,7 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
         appBarTitle = AppLocalizations.of(context)!.viewRecoveryKey;
     }
 
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(

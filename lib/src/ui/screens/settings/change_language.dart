@@ -21,7 +21,7 @@ class _ChangeLanguageState extends State<ChangeLanguage> {
   @override
   Widget build(BuildContext context) {
     final controller = context.read<SettingsController>();
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(
@@ -52,7 +52,7 @@ class _LanguagePickerBodyState extends State<_LanguagePickerBody> {
     const languages = LanguageService.languageNames;
     final languageCodes = languages.keys.toList();
 
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       context: context,
       resizeToAvoidBottomInset: false,
       body: Padding(

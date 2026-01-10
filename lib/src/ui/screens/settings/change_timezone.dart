@@ -22,7 +22,7 @@ class _ChangeTimezoneState extends State<ChangeTimezone> {
   @override
   Widget build(BuildContext context) {
     final controller = context.read<SettingsController>();
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(
@@ -69,7 +69,7 @@ class _TimezonePickerBodyState extends State<_TimezonePickerBody> {
       );
     }
 
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       context: context,
       resizeToAvoidBottomInset: false,
       body: Padding(

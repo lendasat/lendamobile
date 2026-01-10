@@ -14,6 +14,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/qr_border_painter.dart';
@@ -263,15 +264,13 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   static const int _defaultLightningAmount = 10000;
 
   // Boltz fee constants for reverse swaps (receiving Lightning)
+  // Only 0.25% service fee - no additional claim fee
   static const double _boltzServiceFeePercent = 0.25;
-  static const int _boltzClaimFeeSats = 250;
 
   /// Calculate the gross invoice amount needed to receive a specific net amount
-  /// Formula: Gross = (Net + ClaimFee) / (1 - ServiceFeePercent/100)
+  /// Formula: Gross = Net / (1 - ServiceFeePercent/100)
   int _calculateGrossAmount(int netAmount) {
-    return ((netAmount + _boltzClaimFeeSats) /
-            (1 - _boltzServiceFeePercent / 100))
-        .ceil();
+    return (netAmount / (1 - _boltzServiceFeePercent / 100)).ceil();
   }
 
   Future<void> _fetchLightningInvoice() async {
@@ -485,6 +484,165 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   }
 
   void _showAmountSheet() {
+    final isLightning = _receiveType == ReceiveType.lightning;
+    _showAmountInputSheet(isLightning);
+  }
+
+  Future<void> _showLightningFeeInfoSheet(int amount) {
+    final l10n = AppLocalizations.of(context)!;
+    final int grossAmount = _calculateGrossAmount(amount);
+    final int totalFees = grossAmount - amount;
+
+    return arkBottomSheet(
+      context: context,
+      height: MediaQuery.of(context).size.height * 0.85,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: ArkScaffoldUnsafe(
+        context: context,
+        appBar: BitNetAppBar(
+          context: context,
+          hasBackButton: false,
+          text: 'Confirm',
+          actions: [
+            IconButton(
+              icon: Icon(Icons.close,
+                  color: Theme.of(context).colorScheme.onSurface),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.cardPadding),
+                child: Column(
+                  children: [
+                    const SizedBox(height: AppTheme.cardPadding),
+                    // Glass container with fee details
+                    GlassContainer(
+                      opacity: 0.05,
+                      borderRadius: AppTheme.cardRadiusSmall,
+                      padding: const EdgeInsets.all(AppTheme.elementSpacing),
+                      child: Column(
+                        children: [
+                          // Amount display
+                          ArkListTile(
+                            margin: EdgeInsets.zero,
+                            text: l10n.amount,
+                            trailing: Text(
+                              '$amount sats',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                            ),
+                          ),
+                          // Network row
+                          ArkListTile(
+                            margin: EdgeInsets.zero,
+                            text: l10n.network,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  FontAwesomeIcons.bolt,
+                                  size: 14,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Lightning',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Service Fee row (0.25%)
+                          ArkListTile(
+                            margin: EdgeInsets.zero,
+                            text: 'Service Fee (0.25%)',
+                            trailing: Text(
+                              '$totalFees sats',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                            ),
+                          ),
+                          // Total row
+                          ArkListTile(
+                            margin: EdgeInsets.zero,
+                            text: l10n.total,
+                            trailing: Text(
+                              '$grossAmount sats',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    // Info text
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.cardPadding),
+                      child: Text(
+                        'The invoice includes a 0.25% service fee.\nYou will receive exactly $amount sats.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).hintColor,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.cardPadding * 2),
+                  ],
+                ),
+              ),
+            ),
+            // Confirm button at bottom
+            Padding(
+              padding: const EdgeInsets.all(AppTheme.cardPadding),
+              child: LongButtonWidget(
+                title: 'Confirm',
+                buttonType: ButtonType.primary,
+                customWidth: double.infinity,
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _currentAmount = amount);
+                  _fetchLightningInvoice();
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAmountInputSheet(bool isLightning) {
     // Only pre-fill if there's an actual amount set (not 0)
     // Empty string shows hint text "0"
     if (_currentAmount != null && _currentAmount! > 0) {
@@ -498,8 +656,6 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       _amountFocusNode.requestFocus();
     });
 
-    final isLightning = _receiveType == ReceiveType.lightning;
-
     arkBottomSheet(
       context: context,
       height: MediaQuery.of(context).size.height * 0.85,
@@ -511,7 +667,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
           final isBelowMinimum =
               isLightning && amount < _defaultLightningAmount;
 
-          return ArkScaffold(
+          return ArkScaffoldUnsafe(
             context: context,
             appBar: BitNetAppBar(
               context: context,
@@ -552,76 +708,10 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                       },
                     ),
                   ),
-                  // Show Boltz fee breakdown for Lightning
-                  if (isLightning && amount >= _defaultLightningAmount) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.cardPadding,
-                      ),
-                      child: Builder(
-                        builder: (context) {
-                          // Calculate gross amount (what sender pays)
-                          final int grossAmount = _calculateGrossAmount(amount);
-                          final int serviceFee =
-                              (grossAmount * _boltzServiceFeePercent / 100)
-                                  .round();
-                          final isDark =
-                              Theme.of(context).brightness == Brightness.dark;
-
-                          return Container(
-                            padding: const EdgeInsets.all(AppTheme.cardPadding),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.05)
-                                  : Colors.black.withValues(alpha: 0.03),
-                              borderRadius: AppTheme.cardRadiusSmall,
-                            ),
-                            child: Column(
-                              children: [
-                                _buildFeeRow(
-                                  context,
-                                  'You receive',
-                                  '$amount sats',
-                                  isDark,
-                                  isTotal: true,
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Divider(height: 1),
-                                ),
-                                _buildFeeRow(
-                                  context,
-                                  'Service fee (0.25%)',
-                                  '+$serviceFee sats',
-                                  isDark,
-                                ),
-                                const SizedBox(height: 8),
-                                _buildFeeRow(
-                                  context,
-                                  'Claim fee',
-                                  '+$_boltzClaimFeeSats sats',
-                                  isDark,
-                                ),
-                                const SizedBox(height: 8),
-                                _buildFeeRow(
-                                  context,
-                                  'Sender pays',
-                                  '~$grossAmount sats',
-                                  isDark,
-                                  isTotal: true,
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.cardPadding),
-                  ] else
-                    const SizedBox(height: AppTheme.cardPadding),
+                  const SizedBox(height: AppTheme.cardPadding),
                   LongButtonWidget(
                     title: isBelowMinimum
-                        ? 'Amount too low'
+                        ? 'Minimum $_defaultLightningAmount sats'
                         : AppLocalizations.of(context)!.apply,
                     buttonType: isBelowMinimum
                         ? ButtonType.transparent
@@ -633,14 +723,14 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                         : () {
                             final amountText = _satController.text.trim();
                             final amount = int.tryParse(amountText) ?? 0;
-                            setState(() =>
-                                _currentAmount = amount >= 0 ? amount : 0);
                             _unfocusAll();
                             Navigator.pop(context);
-                            // Re-fetch Lightning invoice if on Lightning, otherwise fetch addresses
-                            if (_receiveType == ReceiveType.lightning) {
-                              _fetchLightningInvoice();
+                            // Show fee info sheet for Lightning, otherwise fetch addresses directly
+                            if (isLightning) {
+                              _showLightningFeeInfoSheet(amount);
                             } else {
+                              setState(() =>
+                                  _currentAmount = amount >= 0 ? amount : 0);
                               _fetchAddresses();
                             }
                           },

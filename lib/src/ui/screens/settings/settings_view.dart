@@ -294,7 +294,7 @@ class SettingsViewState extends State<SettingsView> {
   Widget build(BuildContext context) {
     final controller = context.read<SettingsController>();
 
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(
