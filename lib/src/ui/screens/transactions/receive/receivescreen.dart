@@ -709,6 +709,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
               context: context,
               hasBackButton: false,
               text: AppLocalizations.of(context)!.setAmount,
+              transparent: false,
               actions: [
                 IconButton(
                   icon: Icon(Icons.close,
