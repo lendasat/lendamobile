@@ -1046,10 +1046,10 @@ class SendScreenState extends State<SendScreen> {
       case 'Onchain':
         // On-chain: estimate based on fee rate
         // Typical P2WPKH transaction is ~140 vbytes
-        // Use medium fee rate estimate (e.g., 10 sat/vbyte as fallback)
+        // Use halfHourFee to match _estimatedNetworkFeeSats display
         const estimatedVbytes = 140;
-        final feeRate = _recommendedFees?.fastestFee ?? 10.0;
-        return (estimatedVbytes * feeRate).ceil();
+        final feeRate = _recommendedFees?.halfHourFee ?? 10.0;
+        return (estimatedVbytes * feeRate).round();
       default:
         return 0;
     }
