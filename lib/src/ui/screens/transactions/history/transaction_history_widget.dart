@@ -54,6 +54,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   Timer? _searchTimer;
   List<WalletActivityItem> _filteredActivity = [];
 
+  // Cache for combined activity list (memoization for performance)
+  List<WalletActivityItem>? _cachedCombinedActivity;
+
   // Listen to pending transaction updates
   final PendingTransactionService _pendingService = PendingTransactionService();
 
@@ -63,19 +66,6 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     // Listen to pending transaction changes
     _pendingService.addListener(_onPendingTransactionsChanged);
 
-    // Debug: Print transaction types to diagnose network label bug
-    for (final tx in widget.transactions) {
-      tx.map(
-        boarding: (t) => debugPrint(
-            'TX DEBUG: Boarding (Onchain) - ${t.txid.substring(0, 8)}...'),
-        round: (t) => debugPrint(
-            'TX DEBUG: Round (Arkade) - ${t.txid.substring(0, 8)}...'),
-        redeem: (t) => debugPrint(
-            'TX DEBUG: Redeem isSettled=${t.isSettled} (${t.isSettled ? "Onchain" : "Arkade"}) - ${t.txid.substring(0, 8)}...'),
-        offboard: (t) => debugPrint(
-            'TX DEBUG: Offboard (Onchain Send) - ${t.txid.substring(0, 8)}...'),
-      );
-    }
     _filteredActivity = _combineAllActivity();
 
     // Reconcile pending with real transactions when widget loads
@@ -83,13 +73,20 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   }
 
   void _onPendingTransactionsChanged() {
+    // Invalidate cache when pending transactions change
+    _cachedCombinedActivity = null;
     if (mounted) {
       _applySearch(_searchController.text);
     }
   }
 
   /// Combine transactions, swaps, and pending items into a unified list
+  /// Uses cached result if available, otherwise computes and caches
   List<WalletActivityItem> _combineAllActivity() {
+    if (_cachedCombinedActivity != null) {
+      return _cachedCombinedActivity!;
+    }
+
     final List<WalletActivityItem> items = [];
 
     // Add pending transactions first (they'll float to top due to high timestamp)
@@ -108,6 +105,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     // Sort by timestamp (newest first)
     items.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
+    _cachedCombinedActivity = items;
     return items;
   }
 
@@ -116,6 +114,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.transactions != widget.transactions ||
         oldWidget.swaps != widget.swaps) {
+      // Invalidate cache when source data changes
+      _cachedCombinedActivity = null;
       // Reconcile pending with real transactions when data updates
       _pendingService.reconcileWithRealTransactions(widget.transactions);
       _applySearch(_searchController.text);
