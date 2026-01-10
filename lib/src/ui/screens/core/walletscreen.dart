@@ -104,6 +104,13 @@ class WalletScreenState extends State<WalletScreen>
   // Refresh guard to prevent multiple simultaneous refreshes
   bool _isRefreshing = false;
 
+  // Chart data cache (memoization for performance)
+  // Avoids recalculating balance history on every build
+  List<WalletChartData>? _cachedBalanceChartData;
+  int _lastTransactionCount = 0;
+  int _lastPriceDataCount = 0;
+  double _lastTotalBalance = 0;
+
   @override
   void initState() {
     super.initState();
@@ -349,6 +356,9 @@ class WalletScreenState extends State<WalletScreen>
 
     _isRefreshing = true;
 
+    // Invalidate chart cache - will be recomputed with fresh data
+    _cachedBalanceChartData = null;
+
     try {
       await Future.wait([
         _fetchBalance(),
@@ -481,22 +491,21 @@ class WalletScreenState extends State<WalletScreen>
       });
 
       final transactions = await txHistory();
-      setState(() {
-        _isTransactionFetching = false;
-        _transactions = transactions;
-      });
+      if (mounted) {
+        setState(() {
+          _isTransactionFetching = false;
+          _transactions = transactions;
+        });
+      }
       logger.i("Fetched ${transactions.length} transactions");
     } catch (e) {
       logger.e("Error fetching transaction history: $e");
       if (mounted) {
-        _showError(
-            "${AppLocalizations.of(context)!.couldntUpdateTransactions} ${e.toString()}");
-      }
-    } finally {
-      if (mounted) {
         setState(() {
           _isTransactionFetching = false;
         });
+        _showError(
+            "${AppLocalizations.of(context)!.couldntUpdateTransactions} ${e.toString()}");
       }
     }
   }
@@ -509,25 +518,26 @@ class WalletScreenState extends State<WalletScreen>
     try {
       final balanceResult = await balance();
 
-      setState(() {
-        _pendingBalance = balanceResult.offchain.pendingSats.toDouble() /
-            BitcoinConstants.satsPerBtc;
-        _confirmedBalance = balanceResult.offchain.confirmedSats.toDouble() /
-            BitcoinConstants.satsPerBtc;
-        _totalBalance = balanceResult.offchain.totalSats.toDouble() /
-            BitcoinConstants.satsPerBtc;
-        _isBalanceLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _pendingBalance = balanceResult.offchain.pendingSats.toDouble() /
+              BitcoinConstants.satsPerBtc;
+          _confirmedBalance = balanceResult.offchain.confirmedSats.toDouble() /
+              BitcoinConstants.satsPerBtc;
+          _totalBalance = balanceResult.offchain.totalSats.toDouble() /
+              BitcoinConstants.satsPerBtc;
+          _isBalanceLoading = false;
+        });
+      }
 
       logger.i(
           "Balance updated: Total: $_totalBalance BTC, Confirmed: $_confirmedBalance BTC, Pending: $_pendingBalance BTC");
     } catch (e) {
       logger.e("Error fetching balance: $e");
-      setState(() {
-        _isBalanceLoading = false;
-      });
-
       if (mounted) {
+        setState(() {
+          _isBalanceLoading = false;
+        });
         _showError(
             "${AppLocalizations.of(context)!.couldntUpdateBalance} ${e.toString()}");
       }
@@ -596,6 +606,7 @@ class WalletScreenState extends State<WalletScreen>
         builder: (context) => RecipientSearchScreen(
           aspId: widget.aspId,
           availableSats: _getSelectedBalance() * BitcoinConstants.satsPerBtc,
+          bitcoinPrice: _getCurrentBtcPrice(),
         ),
       ),
     );
@@ -609,6 +620,7 @@ class WalletScreenState extends State<WalletScreen>
         builder: (context) => ReceiveScreen(
           aspId: widget.aspId,
           amount: 0,
+          bitcoinPrice: _getCurrentBtcPrice(),
         ),
       ),
     );
@@ -950,6 +962,44 @@ class WalletScreenState extends State<WalletScreen>
     return (currentBalance - amountAfterTimestamp).clamp(0.0, double.infinity);
   }
 
+  /// Get cached balance chart data or compute if cache is invalid
+  /// This avoids expensive _getBalanceAtTimestamp calculations on every rebuild
+  List<WalletChartData> _getBalanceChartData() {
+    // Check if cache is valid
+    final needsRecompute = _cachedBalanceChartData == null ||
+        _transactions.length != _lastTransactionCount ||
+        _bitcoinPriceData.length != _lastPriceDataCount ||
+        _totalBalance != _lastTotalBalance;
+
+    if (needsRecompute) {
+      // Compute chart data - this is the expensive operation
+      _cachedBalanceChartData = _bitcoinPriceData.map((priceData) {
+        final balanceAtTime = _getBalanceAtTimestamp(priceData.time);
+        return WalletChartData(
+          time: priceData.time.toDouble(),
+          value: priceData.price * balanceAtTime,
+        );
+      }).toList();
+
+      // Update cache keys
+      _lastTransactionCount = _transactions.length;
+      _lastPriceDataCount = _bitcoinPriceData.length;
+      _lastTotalBalance = _totalBalance;
+    }
+
+    // Always append current state as the final point for immediate visual updates
+    // This is cheap to compute and ensures the chart reflects the current balance
+    final result = List<WalletChartData>.from(_cachedBalanceChartData!);
+    final currentBalance = _getSelectedBalance();
+    final currentPrice = _getCurrentBtcPrice();
+    result.add(WalletChartData(
+      time: DateTime.now().millisecondsSinceEpoch.toDouble(),
+      value: currentPrice * currentBalance,
+    ));
+
+    return result;
+  }
+
   Widget _buildChartWidget() {
     // Get the top padding (status bar / notch / dynamic island height)
     final topPadding = MediaQuery.of(context).padding.top;
@@ -958,22 +1008,8 @@ class WalletScreenState extends State<WalletScreen>
       return SizedBox(height: AppTheme.cardPadding * 10 + topPadding);
     }
 
-    // Transform price data to historical balance value (balance at time × price)
-    final balanceChartData = _bitcoinPriceData.map((priceData) {
-      final balanceAtTime = _getBalanceAtTimestamp(priceData.time);
-      return WalletChartData(
-        time: priceData.time.toDouble(),
-        value: priceData.price * balanceAtTime,
-      );
-    }).toList();
-
-    // Append current state as the final point to ensure immediate visual updates for new transactions
-    final currentBalance = _getSelectedBalance();
-    final currentPrice = _getCurrentBtcPrice();
-    balanceChartData.add(WalletChartData(
-      time: DateTime.now().millisecondsSinceEpoch.toDouble(),
-      value: currentPrice * currentBalance,
-    ));
+    // Use cached chart data for better performance
+    final balanceChartData = _getBalanceChartData();
 
     return WalletMiniChart(
       data: balanceChartData,

@@ -65,6 +65,10 @@ class _AmountWidgetState extends State<AmountWidget>
   List<TextInputFormatter>? _cachedFormatters;
   bool _formattersNeedUpdate = true;
 
+  // Track service state to detect changes
+  bool _lastSwapped = false;
+  CurrencyType _lastUnit = CurrencyType.sats;
+
   // Cache for display values to avoid rebuilds
   String _displayFiat = "";
   String _displayBtc = "";
@@ -93,6 +97,10 @@ class _AmountWidgetState extends State<AmountWidget>
       initialUnit: widget.bitcoinUnit,
       onInputStateChange: widget.onInputStateChange,
     );
+
+    // Initialize tracking variables
+    _lastSwapped = initialSwapped;
+    _lastUnit = widget.bitcoinUnit;
 
     // Call the callback with initial state - only once
     if (widget.onInputStateChange != null) {
@@ -263,8 +271,12 @@ class _AmountWidgetState extends State<AmountWidget>
     return ListenableBuilder(
       listenable: _service,
       builder: (context, _) {
-        // Mark formatters for update when service state changes (swapped/unit)
-        _formattersNeedUpdate = true;
+        // Only mark formatters for update when service state actually changed
+        if (_lastSwapped != _service.swapped || _lastUnit != _service.currentUnit) {
+          _formattersNeedUpdate = true;
+          _lastSwapped = _service.swapped;
+          _lastUnit = _service.currentUnit;
+        }
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
