@@ -58,7 +58,8 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
   final TextEditingController outputCtrl = TextEditingController();
 
   BitcoinTransaction? transactionModel;
-  bool isLoading = true;
+  // Start with isLoading = false - show basic info immediately, load details in background
+  bool isLoading = false;
   bool hasError = false;
   String? txID;
   bool _isSettling = false;
@@ -73,10 +74,10 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     super.initState();
     txID = widget.txid;
     if (txID != null) {
+      // Load transaction details in background - don't block UI
+      // The fallback view shows immediately with basic info
       _loadTransaction();
       _loadRecipientAddress();
-    } else {
-      isLoading = false;
     }
   }
 
