@@ -22,7 +22,6 @@ class _ChangeLanguageState extends State<ChangeLanguage> {
   Widget build(BuildContext context) {
     final controller = context.read<SettingsController>();
     return ArkScaffoldUnsafe(
-      extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(
         text: AppLocalizations.of(context)!.language,

@@ -24,7 +24,6 @@ class _ChangeCurrencyState extends State<ChangeCurrency> {
   Widget build(BuildContext context) {
     final controller = context.read<SettingsController>();
     return ArkScaffoldUnsafe(
-      extendBodyBehindAppBar: true,
       context: context,
       appBar: BitNetAppBar(
         text: AppLocalizations.of(context)!.currency,
