@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
@@ -66,6 +68,7 @@ class WalletScreenState extends State<WalletScreen>
   final GlobalKey<TransactionHistoryWidgetState> _transactionHistoryKey =
       GlobalKey<TransactionHistoryWidgetState>();
   bool _wasKeyboardVisible = false;
+  Timer? _keyboardDebounceTimer;
 
   // Swap history
   final LendaSwapService _swapService = LendaSwapService();
@@ -139,8 +142,9 @@ class WalletScreenState extends State<WalletScreen>
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    // Detect keyboard dismiss and unfocus the transaction history search field
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Debounce keyboard detection to avoid ~60 callbacks during animation
+    _keyboardDebounceTimer?.cancel();
+    _keyboardDebounceTimer = Timer(const Duration(milliseconds: 100), () {
       if (!mounted) return;
       final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
       if (_wasKeyboardVisible && !keyboardVisible) {
@@ -237,6 +241,7 @@ class WalletScreenState extends State<WalletScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _keyboardDebounceTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
   }

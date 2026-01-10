@@ -1,7 +1,5 @@
-import 'package:ark_flutter/src/providers/theme_provider.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 Future<T?> arkBottomSheet<T>({
   required BuildContext context,
@@ -13,6 +11,11 @@ Future<T?> arkBottomSheet<T>({
   bool isDismissible = true,
   bool isScrollControlled = true,
 }) {
+  // Performance: Use MediaQuery.sizeOf instead of MediaQuery.of to only
+  // subscribe to size changes, not viewInsets (keyboard) changes.
+  // This prevents rebuilds when keyboard opens/closes.
+  final screenSize = MediaQuery.sizeOf(context);
+
   return showModalBottomSheet(
     context: context,
     elevation: 0.0,
@@ -20,8 +23,8 @@ Future<T?> arkBottomSheet<T>({
     isDismissible: isDismissible,
     isScrollControlled: isScrollControlled,
     constraints: BoxConstraints(
-      maxHeight: height ?? MediaQuery.of(context).size.height * 0.9,
-      maxWidth: width ?? MediaQuery.of(context).size.width,
+      maxHeight: height ?? screenSize.height * 0.9,
+      maxWidth: width ?? screenSize.width,
     ),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.only(
@@ -30,16 +33,14 @@ Future<T?> arkBottomSheet<T>({
       ),
     ),
     builder: (context) {
-      return Consumer<ThemeProvider>(
-        builder: (context, value, chid) => Material(
-          color: Colors.transparent,
-          child: ArkBottomSheetWidget(
-            height: height,
-            width: width,
-            borderRadius: borderRadius,
-            backgroundColor: backgroundColor,
-            child: child,
-          ),
+      return Material(
+        color: Colors.transparent,
+        child: ArkBottomSheetWidget(
+          height: height,
+          width: width,
+          borderRadius: borderRadius,
+          backgroundColor: backgroundColor,
+          child: child,
         ),
       );
     },
@@ -64,6 +65,18 @@ class ArkBottomSheetWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Cache theme lookup to avoid multiple calls
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+    final surfaceColor = backgroundColor != Colors.transparent
+        ? backgroundColor
+        : theme.colorScheme.surface;
+
+    final topRadius = BorderRadius.only(
+      topLeft: Radius.circular(borderRadius),
+      topRight: Radius.circular(borderRadius),
+    );
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -73,9 +86,7 @@ class ArkBottomSheetWidget extends StatelessWidget {
           height: AppTheme.elementSpacing / 1.375,
           width: AppTheme.cardPadding * 2.25,
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.light
-                ? Colors.grey.shade300
-                : Colors.grey.shade700,
+            color: isLight ? Colors.grey.shade300 : Colors.grey.shade700,
             borderRadius: BorderRadius.circular(AppTheme.borderRadiusCircular),
           ),
         ),
@@ -84,27 +95,23 @@ class ArkBottomSheetWidget extends StatelessWidget {
           child: Container(
             height: height,
             decoration: BoxDecoration(
-              color: backgroundColor != Colors.transparent
-                  ? backgroundColor
-                  : Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(borderRadius),
-                topRight: Radius.circular(borderRadius),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  spreadRadius: 0,
-                ),
-              ],
+              color: surfaceColor,
+              borderRadius: topRadius,
+              // Performance: Reduced blur radius and only apply shadow in dark mode
+              boxShadow: isLight
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4, // Reduced from 10
+                        spreadRadius: 0,
+                      ),
+                    ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(borderRadius),
-                topRight: Radius.circular(borderRadius),
-              ),
-              child: child,
+              borderRadius: topRadius,
+              // Performance: Wrap child in RepaintBoundary to isolate repaints
+              child: RepaintBoundary(child: child),
             ),
           ),
         ),
