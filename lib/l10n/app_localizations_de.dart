@@ -362,6 +362,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chooseYourPreferredCurrency => 'Wähle deine bevorzugte Währung';
 
   @override
+  String get preferences => 'Preferences';
+
+  @override
+  String get autoReadClipboard => 'Auto-read clipboard';
+
+  @override
+  String get autoReadClipboardDescription =>
+      'Automatically check clipboard for Bitcoin addresses when sending';
+
+  @override
   String get serverConfiguration => 'Serverkonfiguration';
 
   @override

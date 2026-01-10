@@ -37,6 +37,7 @@ class SettingsViewState extends State<SettingsView> {
   final SettingsService _settingsService = SettingsService();
   bool _wordRecoverySet = false;
   bool _showDeveloperOptions = false;
+  bool _showPreferences = false;
   bool _isExportingLogs = false;
 
   // Environment info
@@ -320,98 +321,154 @@ class SettingsViewState extends State<SettingsView> {
               // Recovery Options (with status indicator dot) - most important
               _buildRecoveryOptionsTile(context, controller),
 
-              // Language
+              // Preferences Section (collapsible)
               ArkListTile(
                 leading: RoundedButtonWidget(
-                  iconData: Icons.language,
-                  onTap: () => controller.switchTab('language'),
+                  iconData: Icons.tune_rounded,
+                  onTap: () =>
+                      setState(() => _showPreferences = !_showPreferences),
                   size: AppTheme.iconSize * 1.5,
                   buttonType: ButtonType.transparent,
                 ),
-                text: AppLocalizations.of(context)!.language,
+                text: AppLocalizations.of(context)!.preferences,
                 trailing: Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: AppTheme.iconSize * 0.75,
+                  _showPreferences
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: AppTheme.iconSize,
                   color: Theme.of(context).brightness == Brightness.dark
                       ? AppTheme.white60
                       : AppTheme.black60,
                 ),
-                onTap: () => controller.switchTab('language'),
+                onTap: () =>
+                    setState(() => _showPreferences = !_showPreferences),
               ),
 
-              // Timezone
-              ArkListTile(
-                leading: RoundedButtonWidget(
-                  iconData: Icons.access_time_rounded,
-                  onTap: () => controller.switchTab('timezone'),
-                  size: AppTheme.iconSize * 1.5,
-                  buttonType: ButtonType.transparent,
-                ),
-                text: AppLocalizations.of(context)!.timezone,
-                trailing: Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: AppTheme.iconSize * 0.75,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.white60
-                      : AppTheme.black60,
-                ),
-                onTap: () => controller.switchTab('timezone'),
-              ),
-
-              // Currency
-              ArkListTile(
-                leading: RoundedButtonWidget(
-                  iconData: Icons.currency_bitcoin,
-                  onTap: () => controller.switchTab('currency'),
-                  size: AppTheme.iconSize * 1.5,
-                  buttonType: ButtonType.transparent,
-                ),
-                text: AppLocalizations.of(context)!.currency,
-                trailing: Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: AppTheme.iconSize * 0.75,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.white60
-                      : AppTheme.black60,
-                ),
-                onTap: () => controller.switchTab('currency'),
-              ),
-
-              // Chart Time Range
-              Consumer<UserPreferencesService>(
-                builder: (context, userPrefs, _) => ArkListTile(
-                  leading: RoundedButtonWidget(
-                    iconData: Icons.show_chart_rounded,
-                    onTap: () => controller.switchTab('chart_time_range'),
-                    size: AppTheme.iconSize * 1.5,
-                    buttonType: ButtonType.transparent,
-                  ),
-                  text: 'Chart Time Range',
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
+              // Preferences Content
+              if (_showPreferences) ...[
+                Padding(
+                  padding: const EdgeInsets.only(left: AppTheme.cardPadding),
+                  child: Column(
                     children: [
-                      Text(
-                        userPrefs.getChartTimeRangeLabel(),
-                        style: TextStyle(
+                      // Language
+                      ArkListTile(
+                        leading: RoundedButtonWidget(
+                          iconData: Icons.language,
+                          onTap: () => controller.switchTab('language'),
+                          size: AppTheme.iconSize * 1.5,
+                          buttonType: ButtonType.transparent,
+                        ),
+                        text: AppLocalizations.of(context)!.language,
+                        trailing: Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: AppTheme.iconSize * 0.75,
                           color: Theme.of(context).brightness == Brightness.dark
                               ? AppTheme.white60
                               : AppTheme.black60,
-                          fontSize: 14,
+                        ),
+                        onTap: () => controller.switchTab('language'),
+                      ),
+
+                      // Timezone
+                      ArkListTile(
+                        leading: RoundedButtonWidget(
+                          iconData: Icons.access_time_rounded,
+                          onTap: () => controller.switchTab('timezone'),
+                          size: AppTheme.iconSize * 1.5,
+                          buttonType: ButtonType.transparent,
+                        ),
+                        text: AppLocalizations.of(context)!.timezone,
+                        trailing: Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: AppTheme.iconSize * 0.75,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppTheme.white60
+                              : AppTheme.black60,
+                        ),
+                        onTap: () => controller.switchTab('timezone'),
+                      ),
+
+                      // Currency
+                      ArkListTile(
+                        leading: RoundedButtonWidget(
+                          iconData: Icons.currency_bitcoin,
+                          onTap: () => controller.switchTab('currency'),
+                          size: AppTheme.iconSize * 1.5,
+                          buttonType: ButtonType.transparent,
+                        ),
+                        text: AppLocalizations.of(context)!.currency,
+                        trailing: Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: AppTheme.iconSize * 0.75,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppTheme.white60
+                              : AppTheme.black60,
+                        ),
+                        onTap: () => controller.switchTab('currency'),
+                      ),
+
+                      // Chart Time Range
+                      Consumer<UserPreferencesService>(
+                        builder: (context, userPrefs, _) => ArkListTile(
+                          leading: RoundedButtonWidget(
+                            iconData: Icons.show_chart_rounded,
+                            onTap: () =>
+                                controller.switchTab('chart_time_range'),
+                            size: AppTheme.iconSize * 1.5,
+                            buttonType: ButtonType.transparent,
+                          ),
+                          text: 'Chart Time Range',
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                userPrefs.getChartTimeRangeLabel(),
+                                style: TextStyle(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppTheme.white60
+                                      : AppTheme.black60,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: AppTheme.iconSize * 0.75,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                              ),
+                            ],
+                          ),
+                          onTap: () => controller.switchTab('chart_time_range'),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: AppTheme.iconSize * 0.75,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppTheme.white60
-                            : AppTheme.black60,
+
+                      // Auto-read clipboard
+                      Consumer<UserPreferencesService>(
+                        builder: (context, userPrefs, _) => ArkListTile(
+                          leading: RoundedButtonWidget(
+                            iconData: Icons.content_paste_rounded,
+                            onTap: () => userPrefs.toggleAutoReadClipboard(),
+                            size: AppTheme.iconSize * 1.5,
+                            buttonType: ButtonType.transparent,
+                          ),
+                          text: AppLocalizations.of(context)!.autoReadClipboard,
+                          trailing: Switch.adaptive(
+                            value: userPrefs.autoReadClipboard,
+                            onChanged: (value) =>
+                                userPrefs.setAutoReadClipboard(value),
+                            activeColor: AppTheme.primaryColor,
+                          ),
+                          onTap: () => userPrefs.toggleAutoReadClipboard(),
+                        ),
                       ),
                     ],
                   ),
-                  onTap: () => controller.switchTab('chart_time_range'),
                 ),
-              ),
+              ],
 
               // Legal / AGB & Impressum
               ArkListTile(

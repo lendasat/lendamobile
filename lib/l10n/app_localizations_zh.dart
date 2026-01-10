@@ -349,6 +349,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chooseYourPreferredCurrency => '选择您偏好的货币';
 
   @override
+  String get preferences => 'Preferences';
+
+  @override
+  String get autoReadClipboard => 'Auto-read clipboard';
+
+  @override
+  String get autoReadClipboardDescription =>
+      'Automatically check clipboard for Bitcoin addresses when sending';
+
+  @override
   String get serverConfiguration => '服务器配置';
 
   @override
