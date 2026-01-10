@@ -43,6 +43,7 @@ class SendScreen extends StatefulWidget {
   final double availableSats;
   final String? initialAddress;
   final bool fromClipboard;
+  final double? bitcoinPrice; // Pass cached price to avoid network delay
 
   const SendScreen({
     super.key,
@@ -50,6 +51,7 @@ class SendScreen extends StatefulWidget {
     required this.availableSats,
     this.initialAddress,
     this.fromClipboard = false,
+    this.bitcoinPrice,
   });
 
   @override
@@ -116,23 +118,29 @@ class SendScreenState extends State<SendScreen> {
     _btcController.text = '';
     _currController.text = '';
 
+    // Use passed bitcoin price immediately if available (avoids network delay)
+    if (widget.bitcoinPrice != null && widget.bitcoinPrice! > 0) {
+      _bitcoinPrice = widget.bitcoinPrice;
+    }
+
     // Listen to address changes
     _addressController.addListener(_onAddressChanged);
 
     // Set initial address if provided (e.g., from QR scan or recipient search)
     if (widget.initialAddress != null && widget.initialAddress!.isNotEmpty) {
       _addressController.text = widget.initialAddress!;
+      // Process address synchronously - don't wait for post-frame callback
+      // This parses the invoice and sets sats/btc/fiat values immediately
+      _processAddressChange();
+      // Request focus after first frame (if amount not locked)
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Process address synchronously first to determine if amount is locked
-        _processAddressChange();
-        // Only autofocus amount field if amount is NOT locked (from invoice)
-        if (!_isAmountLocked) {
+        if (!_isAmountLocked && mounted) {
           _amountFocusNode.requestFocus();
         }
       });
     }
 
-    // Fetch bitcoin price
+    // Fetch fresh bitcoin price in background (updates if different from cached)
     _fetchBitcoinPrice();
   }
 
