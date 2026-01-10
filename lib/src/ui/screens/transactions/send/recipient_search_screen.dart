@@ -5,6 +5,7 @@ import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/recipient_storage_service.dart';
+import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/send/send_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
@@ -61,9 +62,16 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
   }
 
   /// Check clipboard for a valid Bitcoin/Lightning address and auto-paste
+  /// Only runs if autoReadClipboard preference is enabled
   Future<void> _checkClipboard() async {
     if (_clipboardChecked) return;
     _clipboardChecked = true;
+
+    // Check if auto-read clipboard is enabled in preferences
+    final userPrefs = context.read<UserPreferencesService>();
+    if (!userPrefs.autoReadClipboard) {
+      return;
+    }
 
     try {
       final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
@@ -502,6 +510,7 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final iconColor = isDark ? AppTheme.white90 : AppTheme.black90;
     const buttonSize = 48.0;
+    const hitboxPadding = 8.0;
 
     return Positioned(
       left: 0,
@@ -552,20 +561,21 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
                       onTap: _pickImageAndScan,
                       iconColor: iconColor,
                       size: buttonSize,
+                      hitboxPadding: hitboxPadding,
                     ),
-                    const SizedBox(width: AppTheme.elementSpacing),
                     _buildActionButton(
                       icon: CupertinoIcons.qrcode_viewfinder,
                       onTap: _handleQRScan,
                       iconColor: iconColor,
                       size: buttonSize,
+                      hitboxPadding: hitboxPadding,
                     ),
-                    const SizedBox(width: AppTheme.elementSpacing),
                     _buildActionButton(
                       icon: CupertinoIcons.doc_on_clipboard_fill,
                       onTap: _pasteFromClipboard,
                       iconColor: iconColor,
                       size: buttonSize,
+                      hitboxPadding: hitboxPadding,
                     ),
                   ],
                 ),
@@ -582,18 +592,22 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
     required VoidCallback onTap,
     required Color iconColor,
     required double size,
+    double hitboxPadding = 0,
   }) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Center(
-          child: Icon(
-            icon,
-            color: iconColor,
-            size: 24,
+      child: Padding(
+        padding: EdgeInsets.all(hitboxPadding),
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Center(
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: 24,
+            ),
           ),
         ),
       ),
