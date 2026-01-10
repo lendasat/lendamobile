@@ -549,27 +549,27 @@ class WalletScreenState extends State<WalletScreen>
     }
   }
 
-  // void _toggleBalanceType() {
-  //   setState(() {
-  //     switch (_currentBalanceType) {
-  //       case BalanceType.total:
-  //         _currentBalanceType = BalanceType.pending;
-  //         break;
-  //       case BalanceType.pending:
-  //         _currentBalanceType = BalanceType.confirmed;
-  //         break;
-  //       case BalanceType.confirmed:
-  //         _currentBalanceType = BalanceType.total;
-  //         break;
-  //     }
-  //   });
-  //
-  //   OverlayService().showOverlay(
-  //     AppLocalizations.of(context)!
-  //         .showingBalanceType(_currentBalanceType.name),
-  //     color: AppTheme.colorBitcoin,
-  //   );
-  // }
+  void _toggleBalanceType() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      switch (_currentBalanceType) {
+        case BalanceType.total:
+          _currentBalanceType = BalanceType.pending;
+          break;
+        case BalanceType.pending:
+          _currentBalanceType = BalanceType.confirmed;
+          break;
+        case BalanceType.confirmed:
+          _currentBalanceType = BalanceType.total;
+          break;
+      }
+    });
+
+    OverlayService().showOverlay(
+      'Showing ${_currentBalanceType.name} balance',
+      color: AppTheme.colorBitcoin,
+    );
+  }
 
   void _toggleBalanceVisibility() {
     HapticFeedback.lightImpact();
@@ -1096,6 +1096,7 @@ class WalletScreenState extends State<WalletScreen>
           PostHogMaskWidget(
             child: GestureDetector(
               onTap: _toggleDisplayUnit,
+              onDoubleTap: _toggleBalanceType,
               onLongPress: _toggleBalanceVisibility,
               behavior: HitTestBehavior.opaque,
               child: SizedBox(
