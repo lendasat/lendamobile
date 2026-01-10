@@ -9,7 +9,6 @@ import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/moonpay_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
-import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
@@ -44,8 +43,19 @@ class _BuyScreenState extends State<BuyScreen> {
   int _quoteTimer = 20;
   Timer? _timer;
 
-  String _paymentMethodName = 'Credit or Debit Card';
-  String _paymentMethodId = 'credit_debit_card';
+  String _paymentMethodName = 'SEPA Bank Payments';
+  String _paymentMethodId = 'sepa_bank_transfer';
+  double _paymentMethodFee = 1.0; // Default SEPA fee (lowest)
+
+  // MoonPay fee structure by payment method
+  static const Map<String, double> _feesByMethod = {
+    'credit_debit_card': 4.5,
+    'google_pay': 4.5,
+    'apple_pay': 4.5,
+    'paypal': 4.5,
+    'stripe': 4.5,
+    'sepa_bank_transfer': 1.0,
+  };
 
   // Provider state
   final String _providerName = 'MoonPay';
@@ -95,16 +105,20 @@ class _BuyScreenState extends State<BuyScreen> {
 
   Future<void> _fetchLimits() async {
     try {
+      logger.i(
+          '[BuyScreen] Fetching limits for payment method: $_paymentMethodId');
       final limits = await MoonPayService().getCurrencyLimits(
         baseCurrencyCode: 'usd',
         paymentMethod: _paymentMethodId,
       );
 
+      logger.i(
+          '[BuyScreen] Limits fetched: min=${limits.quoteCurrency.minBuyAmount} BTC, max=${limits.quoteCurrency.maxBuyAmount} BTC');
       setState(() {
         _limits = limits;
       });
     } catch (e) {
-      logger.e('Error fetching limits: $e');
+      logger.e('[BuyScreen] Error fetching limits: $e');
       rethrow;
     }
   }
@@ -142,8 +156,15 @@ class _BuyScreenState extends State<BuyScreen> {
   }
 
   bool _isValidAmount() {
-    return _inputState == 'in' &&
-        (_btcController.text.isNotEmpty || _satController.text.isNotEmpty);
+    // Check if there's a valid amount entered and it's within bounds
+    final hasAmount = _satController.text.isNotEmpty &&
+        int.tryParse(_satController.text) != null &&
+        int.parse(_satController.text) > 0;
+    final isWithinBounds = _allowedAmountDifference == 0;
+    final isValid = hasAmount && isWithinBounds;
+    logger.d(
+        '[BuyScreen] _isValidAmount: $isValid (hasAmount=$hasAmount, isWithinBounds=$isWithinBounds, sat=${_satController.text}, allowedDiff=$_allowedAmountDifference)');
+    return isValid;
   }
 
   Future<void> _processPurchase() async {
@@ -162,24 +183,30 @@ class _BuyScreenState extends State<BuyScreen> {
         'paymentMethod': _paymentMethodId,
       };
 
-      final encryptedData = await MoonPayService().encryptData(queryParams);
+      final moonpayService = MoonPayService();
 
-      final settingsService = SettingsService();
-      final websiteUrl = await settingsService.getWebsiteUrl();
+      // Debug: Print MoonPay configuration
+      moonpayService.printConfig();
+
+      final encryptedData = await moonpayService.encryptData(queryParams);
+
+      // Use MoonPay webview link from environment variables
+      final websiteUrl = moonpayService.webviewLink;
+      logger.i('[MoonPay] Using webview link: $websiteUrl');
 
       final websiteUri = Uri.parse(websiteUrl);
       final moonpayUrl = Uri(
         scheme: websiteUri.scheme,
         host: websiteUri.host,
         port: websiteUri.port,
-        path: '/moonpay_onramp',
+        path: '/moonpay/onramp',
         queryParameters: {
           'data': encryptedData.ciphertext,
           'value': encryptedData.iv,
         },
       );
 
-      logger.i('Launching MoonPay: $moonpayUrl');
+      logger.i('[MoonPay] Launching URL: $moonpayUrl');
 
       try {
         await launchUrl(
@@ -367,9 +394,7 @@ class _BuyScreenState extends State<BuyScreen> {
                           customWidth: MediaQuery.of(context).size.width * 0.9,
                           title: l10n.buyBitcoin,
                           isLoading: _isProcessing,
-                          enabled: _isValidAmount() &&
-                              !_isProcessing &&
-                              _allowedAmountDifference == 0,
+                          enabled: _isValidAmount() && !_isProcessing,
                           onTap: _processPurchase,
                           buttonType: ButtonType.solid,
                         ),
@@ -533,6 +558,19 @@ class _BuyScreenState extends State<BuyScreen> {
                 top: 16.0,
               ),
               text: _paymentMethodName,
+              subtitle: Text(
+                '$_paymentMethodFee% fee',
+                style: TextStyle(
+                  color: _paymentMethodFee <= 1.0
+                      ? AppTheme.successColor
+                      : Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.color
+                          ?.withValues(alpha: 0.7),
+                  fontSize: 12,
+                ),
+              ),
               onTap: () async {
                 final result = await Navigator.of(context).push(
                   MaterialPageRoute(
@@ -545,6 +583,7 @@ class _BuyScreenState extends State<BuyScreen> {
                   setState(() {
                     _paymentMethodName = result['name']!;
                     _paymentMethodId = result['id']!;
+                    _paymentMethodFee = _feesByMethod[_paymentMethodId] ?? 4.5;
                   });
                   await _fetchLimits();
                 }

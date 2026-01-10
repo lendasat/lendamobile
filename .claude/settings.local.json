@@ -45,7 +45,15 @@
       "Bash(\"/mnt/c/Program Files/Android/Android Studio/jbr/bin/java.exe\" -version)",
       "Bash(powershell.exe -Command \"cd ''''C:\\\\Users\\\\tobia\\\\StudioProjects\\\\lendamobile''''; flutter build apk --debug\")",
       "Bash(1 --manifest-path /mnt/c/Users/tobia/StudioProjects/lendamobile/rust/Cargo.toml)",
-      "Bash(git worktree:*)"
+      "Bash(git worktree:*)",
+      "Bash(curl:*)",
+      "Bash(ip addr:*)",
+      "Bash(lsof:*)",
+      "Bash(fuser:*)",
+      "Bash(ss:*)",
+      "Bash(netstat:*)",
+      "Bash(powershell.exe -Command \"Invoke-WebRequest -Uri http://localhost:3000 -TimeoutSec 5 -UseBasicParsing | Select-Object -ExpandProperty StatusCode\")",
+      "Bash(powershell.exe -Command \"Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force; Remove-Item -Force ''C:\\\\website\\\\.next\\\\dev\\\\lock'' -ErrorAction SilentlyContinue; Write-Host ''Done - try yarn dev again''\")"
     ],
     "deny": [],
     "ask": []

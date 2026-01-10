@@ -24,10 +24,21 @@ class PaymentMethodsScreen extends StatefulWidget {
 class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   late String _selectedMethodId;
 
+  // MoonPay fee structure by payment method
+  // Source: https://support.moonpay.com/customers/docs/moonpay-fees
+  static const Map<String, PaymentMethodFee> _fees = {
+    'credit_debit_card': PaymentMethodFee(percentage: 4.5, minFee: 3.99),
+    'google_pay': PaymentMethodFee(percentage: 4.5, minFee: 3.99),
+    'apple_pay': PaymentMethodFee(percentage: 4.5, minFee: 3.99),
+    'paypal': PaymentMethodFee(percentage: 4.5, minFee: 3.99),
+    'stripe': PaymentMethodFee(percentage: 4.5, minFee: 3.99),
+    'sepa_bank_transfer': PaymentMethodFee(percentage: 1.0, minFee: 3.99),
+  };
+
   @override
   void initState() {
     super.initState();
-    _selectedMethodId = widget.initialMethodId ?? 'credit_debit_card';
+    _selectedMethodId = widget.initialMethodId ?? 'sepa_bank_transfer';
   }
 
   void _selectMethod(String id, String name) {
@@ -76,6 +87,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
               id: "credit_debit_card",
               name: "Credit or Debit Card",
               icon: const Icon(Icons.wallet_rounded),
+              fee: _fees['credit_debit_card'],
             ),
 
             // Google Pay
@@ -83,6 +95,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
               id: "google_pay",
               name: "Google Pay",
               icon: const Icon(FontAwesomeIcons.google),
+              fee: _fees['google_pay'],
             ),
 
             // Apple Pay (iOS only)
@@ -91,6 +104,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                 id: "apple_pay",
                 name: "Apple Pay",
                 icon: const Icon(FontAwesomeIcons.applePay, size: 32),
+                fee: _fees['apple_pay'],
               ),
 
             // PayPal
@@ -98,6 +112,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
               id: "paypal",
               name: "PayPal",
               icon: const Icon(FontAwesomeIcons.paypal, size: 32),
+              fee: _fees['paypal'],
             ),
 
             // Stripe
@@ -105,13 +120,16 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
               id: "stripe",
               name: "Stripe",
               icon: const Icon(FontAwesomeIcons.stripe, size: 32),
+              fee: _fees['stripe'],
             ),
 
-            // SEPA Bank Payments
+            // SEPA Bank Payments (lowest fee!)
             _buildPaymentMethodTile(
               id: "sepa_bank_transfer",
               name: "SEPA Bank Payments",
               icon: const Icon(Icons.account_balance),
+              fee: _fees['sepa_bank_transfer'],
+              isRecommended: true,
             ),
           ],
         ),
@@ -123,11 +141,16 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
     required String id,
     required String name,
     required Widget icon,
+    PaymentMethodFee? fee,
+    bool isRecommended = false,
   }) {
     final isSelected = _selectedMethodId == id;
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.cardPadding,
+        vertical: 8.0,
+      ),
       child: GlassContainer(
         opacity: 0.05,
         child: ArkListTile(
@@ -139,6 +162,48 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
             top: 16.0,
           ),
           text: name,
+          subtitle: fee != null
+              ? Row(
+                  children: [
+                    Text(
+                      '${fee.percentage}% fee',
+                      style: TextStyle(
+                        color: isRecommended
+                            ? AppTheme.successColor
+                            : Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.color
+                                ?.withValues(alpha: 0.7),
+                        fontSize: 12,
+                        fontWeight:
+                            isRecommended ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                    if (isRecommended) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.successColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Lowest Fee',
+                          style: TextStyle(
+                            color: AppTheme.successColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                )
+              : null,
           onTap: () => _selectMethod(id, name),
           leading: ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -154,4 +219,15 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
       ),
     );
   }
+}
+
+/// Fee structure for a payment method
+class PaymentMethodFee {
+  final double percentage;
+  final double minFee;
+
+  const PaymentMethodFee({
+    required this.percentage,
+    required this.minFee,
+  });
 }
