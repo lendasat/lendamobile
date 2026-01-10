@@ -195,6 +195,12 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
           ),
           _buildSection(
             context,
+            icon: Icons.swap_horiz_outlined,
+            title: AppLocalizations.of(context)!.agbBuyingSelling,
+            content: AppLocalizations.of(context)!.agbBuyingSellingContent,
+          ),
+          _buildSection(
+            context,
             icon: Icons.gavel_outlined,
             title: AppLocalizations.of(context)!.agbLiabilityTitle,
             content: AppLocalizations.of(context)!.agbLiabilityContent,
