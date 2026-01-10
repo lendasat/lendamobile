@@ -80,10 +80,12 @@ class AmountWidgetService extends ChangeNotifier {
   void _syncBitcoinControllers() {
     if (_currentUnit == CurrencyType.sats) {
       final sats = double.tryParse(_satController!.text) ?? 0;
-      _btcController!.text = (sats / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
+      _btcController!.text =
+          (sats / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
     } else {
       final btc = double.tryParse(_btcController!.text) ?? 0;
-      _satController!.text = (btc * BitcoinConstants.satsPerBtc).toInt().toString();
+      _satController!.text =
+          (btc * BitcoinConstants.satsPerBtc).toInt().toString();
     }
   }
 
@@ -118,8 +120,10 @@ class AmountWidgetService extends ChangeNotifier {
 
   /// Update bitcoin display value from current fiat amount
   void _updateBitcoinFromFiat(double? bitcoinPrice, double? fiatRate) {
-    // Check if there's actual input
-    if (_currController!.text.isEmpty || bitcoinPrice == null || fiatRate == null) {
+    // Check if fiat controller has input
+    final hasFiatInput = _currController!.text.isNotEmpty;
+
+    if (!hasFiatInput || bitcoinPrice == null || fiatRate == null) {
       _cachedBtcDisplay = "";
       return;
     }
@@ -127,16 +131,32 @@ class AmountWidgetService extends ChangeNotifier {
     final currAmount = double.tryParse(_currController!.text) ?? 0.0;
 
     final btcAmount = currAmount / (bitcoinPrice * fiatRate);
-    final satAmount = (btcAmount * BitcoinConstants.satsPerBtc).round();
+    final newSatAmount = (btcAmount * BitcoinConstants.satsPerBtc).round();
+
+    // Get current sats value to compare
+    final currentSatAmount = int.tryParse(_satController!.text) ?? 0;
+
+    // IMPORTANT: Never increase sats when reconverting from fiat
+    // This prevents "not enough funds" errors when Max button sets exact sats
+    // and fiat rounding would result in slightly higher sats
+    final satAmount = (currentSatAmount > 0 && newSatAmount > currentSatAmount)
+        ? currentSatAmount
+        : newSatAmount;
+
+    // Recalculate btc from the (possibly capped) sat amount
+    final finalBtcAmount =
+        (currentSatAmount > 0 && newSatAmount > currentSatAmount)
+            ? currentSatAmount / BitcoinConstants.satsPerBtc
+            : btcAmount;
 
     // Update controllers for when user swaps back
     if (!_preventConversion) {
-      _btcController!.text = btcAmount.toStringAsFixed(8);
+      _btcController!.text = finalBtcAmount.toStringAsFixed(8);
       _satController!.text = satAmount.toString();
     }
 
     _cachedBtcDisplay = _currentUnit == CurrencyType.bitcoin
-        ? btcAmount.toStringAsFixed(8)
+        ? finalBtcAmount.toStringAsFixed(8)
         : satAmount.toString();
   }
 
