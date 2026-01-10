@@ -102,6 +102,11 @@ class _AmountWidgetState extends State<AmountWidget>
     _lastSwapped = initialSwapped;
     _lastUnit = widget.bitcoinUnit;
 
+    // Listen to controller changes (for programmatic updates like Max button)
+    widget.satController.addListener(_onControllerChanged);
+    widget.btcController.addListener(_onControllerChanged);
+    widget.currController.addListener(_onControllerChanged);
+
     // Call the callback with initial state - only once
     if (widget.onInputStateChange != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -118,8 +123,21 @@ class _AmountWidgetState extends State<AmountWidget>
     });
   }
 
+  /// Called when any controller text changes (including programmatic changes)
+  void _onControllerChanged() {
+    if (!mounted) return;
+    // Update conversions and trigger rebuild
+    _updateConversions();
+    setState(() {});
+  }
+
   @override
   void dispose() {
+    // Remove controller listeners to prevent memory leaks
+    widget.satController.removeListener(_onControllerChanged);
+    widget.btcController.removeListener(_onControllerChanged);
+    widget.currController.removeListener(_onControllerChanged);
+
     WidgetsBinding.instance.removeObserver(this);
     _keyboardDebounceTimer?.cancel();
     _service.dispose();
