@@ -1,6 +1,8 @@
-import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
+import 'dart:async';
+
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:provider/provider.dart';
@@ -57,6 +59,15 @@ class _AmountWidgetState extends State<AmountWidget>
     with WidgetsBindingObserver {
   late AmountWidgetService _service;
   bool _wasKeyboardVisible = false;
+  Timer? _keyboardDebounceTimer;
+
+  // Cached input formatters - created once, updated when needed
+  List<TextInputFormatter>? _cachedFormatters;
+  bool _formattersNeedUpdate = true;
+
+  // Cache for display values to avoid rebuilds
+  String _displayFiat = "";
+  String _displayBtc = "";
 
   @override
   void initState() {
@@ -66,41 +77,67 @@ class _AmountWidgetState extends State<AmountWidget>
 
     _service = AmountWidgetService();
 
+    // Determine initial swapped state based on user's display preference
+    // showCoinBalance = true means user prefers BTC/sats (swapped = false)
+    // showCoinBalance = false means user prefers fiat (swapped = true)
+    final currencyService = context.read<CurrencyPreferenceService>();
+    final initialSwapped = !currencyService.showCoinBalance;
+
     _service.initialize(
       btcController: widget.btcController,
       satController: widget.satController,
       currController: widget.currController,
-      initialSwapped: widget.swapped,
+      initialSwapped: initialSwapped,
       preventConversionValue: widget.preventConversion?.call() ?? false,
       enabledValue: widget.enabled?.call() ?? true,
       initialUnit: widget.bitcoinUnit,
       onInputStateChange: widget.onInputStateChange,
     );
 
-    // Call the callback with initial state
+    // Call the callback with initial state - only once
     if (widget.onInputStateChange != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         widget.onInputStateChange!(
-          _service.swapped
+          initialSwapped
               ? "currency"
               : _service.currentUnit.name.toLowerCase(),
         );
       });
     }
+
+    // Initial conversion calculation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateConversions();
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _keyboardDebounceTimer?.cancel();
     _service.dispose();
     super.dispose();
   }
 
   @override
+  void didUpdateWidget(AmountWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Mark formatters for update if relevant props changed
+    if (oldWidget.boundType != widget.boundType ||
+        oldWidget.lowerBound != widget.lowerBound ||
+        oldWidget.upperBound != widget.upperBound ||
+        oldWidget.bitcoinPrice != widget.bitcoinPrice) {
+      _formattersNeedUpdate = true;
+    }
+  }
+
+  @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    // Detect keyboard dismiss and unfocus the amount field
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Debounce keyboard detection to avoid 60+ calls during animation
+    _keyboardDebounceTimer?.cancel();
+    _keyboardDebounceTimer = Timer(const Duration(milliseconds: 100), () {
       if (!mounted) return;
       final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
       if (_wasKeyboardVisible && !keyboardVisible) {
@@ -111,17 +148,119 @@ class _AmountWidgetState extends State<AmountWidget>
     });
   }
 
+  /// Get fiat rate from currency service
+  double? _getFiatRate(CurrencyPreferenceService currencyService) {
+    final exchangeRates = currencyService.exchangeRates;
+    return exchangeRates?.rates[currencyService.code];
+  }
+
+  /// Update conversions when input changes - called from onChanged, NOT build
+  void _updateConversions() {
+    final currencyService = context.read<CurrencyPreferenceService>();
+    final fiatRate = _getFiatRate(currencyService);
+
+    _service.onInputChanged(
+      bitcoinPrice: widget.bitcoinPrice,
+      fiatRate: fiatRate,
+    );
+
+    // Update cached display values
+    _displayFiat = _service.cachedFiatDisplay;
+    _displayBtc = _service.cachedBtcDisplay;
+
+    // Handle auto-convert if enabled
+    if (widget.autoConvert && !_service.swapped) {
+      final amount = _service.currentUnit == CurrencyType.bitcoin
+          ? double.tryParse(widget.btcController.text.isEmpty ? "0" : widget.btcController.text) ?? 0.0
+          : double.tryParse(widget.satController.text.isEmpty ? "0" : widget.satController.text) ?? 0.0;
+
+      final unitEquivalent = _service.convertToBitcoinUnit(amount, _service.currentUnit);
+      _service.processAutoConvert(unitEquivalent);
+    }
+  }
+
+  /// Handle text input changes
+  void _handleInputChange(String text) {
+    _updateConversions();
+
+    // Notify parent of amount change
+    if (widget.onAmountChange != null) {
+      final currencyService = context.read<CurrencyPreferenceService>();
+      final currencyType = _service.swapped
+          ? currencyService.code
+          : _service.currentUnit.name;
+      widget.onAmountChange!(
+        currencyType,
+        widget.btcController.text.isEmpty ? '0' : widget.btcController.text,
+      );
+    }
+
+    // Trigger rebuild to update display
+    setState(() {});
+  }
+
+  /// Get or create cached input formatters
+  List<TextInputFormatter> _getInputFormatters(double? bitcoinPrice) {
+    if (!_formattersNeedUpdate && _cachedFormatters != null) {
+      return _cachedFormatters!;
+    }
+
+    List<TextInputFormatter> formatters = [];
+
+    // Add bound input formatter if boundType exists
+    if (widget.boundType != null && bitcoinPrice != null) {
+      formatters.add(
+        BoundInputFormatter(
+          swapped: _service.swapped,
+          lowerBound: widget.lowerBound ?? 0,
+          upperBound: widget.upperBound ?? 999999999999999,
+          boundType: widget.boundType!,
+          valueType: _service.currentUnit,
+          bitcoinPrice: bitcoinPrice,
+          overBound: widget.overBoundFunc,
+          underBound: widget.underBoundFunc,
+          inBound: widget.inBoundFunc,
+        ),
+      );
+    }
+
+    // Add filtering formatter based on unit and swapped state
+    if (_service.currentUnit == CurrencyType.sats && !_service.swapped) {
+      formatters.add(FilteringTextInputFormatter.allow(RegExp(r'(^\d+)')));
+    } else {
+      formatters.add(const CommaToDecimalFormatter());
+      formatters.add(
+        FilteringTextInputFormatter.allow(RegExp(r'(^\d*\.?\d*)')),
+      );
+    }
+
+    // Add numerical range formatter
+    formatters.add(
+      NumericalRangeFormatter(
+        min: 0,
+        max: (widget.upperBound != null && widget.upperBound! > 99999999999)
+            ? widget.upperBound!.toDouble()
+            : 99999999999,
+      ),
+    );
+
+    _cachedFormatters = formatters;
+    _formattersNeedUpdate = false;
+    return formatters;
+  }
+
   @override
   Widget build(BuildContext context) {
     final materialTheme = Theme.of(context);
     final bitcoinPrice = widget.bitcoinPrice;
-    final currencyService = context.watch<CurrencyPreferenceService>();
+    // Use read instead of watch - we update display via setState in _handleInputChange
+    final currencyService = context.read<CurrencyPreferenceService>();
 
     return ListenableBuilder(
       listenable: _service,
       builder: (context, _) {
-        final currencyType =
-            _service.swapped ? currencyService.code : _service.currentUnit.name;
+        // Mark formatters for update when service state changes (swapped/unit)
+        _formattersNeedUpdate = true;
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
@@ -138,46 +277,12 @@ class _AmountWidgetState extends State<AmountWidget>
                   }
                 },
                 textAlign: TextAlign.left,
-                onChanged: (text) {
-                  if (!_service.swapped) {
-                    if (_service.currentUnit == CurrencyType.sats) {
-                      widget.btcController.text = (double.tryParse(
-                                widget.satController.text,
-                              ) ??
-                              0 / BitcoinConstants.satsPerBtc)
-                          .toStringAsFixed(8);
-                    } else {
-                      widget.satController.text =
-                          ((double.tryParse(widget.btcController.text) ?? 0) *
-                                  BitcoinConstants.satsPerBtc)
-                              .toInt()
-                              .toString();
-                    }
-                  }
-                  if (widget.onAmountChange != null && !_service.swapped) {
-                    widget.onAmountChange!(
-                      currencyType,
-                      widget.btcController.text.isEmpty
-                          ? '0'
-                          : widget.btcController.text,
-                    );
-                  }
-                },
+                onChanged: _handleInputChange,
                 maxLength: widget.lowerBound != null ? 20 : 10,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                inputFormatters: _service.getInputFormatters(
-                  hasBoundType: widget.boundType != null,
-                  context: context,
-                  bitcoinPrice: bitcoinPrice,
-                  lowerBound: widget.lowerBound,
-                  upperBound: widget.upperBound,
-                  boundType: widget.boundType,
-                  overBoundCallback: widget.overBoundFunc,
-                  underBoundCallback: widget.underBoundFunc,
-                  inBoundCallback: widget.inBoundFunc,
-                ),
+                inputFormatters: _getInputFormatters(bitcoinPrice),
                 decoration: InputDecoration(
                   suffixIcon: _service.swapped
                       ? Column(
@@ -219,8 +324,14 @@ class _AmountWidgetState extends State<AmountWidget>
               // Conversion display - tap to swap
               GestureDetector(
                 onTap: () {
-                  _service.toggleSwapped(bitcoinPrice);
+                  final fiatRate = _getFiatRate(currencyService);
+                  _service.toggleSwapped(bitcoinPrice, fiatRate);
                   widget.focusNode.unfocus();
+
+                  // Update display values after swap
+                  _displayFiat = _service.cachedFiatDisplay;
+                  _displayBtc = _service.cachedBtcDisplay;
+
                   if (widget.onAmountChange != null) {
                     widget.onAmountChange!(
                       _service.currentUnit.name,
@@ -230,10 +341,8 @@ class _AmountWidgetState extends State<AmountWidget>
                 },
                 behavior: HitTestBehavior.opaque,
                 child: !_service.swapped
-                    ? _buildBitcoinToMoneyWidget(
-                        context, bitcoinPrice, currencyService)
-                    : _buildMoneyToBitcoinWidget(
-                        context, bitcoinPrice, currencyService),
+                    ? _buildBitcoinToMoneyDisplay(context, bitcoinPrice, currencyService)
+                    : _buildMoneyToBitcoinDisplay(context, currencyService),
               ),
             ],
           ),
@@ -242,161 +351,53 @@ class _AmountWidgetState extends State<AmountWidget>
     );
   }
 
-  Widget _buildBitcoinToMoneyWidget(
+  /// Display fiat equivalent - NO conversions here, just display cached value
+  Widget _buildBitcoinToMoneyDisplay(
     BuildContext context,
     double? bitcoinPrice,
     CurrencyPreferenceService currencyService,
   ) {
     final materialTheme = Theme.of(context);
+    final textColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
 
-    if (bitcoinPrice == null) {
+    // Show placeholder if no value or no price
+    if (_displayFiat.isEmpty || bitcoinPrice == null) {
       return Text(
-        "≈ ${currencyService.formatAmount(0.0)}",
-        style: materialTheme.textTheme.bodyLarge?.copyWith(
-            color:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
+        "\u2248 ${currencyService.symbol}0",
+        style: materialTheme.textTheme.bodyLarge?.copyWith(color: textColor),
       );
     }
 
-    final amount = _service.currentUnit == CurrencyType.bitcoin
-        ? double.tryParse(
-              widget.btcController.text.isEmpty
-                  ? "0.0"
-                  : widget.btcController.text,
-            ) ??
-            0.0
-        : double.tryParse(
-              widget.satController.text.isEmpty
-                  ? "0"
-                  : widget.satController.text,
-            ) ??
-            0.0;
-
-    double btcAmount = _service.currentUnit == CurrencyType.sats
-        ? amount / BitcoinConstants.satsPerBtc
-        : amount;
-    double fiatAmount = btcAmount * bitcoinPrice;
-
-    // Convert to user's selected currency for the text field
+    // Parse the cached fiat display for formatting
+    final fiatValue = double.tryParse(_displayFiat) ?? 0.0;
+    // Convert back from local currency rate for formatAmount (which applies rate internally)
     final exchangeRates = currencyService.exchangeRates;
     final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
-    final localCurrencyAmount = fiatAmount * fiatRate;
+    final usdValue = fiatValue / fiatRate;
 
-    // Only update currController if there's actual content in the source
-    final hasSourceContent = _service.currentUnit == CurrencyType.bitcoin
-        ? widget.btcController.text.isNotEmpty
-        : widget.satController.text.isNotEmpty;
-    if (!_service.preventConversion && hasSourceContent) {
-      widget.currController.text = localCurrencyAmount.toStringAsFixed(2);
-    }
-
-    if (widget.autoConvert) {
-      final unitEquivalent = _service.convertToBitcoinUnit(
-        amount,
-        _service.currentUnit,
-      );
-      _service.processAutoConvert(unitEquivalent);
-    }
-
-    // formatAmount handles currency conversion internally
     return Text(
-      "≈ ${currencyService.formatAmount(fiatAmount)}",
-      style: materialTheme.textTheme.bodyLarge?.copyWith(
-          color:
-              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
+      "\u2248 ${currencyService.formatAmount(usdValue)}",
+      style: materialTheme.textTheme.bodyLarge?.copyWith(color: textColor),
     );
   }
 
-  Widget _buildMoneyToBitcoinWidget(
+  /// Display bitcoin equivalent - NO conversions here, just display cached value
+  Widget _buildMoneyToBitcoinDisplay(
     BuildContext context,
-    double? bitcoinPrice,
     CurrencyPreferenceService currencyService,
   ) {
     final materialTheme = Theme.of(context);
+    final textColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
 
-    if (bitcoinPrice == null) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "≈ 0.00",
-            style: materialTheme.textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.7),
-            ),
-          ),
-          _getCurrencyIcon(context, _service.currentUnit),
-        ],
-      );
-    }
-
-    final currAmount = double.tryParse(
-          widget.currController.text.isEmpty
-              ? "0.0"
-              : widget.currController.text,
-        ) ??
-        0.0;
-
-    // Convert from user's local currency to BTC
-    // currAmount is in local currency, need to convert to USD first, then to BTC
-    final exchangeRates = currencyService.exchangeRates;
-    final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
-    final btcAmount = currAmount / (bitcoinPrice * fiatRate);
-    final satAmount = (btcAmount * BitcoinConstants.satsPerBtc).round();
-
-    // Only update btc/sat controllers if there's actual content in currController
-    if (!_service.preventConversion && widget.currController.text.isNotEmpty) {
-      widget.btcController.text = btcAmount.toString();
-      widget.satController.text = satAmount.toString();
-    }
-
-    if (widget.autoConvert) {
-      final amount = _service.currentUnit == CurrencyType.bitcoin
-          ? double.tryParse(
-                widget.btcController.text.isEmpty
-                    ? "0.0"
-                    : widget.btcController.text,
-              ) ??
-              0.0
-          : double.tryParse(
-                widget.satController.text.isEmpty
-                    ? "0"
-                    : widget.satController.text,
-              ) ??
-              0.0;
-
-      final unitEquivalent = _service.convertToBitcoinUnit(
-        amount,
-        _service.currentUnit,
-      );
-      _service.processAutoConvert(unitEquivalent);
-    }
-
-    if (widget.onAmountChange != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onAmountChange!(
-          _service.swapped ? currencyService.code : _service.currentUnit.name,
-          widget.btcController.text.isEmpty ? '0' : widget.btcController.text,
-        );
-      });
-    }
-
-    final displayAmount = _service.currentUnit == CurrencyType.bitcoin
-        ? widget.btcController.text
-        : widget.satController.text;
+    // Show placeholder if no value
+    final displayValue = _displayBtc.isEmpty ? "0" : _displayBtc;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          "≈ $displayAmount",
-          style: materialTheme.textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.7)),
+          "\u2248 $displayValue",
+          style: materialTheme.textTheme.bodyLarge?.copyWith(color: textColor),
         ),
         const SizedBox(width: 4),
         _getCurrencyIcon(context, _service.currentUnit),

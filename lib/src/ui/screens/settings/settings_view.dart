@@ -159,37 +159,43 @@ class SettingsViewState extends State<SettingsView> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppTheme.cardPadding),
-            LongButtonWidget(
-              buttonType: ButtonType.transparent,
-              title: AppLocalizations.of(context)!.cancel,
-              onTap: () => Navigator.pop(context),
-              customWidth: double.infinity,
-            ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            LongButtonWidget(
-              buttonType: ButtonType.solid,
-              title: AppLocalizations.of(context)!.reset,
-              onTap: () async {
-                var dataDir = await getApplicationSupportDirectory();
-                await resetWallet(dataDir: dataDir.path);
-                await _settingsService.resetToDefaults();
+            Row(
+              children: [
+                Expanded(
+                  child: LongButtonWidget(
+                    buttonType: ButtonType.transparent,
+                    title: AppLocalizations.of(context)!.cancel,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.elementSpacing),
+                Expanded(
+                  child: LongButtonWidget(
+                    buttonType: ButtonType.solid,
+                    title: AppLocalizations.of(context)!.reset,
+                    onTap: () async {
+                      var dataDir = await getApplicationSupportDirectory();
+                      await resetWallet(dataDir: dataDir.path);
+                      await _settingsService.resetToDefaults();
 
-                // Reset service singletons so they re-initialize with new wallet
-                LendaSwapService().reset();
-                LendasatService().reset();
+                      // Reset service singletons so they re-initialize with new wallet
+                      LendaSwapService().reset();
+                      LendasatService().reset();
 
-                if (context.mounted) {
-                  // Navigate to OnboardingScreen and remove all previous routes
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                      builder: (context) => const OnboardingScreen(),
-                    ),
-                    (route) => false,
-                  );
-                }
-              },
-              customWidth: double.infinity,
-              backgroundColor: AppTheme.errorColor,
+                      if (context.mounted) {
+                        // Navigate to OnboardingScreen and remove all previous routes
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => const OnboardingScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      }
+                    },
+                    backgroundColor: AppTheme.errorColor,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: AppTheme.elementSpacing),
           ],
