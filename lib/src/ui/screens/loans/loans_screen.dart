@@ -35,6 +35,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   String _searchQuery = '';
   final FocusNode _searchFocusNode = FocusNode();
   bool _wasKeyboardVisible = false;
+  Timer? _keyboardDebounceTimer;
 
   bool _isLoading = true;
   bool _isRegistering = false;
@@ -64,6 +65,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _autoRefreshTimer?.cancel();
+    _keyboardDebounceTimer?.cancel();
     _searchFocusNode.dispose();
     super.dispose();
   }
@@ -85,8 +87,9 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    // Detect keyboard dismiss and unfocus the search field
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Debounce keyboard detection to avoid ~60 callbacks during animation
+    _keyboardDebounceTimer?.cancel();
+    _keyboardDebounceTimer = Timer(const Duration(milliseconds: 100), () {
       if (!mounted) return;
       final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
       if (_wasKeyboardVisible && !keyboardVisible) {

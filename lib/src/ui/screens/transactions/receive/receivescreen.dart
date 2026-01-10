@@ -90,6 +90,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
   // Keyboard visibility tracking for unfocusing amount field
   bool _wasKeyboardVisible = false;
+  Timer? _keyboardDebounceTimer;
 
   @override
   void initState() {
@@ -146,6 +147,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _invoiceTimer?.cancel();
+    _keyboardDebounceTimer?.cancel();
     _timerNotifier.dispose();
     _animationController.dispose();
     _btcController.dispose();
@@ -169,9 +171,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    // Detect keyboard dismiss and unfocus the amount field
-    // This handles the case when AmountWidget is inside arkBottomSheet
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Debounce keyboard detection to avoid ~60 callbacks during animation
+    _keyboardDebounceTimer?.cancel();
+    _keyboardDebounceTimer = Timer(const Duration(milliseconds: 100), () {
       if (!mounted) return;
       final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
       if (_wasKeyboardVisible && !keyboardVisible) {
