@@ -54,8 +54,9 @@ class TransactionFilterScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (showFilterPills) ...[
+                    // Network/Type section
                     Text(
-                      'Filter Options',
+                      'Network',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 16,
@@ -69,39 +70,58 @@ class TransactionFilterScreen extends StatelessWidget {
                       children: [
                         _FilterPill(
                           label: 'Onchain',
-                          isSelected:
-                              filterService.selectedFilters.contains('Onchain'),
-                          onTap: () => filterService.toggleFilter('Onchain'),
+                          isSelected: filterService.isNetworkEnabled('Onchain'),
+                          onTap: () =>
+                              filterService.toggleNetworkFilter('Onchain'),
                         ),
                         _FilterPill(
                           label: 'Lightning',
-                          isSelected: filterService.selectedFilters
-                              .contains('Lightning'),
-                          onTap: () => filterService.toggleFilter('Lightning'),
+                          isSelected:
+                              filterService.isNetworkEnabled('Lightning'),
+                          onTap: () =>
+                              filterService.toggleNetworkFilter('Lightning'),
                         ),
                         _FilterPill(
                           label: 'Arkade',
-                          isSelected:
-                              filterService.selectedFilters.contains('Arkade'),
-                          onTap: () => filterService.toggleFilter('Arkade'),
+                          isSelected: filterService.isNetworkEnabled('Arkade'),
+                          onTap: () =>
+                              filterService.toggleNetworkFilter('Arkade'),
                         ),
                         _FilterPill(
                           label: 'Swap',
-                          isSelected:
-                              filterService.selectedFilters.contains('Swap'),
-                          onTap: () => filterService.toggleFilter('Swap'),
+                          isSelected: filterService.isNetworkEnabled('Swap'),
+                          onTap: () =>
+                              filterService.toggleNetworkFilter('Swap'),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.paddingL),
+                    // Direction section
+                    Text(
+                      'Direction',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.paddingM),
+                    Wrap(
+                      spacing: AppTheme.paddingS,
+                      runSpacing: AppTheme.paddingS,
+                      children: [
                         _FilterPill(
                           label: AppLocalizations.of(context)!.sent,
-                          isSelected:
-                              filterService.selectedFilters.contains('Sent'),
-                          onTap: () => filterService.toggleFilter('Sent'),
+                          isSelected: filterService.isDirectionEnabled('Sent'),
+                          onTap: () =>
+                              filterService.toggleDirectionFilter('Sent'),
                         ),
                         _FilterPill(
                           label: AppLocalizations.of(context)!.received,
-                          isSelected: filterService.selectedFilters
-                              .contains('Received'),
-                          onTap: () => filterService.toggleFilter('Received'),
+                          isSelected:
+                              filterService.isDirectionEnabled('Received'),
+                          onTap: () =>
+                              filterService.toggleDirectionFilter('Received'),
                         ),
                       ],
                     ),
@@ -247,24 +267,58 @@ class _FilterPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return InkWell(
       onTap: onTap,
-      child: GlassContainer(
-        opacity: isSelected ? 0.2 : 0.1,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.paddingM,
-            vertical: AppTheme.paddingS * 0.75,
+      borderRadius: BorderRadius.circular(AppTheme.borderRadiusBig),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.paddingM,
+          vertical: AppTheme.paddingS * 0.75,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark
+                  ? Colors.white.withValues(alpha: 0.15)
+                  : Colors.black.withValues(alpha: 0.1))
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadiusBig),
+          border: Border.all(
+            color: isSelected
+                ? (isDark
+                    ? Colors.white.withValues(alpha: 0.3)
+                    : Colors.black.withValues(alpha: 0.3))
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.1)),
+            width: 1,
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected
-                  ? Theme.of(context).colorScheme.onSurface
-                  : Theme.of(context).hintColor,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected) ...[
+              Icon(
+                Icons.check,
+                size: 14,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected
+                    ? (isDark ? Colors.white : Colors.black)
+                    : (isDark
+                        ? Colors.white.withValues(alpha: 0.4)
+                        : Colors.black.withValues(alpha: 0.4)),
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
