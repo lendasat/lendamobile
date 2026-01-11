@@ -4,6 +4,7 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/services/pending_transaction_service.dart';
+import 'package:ark_flutter/src/services/recipient_storage_service.dart';
 import 'package:ark_flutter/src/ui/widgets/transaction/transaction_detail_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/swap_detail_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
@@ -21,6 +22,8 @@ import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:provider/provider.dart';
 import 'package:ark_flutter/src/services/transaction_filter_service.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/history/transaction_filter_screen.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class TransactionHistoryWidget extends StatefulWidget {
   final String aspId;
@@ -31,6 +34,10 @@ class TransactionHistoryWidget extends StatefulWidget {
   final bool showBtcAsMain;
   final double? bitcoinPrice;
 
+  /// When false, the header (title + search bar) is not rendered.
+  /// Use this when the header is rendered separately as a sticky sliver.
+  final bool showHeader;
+
   const TransactionHistoryWidget({
     super.key,
     required this.aspId,
@@ -40,6 +47,7 @@ class TransactionHistoryWidget extends StatefulWidget {
     this.hideAmounts = false,
     this.showBtcAsMain = true,
     this.bitcoinPrice,
+    this.showHeader = true,
   });
 
   @override
@@ -57,6 +65,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   // Cache for combined activity list (memoization for performance)
   List<WalletActivityItem>? _cachedCombinedActivity;
 
+  // Cache for payment info (network type lookup)
+  Map<String, StoredRecipient> _paymentInfoCache = {};
+
   // Listen to pending transaction updates
   final PendingTransactionService _pendingService = PendingTransactionService();
 
@@ -70,6 +81,35 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
     // Reconcile pending with real transactions when widget loads
     _pendingService.reconcileWithRealTransactions(widget.transactions);
+
+    // Load payment info for all transactions
+    _loadPaymentInfoCache();
+  }
+
+  /// Load payment info for all transactions to enable proper filtering
+  Future<void> _loadPaymentInfoCache() async {
+    final recipients = await RecipientStorageService.getRecipients();
+    final cache = <String, StoredRecipient>{};
+    for (final r in recipients) {
+      if (r.txid != null) {
+        cache[r.txid!] = r;
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _paymentInfoCache = cache;
+      });
+    }
+  }
+
+  /// Get the network type for a transaction based on cached payment info
+  String _getNetworkTypeForTxid(String txid, String defaultNetwork) {
+    final paymentInfo = _paymentInfoCache[txid];
+    if (paymentInfo != null) {
+      if (paymentInfo.isLightning) return 'Lightning';
+      if (paymentInfo.isOnchain) return 'Onchain';
+    }
+    return defaultNetwork;
   }
 
   void _onPendingTransactionsChanged() {
@@ -118,6 +158,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       _cachedCombinedActivity = null;
       // Reconcile pending with real transactions when data updates
       _pendingService.reconcileWithRealTransactions(widget.transactions);
+      // Reload payment info cache
+      _loadPaymentInfoCache();
       _applySearch(_searchController.text);
     }
   }
@@ -134,6 +176,21 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   /// Unfocus search field - can be called from parent (e.g., WalletScreen)
   void unfocusSearch() {
     _searchFocusNode.unfocus();
+  }
+
+  /// Apply search from external source (e.g., sticky header)
+  /// Updates the search controller and triggers filtering
+  void applySearchFromExternal(String value) {
+    _searchController.text = value;
+    _searchTimer?.cancel();
+    _searchTimer = Timer(const Duration(milliseconds: 300), () {
+      _applySearch(value);
+    });
+  }
+
+  /// Refresh filter after filter screen is closed
+  void refreshFilter() {
+    _applySearch(_searchController.text);
   }
 
   void _applySearch(String searchText) {
@@ -161,21 +218,36 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         }).toList();
       }
 
-      // Type filter by network (Onchain, Arkade, Swap)
+      // Type filter by network (Onchain, Lightning, Arkade, Swap)
       final hasTypeFilter = filterService.selectedFilters.any(
-        (f) => ['Onchain', 'Arkade', 'Swap'].contains(f),
+        (f) => ['Onchain', 'Lightning', 'Arkade', 'Swap'].contains(f),
       );
       if (hasTypeFilter) {
         allActivity = allActivity.where((item) {
           if (item is PendingActivityItem) {
-            // Pending sends are onchain
+            // Pending sends could be onchain or lightning based on address type
+            final recipientType =
+                RecipientStorageService.determineType(item.address);
+            if (recipientType == RecipientType.lightningInvoice ||
+                recipientType == RecipientType.lightning) {
+              return filterService.selectedFilters.contains('Lightning');
+            }
             return filterService.selectedFilters.contains('Onchain');
           } else if (item is TransactionActivityItem) {
             return item.transaction.map(
               boarding: (_) =>
                   filterService.selectedFilters.contains('Onchain'),
-              round: (_) => filterService.selectedFilters.contains('Arkade'),
+              round: (tx) {
+                // Check if this was actually a Lightning payment
+                final networkType = _getNetworkTypeForTxid(tx.txid, 'Arkade');
+                return filterService.selectedFilters.contains(networkType);
+              },
               redeem: (tx) {
+                // Check if this was a Lightning payment
+                final networkType = _getNetworkTypeForTxid(tx.txid, 'Arkade');
+                if (networkType == 'Lightning') {
+                  return filterService.selectedFilters.contains('Lightning');
+                }
                 // If not settled, it's still a virtual Ark transaction (Arkade)
                 // Only filter as Onchain if it's been settled/redeemed
                 if (tx.isSettled) {
@@ -394,12 +466,14 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
+  /// Build the header widget (title + search bar)
+  /// This can be used externally for sticky header implementation
+  Widget buildHeader({bool includeBottomPadding = true}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
@@ -457,7 +531,21 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               ),
             ),
           ),
-        const SizedBox(height: AppTheme.elementSpacing),
+        if (includeBottomPadding)
+          const SizedBox(height: AppTheme.elementSpacing),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Only show header if showHeader is true
+        if (widget.showHeader) buildHeader(),
         if (_error != null)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -600,7 +688,7 @@ class _ActivityContainer extends StatelessWidget {
   }
 }
 
-class _TransactionItemWidget extends StatelessWidget {
+class _TransactionItemWidget extends StatefulWidget {
   final Transaction transaction;
   final String aspId;
   final bool hideAmounts;
@@ -614,6 +702,47 @@ class _TransactionItemWidget extends StatelessWidget {
     required this.showBtcAsMain,
     this.bitcoinPrice,
   });
+
+  @override
+  State<_TransactionItemWidget> createState() => _TransactionItemWidgetState();
+}
+
+class _TransactionItemWidgetState extends State<_TransactionItemWidget> {
+  StoredRecipient? _paymentInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPaymentInfo();
+  }
+
+  Future<void> _loadPaymentInfo() async {
+    final txid = widget.transaction.map(
+      boarding: (tx) => tx.txid,
+      round: (tx) => tx.txid,
+      redeem: (tx) => tx.txid,
+      offboard: (tx) => tx.txid,
+    );
+    final info = await RecipientStorageService.getByTxid(txid);
+    if (mounted) {
+      setState(() {
+        _paymentInfo = info;
+      });
+    }
+  }
+
+  /// Get the network type based on payment info
+  String _getNetworkType(String defaultNetwork) {
+    if (_paymentInfo != null) {
+      if (_paymentInfo!.isLightning) {
+        return 'Lightning';
+      }
+      if (_paymentInfo!.isOnchain) {
+        return 'Onchain';
+      }
+    }
+    return defaultNetwork;
+  }
 
   void _navigateToTransactionDetail(
     BuildContext context,
@@ -639,7 +768,8 @@ class _TransactionItemWidget extends StatelessWidget {
         networkType: networkType,
         isConfirmed: isConfirmed,
         isSettleable: isSettleable,
-        bitcoinPrice: bitcoinPrice,
+        bitcoinPrice: widget.bitcoinPrice,
+        paymentInfo: _paymentInfo,
       ),
     );
   }
@@ -650,16 +780,16 @@ class _TransactionItemWidget extends StatelessWidget {
   // states only confuses users with technical complexity they don't need to see.
   @override
   Widget build(BuildContext context) {
-    return transaction.map(
+    return widget.transaction.map(
       boarding: (tx) => _buildTransactionTile(
         context,
         AppLocalizations.of(context)!.boardingTransaction,
         tx.txid,
         DateTime.now().millisecondsSinceEpoch ~/ 1000,
         tx.amountSats.toInt(),
-        showBtcAsMain,
-        hideAmounts,
-        'Arkade',
+        widget.showBtcAsMain,
+        widget.hideAmounts,
+        'Onchain', // Boarding is always an onchain deposit into Arkade
         isConfirmed: true, // Always confirmed - funds are spendable immediately
         isSettleable: tx.confirmedAt != null,
       ),
@@ -669,9 +799,9 @@ class _TransactionItemWidget extends StatelessWidget {
         tx.txid,
         tx.createdAt,
         tx.amountSats,
-        showBtcAsMain,
-        hideAmounts,
-        'Arkade',
+        widget.showBtcAsMain,
+        widget.hideAmounts,
+        _getNetworkType('Arkade'),
         isConfirmed: true, // Always confirmed - instant in Arkade
         isSettleable: true, // Round transactions are instantly settled
       ),
@@ -681,9 +811,9 @@ class _TransactionItemWidget extends StatelessWidget {
         tx.txid,
         tx.createdAt,
         tx.amountSats,
-        showBtcAsMain,
-        hideAmounts,
-        'Arkade',
+        widget.showBtcAsMain,
+        widget.hideAmounts,
+        _getNetworkType('Arkade'),
         isConfirmed: true, // Always confirmed - funds are spendable immediately
         isSettleable: tx.isSettled, // True when fully settled on-chain
       ),
@@ -693,9 +823,9 @@ class _TransactionItemWidget extends StatelessWidget {
         tx.txid,
         tx.confirmedAt ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000),
         tx.amountSats,
-        showBtcAsMain,
-        hideAmounts,
-        'Onchain',
+        widget.showBtcAsMain,
+        widget.hideAmounts,
+        'Onchain', // Offboard is always onchain, never Lightning
         isConfirmed: tx.confirmedAt != null, // Only on-chain sends show pending
       ),
     );
@@ -719,11 +849,15 @@ class _TransactionItemWidget extends StatelessWidget {
     final amountBtc = amountSats / BitcoinConstants.satsPerBtc;
 
     // Use actual BTC price, with fallback only if not available
-    final btcPrice = bitcoinPrice ?? 0;
+    final btcPrice = widget.bitcoinPrice ?? 0;
     // formatAmount handles currency conversion internally
     final fiatAmount = amountBtc * btcPrice;
 
     String transactionType = dialogTitle.replaceAll(' Transaction', '');
+
+    // Check network type for icon display
+    final isLightning = network == 'Lightning';
+    final isArkade = network == 'Arkade';
 
     return RepaintBoundary(
       child: Material(
@@ -810,19 +944,29 @@ class _TransactionItemWidget extends StatelessWidget {
                                   style: Theme.of(context).textTheme.labelSmall,
                                 ),
                               ),
-                              Image.asset(
-                                "assets/images/bitcoin.png",
-                                width: AppTheme.cardPadding * 0.5,
-                                height: AppTheme.cardPadding * 0.5,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons.currency_bitcoin,
-                                    size: AppTheme.cardPadding * 0.5,
-                                    color: AppTheme.colorBitcoin,
-                                  );
-                                },
-                              ),
+                              // Show network-specific icon (all gray)
+                              if (isArkade)
+                                SvgPicture.asset(
+                                  'assets/images/tokens/arkade.svg',
+                                  width: AppTheme.cardPadding * 0.5,
+                                  height: AppTheme.cardPadding * 0.5,
+                                  colorFilter: ColorFilter.mode(
+                                    isDark
+                                        ? AppTheme.white60
+                                        : AppTheme.black60,
+                                    BlendMode.srcIn,
+                                  ),
+                                )
+                              else
+                                FaIcon(
+                                  isLightning
+                                      ? FontAwesomeIcons.bolt
+                                      : FontAwesomeIcons.link,
+                                  size: AppTheme.cardPadding * 0.5,
+                                  color: isDark
+                                      ? AppTheme.white60
+                                      : AppTheme.black60,
+                                ),
                               const SizedBox(
                                   width: AppTheme.elementSpacing / 4),
                               Text(
