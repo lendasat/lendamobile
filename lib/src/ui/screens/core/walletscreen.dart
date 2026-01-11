@@ -123,6 +123,7 @@ class WalletScreenState extends State<WalletScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     logger.i("WalletScreen initialized with ASP ID: ${widget.aspId}");
+    _loadCachedBalance(); // Load cached balance first for instant display
     _initializeWalletData();
     _loadBitcoinPriceData();
     _loadRecoveryStatus();
@@ -132,6 +133,23 @@ class WalletScreenState extends State<WalletScreen>
       context.read<CurrencyPreferenceService>().fetchExchangeRates();
       _checkAndShowAlphaWarning();
     });
+  }
+
+  /// Load cached balance from local storage for instant display
+  Future<void> _loadCachedBalance() async {
+    try {
+      final cachedBalance = await SettingsService().getCachedBalance();
+      if (cachedBalance != null && mounted) {
+        setState(() {
+          _totalBalance = cachedBalance.total;
+          _confirmedBalance = cachedBalance.confirmed;
+          _pendingBalance = cachedBalance.pending;
+        });
+        logger.i("Loaded cached balance: ${cachedBalance.total} BTC");
+      }
+    } catch (e) {
+      logger.w("Could not load cached balance: $e");
+    }
   }
 
   @override
@@ -566,19 +584,30 @@ class WalletScreenState extends State<WalletScreen>
     try {
       final balanceResult = await balance();
 
+      final newPendingBalance = balanceResult.offchain.pendingSats.toDouble() /
+          BitcoinConstants.satsPerBtc;
+      final newConfirmedBalance = balanceResult.offchain.confirmedSats.toDouble() /
+          BitcoinConstants.satsPerBtc;
+      final newTotalBalance = balanceResult.offchain.totalSats.toDouble() /
+          BitcoinConstants.satsPerBtc;
+
       if (mounted) {
         setState(() {
-          _pendingBalance = balanceResult.offchain.pendingSats.toDouble() /
-              BitcoinConstants.satsPerBtc;
-          _confirmedBalance = balanceResult.offchain.confirmedSats.toDouble() /
-              BitcoinConstants.satsPerBtc;
-          _totalBalance = balanceResult.offchain.totalSats.toDouble() /
-              BitcoinConstants.satsPerBtc;
+          _pendingBalance = newPendingBalance;
+          _confirmedBalance = newConfirmedBalance;
+          _totalBalance = newTotalBalance;
           _recoverableSats = balanceResult.offchain.recoverableSats.toInt();
           _expiredSats = balanceResult.offchain.expiredSats.toInt();
           _isBalanceLoading = false;
         });
       }
+
+      // Cache the balance for instant display on next app launch
+      await SettingsService().setCachedBalance(
+        total: newTotalBalance,
+        confirmed: newConfirmedBalance,
+        pending: newPendingBalance,
+      );
 
       logger.i(
           "Balance updated: Total: $_totalBalance BTC, Confirmed: $_confirmedBalance BTC, Pending: $_pendingBalance BTC, Recoverable: $_recoverableSats sats, Expired: $_expiredSats sats");
