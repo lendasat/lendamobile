@@ -519,8 +519,9 @@ class SendScreenState extends State<SendScreen> {
       return 0;
     }
     // Use halfHourFee (standard) fee rate
+    // Use ceil() to be conservative and match _getEstimatedFees()
     final feeRate = _recommendedFees!.halfHourFee;
-    return (feeRate * _estimatedTxVbytes).round();
+    return (feeRate * _estimatedTxVbytes).ceil();
   }
 
   /// Check if this is a Lightning payment (invoice or LNURL/Lightning Address)
@@ -1047,17 +1048,25 @@ class SendScreenState extends State<SendScreen> {
         // Lightning via Boltz: 0.25% swap fee
         // To find max amount: amount + fee = balance, where fee = amount * 0.0025
         // So: amount * 1.0025 = balance => amount = balance / 1.0025
-        // Fee = balance - amount = balance - (balance / 1.0025)
-        // Use round() to match _calculateBoltzFee() rounding
-        final maxAmount = widget.availableSats / (1 + _boltzFeePercent / 100);
-        return (widget.availableSats - maxAmount).round();
+        // Use floor() for maxAmount to be conservative, then verify with actual fee calc
+        final maxAmount =
+            (widget.availableSats / (1 + _boltzFeePercent / 100)).floor();
+        // Calculate what the actual fee would be (using same rounding as _calculateBoltzFee)
+        final actualFee = (maxAmount * _boltzFeePercent / 100).round();
+        // If total exceeds balance due to rounding edge case, add 1 to fee
+        if (maxAmount + actualFee > widget.availableSats) {
+          return actualFee + 1;
+        }
+        return actualFee;
       case 'Onchain':
-        // On-chain: estimate based on fee rate
-        // Typical P2WPKH transaction is ~140 vbytes
-        // Use halfHourFee to match _estimatedNetworkFeeSats display
-        const estimatedVbytes = 140;
-        final feeRate = _recommendedFees?.halfHourFee ?? 10.0;
-        return (estimatedVbytes * feeRate).round();
+        // On-chain: use the same getter as fee display for consistency
+        // Use ceil() to be conservative and avoid 1 sat shortfall
+        if (_recommendedFees == null) {
+          // If fees haven't loaded yet, use conservative estimate
+          return (_estimatedTxVbytes * 10.0).ceil();
+        }
+        // Use ceil() instead of round() to ensure we never underestimate
+        return (_estimatedTxVbytes * _recommendedFees!.halfHourFee).ceil();
       default:
         return 0;
     }
