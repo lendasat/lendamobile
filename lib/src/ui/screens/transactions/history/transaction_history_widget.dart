@@ -219,10 +219,8 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       }
 
       // Type filter by network (Onchain, Lightning, Arkade, Swap)
-      final hasTypeFilter = filterService.selectedFilters.any(
-        (f) => ['Onchain', 'Lightning', 'Arkade', 'Swap'].contains(f),
-      );
-      if (hasTypeFilter) {
+      // Only apply if user has explicitly filtered (not default "all enabled" state)
+      if (filterService.hasNetworkFilter) {
         allActivity = allActivity.where((item) {
           if (item is PendingActivityItem) {
             // Pending sends could be onchain or lightning based on address type
@@ -235,28 +233,30 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             return filterService.selectedFilters.contains('Onchain');
           } else if (item is TransactionActivityItem) {
             return item.transaction.map(
+              // Boarding is an on-chain deposit into Ark
               boarding: (_) =>
                   filterService.selectedFilters.contains('Onchain'),
+              // Round transactions are always Arkade (off-chain Ark transactions)
+              // unless they're Lightning payments
               round: (tx) {
-                // Check if this was actually a Lightning payment
-                final networkType = _getNetworkTypeForTxid(tx.txid, 'Arkade');
-                return filterService.selectedFilters.contains(networkType);
-              },
-              redeem: (tx) {
-                // Check if this was a Lightning payment
                 final networkType = _getNetworkTypeForTxid(tx.txid, 'Arkade');
                 if (networkType == 'Lightning') {
                   return filterService.selectedFilters.contains('Lightning');
                 }
-                // If not settled, it's still a virtual Ark transaction (Arkade)
-                // Only filter as Onchain if it's been settled/redeemed
-                if (tx.isSettled) {
-                  return filterService.selectedFilters.contains('Onchain');
-                } else {
-                  return filterService.selectedFilters.contains('Arkade');
-                }
+                // Round is always Arkade - even if sent to on-chain address,
+                // the round itself is an off-chain Ark transaction
+                return filterService.selectedFilters.contains('Arkade');
               },
-              // Offboard is always an on-chain send
+              // Redeem is a unilateral on-chain exit from Ark (unless Lightning)
+              redeem: (tx) {
+                final networkType = _getNetworkTypeForTxid(tx.txid, 'Arkade');
+                if (networkType == 'Lightning') {
+                  return filterService.selectedFilters.contains('Lightning');
+                }
+                // Redeem transactions are on-chain claims
+                return filterService.selectedFilters.contains('Onchain');
+              },
+              // Offboard is a collaborative on-chain exit
               offboard: (_) =>
                   filterService.selectedFilters.contains('Onchain'),
             );
@@ -268,27 +268,21 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       }
 
       // Direction filter (Sent/Received)
-      final filterSent = filterService.selectedFilters.contains('Sent');
-      final filterReceived = filterService.selectedFilters.contains('Received');
-      if (filterSent && !filterReceived) {
+      // Only apply if user has explicitly filtered (not default "all enabled" state)
+      if (filterService.hasDirectionFilter) {
+        final showSent = filterService.selectedFilters.contains('Sent');
+        final showReceived = filterService.selectedFilters.contains('Received');
+
         allActivity = allActivity.where((item) {
           if (item is PendingActivityItem) {
-            return true; // Pending sends are always outgoing
+            // Pending sends are always outgoing
+            return showSent;
           } else if (item is TransactionActivityItem) {
-            return item.amountSats < 0;
+            final isSent = item.amountSats < 0;
+            return isSent ? showSent : showReceived;
           } else if (item is SwapActivityItem) {
-            return item.isBtcToEvm; // Sending BTC
-          }
-          return false;
-        }).toList();
-      } else if (filterReceived && !filterSent) {
-        allActivity = allActivity.where((item) {
-          if (item is PendingActivityItem) {
-            return false; // Pending sends are never incoming
-          } else if (item is TransactionActivityItem) {
-            return item.amountSats >= 0;
-          } else if (item is SwapActivityItem) {
-            return !item.isBtcToEvm; // Receiving BTC
+            final isSent = item.isBtcToEvm; // Sending BTC
+            return isSent ? showSent : showReceived;
           }
           return false;
         }).toList();

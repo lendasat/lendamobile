@@ -375,6 +375,16 @@ class WalletScreenState extends State<WalletScreen>
         firstBalance, currentBalance, firstValue, currentValue);
   }
 
+  /// Scrolls to the top of the wallet screen with a smooth animation
+  /// Called when user taps the wallet tab while already on the wallet screen
+  void scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
   /// Fetches all wallet data (balance, transactions, swaps, and locked collateral)
   /// This is public so it can be called from parent widgets (e.g., after payment received)
   Future<void> fetchWalletData() async {
