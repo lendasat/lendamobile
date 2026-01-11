@@ -54,7 +54,8 @@
       "Bash(netstat:*)",
       "Bash(powershell.exe -Command \"Invoke-WebRequest -Uri http://localhost:3000 -TimeoutSec 5 -UseBasicParsing | Select-Object -ExpandProperty StatusCode\")",
       "Bash(powershell.exe -Command \"Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force; Remove-Item -Force ''C:\\\\website\\\\.next\\\\dev\\\\lock'' -ErrorAction SilentlyContinue; Write-Host ''Done - try yarn dev again''\")",
-      "WebFetch(domain:docs.cdp.coinbase.com)"
+      "WebFetch(domain:docs.cdp.coinbase.com)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

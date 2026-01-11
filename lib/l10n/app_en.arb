@@ -33,6 +33,8 @@
     "description": "Search placeholder text"
   },
   "enterAmount": "Enter Amount",
+  "amountTooLow": "Amount Too Low",
+  "amountTooHigh": "Amount Too High",
   "amount": "Amount",
   "skipAnyAmount": "SKIP (ANY AMOUNT)",
   "contin": "CONTINUE",
@@ -309,6 +311,8 @@
   "block": "Block",
   "yourTx": "Your TX",
   "paymentMethods": "Payment Methods",
+  "paymentProvider": "Payment Provider",
+  "chooseProvider": "Choose Provider",
   "buyLimits": "Buy Limits",
   "errorLoadingBuyScreen": "Error loading buy screen",
   "buyBitcoin": "Buy Bitcoin",

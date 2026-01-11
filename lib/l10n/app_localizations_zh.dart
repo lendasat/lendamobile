@@ -36,6 +36,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get enterAmount => '输入金额';
 
   @override
+  String get amountTooLow => 'Amount Too Low';
+
+  @override
+  String get amountTooHigh => 'Amount Too High';
+
+  @override
   String get amount => 'Amount';
 
   @override
@@ -760,6 +766,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get paymentMethods => 'Payment Methods';
+
+  @override
+  String get paymentProvider => 'Payment Provider';
+
+  @override
+  String get chooseProvider => 'Choose Provider';
 
   @override
   String get buyLimits => 'Buy Limits';
