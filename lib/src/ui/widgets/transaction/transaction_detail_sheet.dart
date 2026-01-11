@@ -20,6 +20,8 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/blinking_dot.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -35,6 +37,7 @@ class TransactionDetailSheet extends StatefulWidget {
   final bool? isConfirmed;
   final bool isSettleable;
   final double? bitcoinPrice;
+  final StoredRecipient? paymentInfo; // Payment info with network type and fee
 
   const TransactionDetailSheet({
     super.key,
@@ -46,6 +49,7 @@ class TransactionDetailSheet extends StatefulWidget {
     this.isConfirmed,
     this.isSettleable = false,
     this.bitcoinPrice,
+    this.paymentInfo,
   });
 
   @override
@@ -81,6 +85,16 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
   }
 
   Future<void> _loadRecipientAddress() async {
+    // If paymentInfo is provided, use it directly
+    if (widget.paymentInfo != null) {
+      if (mounted) {
+        setState(() {
+          _recipientAddress = widget.paymentInfo!.address;
+        });
+      }
+      return;
+    }
+
     if (txID == null) return;
 
     try {
@@ -96,6 +110,26 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
       // Silently fail - address is optional
     }
   }
+
+  /// Get the effective network type based on payment info
+  String get _effectiveNetworkType {
+    if (widget.paymentInfo?.isLightning == true) {
+      return 'Lightning';
+    }
+    if (widget.paymentInfo?.isOnchain == true) {
+      return 'Onchain';
+    }
+    return widget.networkType ?? 'Arkade';
+  }
+
+  /// Check if this is a Lightning transaction
+  bool get _isLightning => _effectiveNetworkType == 'Lightning';
+
+  /// Check if this is an onchain transaction
+  bool get _isOnchain => _effectiveNetworkType == 'Onchain';
+
+  /// Check if this is an Arkade transaction
+  bool get _isArkade => _effectiveNetworkType == 'Arkade';
 
   void _copyTxId() {
     if (txID == null) return;
@@ -527,9 +561,9 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                                       .externalApplication);
                                             }
                                           },
-                                          child: const Icon(
+                                          child: Icon(
                                             Icons.open_in_new,
-                                            color: AppTheme.colorBitcoin,
+                                            color: AppTheme.white60,
                                             size: AppTheme.cardPadding * 0.75,
                                           ),
                                         ),
@@ -612,20 +646,11 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                       vertical: AppTheme.elementSpacing * 0.5,
                                     ),
                                     text: l10n.block,
-                                    trailing: Row(
-                                      children: [
-                                        Text(
-                                          "${transactionModel!.status.blockHeight ?? "--"}",
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium!
-                                              .copyWith(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .primary,
-                                              ),
-                                        ),
-                                      ],
+                                    trailing: Text(
+                                      "${transactionModel!.status.blockHeight ?? "--"}",
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
                                     ),
                                   ),
 
@@ -688,22 +713,35 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                     text: l10n.network,
                                     trailing: Row(
                                       children: [
-                                        Image.asset(
-                                          "assets/images/bitcoin.png",
-                                          width: AppTheme.cardPadding * 1,
-                                          height: AppTheme.cardPadding * 1,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                            return const Icon(
-                                              Icons.currency_bitcoin,
-                                              color: AppTheme.colorBitcoin,
-                                            );
-                                          },
-                                        ),
+                                        if (_isArkade)
+                                          SvgPicture.asset(
+                                            'assets/images/tokens/arkade.svg',
+                                            width: AppTheme.cardPadding * 0.7,
+                                            height: AppTheme.cardPadding * 0.7,
+                                            colorFilter: ColorFilter.mode(
+                                              Theme.of(context).brightness ==
+                                                      Brightness.dark
+                                                  ? AppTheme.white60
+                                                  : AppTheme.black60,
+                                              BlendMode.srcIn,
+                                            ),
+                                          )
+                                        else
+                                          FaIcon(
+                                            _isLightning
+                                                ? FontAwesomeIcons.bolt
+                                                : FontAwesomeIcons.link,
+                                            size: AppTheme.cardPadding * 0.7,
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? AppTheme.white60
+                                                    : AppTheme.black60,
+                                          ),
                                         const SizedBox(
                                             width: AppTheme.elementSpacing / 2),
                                         Text(
-                                          widget.networkType ?? 'Onchain',
+                                          _effectiveNetworkType,
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleMedium,
@@ -753,6 +791,76 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                             ),
                                           );
                                         },
+                                      ),
+                                    ),
+
+                                  // Boltz Fee (for Lightning transactions)
+                                  if (_isLightning &&
+                                      widget.paymentInfo?.feeSats != null)
+                                    ArkListTile(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal:
+                                            AppTheme.elementSpacing * 0.75,
+                                        vertical: AppTheme.elementSpacing * 0.5,
+                                      ),
+                                      text: 'Boltz Fee',
+                                      trailing: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            _formatPrice(widget
+                                                .paymentInfo!.feeSats
+                                                .toString()),
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'sats (0.25%)',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                  // Miner Fee (for onchain transactions)
+                                  if (_isOnchain &&
+                                      widget.paymentInfo?.feeSats != null)
+                                    ArkListTile(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal:
+                                            AppTheme.elementSpacing * 0.75,
+                                        vertical: AppTheme.elementSpacing * 0.5,
+                                      ),
+                                      text: 'Miner Fee',
+                                      trailing: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            _formatPrice(widget
+                                                .paymentInfo!.feeSats
+                                                .toString()),
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'sats',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
+                                          ),
+                                        ],
                                       ),
                                     ),
 
@@ -1222,23 +1330,36 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                     text: l10n.network,
                                     trailing: Row(
                                       children: [
-                                        Image.asset(
-                                          "assets/images/bitcoin.png",
-                                          width: AppTheme.cardPadding * 1,
-                                          height: AppTheme.cardPadding * 1,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                            return const Icon(
-                                              Icons.currency_bitcoin,
-                                              color: AppTheme.colorBitcoin,
-                                            );
-                                          },
-                                        ),
+                                        if (_isArkade)
+                                          SvgPicture.asset(
+                                            'assets/images/tokens/arkade.svg',
+                                            width: AppTheme.cardPadding * 0.7,
+                                            height: AppTheme.cardPadding * 0.7,
+                                            colorFilter: ColorFilter.mode(
+                                              Theme.of(context).brightness ==
+                                                      Brightness.dark
+                                                  ? AppTheme.white60
+                                                  : AppTheme.black60,
+                                              BlendMode.srcIn,
+                                            ),
+                                          )
+                                        else
+                                          FaIcon(
+                                            _isLightning
+                                                ? FontAwesomeIcons.bolt
+                                                : FontAwesomeIcons.link,
+                                            size: AppTheme.cardPadding * 0.7,
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? AppTheme.white60
+                                                    : AppTheme.black60,
+                                          ),
                                         const SizedBox(
                                           width: AppTheme.elementSpacing / 2,
                                         ),
                                         Text(
-                                          widget.networkType ?? 'Arkade',
+                                          _effectiveNetworkType,
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleMedium,
@@ -1246,6 +1367,76 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                       ],
                                     ),
                                   ),
+
+                                  // Boltz Fee (for Lightning transactions)
+                                  if (_isLightning &&
+                                      widget.paymentInfo?.feeSats != null)
+                                    ArkListTile(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal:
+                                            AppTheme.elementSpacing * 0.75,
+                                        vertical: AppTheme.elementSpacing * 0.5,
+                                      ),
+                                      text: 'Boltz Fee',
+                                      trailing: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            _formatPrice(widget
+                                                .paymentInfo!.feeSats
+                                                .toString()),
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'sats (0.25%)',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                  // Miner Fee (for onchain transactions)
+                                  if (_isOnchain &&
+                                      widget.paymentInfo?.feeSats != null)
+                                    ArkListTile(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal:
+                                            AppTheme.elementSpacing * 0.75,
+                                        vertical: AppTheme.elementSpacing * 0.5,
+                                      ),
+                                      text: 'Miner Fee',
+                                      trailing: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            _formatPrice(widget
+                                                .paymentInfo!.feeSats
+                                                .toString()),
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'sats',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
 
                                   // Time
                                   if (widget.createdAt != null)

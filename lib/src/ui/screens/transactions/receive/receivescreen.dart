@@ -7,6 +7,7 @@ import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/recipient_storage_service.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
@@ -25,6 +26,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:share_plus/share_plus.dart';
@@ -268,6 +270,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       // Start timer if we have a Lightning invoice
       if (_lightningInvoice != null && _lightningInvoice!.isNotEmpty) {
         _startInvoiceTimer();
+        // Save Lightning receive request for transaction history tracking
+        _saveReceiveRequest();
       }
 
       _startPaymentMonitoring();
@@ -292,6 +296,29 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     return (netAmount / (1 - _boltzServiceFeePercent / 100)).ceil();
   }
 
+  /// Save the Lightning receive request for transaction history tracking
+  Future<void> _saveReceiveRequest() async {
+    if (_lightningInvoice == null || _lightningInvoice!.isEmpty) return;
+
+    try {
+      final requestedAmount =
+          (_currentAmount ?? 0) > 0 ? _currentAmount! : _defaultLightningAmount;
+      final grossAmount = _calculateGrossAmount(requestedAmount);
+      final feeSats = grossAmount - requestedAmount;
+
+      await RecipientStorageService.saveReceiveRequest(
+        address: _lightningInvoice!,
+        type: RecipientType.lightningInvoice,
+        amountSats: requestedAmount,
+        feeSats: feeSats,
+        label: _boltzSwapId,
+      );
+      logger.i('Saved Lightning receive request: $requestedAmount sats');
+    } catch (e) {
+      logger.e('Error saving receive request: $e');
+    }
+  }
+
   Future<void> _fetchLightningInvoice() async {
     try {
       // Boltz requires minimum 333 sats, use default if no amount set
@@ -311,6 +338,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
       if (_lightningInvoice != null && _lightningInvoice!.isNotEmpty) {
         _startInvoiceTimer();
+        // Save Lightning receive request for transaction history tracking
+        _saveReceiveRequest();
       } else {
         OverlayService().showError("Lightning service temporarily unavailable");
         // Fall back to combined view
@@ -1123,7 +1152,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                     final isSelected = _receiveType == type;
                     final icon = switch (type) {
                       ReceiveType.combined => FontAwesomeIcons.qrcode,
-                      ReceiveType.ark => FontAwesomeIcons.spaceAwesome,
+                      ReceiveType.ark => null, // Use SVG instead
                       ReceiveType.onchain => FontAwesomeIcons.link,
                       ReceiveType.lightning => FontAwesomeIcons.bolt,
                     };
@@ -1133,6 +1162,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                       ReceiveType.onchain => 'Onchain',
                       ReceiveType.lightning => 'Lightning',
                     };
+                    final iconColor = isSelected
+                        ? (isLight ? Colors.black87 : Colors.white)
+                        : (isLight ? Colors.black38 : Colors.white38);
 
                     return Expanded(
                       child: GestureDetector(
@@ -1149,17 +1181,22 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  icon,
-                                  size: 12,
-                                  color: isSelected
-                                      ? (isLight
-                                          ? Colors.black87
-                                          : Colors.white)
-                                      : (isLight
-                                          ? Colors.black38
-                                          : Colors.white38),
-                                ),
+                                if (type == ReceiveType.ark)
+                                  SvgPicture.asset(
+                                    'assets/images/tokens/arkade.svg',
+                                    width: 12,
+                                    height: 12,
+                                    colorFilter: ColorFilter.mode(
+                                      iconColor,
+                                      BlendMode.srcIn,
+                                    ),
+                                  )
+                                else
+                                  Icon(
+                                    icon,
+                                    size: 12,
+                                    color: iconColor,
+                                  ),
                                 const SizedBox(width: 4),
                                 Text(
                                   label,
