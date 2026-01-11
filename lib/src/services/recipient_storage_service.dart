@@ -42,6 +42,9 @@ class StoredRecipient {
   /// Check if this is an onchain Bitcoin payment
   bool get isOnchain => type == RecipientType.onchain;
 
+  /// Check if this is an Ark/Arkade payment
+  bool get isArkade => type == RecipientType.ark;
+
   Map<String, dynamic> toJson() => {
         'address': address,
         'type': type.index,

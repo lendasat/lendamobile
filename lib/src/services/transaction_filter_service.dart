@@ -67,28 +67,24 @@ class TransactionFilterService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Toggle a network filter with "all enabled by default" logic
-  /// First click on any network pill will disable just that network
+  /// Toggle a network filter with whitelist logic
+  /// Clicking a network SELECTS it (shows only selected networks)
+  /// First click: show only that network
+  /// Additional clicks: add/remove from visible set
   void toggleNetworkFilter(String network) {
     if (!hasNetworkFilter) {
       // No network filters set = all are visible
-      // User wants to hide this one, so enable all EXCEPT this one
-      for (final n in networkFilters) {
-        if (n != network) {
-          _selectedFilters.add(n);
-        }
-      }
-    } else if (_selectedFilters.contains(network)) {
-      // This network is enabled, disable it
-      _selectedFilters.remove(network);
-      // If no networks left, clear all network filters (back to "all visible")
-      if (!hasNetworkFilter) {
-        // All network filters removed, which means show all
-      }
-    } else {
-      // This network is disabled, enable it
+      // User clicks one to SELECT it (show only this one)
       _selectedFilters.add(network);
-      // If all networks are now enabled, clear them (back to default "all visible")
+    } else if (_selectedFilters.contains(network)) {
+      // This network is selected, deselect it (hide it)
+      _selectedFilters.remove(network);
+      // If no networks left selected, we stay in that state (nothing shown)
+      // User needs to select something or clear filters
+    } else {
+      // This network is not selected, select it (show it)
+      _selectedFilters.add(network);
+      // If all networks are now selected, clear them (back to default "all visible")
       if (networkFilters.every((n) => _selectedFilters.contains(n))) {
         for (final n in networkFilters) {
           _selectedFilters.remove(n);
@@ -98,23 +94,20 @@ class TransactionFilterService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Toggle a direction filter with "all enabled by default" logic
+  /// Toggle a direction filter with whitelist logic
+  /// Clicking a direction SELECTS it (shows only selected directions)
   void toggleDirectionFilter(String direction) {
     if (!hasDirectionFilter) {
       // No direction filters set = all are visible
-      // User wants to hide this one, so enable all EXCEPT this one
-      for (final d in directionFilters) {
-        if (d != direction) {
-          _selectedFilters.add(d);
-        }
-      }
+      // User clicks one to SELECT it (show only this one)
+      _selectedFilters.add(direction);
     } else if (_selectedFilters.contains(direction)) {
-      // This direction is enabled, disable it
+      // This direction is selected, deselect it (hide it)
       _selectedFilters.remove(direction);
     } else {
-      // This direction is disabled, enable it
+      // This direction is not selected, select it (show it)
       _selectedFilters.add(direction);
-      // If all directions are now enabled, clear them (back to default)
+      // If all directions are now selected, clear them (back to default "all visible")
       if (directionFilters.every((d) => _selectedFilters.contains(d))) {
         for (final d in directionFilters) {
           _selectedFilters.remove(d);
