@@ -13,7 +13,6 @@ import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
-import 'package:ark_flutter/src/ui/screens/analytics/bitcoin_chart/bitcoin_chart_detail_screen.dart';
 import 'package:ark_flutter/src/ui/screens/buy/buy_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/receivescreen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
@@ -21,6 +20,8 @@ import 'package:ark_flutter/src/ui/screens/transactions/send/recipient_search_sc
 import 'package:ark_flutter/src/ui/screens/transactions/send/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/settings.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/history/transaction_history_widget.dart';
+import 'package:ark_flutter/src/ui/screens/transactions/history/transaction_filter_screen.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart'
     show PriceData; // Only import the data type, not the chart widget
@@ -81,6 +82,8 @@ class WalletScreenState extends State<WalletScreen>
   // On-chain boarding balance (pending settle)
   int _boardingBalanceSats = 0;
   bool _isSettling = false;
+  bool _skipAutoSettle = false;
+  DateTime? _lastSettleAttempt;
 
   // Balance values
   double _pendingBalance = 0.0;
@@ -486,8 +489,21 @@ class WalletScreenState extends State<WalletScreen>
   }
 
   /// Settle boarding UTXOs (convert on-chain funds to Ark VTXOs)
-  Future<void> _settleBoarding() async {
+  Future<void> _settleBoarding({bool manual = false}) async {
     if (_isSettling || _boardingBalanceSats == 0) return;
+
+    // Skip auto-settle if we recently failed due to timelock
+    // But always allow manual settle attempts
+    if (!manual && _skipAutoSettle) {
+      final lastAttempt = _lastSettleAttempt;
+      if (lastAttempt != null &&
+          DateTime.now().difference(lastAttempt).inMinutes < 5) {
+        logger.d("Skipping auto-settle - waiting for more confirmations");
+        return;
+      }
+      // Reset skip flag after 5 minutes
+      _skipAutoSettle = false;
+    }
 
     setState(() {
       _isSettling = true;
@@ -498,6 +514,9 @@ class WalletScreenState extends State<WalletScreen>
       await settle();
       logger.i("Settle completed successfully!");
 
+      // Reset skip flag on success
+      _skipAutoSettle = false;
+
       // Refresh balance after settle
       await _fetchBalance();
       await _fetchBoardingBalance();
@@ -507,7 +526,20 @@ class WalletScreenState extends State<WalletScreen>
       }
     } catch (e) {
       logger.e("Error settling boarding UTXOs: $e");
-      // Don't show error to user - settle will be retried on next refresh
+      _lastSettleAttempt = DateTime.now();
+
+      final errorStr = e.toString().toLowerCase();
+      // Check if error is due to timelock not yet valid
+      if (errorStr.contains('not yet valid') ||
+          errorStr.contains('invalid_intent_timerange')) {
+        _skipAutoSettle = true;
+        if (manual && mounted) {
+          // Show user-friendly message for manual attempts
+          OverlayService().showError(
+            'Funds need more confirmations before they can be settled. Please wait a few minutes and try again.',
+          );
+        }
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -586,8 +618,9 @@ class WalletScreenState extends State<WalletScreen>
 
       final newPendingBalance = balanceResult.offchain.pendingSats.toDouble() /
           BitcoinConstants.satsPerBtc;
-      final newConfirmedBalance = balanceResult.offchain.confirmedSats.toDouble() /
-          BitcoinConstants.satsPerBtc;
+      final newConfirmedBalance =
+          balanceResult.offchain.confirmedSats.toDouble() /
+              BitcoinConstants.satsPerBtc;
       final newTotalBalance = balanceResult.offchain.totalSats.toDouble() /
           BitcoinConstants.satsPerBtc;
 
@@ -910,12 +943,10 @@ class WalletScreenState extends State<WalletScreen>
                   ),
                 ),
 
-                // Spacing before transaction list
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: AppTheme.cardPadding),
-                ),
+                // Sticky header for transaction history (includes top spacing)
+                _buildStickyTransactionHeader(),
 
-                // Transaction list (TransactionHistoryWidget has its own header)
+                // Transaction list content (without header)
                 SliverToBoxAdapter(
                   child: _buildTransactionList(),
                 ),
@@ -1271,7 +1302,7 @@ class WalletScreenState extends State<WalletScreen>
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
       child: PostHogMaskWidget(
         child: GestureDetector(
-          onTap: _isSettling ? null : _settleBoarding,
+          onTap: _isSettling ? null : () => _settleBoarding(manual: true),
           behavior: HitTestBehavior.opaque,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1314,7 +1345,11 @@ class WalletScreenState extends State<WalletScreen>
               ),
               const SizedBox(width: 4),
               Text(
-                _isSettling ? 'settling...' : 'incoming',
+                _isSettling
+                    ? 'settling...'
+                    : _skipAutoSettle
+                        ? 'confirming...'
+                        : 'incoming',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context)
                           .colorScheme
@@ -1525,6 +1560,127 @@ class WalletScreenState extends State<WalletScreen>
       hideAmounts: !userPrefs.balancesVisible,
       showBtcAsMain: currencyService.showCoinBalance,
       bitcoinPrice: _getCurrentBtcPrice(),
+      showHeader: false, // Header is rendered as sticky SliverAppBar
+    );
+  }
+
+  /// Builds the sticky transaction history header using SliverAppBar
+  Widget _buildStickyTransactionHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final hasTransactions = _transactions.isNotEmpty || _swaps.isNotEmpty;
+
+    // Calculate header height based on content (includes top spacing)
+    // Top spacing: cardPadding (~24)
+    // Title: ~24, spacing: ~8, search bar: ~56, padding: ~24 = ~136 when search visible
+    // Title: ~24, padding: ~16 = ~64 when no search
+    final double headerHeight = (!_isTransactionFetching && hasTransactions)
+        ? 112.0 + AppTheme.cardPadding
+        : 40.0 + AppTheme.cardPadding;
+
+    return SliverAppBar(
+      pinned: true,
+      floating: false,
+      automaticallyImplyLeading: false,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      toolbarHeight: headerHeight,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Top spacing (previously separate SliverToBoxAdapter)
+              const SizedBox(height: AppTheme.cardPadding * 2),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.cardPadding),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.transactionHistory,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    // Reload button for transaction history only
+                    GestureDetector(
+                      onTap: _isTransactionFetching
+                          ? null
+                          : () async {
+                              // Reload only transactions and swaps, not the entire wallet
+                              await Future.wait([
+                                _fetchTransactions(),
+                                _fetchSwaps(),
+                              ]);
+                            },
+                      child: _isTransactionFetching
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: isDark
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                              ),
+                            )
+                          : Icon(
+                              Icons.refresh,
+                              size: 20,
+                              color:
+                                  isDark ? AppTheme.white60 : AppTheme.black60,
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.elementSpacing),
+              if (!_isTransactionFetching && hasTransactions)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.cardPadding,
+                    vertical: AppTheme.elementSpacing,
+                  ),
+                  child: SearchFieldWidget(
+                    hintText: l10n.search,
+                    isSearchEnabled: true,
+                    handleSearch: (value) {
+                      _transactionHistoryKey.currentState
+                          ?.applySearchFromExternal(value);
+                    },
+                    onChanged: (value) {
+                      _transactionHistoryKey.currentState
+                          ?.applySearchFromExternal(value);
+                    },
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        Icons.filter_list,
+                        color: isDark ? AppTheme.white60 : AppTheme.black60,
+                        size: AppTheme.cardPadding * 0.75,
+                      ),
+                      onPressed: () async {
+                        FocusScope.of(context).unfocus();
+                        await arkBottomSheet(
+                          context: context,
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          backgroundColor:
+                              Theme.of(context).scaffoldBackgroundColor,
+                          child: const TransactionFilterScreen(),
+                        );
+                        _transactionHistoryKey.currentState?.refreshFilter();
+                      },
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
