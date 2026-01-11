@@ -71,6 +71,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   // Listen to pending transaction updates
   final PendingTransactionService _pendingService = PendingTransactionService();
 
+  // Reference to filter service for listening to changes
+  TransactionFilterService? _filterService;
+
   @override
   void initState() {
     super.initState();
@@ -84,6 +87,35 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
     // Load payment info for all transactions
     _loadPaymentInfoCache();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to filter service changes
+    final newFilterService =
+        Provider.of<TransactionFilterService>(context, listen: false);
+    if (_filterService != newFilterService) {
+      _filterService?.removeListener(_onFilterChanged);
+      _filterService = newFilterService;
+      _filterService?.addListener(_onFilterChanged);
+      // Apply any existing filters when first connected
+      if (_filterService?.hasAnyFilter == true) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _applySearch(_searchController.text);
+          }
+        });
+      }
+    }
+  }
+
+  void _onFilterChanged() {
+    // Filter service changed, refresh the filter
+    if (mounted) {
+      _cachedCombinedActivity = null;
+      _applySearch(_searchController.text);
+    }
   }
 
   /// Load payment info for all transactions to enable proper filtering
@@ -108,6 +140,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     if (paymentInfo != null) {
       if (paymentInfo.isLightning) return 'Lightning';
       if (paymentInfo.isOnchain) return 'Onchain';
+      if (paymentInfo.isArkade) return 'Arkade';
     }
     return defaultNetwork;
   }
@@ -167,6 +200,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   @override
   void dispose() {
     _pendingService.removeListener(_onPendingTransactionsChanged);
+    _filterService?.removeListener(_onFilterChanged);
     _searchController.dispose();
     _searchFocusNode.dispose();
     _searchTimer?.cancel();
@@ -189,12 +223,17 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   }
 
   /// Refresh filter after filter screen is closed
+  /// Invalidates cache to ensure filters are applied to full transaction list
   void refreshFilter() {
+    // Invalidate cache to ensure we filter the complete list
+    _cachedCombinedActivity = null;
     _applySearch(_searchController.text);
   }
 
   void _applySearch(String searchText) {
-    final filterService = context.read<TransactionFilterService>();
+    // Use Provider.of to ensure we get the latest filter state
+    final filterService =
+        Provider.of<TransactionFilterService>(context, listen: false);
     final lowerSearch = searchText.toLowerCase();
 
     setState(() {
@@ -223,40 +262,33 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       if (filterService.hasNetworkFilter) {
         allActivity = allActivity.where((item) {
           if (item is PendingActivityItem) {
-            // Pending sends could be onchain or lightning based on address type
+            // Pending sends could be onchain, lightning, or arkade based on address type
             final recipientType =
                 RecipientStorageService.determineType(item.address);
             if (recipientType == RecipientType.lightningInvoice ||
                 recipientType == RecipientType.lightning) {
               return filterService.selectedFilters.contains('Lightning');
             }
+            if (recipientType == RecipientType.ark) {
+              return filterService.selectedFilters.contains('Arkade');
+            }
             return filterService.selectedFilters.contains('Onchain');
           } else if (item is TransactionActivityItem) {
             return item.transaction.map(
-              // Boarding is an on-chain deposit into Ark
+              // Boarding is always displayed as Onchain
               boarding: (_) =>
                   filterService.selectedFilters.contains('Onchain'),
-              // Round transactions are always Arkade (off-chain Ark transactions)
-              // unless they're Lightning payments
+              // Round: use same logic as display (_getNetworkType with 'Arkade' default)
               round: (tx) {
                 final networkType = _getNetworkTypeForTxid(tx.txid, 'Arkade');
-                if (networkType == 'Lightning') {
-                  return filterService.selectedFilters.contains('Lightning');
-                }
-                // Round is always Arkade - even if sent to on-chain address,
-                // the round itself is an off-chain Ark transaction
-                return filterService.selectedFilters.contains('Arkade');
+                return filterService.selectedFilters.contains(networkType);
               },
-              // Redeem is a unilateral on-chain exit from Ark (unless Lightning)
+              // Redeem: use same logic as display (_getNetworkType with 'Arkade' default)
               redeem: (tx) {
                 final networkType = _getNetworkTypeForTxid(tx.txid, 'Arkade');
-                if (networkType == 'Lightning') {
-                  return filterService.selectedFilters.contains('Lightning');
-                }
-                // Redeem transactions are on-chain claims
-                return filterService.selectedFilters.contains('Onchain');
+                return filterService.selectedFilters.contains(networkType);
               },
-              // Offboard is a collaborative on-chain exit
+              // Offboard is always displayed as Onchain
               offboard: (_) =>
                   filterService.selectedFilters.contains('Onchain'),
             );
@@ -516,7 +548,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                   _searchFocusNode.unfocus();
                   await arkBottomSheet(
                     context: context,
-                    height: MediaQuery.of(context).size.height * 0.6,
+                    height: MediaQuery.of(context).size.height * 0.7,
                     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                     child: const TransactionFilterScreen(),
                   );
