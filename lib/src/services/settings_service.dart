@@ -9,6 +9,9 @@ class SettingsService {
   static const String _wordRecoverySetKey = 'word_recovery_set';
   static const String _userEmailKey = 'user_email';
   static const String _alphaWarningShownKey = 'alpha_warning_shown';
+  static const String _cachedTotalBalanceKey = 'cached_total_balance';
+  static const String _cachedConfirmedBalanceKey = 'cached_confirmed_balance';
+  static const String _cachedPendingBalanceKey = 'cached_pending_balance';
 
   // Default values from environment variables (injected via --dart-define)
   static const String defaultEsploraUrl = String.fromEnvironment('ESPLORA_URL',
@@ -157,5 +160,42 @@ class SettingsService {
   Future<bool> setAlphaWarningShown() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_alphaWarningShownKey, true);
+  }
+
+  // Get cached balance (returns null if not cached)
+  Future<({double total, double confirmed, double pending})?> getCachedBalance() async {
+    final prefs = await SharedPreferences.getInstance();
+    final total = prefs.getDouble(_cachedTotalBalanceKey);
+    final confirmed = prefs.getDouble(_cachedConfirmedBalanceKey);
+    final pending = prefs.getDouble(_cachedPendingBalanceKey);
+
+    // Only return if we have at least the total balance cached
+    if (total == null) return null;
+
+    return (
+      total: total,
+      confirmed: confirmed ?? 0.0,
+      pending: pending ?? 0.0,
+    );
+  }
+
+  // Save balance to cache
+  Future<void> setCachedBalance({
+    required double total,
+    required double confirmed,
+    required double pending,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_cachedTotalBalanceKey, total);
+    await prefs.setDouble(_cachedConfirmedBalanceKey, confirmed);
+    await prefs.setDouble(_cachedPendingBalanceKey, pending);
+  }
+
+  // Clear cached balance
+  Future<void> clearCachedBalance() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_cachedTotalBalanceKey);
+    await prefs.remove(_cachedConfirmedBalanceKey);
+    await prefs.remove(_cachedPendingBalanceKey);
   }
 }
