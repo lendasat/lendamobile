@@ -9,6 +9,7 @@ import 'package:ark_flutter/src/services/lendaswap_service.dart'
     show LendaSwapService;
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
+import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/ui/screens/swap/swap_processing_screen.dart';
@@ -49,6 +50,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   String? _errorMessage;
   Timer? _pollTimer;
   bool _showAddressCopied = false;
+  BigInt _availableBalanceSats = BigInt.zero;
 
   @override
   void initState() {
@@ -70,6 +72,26 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
     try {
       final contract = await _lendasatService.getContract(widget.contractId);
+
+      // Fetch wallet balance for collateral check
+      // Use cached balance first for instant display, then fetch fresh balance
+      try {
+        final cachedBalance = await SettingsService().getCachedBalance();
+        if (cachedBalance != null) {
+          _availableBalanceSats = BigInt.from(
+              (cachedBalance.total * BitcoinConstants.satsPerBtc).round());
+        }
+        // Also fetch fresh balance for accuracy
+        final walletBalance = await ark_api.balance();
+        _availableBalanceSats = walletBalance.offchain.totalSats;
+      } catch (e) {
+        logger.w('Error fetching balance for collateral check: $e');
+        // Keep cached balance if fresh fetch fails
+        if (_availableBalanceSats == BigInt.zero) {
+          _availableBalanceSats = BigInt.zero;
+        }
+      }
+
       if (mounted) {
         setState(() {
           _contract = contract;
@@ -104,6 +126,23 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   Future<void> _refreshContract() async {
     try {
       final contract = await _lendasatService.getContract(widget.contractId);
+
+      // Also refresh balance if contract is awaiting deposit
+      if (contract.status == ContractStatus.approved) {
+        try {
+          // Try cached balance first, then fresh
+          final cachedBalance = await SettingsService().getCachedBalance();
+          if (cachedBalance != null) {
+            _availableBalanceSats = BigInt.from(
+                (cachedBalance.total * BitcoinConstants.satsPerBtc).round());
+          }
+          final walletBalance = await ark_api.balance();
+          _availableBalanceSats = walletBalance.offchain.totalSats;
+        } catch (e) {
+          // Ignore balance fetch errors during refresh
+        }
+      }
+
       if (mounted) {
         setState(() => _contract = contract);
 
@@ -1182,16 +1221,37 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         MediaQuery.of(context).size.width - AppTheme.cardPadding * 2;
     final isPayingCollateral = _isActionLoading;
 
+    // Check if user has enough balance for collateral
+    final requiredSats = BigInt.from(_contract!.effectiveCollateralSats);
+    final hasInsufficientBalance =
+        canPayCollateral && _availableBalanceSats < requiredSats;
+
     return Column(
       children: [
         if (canPayCollateral)
           LongButtonWidget(
-            title:
-                isPayingCollateral ? 'ADDING COLLATERAL...' : 'PAY COLLATERAL',
-            buttonType: ButtonType.primary,
+            title: isPayingCollateral
+                ? 'ADDING COLLATERAL...'
+                : hasInsufficientBalance
+                    ? 'BALANCE TOO LOW'
+                    : 'PAY COLLATERAL',
+            buttonType:
+                hasInsufficientBalance ? ButtonType.secondary : ButtonType.primary,
             customWidth: buttonWidth,
             isLoading: isPayingCollateral,
-            onTap: isPayingCollateral ? null : _payCollateral,
+            onTap:
+                isPayingCollateral || hasInsufficientBalance ? null : _payCollateral,
+          ),
+        if (hasInsufficientBalance)
+          Padding(
+            padding: const EdgeInsets.only(top: AppTheme.elementSpacing),
+            child: Text(
+              'You need ${(_contract!.effectiveCollateralSats / 100000000).toStringAsFixed(8)} BTC to fund this contract',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.errorColor,
+                  ),
+              textAlign: TextAlign.center,
+            ),
           ),
         if (_contract!.canRepayWithLendaswap) ...[
           if (canPayCollateral) const SizedBox(height: 12),
