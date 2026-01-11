@@ -167,6 +167,18 @@ abstract class AppLocalizations {
   /// **'Enter Amount'**
   String get enterAmount;
 
+  /// No description provided for @amountTooLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount Too Low'**
+  String get amountTooLow;
+
+  /// No description provided for @amountTooHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount Too High'**
+  String get amountTooHigh;
+
   /// No description provided for @amount.
   ///
   /// In en, this message translates to:
@@ -1588,6 +1600,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment Methods'**
   String get paymentMethods;
+
+  /// No description provided for @paymentProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Provider'**
+  String get paymentProvider;
+
+  /// No description provided for @chooseProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Provider'**
+  String get chooseProvider;
 
   /// No description provided for @buyLimits.
   ///

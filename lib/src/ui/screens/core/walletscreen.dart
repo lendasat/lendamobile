@@ -1468,20 +1468,16 @@ class WalletScreenState extends State<WalletScreen>
           //     fallbackIcon: Icons.sell_outlined,
           //   ),
           // ),
-          // TODO: Buy button disabled - MoonPay doesn't support Taproot (bc1p) addresses yet.
-          // They only support SegWit (bc1q) addresses. Once MoonPay adds Taproot support,
-          // or we implement a SegWit receive address with auto-settle, this can be re-enabled.
-          // See: https://support.moonpay.com/en/articles/380897-what-kind-of-btc-address-does-moonpay-use
-          // Flexible(
-          //   child: BitNetImageWithTextButton(
-          //     "Buy",
-          //     _handleBuy,
-          //     width: AppTheme.cardPadding * 2.5,
-          //     height: AppTheme.cardPadding * 2.5,
-          //     fallbackIcon: FontAwesomeIcons.btc,
-          //     fallbackIconSize: AppTheme.iconSize * 1.5,
-          //   ),
-          // ),
+          Flexible(
+            child: BitNetImageWithTextButton(
+              "Buy",
+              _handleBuy,
+              width: AppTheme.cardPadding * 2.5,
+              height: AppTheme.cardPadding * 2.5,
+              fallbackIcon: FontAwesomeIcons.btc,
+              fallbackIconSize: AppTheme.iconSize * 1.5,
+            ),
+          ),
         ],
       ),
     );
