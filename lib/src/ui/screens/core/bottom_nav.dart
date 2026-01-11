@@ -73,6 +73,14 @@ class _BottomNavState extends State<BottomNav> {
     _swapKey.currentState?.unfocusAll();
     _loansKey.currentState?.unfocusAll();
 
+    // If tapping the already selected tab, scroll to top
+    if (index == _selectedIndex) {
+      if (index == 0) {
+        _walletKey.currentState?.scrollToTop();
+      }
+      return;
+    }
+
     // Refresh balance when switching to swap tab
     if (index == 1) {
       _swapKey.currentState?.refreshBalance();
