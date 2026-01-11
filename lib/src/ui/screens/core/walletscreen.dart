@@ -1628,23 +1628,11 @@ class WalletScreenState extends State<WalletScreen>
                                 _fetchSwaps(),
                               ]);
                             },
-                      child: _isTransactionFetching
-                          ? SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: isDark
-                                    ? AppTheme.white60
-                                    : AppTheme.black60,
-                              ),
-                            )
-                          : Icon(
-                              Icons.refresh,
-                              size: 20,
-                              color:
-                                  isDark ? AppTheme.white60 : AppTheme.black60,
-                            ),
+                      child: Icon(
+                        Icons.refresh,
+                        size: 20,
+                        color: isDark ? AppTheme.white60 : AppTheme.black60,
+                      ),
                     ),
                   ],
                 ),
@@ -1652,9 +1640,11 @@ class WalletScreenState extends State<WalletScreen>
               const SizedBox(height: AppTheme.elementSpacing),
               if (!_isTransactionFetching && hasTransactions)
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.cardPadding,
-                    vertical: AppTheme.elementSpacing,
+                  padding: const EdgeInsets.only(
+                    left: AppTheme.cardPadding,
+                    right: AppTheme.cardPadding,
+                    top: AppTheme.elementSpacing,
+                    bottom: AppTheme.elementSpacing,
                   ),
                   child: SearchFieldWidget(
                     hintText: l10n.search,
@@ -1677,7 +1667,7 @@ class WalletScreenState extends State<WalletScreen>
                         FocusScope.of(context).unfocus();
                         await arkBottomSheet(
                           context: context,
-                          height: MediaQuery.of(context).size.height * 0.6,
+                          height: MediaQuery.of(context).size.height * 0.7,
                           backgroundColor:
                               Theme.of(context).scaffoldBackgroundColor,
                           child: const TransactionFilterScreen(),
