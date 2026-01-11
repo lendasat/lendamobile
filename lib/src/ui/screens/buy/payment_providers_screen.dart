@@ -5,6 +5,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Payment provider information
 class PaymentProvider {
@@ -92,7 +93,7 @@ class _PaymentProvidersScreenState extends State<PaymentProvidersScreen> {
       id: 'bringin',
       name: 'Bringin',
       description: 'Buy Bitcoin with ease',
-      imagePath: 'assets/images/bringin.png',
+      imagePath: 'assets/images/bringinxyz_logo.webp',
       feesByMethod: {
         'credit_debit_card': ProviderFee(percentage: 2.5),
         'sepa_bank_transfer': ProviderFee(percentage: 1.0),
@@ -149,6 +150,7 @@ class _PaymentProvidersScreenState extends State<PaymentProvidersScreen> {
         context: context,
         hasBackButton: true,
         text: l10n.paymentProvider,
+        transparent: false,
         onTap: () => Navigator.of(context).pop(),
       ),
       body: SingleChildScrollView(
@@ -299,28 +301,7 @@ class _PaymentProvidersScreenState extends State<PaymentProvidersScreen> {
                       0.5,
                       0,
                     ]),
-              child: Image.asset(
-                provider.imagePath,
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .cardColor
-                          .withValues(alpha: provider.isAvailable ? 1.0 : 0.5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.account_balance,
-                      color: provider.isAvailable ? null : greyColor,
-                    ),
-                  );
-                },
-              ),
+              child: _buildProviderImage(provider, greyColor),
             ),
           ),
           trailing: isSelected
@@ -334,6 +315,72 @@ class _PaymentProvidersScreenState extends State<PaymentProvidersScreen> {
                   color: provider.isAvailable ? null : greyColor,
                 ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildProviderImage(PaymentProvider provider, Color? greyColor) {
+    final isSvg = provider.imagePath.endsWith('.svg');
+
+    // Bringin logo needs a circular background
+    if (provider.id == 'bringin') {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.grey.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        padding: const EdgeInsets.all(6),
+        child: Image.asset(
+          provider.imagePath,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildFallbackIcon(provider, greyColor);
+          },
+        ),
+      );
+    }
+
+    if (isSvg) {
+      return SvgPicture.asset(
+        provider.imagePath,
+        width: 40,
+        height: 40,
+        fit: BoxFit.contain,
+        placeholderBuilder: (context) =>
+            _buildFallbackIcon(provider, greyColor),
+      );
+    }
+
+    return Image.asset(
+      provider.imagePath,
+      width: 40,
+      height: 40,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return _buildFallbackIcon(provider, greyColor);
+      },
+    );
+  }
+
+  Widget _buildFallbackIcon(PaymentProvider provider, Color? greyColor) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Theme.of(context)
+            .cardColor
+            .withValues(alpha: provider.isAvailable ? 1.0 : 0.5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        Icons.account_balance,
+        color: provider.isAvailable ? null : greyColor,
       ),
     );
   }

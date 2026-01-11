@@ -11,10 +11,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class PaymentMethodsScreen extends StatefulWidget {
   final String? initialMethodId;
+  final String providerId;
 
   const PaymentMethodsScreen({
     super.key,
     this.initialMethodId,
+    this.providerId = 'coinbase',
   });
 
   @override
@@ -26,7 +28,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
 
   // MoonPay fee structure by payment method
   // Source: https://support.moonpay.com/customers/docs/moonpay-fees
-  static const Map<String, PaymentMethodFee> _fees = {
+  static const Map<String, PaymentMethodFee> _moonpayFees = {
     'credit_debit_card': PaymentMethodFee(percentage: 4.5, minFee: 3.99),
     'google_pay': PaymentMethodFee(percentage: 4.5, minFee: 3.99),
     'apple_pay': PaymentMethodFee(percentage: 4.5, minFee: 3.99),
@@ -34,6 +36,22 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
     'stripe': PaymentMethodFee(percentage: 4.5, minFee: 3.99),
     'sepa_bank_transfer': PaymentMethodFee(percentage: 1.0, minFee: 3.99),
   };
+
+  // Coinbase fee structure by payment method
+  // Source: https://help.coinbase.com/en/coinbase/trading-and-funding/pricing-and-fees/fees
+  static const Map<String, PaymentMethodFee> _coinbaseFees = {
+    'credit_debit_card':
+        PaymentMethodFee(percentage: 4.49, minFee: 0), // 3.99% + 0.5% spread
+    'google_pay': PaymentMethodFee(percentage: 4.49, minFee: 0),
+    'apple_pay': PaymentMethodFee(percentage: 4.49, minFee: 0),
+    'paypal': PaymentMethodFee(percentage: 4.49, minFee: 0),
+    'stripe': PaymentMethodFee(percentage: 4.49, minFee: 0),
+    'sepa_bank_transfer':
+        PaymentMethodFee(percentage: 1.99, minFee: 0), // 1.49% + 0.5% spread
+  };
+
+  Map<String, PaymentMethodFee> get _fees =>
+      widget.providerId == 'coinbase' ? _coinbaseFees : _moonpayFees;
 
   @override
   void initState() {
@@ -67,6 +85,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
         context: context,
         hasBackButton: true,
         text: l10n.paymentMethods,
+        transparent: false,
         onTap: () => Navigator.of(context).pop(),
       ),
       body: SingleChildScrollView(
