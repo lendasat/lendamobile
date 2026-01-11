@@ -509,7 +509,8 @@ class WalletScreenState extends State<WalletScreen>
 
     final totalToRecover = _recoverableSats + _expiredSats;
     try {
-      logger.i("Settling $totalToRecover sats from recoverable/expired VTXOs...");
+      logger
+          .i("Settling $totalToRecover sats from recoverable/expired VTXOs...");
       await settle();
       logger.i("Recoverable VTXOs settled successfully!");
 
@@ -593,28 +594,6 @@ class WalletScreenState extends State<WalletScreen>
     }
   }
 
-  void _toggleBalanceType() {
-    HapticFeedback.lightImpact();
-    setState(() {
-      switch (_currentBalanceType) {
-        case BalanceType.total:
-          _currentBalanceType = BalanceType.pending;
-          break;
-        case BalanceType.pending:
-          _currentBalanceType = BalanceType.confirmed;
-          break;
-        case BalanceType.confirmed:
-          _currentBalanceType = BalanceType.total;
-          break;
-      }
-    });
-
-    OverlayService().showOverlay(
-      'Showing ${_currentBalanceType.name} balance',
-      color: AppTheme.colorBitcoin,
-    );
-  }
-
   void _toggleBalanceVisibility() {
     HapticFeedback.lightImpact();
     context.read<UserPreferencesService>().toggleBalancesVisible();
@@ -629,14 +608,8 @@ class WalletScreenState extends State<WalletScreen>
   }
 
   double _getSelectedBalance() {
-    switch (_currentBalanceType) {
-      case BalanceType.pending:
-        return _pendingBalance;
-      case BalanceType.confirmed:
-        return _confirmedBalance;
-      case BalanceType.total:
-        return _totalBalance;
-    }
+    // Always show total balance - detailed breakdown available in Developer Settings
+    return _totalBalance;
   }
 
   /// Get current BTC price in USD from price data.
@@ -1140,7 +1113,6 @@ class WalletScreenState extends State<WalletScreen>
           PostHogMaskWidget(
             child: GestureDetector(
               onTap: _toggleDisplayUnit,
-              onDoubleTap: _toggleBalanceType,
               onLongPress: _toggleBalanceVisibility,
               behavior: HitTestBehavior.opaque,
               child: SizedBox(
