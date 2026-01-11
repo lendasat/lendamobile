@@ -74,6 +74,12 @@ class TransactionFilterScreen extends StatelessWidget {
                           onTap: () => filterService.toggleFilter('Onchain'),
                         ),
                         _FilterPill(
+                          label: 'Lightning',
+                          isSelected: filterService.selectedFilters
+                              .contains('Lightning'),
+                          onTap: () => filterService.toggleFilter('Lightning'),
+                        ),
+                        _FilterPill(
                           label: 'Arkade',
                           isSelected:
                               filterService.selectedFilters.contains('Arkade'),

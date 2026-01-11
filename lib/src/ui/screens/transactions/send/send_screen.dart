@@ -27,6 +27,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:bolt11_decoder/bolt11_decoder.dart';
@@ -653,11 +654,14 @@ class SendScreenState extends State<SendScreen> {
       final recipientType = _lnurlParams?.callback != null
           ? RecipientType.lightning
           : RecipientType.lightningInvoice;
+      // Calculate Boltz fee for Lightning payment (0.25% of amount)
+      final boltzFeeSats = (amountSats * _boltzFeePercent / 100).ceil();
       await RecipientStorageService.saveRecipient(
         address: recipientAddress,
         type: recipientType,
         amountSats: amountSats,
         txid: txid,
+        feeSats: boltzFeeSats,
       );
 
       // Return to wallet and show success bottom sheet
@@ -697,11 +701,20 @@ class SendScreenState extends State<SendScreen> {
     // Determine recipient type
     final recipientType = RecipientStorageService.determineType(address);
 
+    // Calculate miner fee for onchain transactions
+    int? minerFeeSats;
+    if (recipientType == RecipientType.onchain && _recommendedFees != null) {
+      // Use fastest fee rate as default (user can change this in the future)
+      minerFeeSats =
+          (_estimatedTxVbytes * _recommendedFees!.fastestFee).round();
+    }
+
     // Save recipient before starting (so we have it even if tx fails for retry)
     await RecipientStorageService.saveRecipient(
       address: address,
       type: recipientType,
       amountSats: amountSats,
+      feeSats: minerFeeSats,
     );
 
     // Add pending transaction and start background send
@@ -1322,10 +1335,10 @@ class SendScreenState extends State<SendScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      _getNetworkIcon(currentNetwork),
-                      size: AppTheme.cardPadding * 0.75,
-                      color: Theme.of(context).hintColor,
+                    _buildNetworkIconWidget(
+                      currentNetwork,
+                      AppTheme.cardPadding * 0.75,
+                      Theme.of(context).hintColor,
                     ),
                     const SizedBox(width: AppTheme.elementSpacing / 2),
                     Text(
@@ -1339,10 +1352,10 @@ class SendScreenState extends State<SendScreen> {
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  _getNetworkIcon(currentNetwork),
-                  size: AppTheme.cardPadding * 0.75,
-                  color: Theme.of(context).hintColor,
+                _buildNetworkIconWidget(
+                  currentNetwork,
+                  AppTheme.cardPadding * 0.75,
+                  Theme.of(context).hintColor,
                 ),
                 const SizedBox(width: AppTheme.elementSpacing / 2),
                 Text(
@@ -1428,6 +1441,23 @@ class SendScreenState extends State<SendScreen> {
       default:
         return FontAwesomeIcons.question;
     }
+  }
+
+  /// Build network icon as Widget (supports SVG for Arkade)
+  Widget _buildNetworkIconWidget(String network, double size, Color color) {
+    if (network == 'Arkade') {
+      return SvgPicture.asset(
+        'assets/images/tokens/arkade.svg',
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    }
+    return FaIcon(
+      _getNetworkIcon(network),
+      size: size,
+      color: color,
+    );
   }
 
   String _getNetworkFeeHint(String network) {
@@ -1556,10 +1586,10 @@ class SendScreenState extends State<SendScreen> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
-                                      _getNetworkIcon(currentNetwork),
-                                      size: AppTheme.cardPadding * 0.75,
-                                      color: Theme.of(context).hintColor,
+                                    _buildNetworkIconWidget(
+                                      currentNetwork,
+                                      AppTheme.cardPadding * 0.75,
+                                      Theme.of(context).hintColor,
                                     ),
                                     const SizedBox(
                                         width: AppTheme.elementSpacing / 2),
@@ -1583,10 +1613,10 @@ class SendScreenState extends State<SendScreen> {
                           : Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  _getNetworkIcon(currentNetwork),
-                                  size: AppTheme.cardPadding * 0.75,
-                                  color: Theme.of(context).hintColor,
+                                _buildNetworkIconWidget(
+                                  currentNetwork,
+                                  AppTheme.cardPadding * 0.75,
+                                  Theme.of(context).hintColor,
                                 ),
                                 const SizedBox(
                                     width: AppTheme.elementSpacing / 2),
