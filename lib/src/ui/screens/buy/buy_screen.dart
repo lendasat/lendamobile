@@ -47,7 +47,8 @@ class _BuyScreenState extends State<BuyScreen> {
 
   String _paymentMethodName = 'SEPA Bank Payments';
   String _paymentMethodId = 'sepa_bank_transfer';
-  double _paymentMethodFee = 1.0; // Default SEPA fee (lowest)
+  double _paymentMethodFee =
+      1.99; // Default Coinbase SEPA fee (1.49% + 0.5% spread)
 
   // MoonPay fee structure by payment method
   static const Map<String, double> _moonpayFeesByMethod = {
@@ -403,8 +404,23 @@ class _BuyScreenState extends State<BuyScreen> {
               Image.asset('assets/images/coinbase.png', width: 32, height: 32),
         );
       case "bringin":
-        return Image.asset('assets/images/bringinxyz_logo.webp',
-            width: 32, height: 32);
+        return Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.grey.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          padding: const EdgeInsets.all(4),
+          child: Image.asset(
+            'assets/images/bringinxyz_logo.webp',
+            fit: BoxFit.contain,
+          ),
+        );
       default:
         return const Icon(Icons.account_balance);
     }
@@ -687,9 +703,9 @@ class _BuyScreenState extends State<BuyScreen> {
               ),
               text: _paymentMethodName,
               subtitle: Text(
-                '$_paymentMethodFee% fee',
+                '${_paymentMethodFee.toStringAsFixed(_paymentMethodFee == _paymentMethodFee.roundToDouble() ? 1 : 2)}% fee',
                 style: TextStyle(
-                  color: _paymentMethodFee <= 1.0
+                  color: _paymentMethodFee <= 2.0
                       ? AppTheme.successColor
                       : Theme.of(context)
                           .textTheme
@@ -704,6 +720,7 @@ class _BuyScreenState extends State<BuyScreen> {
                   MaterialPageRoute(
                     builder: (context) => PaymentMethodsScreen(
                       initialMethodId: _paymentMethodId,
+                      providerId: _providerId,
                     ),
                   ),
                 );
