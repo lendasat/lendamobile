@@ -18,6 +18,8 @@ class StoredRecipient {
   final int timestamp;
   final String? txid;
   final String? label;
+  final bool isReceive; // true for receive requests, false for sends
+  final int? feeSats; // Fee paid (e.g., Boltz fee for Lightning)
 
   const StoredRecipient({
     required this.address,
@@ -26,10 +28,19 @@ class StoredRecipient {
     required this.timestamp,
     this.txid,
     this.label,
+    this.isReceive = false,
+    this.feeSats,
   });
 
   /// Check if this recipient can be reused for sending
-  bool get isReusable => type != RecipientType.lightningInvoice;
+  bool get isReusable => type != RecipientType.lightningInvoice && !isReceive;
+
+  /// Check if this is a Lightning payment (invoice or LNURL)
+  bool get isLightning =>
+      type == RecipientType.lightningInvoice || type == RecipientType.lightning;
+
+  /// Check if this is an onchain Bitcoin payment
+  bool get isOnchain => type == RecipientType.onchain;
 
   Map<String, dynamic> toJson() => {
         'address': address,
@@ -38,6 +49,8 @@ class StoredRecipient {
         'timestamp': timestamp,
         'txid': txid,
         'label': label,
+        'isReceive': isReceive,
+        'feeSats': feeSats,
       };
 
   factory StoredRecipient.fromJson(Map<String, dynamic> json) {
@@ -48,6 +61,8 @@ class StoredRecipient {
       timestamp: json['timestamp'] as int,
       txid: json['txid'] as String?,
       label: json['label'] as String?,
+      isReceive: json['isReceive'] as bool? ?? false,
+      feeSats: json['feeSats'] as int?,
     );
   }
 }
@@ -64,6 +79,7 @@ class RecipientStorageService {
     required int amountSats,
     String? txid,
     String? label,
+    int? feeSats,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -76,6 +92,7 @@ class RecipientStorageService {
         timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         txid: txid,
         label: label,
+        feeSats: feeSats,
       );
 
       // Add new recipient at the beginning (allow multiple transactions to same address)
@@ -109,12 +126,105 @@ class RecipientStorageService {
           timestamp: old.timestamp,
           txid: txid,
           label: old.label,
+          isReceive: old.isReceive,
+          feeSats: old.feeSats,
         );
         await _saveRecipients(prefs, recipients);
         logger.i('Updated recipient txid: ${_truncateAddress(address)}');
       }
     } catch (e) {
       logger.e('Error updating recipient txid: $e');
+    }
+  }
+
+  /// Find a recipient/payment request by transaction ID
+  static Future<StoredRecipient?> getByTxid(String txid) async {
+    try {
+      final recipients = await getRecipients();
+      return recipients.cast<StoredRecipient?>().firstWhere(
+            (r) => r?.txid == txid,
+            orElse: () => null,
+          );
+    } catch (e) {
+      logger.e('Error finding recipient by txid: $e');
+      return null;
+    }
+  }
+
+  /// Save a receive request (e.g., Lightning invoice we created)
+  static Future<void> saveReceiveRequest({
+    required String address,
+    required RecipientType type,
+    required int amountSats,
+    int? feeSats,
+    String? label,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final recipients = await _loadRecipients(prefs);
+
+      final newRecipient = StoredRecipient(
+        address: address,
+        type: type,
+        amountSats: amountSats,
+        timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        isReceive: true,
+        feeSats: feeSats,
+        label: label,
+      );
+
+      recipients.insert(0, newRecipient);
+
+      // Trim to max size
+      if (recipients.length > _maxRecipients) {
+        recipients.removeRange(_maxRecipients, recipients.length);
+      }
+
+      await _saveRecipients(prefs, recipients);
+      logger.i(
+          'Saved receive request: ${_truncateAddress(address)} (${type.name})');
+    } catch (e) {
+      logger.e('Error saving receive request: $e');
+    }
+  }
+
+  /// Link a receive request to a transaction by matching amount
+  /// Used when a Lightning payment arrives and we need to correlate it
+  static Future<void> linkReceiveToTransaction({
+    required String txid,
+    required int amountSats,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final recipients = await _loadRecipients(prefs);
+
+      // Find pending Lightning receives (no txid yet) with matching amount
+      // Allow some tolerance for fees (within 5%)
+      final tolerance = (amountSats * 0.05).round();
+
+      final index = recipients.indexWhere((r) =>
+          r.isReceive &&
+          r.txid == null &&
+          r.isLightning &&
+          (r.amountSats - amountSats).abs() <= tolerance);
+
+      if (index != -1) {
+        final old = recipients[index];
+        recipients[index] = StoredRecipient(
+          address: old.address,
+          type: old.type,
+          amountSats: old.amountSats,
+          timestamp: old.timestamp,
+          txid: txid,
+          label: old.label,
+          isReceive: old.isReceive,
+          feeSats: old.feeSats,
+        );
+        await _saveRecipients(prefs, recipients);
+        logger.i('Linked receive request to txid: ${_truncateAddress(txid)}');
+      }
+    } catch (e) {
+      logger.e('Error linking receive to transaction: $e');
     }
   }
 
