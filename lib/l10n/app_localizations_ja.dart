@@ -36,6 +36,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get enterAmount => '金額を入力';
 
   @override
+  String get amountTooLow => 'Amount Too Low';
+
+  @override
+  String get amountTooHigh => 'Amount Too High';
+
+  @override
   String get amount => 'Amount';
 
   @override
@@ -744,6 +750,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get paymentMethods => 'Payment Methods';
+
+  @override
+  String get paymentProvider => 'Payment Provider';
+
+  @override
+  String get chooseProvider => 'Choose Provider';
 
   @override
   String get buyLimits => 'Buy Limits';

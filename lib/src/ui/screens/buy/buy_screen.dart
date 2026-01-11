@@ -7,6 +7,7 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart' as rust_api;
 import 'package:ark_flutter/src/rust/models/moonpay.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
+import 'package:ark_flutter/src/services/coinbase_service.dart';
 import 'package:ark_flutter/src/services/moonpay_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -22,6 +23,7 @@ import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'payment_methods_screen.dart';
+import 'payment_providers_screen.dart';
 
 class BuyScreen extends StatefulWidget {
   const BuyScreen({super.key});
@@ -48,7 +50,7 @@ class _BuyScreenState extends State<BuyScreen> {
   double _paymentMethodFee = 1.0; // Default SEPA fee (lowest)
 
   // MoonPay fee structure by payment method
-  static const Map<String, double> _feesByMethod = {
+  static const Map<String, double> _moonpayFeesByMethod = {
     'credit_debit_card': 4.5,
     'google_pay': 4.5,
     'apple_pay': 4.5,
@@ -57,9 +59,18 @@ class _BuyScreenState extends State<BuyScreen> {
     'sepa_bank_transfer': 1.0,
   };
 
+  // Coinbase fee structure by payment method (percentage + spread)
+  static const Map<String, double> _coinbaseFeesByMethod = {
+    'credit_debit_card': 4.49, // 3.99% + 0.5% spread
+    'google_pay': 4.49,
+    'apple_pay': 4.49,
+    'paypal': 4.49,
+    'sepa_bank_transfer': 1.99, // 1.49% + 0.5% spread
+  };
+
   // Provider state
-  final String _providerName = 'MoonPay';
-  final String _providerId = 'moonpay';
+  String _providerName = 'Coinbase';
+  String _providerId = 'coinbase';
 
   MoonPayCurrencyLimits? _limits;
 
@@ -72,6 +83,19 @@ class _BuyScreenState extends State<BuyScreen> {
 
   /// Get current BTC price from MoonPay quote, or 0 if not available.
   double get _btcToUsdRate => _currentQuote?.exchangeRate ?? 0;
+
+  /// Get fee for current provider and payment method
+  double _getFeeForCurrentProvider(String methodId) {
+    if (_providerId == 'coinbase') {
+      return _coinbaseFeesByMethod[methodId] ??
+          _coinbaseFeesByMethod['credit_debit_card'] ??
+          4.49;
+    }
+    // Default to MoonPay
+    return _moonpayFeesByMethod[methodId] ??
+        _moonpayFeesByMethod['credit_debit_card'] ??
+        4.5;
+  }
 
   @override
   void initState() {
@@ -104,6 +128,17 @@ class _BuyScreenState extends State<BuyScreen> {
   }
 
   Future<void> _fetchLimits() async {
+    // Only fetch MoonPay limits when MoonPay is selected
+    // Coinbase handles its own limits validation
+    if (_providerId != 'moonpay') {
+      logger.i(
+          '[BuyScreen] Skipping limits fetch for $_providerId (provider handles validation)');
+      setState(() {
+        _limits = null;
+      });
+      return;
+    }
+
     try {
       logger.i(
           '[BuyScreen] Fetching limits for payment method: $_paymentMethodId');
@@ -167,6 +202,30 @@ class _BuyScreenState extends State<BuyScreen> {
     return isValid;
   }
 
+  String _getButtonTitle(AppLocalizations l10n) {
+    // Check if there's any amount entered
+    final hasAmount = _satController.text.isNotEmpty &&
+        int.tryParse(_satController.text) != null &&
+        int.parse(_satController.text) > 0;
+
+    if (!hasAmount) {
+      return l10n.enterAmount;
+    }
+
+    // Check if amount is too low (under minimum)
+    if (_allowedAmountDifference > 0) {
+      return l10n.amountTooLow;
+    }
+
+    // Check if amount is too high (over maximum)
+    if (_allowedAmountDifference < 0) {
+      return l10n.amountTooHigh;
+    }
+
+    // Amount is valid
+    return l10n.buyBitcoin;
+  }
+
   Future<void> _processPurchase() async {
     if (!_isValidAmount() || _walletAddress == null) return;
 
@@ -176,79 +235,139 @@ class _BuyScreenState extends State<BuyScreen> {
       final sats = int.parse(_satController.text);
       final btcAmount = sats / BitcoinConstants.satsPerBtc;
 
-      final queryParams = {
-        'quoteCurrencyAmount': btcAmount.toString(),
-        'baseCurrencyCode': 'usd',
-        'walletAddress': _walletAddress!,
-        'paymentMethod': _paymentMethodId,
-      };
-
-      final moonpayService = MoonPayService();
-
-      // Debug: Print MoonPay configuration
-      moonpayService.printConfig();
-
-      final encryptedData = await moonpayService.encryptData(queryParams);
-
-      // Use MoonPay webview link from environment variables
-      final websiteUrl = moonpayService.webviewLink;
-      logger.i('[MoonPay] Using webview link: $websiteUrl');
-
-      final websiteUri = Uri.parse(websiteUrl);
-      final moonpayUrl = Uri(
-        scheme: websiteUri.scheme,
-        host: websiteUri.host,
-        port: websiteUri.port,
-        path: '/moonpay/onramp',
-        queryParameters: {
-          'data': encryptedData.ciphertext,
-          'value': encryptedData.iv,
-        },
-      );
-
-      logger.i('[MoonPay] Launching URL: $moonpayUrl');
-
-      try {
-        await launchUrl(
-          moonpayUrl,
-          customTabsOptions: CustomTabsOptions(
-            colorSchemes: CustomTabsColorSchemes.defaults(
-              toolbarColor: const Color(0xFF121212),
-            ),
-            shareState: CustomTabsShareState.on,
-            urlBarHidingEnabled: true,
-            showTitle: false,
-          ),
-          safariVCOptions: const SafariViewControllerOptions(
-            preferredBarTintColor: Color(0xFF121212),
-            preferredControlTintColor: Color(0xFFFFFFFF),
-            barCollapsingEnabled: true,
-            dismissButtonStyle: SafariViewControllerDismissButtonStyle.close,
-            entersReaderIfAvailable: false,
-          ),
-        );
-
-        // Track bitcoin buy transaction
-        await AnalyticsService().trackBitcoinTransaction(
-          amountSats: sats,
-          type: 'buy',
-          fiatCurrency: 'usd',
-          provider: 'moonpay',
-        );
-      } catch (e) {
-        throw Exception('Could not launch MoonPay: $e');
+      if (_providerId == 'coinbase') {
+        await _processCoinbasePurchase(sats, btcAmount);
+      } else {
+        await _processMoonPayPurchase(sats, btcAmount);
       }
     } catch (e) {
       logger.e('Error processing purchase: $e');
       if (mounted) {
         OverlayService().showError(
-          '${AppLocalizations.of(context)!.failedToLaunchMoonpay}: ${e.toString()}',
+          'Failed to launch $_providerName: ${e.toString()}',
         );
       }
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);
       }
+    }
+  }
+
+  Future<void> _processMoonPayPurchase(int sats, double btcAmount) async {
+    final queryParams = {
+      'quoteCurrencyAmount': btcAmount.toString(),
+      'baseCurrencyCode': 'usd',
+      'walletAddress': _walletAddress!,
+      'paymentMethod': _paymentMethodId,
+    };
+
+    final moonpayService = MoonPayService();
+
+    // Debug: Print MoonPay configuration
+    moonpayService.printConfig();
+
+    final encryptedData = await moonpayService.encryptData(queryParams);
+
+    // Use MoonPay webview link from environment variables
+    final websiteUrl = moonpayService.webviewLink;
+    logger.i('[MoonPay] Using webview link: $websiteUrl');
+
+    final websiteUri = Uri.parse(websiteUrl);
+    final moonpayUrl = Uri(
+      scheme: websiteUri.scheme,
+      host: websiteUri.host,
+      port: websiteUri.port,
+      path: '/moonpay/onramp',
+      queryParameters: {
+        'data': encryptedData.ciphertext,
+        'value': encryptedData.iv,
+      },
+    );
+
+    logger.i('[MoonPay] Launching URL: $moonpayUrl');
+
+    try {
+      await launchUrl(
+        moonpayUrl,
+        customTabsOptions: CustomTabsOptions(
+          colorSchemes: CustomTabsColorSchemes.defaults(
+            toolbarColor: const Color(0xFF121212),
+          ),
+          shareState: CustomTabsShareState.on,
+          urlBarHidingEnabled: true,
+          showTitle: false,
+        ),
+        safariVCOptions: const SafariViewControllerOptions(
+          preferredBarTintColor: Color(0xFF121212),
+          preferredControlTintColor: Color(0xFFFFFFFF),
+          barCollapsingEnabled: true,
+          dismissButtonStyle: SafariViewControllerDismissButtonStyle.close,
+          entersReaderIfAvailable: false,
+        ),
+      );
+
+      // Track bitcoin buy transaction
+      await AnalyticsService().trackBitcoinTransaction(
+        amountSats: sats,
+        type: 'buy',
+        fiatCurrency: 'usd',
+        provider: 'moonpay',
+      );
+    } catch (e) {
+      throw Exception('Could not launch MoonPay: $e');
+    }
+  }
+
+  Future<void> _processCoinbasePurchase(int sats, double btcAmount) async {
+    logger.i('[Coinbase] Processing purchase for $btcAmount BTC');
+
+    final coinbaseService = CoinbaseService();
+    coinbaseService.printConfig();
+
+    // Get session token and onramp URL from backend
+    final sessionResponse = await coinbaseService.getSessionToken(
+      walletAddress: _walletAddress!,
+      btcAmount: btcAmount,
+    );
+
+    if (!sessionResponse.success || sessionResponse.onrampUrl == null) {
+      throw Exception(
+          sessionResponse.errorMessage ?? 'Could not get Coinbase session');
+    }
+
+    logger.i('[Coinbase] Launching URL: ${sessionResponse.onrampUrl}');
+
+    // Launch using flutter_custom_tabs for better in-app experience
+    try {
+      await launchUrl(
+        Uri.parse(sessionResponse.onrampUrl!),
+        customTabsOptions: CustomTabsOptions(
+          colorSchemes: CustomTabsColorSchemes.defaults(
+            toolbarColor: const Color(0xFF0052FF), // Coinbase blue
+          ),
+          shareState: CustomTabsShareState.on,
+          urlBarHidingEnabled: true,
+          showTitle: false,
+        ),
+        safariVCOptions: const SafariViewControllerOptions(
+          preferredBarTintColor: Color(0xFF0052FF), // Coinbase blue
+          preferredControlTintColor: Color(0xFFFFFFFF),
+          barCollapsingEnabled: true,
+          dismissButtonStyle: SafariViewControllerDismissButtonStyle.close,
+          entersReaderIfAvailable: false,
+        ),
+      );
+
+      // Track bitcoin buy transaction
+      await AnalyticsService().trackBitcoinTransaction(
+        amountSats: sats,
+        type: 'buy',
+        fiatCurrency: 'usd',
+        provider: 'coinbase',
+      );
+    } catch (e) {
+      throw Exception('Could not launch Coinbase: $e');
     }
   }
 
@@ -277,6 +396,12 @@ class _BuyScreenState extends State<BuyScreen> {
         return Image.asset('assets/images/stripe.png', width: 32, height: 32);
       case "moonpay":
         return Image.asset('assets/images/moonpay.png', width: 32, height: 32);
+      case "coinbase":
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child:
+              Image.asset('assets/images/coinbase.png', width: 32, height: 32),
+        );
       case "bringin":
         return Image.asset('assets/images/bringinxyz_logo.webp',
             width: 32, height: 32);
@@ -333,6 +458,7 @@ class _BuyScreenState extends State<BuyScreen> {
         context: context,
         hasBackButton: true,
         text: l10n.buyBitcoin,
+        transparent: false,
         onTap: () => Navigator.of(context).pop(),
         actions: [
           Padding(
@@ -392,11 +518,13 @@ class _BuyScreenState extends State<BuyScreen> {
                         padding: const EdgeInsets.only(bottom: 20.0),
                         child: LongButtonWidget(
                           customWidth: MediaQuery.of(context).size.width * 0.9,
-                          title: l10n.buyBitcoin,
+                          title: _getButtonTitle(l10n),
                           isLoading: _isProcessing,
                           enabled: _isValidAmount() && !_isProcessing,
                           onTap: _processPurchase,
-                          buttonType: ButtonType.solid,
+                          buttonType: _isValidAmount()
+                              ? ButtonType.solid
+                              : ButtonType.transparent,
                         ),
                       ),
                     ),
@@ -583,7 +711,8 @@ class _BuyScreenState extends State<BuyScreen> {
                   setState(() {
                     _paymentMethodName = result['name']!;
                     _paymentMethodId = result['id']!;
-                    _paymentMethodFee = _feesByMethod[_paymentMethodId] ?? 4.5;
+                    _paymentMethodFee =
+                        _getFeeForCurrentProvider(_paymentMethodId);
                   });
                   await _fetchLimits();
                 }
@@ -607,7 +736,7 @@ class _BuyScreenState extends State<BuyScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Payment Provider",
+            l10n.paymentProvider,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: AppTheme.elementSpacing),
@@ -622,8 +751,39 @@ class _BuyScreenState extends State<BuyScreen> {
                 top: 16.0,
               ),
               text: _providerName,
-              onTap: () {
-                // TODO: Navigate to providers screen when implemented
+              subtitle: Text(
+                '${_paymentMethodFee.toStringAsFixed(_paymentMethodFee == _paymentMethodFee.roundToDouble() ? 1 : 2)}% fee for ${_paymentMethodName.toLowerCase()}',
+                style: TextStyle(
+                  color: _paymentMethodFee <= 2.0
+                      ? AppTheme.successColor
+                      : Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.color
+                          ?.withValues(alpha: 0.7),
+                  fontSize: 12,
+                ),
+              ),
+              onTap: () async {
+                final result = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => PaymentProvidersScreen(
+                      initialProviderId: _providerId,
+                      currentPaymentMethodId: _paymentMethodId,
+                    ),
+                  ),
+                );
+                if (result != null && result is Map<String, String>) {
+                  setState(() {
+                    _providerName = result['name']!;
+                    _providerId = result['id']!;
+                    // Update fee for the new provider
+                    _paymentMethodFee =
+                        _getFeeForCurrentProvider(_paymentMethodId);
+                  });
+                  // Re-fetch limits for the new provider
+                  _fetchLimits();
+                }
               },
               leading: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
