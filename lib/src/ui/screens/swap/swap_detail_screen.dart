@@ -585,6 +585,16 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
               createdAt,
               isDarkMode,
             ),
+            // Fee display
+            if (_swapInfo!.feeSats.toInt() > 0) ...[
+              const SizedBox(height: AppTheme.elementSpacing),
+              _buildDetailRow(
+                context,
+                'Fee',
+                _formatFee(_swapInfo!.feeSats.toInt()),
+                isDarkMode,
+              ),
+            ],
             if (_swapInfo!.evmHtlcAddress != null) ...[
               const SizedBox(height: AppTheme.elementSpacing),
               _buildDetailRow(
@@ -805,6 +815,26 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
   String _truncateId(String id) {
     if (id.length <= 16) return id;
     return '${id.substring(0, 8)}...${id.substring(id.length - 6)}';
+  }
+
+  String _formatFee(int feeSats) {
+    if (feeSats >= 100000) {
+      // Show in BTC for large amounts
+      final btc = feeSats / BitcoinConstants.satsPerBtc;
+      return '${btc.toStringAsFixed(8)} BTC';
+    } else if (feeSats >= 1000) {
+      // Show in sats with comma formatting
+      return '${_formatNumber(feeSats)} sats';
+    } else {
+      return '$feeSats sats';
+    }
+  }
+
+  String _formatNumber(int number) {
+    return number.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
   }
 
   String _formatTimestamp(String timestamp) {
