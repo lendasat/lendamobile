@@ -10,6 +10,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -42,6 +43,12 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
   bool _isClaiming = false;
   String? _errorMessage;
   Timer? _pollTimer;
+
+  // Copy feedback states
+  bool _showSwapIdCopied = false;
+  bool _showEvmContractCopied = false;
+  bool _showArkadeHtlcCopied = false;
+  bool _showTxCopied = false;
 
   @override
   void initState() {
@@ -102,11 +109,43 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     }
   }
 
-  Future<void> _copyToClipboard(String text) async {
-    await Clipboard.setData(ClipboardData(text: text));
-    if (mounted) {
-      OverlayService().showSuccess('Copied to clipboard');
-    }
+  void _copySwapId() {
+    Clipboard.setData(ClipboardData(text: widget.swapId));
+    HapticFeedback.lightImpact();
+    setState(() => _showSwapIdCopied = true);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _showSwapIdCopied = false);
+    });
+  }
+
+  void _copyEvmContract() {
+    if (_swapInfo?.evmHtlcAddress == null) return;
+    Clipboard.setData(ClipboardData(text: _swapInfo!.evmHtlcAddress!));
+    HapticFeedback.lightImpact();
+    setState(() => _showEvmContractCopied = true);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _showEvmContractCopied = false);
+    });
+  }
+
+  void _copyArkadeHtlc() {
+    if (_swapInfo?.arkadeHtlcAddress == null) return;
+    Clipboard.setData(ClipboardData(text: _swapInfo!.arkadeHtlcAddress!));
+    HapticFeedback.lightImpact();
+    setState(() => _showArkadeHtlcCopied = true);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _showArkadeHtlcCopied = false);
+    });
+  }
+
+  void _copyTxHash() {
+    if (_swapInfo?.evmHtlcClaimTxid == null) return;
+    Clipboard.setData(ClipboardData(text: _swapInfo!.evmHtlcClaimTxid!));
+    HapticFeedback.lightImpact();
+    setState(() => _showTxCopied = true);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _showTxCopied = false);
+    });
   }
 
   Future<void> _handleRefund() async {
@@ -305,22 +344,80 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
       },
       child: SingleChildScrollView(
         physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Column(
-          children: [
-            const SizedBox(height: AppTheme.cardPadding * 2),
-            // Status header
-            _buildStatusHeader(context, status, isDarkMode),
-            const SizedBox(height: AppTheme.cardPadding * 1.5),
-            // Swap summary
-            _buildSwapSummary(context, sourceToken, targetToken, isDarkMode),
-            const SizedBox(height: AppTheme.cardPadding),
-            // Swap details
-            _buildSwapDetails(context, isDarkMode),
-            const SizedBox(height: AppTheme.cardPadding),
-            // Action buttons
-            _buildActionButtons(context, status),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.only(
+            top: AppTheme.cardPadding * 3,
+          ),
+          child: Column(
+            children: [
+              // Status header in its own GlassContainer
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.elementSpacing,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: GlassContainer(
+                    borderRadius: AppTheme.cardRadiusBig,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppTheme.cardPadding,
+                        horizontal: AppTheme.elementSpacing,
+                      ),
+                      child: _buildStatusHeader(context, status, isDarkMode),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppTheme.elementSpacing),
+              // Main card with swap summary and details
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.elementSpacing,
+                ),
+                child: GlassContainer(
+                  borderRadius: AppTheme.cardRadiusBig,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppTheme.elementSpacing,
+                      horizontal: AppTheme.elementSpacing,
+                    ),
+                    child: Column(
+                      children: [
+                        // Swap summary (amounts) in its own box
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.elementSpacing * 0.5,
+                            vertical: AppTheme.elementSpacing,
+                          ),
+                          child: GlassContainer(
+                            opacity: 0.05,
+                            borderRadius: AppTheme.cardRadiusSmall,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.all(AppTheme.cardPadding),
+                              child: _buildSwapSummaryCompact(context,
+                                  sourceToken, targetToken, isDarkMode),
+                            ),
+                          ),
+                        ),
+                        // Swap details (nested container)
+                        _buildSwapDetails(context, isDarkMode),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppTheme.cardPadding),
+              // Action buttons outside the main card
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.cardPadding,
+                ),
+                child: _buildActionButtons(context, status),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -417,7 +514,8 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     }
   }
 
-  Widget _buildSwapSummary(BuildContext context, SwapToken sourceToken,
+  /// Swap summary with token icons - original design within the unified card
+  Widget _buildSwapSummaryCompact(BuildContext context, SwapToken sourceToken,
       SwapToken targetToken, bool isDarkMode) {
     final btcAmount = _swapInfo != null
         ? ((_swapInfo!.sourceAmountSats.toInt()) / BitcoinConstants.satsPerBtc)
@@ -439,122 +537,109 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
       }
     }
 
-    return GlassContainer(
-      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Column(
+    return Column(
+      children: [
+        // From
+        Row(
           children: [
-            // From
-            Row(
-              children: [
-                TokenIcon(token: sourceToken, size: 40),
-                const SizedBox(width: AppTheme.elementSpacing),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Sent',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDarkMode
-                                  ? AppTheme.white60
-                                  : AppTheme.black60,
-                            ),
-                      ),
-                      Text(
-                        formatTokenAmount(sourceToken, tokenAmount),
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                      ),
-                      Text(
-                        '${sourceToken.symbol} (${sourceToken.network})',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDarkMode
-                                  ? AppTheme.white60
-                                  : AppTheme.black60,
-                            ),
-                      ),
-                    ],
+            TokenIcon(token: sourceToken, size: 40),
+            const SizedBox(width: AppTheme.elementSpacing),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Sent',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-            // Divider with arrow
-            Row(
-              children: [
-                Expanded(
-                  child: Divider(
-                    color: isDarkMode
-                        ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.black.withValues(alpha: 0.1),
+                  Text(
+                    formatTokenAmount(sourceToken, tokenAmount),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Icon(
-                    Icons.arrow_downward_rounded,
-                    size: 20,
-                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                  Text(
+                    '${sourceToken.symbol} (${sourceToken.network})',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
                   ),
-                ),
-                Expanded(
-                  child: Divider(
-                    color: isDarkMode
-                        ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.black.withValues(alpha: 0.1),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-            // To
-            Row(
-              children: [
-                TokenIcon(token: targetToken, size: 40),
-                const SizedBox(width: AppTheme.elementSpacing),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Received',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDarkMode
-                                  ? AppTheme.white60
-                                  : AppTheme.black60,
-                            ),
-                      ),
-                      Text(
-                        formatTokenAmount(targetToken, tokenAmount),
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: _swapInfo?.status ==
-                                          SwapStatusSimple.completed
-                                      ? AppTheme.successColor
-                                      : null,
-                                ),
-                      ),
-                      Text(
-                        '${targetToken.symbol} (${targetToken.network})',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDarkMode
-                                  ? AppTheme.white60
-                                  : AppTheme.black60,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: AppTheme.cardPadding),
+        // Divider with arrow
+        Row(
+          children: [
+            Expanded(
+              child: Divider(
+                color: isDarkMode
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.1),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Icon(
+                Icons.arrow_downward_rounded,
+                size: 20,
+                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+              ),
+            ),
+            Expanded(
+              child: Divider(
+                color: isDarkMode
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.1),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.cardPadding),
+        // To
+        Row(
+          children: [
+            TokenIcon(token: targetToken, size: 40),
+            const SizedBox(width: AppTheme.elementSpacing),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Received',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
+                  ),
+                  Text(
+                    formatTokenAmount(targetToken, tokenAmount),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: _swapInfo?.status == SwapStatusSimple.completed
+                              ? AppTheme.successColor
+                              : null,
+                        ),
+                  ),
+                  Text(
+                    '${targetToken.symbol} (${targetToken.network})',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -562,119 +647,293 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     if (_swapInfo == null) return const SizedBox.shrink();
 
     final createdAt = _formatTimestamp(_swapInfo!.createdAt);
+    final feeSats = _swapInfo!.feeSats.toInt();
+    final feeFormatted = _formatFee(feeSats);
 
-    return GlassContainer(
-      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Column(
-          children: [
-            _buildDetailRow(
-              context,
-              'Swap ID',
-              _truncateId(widget.swapId),
-              isDarkMode,
-              onTap: () => _copyToClipboard(widget.swapId),
-            ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            _buildDetailRow(
-              context,
-              'Direction',
-              _swapInfo!.direction == 'btc_to_evm'
-                  ? 'BTC → ${_getTargetToken().symbol} (${_getTargetToken().network})'
-                  : '${_getSourceToken().symbol} (${_getSourceToken().network}) → BTC',
-              isDarkMode,
-            ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            _buildDetailRow(
-              context,
-              'Created',
-              createdAt,
-              isDarkMode,
-            ),
-            if (_swapInfo!.evmHtlcAddress != null) ...[
-              const SizedBox(height: AppTheme.elementSpacing),
-              _buildDetailRow(
-                context,
-                'EVM Contract',
-                _truncateId(_swapInfo!.evmHtlcAddress!),
-                isDarkMode,
-                onTap: () => _copyToClipboard(_swapInfo!.evmHtlcAddress!),
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.elementSpacing * 0.5,
+        vertical: AppTheme.elementSpacing,
+      ),
+      child: GlassContainer(
+        opacity: 0.05,
+        borderRadius: AppTheme.cardRadiusSmall,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: AppTheme.elementSpacing,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Swap ID with copy feedback
+              ArkListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.elementSpacing * 0.75,
+                  vertical: AppTheme.elementSpacing * 0.5,
+                ),
+                text: 'Swap ID',
+                onTap: _copySwapId,
+                trailing: SizedBox(
+                  width: AppTheme.cardPadding * 6,
+                  child: _showSwapIdCopied
+                      ? Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            const Icon(
+                              Icons.check,
+                              color: AppTheme.successColor,
+                              size: AppTheme.cardPadding * 0.75,
+                            ),
+                            const SizedBox(width: AppTheme.elementSpacing / 2),
+                            const Text(
+                              'Copied',
+                              style: TextStyle(color: AppTheme.successColor),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.swapId,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: AppTheme.elementSpacing / 2),
+                            Icon(
+                              Icons.copy,
+                              color: AppTheme.white60,
+                              size: AppTheme.cardPadding * 0.75,
+                            ),
+                          ],
+                        ),
+                ),
               ),
-            ],
-            if (_swapInfo!.arkadeHtlcAddress != null) ...[
-              const SizedBox(height: AppTheme.elementSpacing),
-              _buildDetailRow(
-                context,
-                'Arkade HTLC',
-                _truncateId(_swapInfo!.arkadeHtlcAddress!),
-                isDarkMode,
-                onTap: () => _copyToClipboard(_swapInfo!.arkadeHtlcAddress!),
+
+              // Direction
+              ArkListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.elementSpacing * 0.75,
+                  vertical: AppTheme.elementSpacing * 0.5,
+                ),
+                text: 'Direction',
+                trailing: Text(
+                  _swapInfo!.direction == 'btc_to_evm'
+                      ? 'BTC → ${_getTargetToken().symbol}'
+                      : '${_getSourceToken().symbol} → BTC',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
-            ],
-            // Show claim transaction hash for BTC→EVM swaps
-            if (_swapInfo!.evmHtlcClaimTxid != null &&
-                _swapInfo!.direction == 'btc_to_evm') ...[
-              const SizedBox(height: AppTheme.elementSpacing),
-              _buildDetailRow(
-                context,
-                'Transaction',
-                _truncateId(_swapInfo!.evmHtlcClaimTxid!),
-                isDarkMode,
-                onTap: () => _copyToClipboard(_swapInfo!.evmHtlcClaimTxid!),
+
+              // Created
+              ArkListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.elementSpacing * 0.75,
+                  vertical: AppTheme.elementSpacing * 0.5,
+                ),
+                text: 'Created',
+                trailing: Text(
+                  createdAt,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
+
+              // Fee
+              ArkListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.elementSpacing * 0.75,
+                  vertical: AppTheme.elementSpacing * 0.5,
+                ),
+                text: 'Fee',
+                trailing: Text(
+                  feeFormatted,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+
+              // EVM Contract with copy feedback
+              if (_swapInfo!.evmHtlcAddress != null)
+                ArkListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.elementSpacing * 0.75,
+                    vertical: AppTheme.elementSpacing * 0.5,
+                  ),
+                  text: 'EVM Contract',
+                  onTap: _copyEvmContract,
+                  trailing: SizedBox(
+                    width: AppTheme.cardPadding * 6,
+                    child: _showEvmContractCopied
+                        ? Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              const Icon(
+                                Icons.check,
+                                color: AppTheme.successColor,
+                                size: AppTheme.cardPadding * 0.75,
+                              ),
+                              const SizedBox(
+                                  width: AppTheme.elementSpacing / 2),
+                              const Text(
+                                'Copied',
+                                style: TextStyle(color: AppTheme.successColor),
+                              ),
+                            ],
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _swapInfo!.evmHtlcAddress!,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(
+                                  width: AppTheme.elementSpacing / 2),
+                              Icon(
+                                Icons.copy,
+                                color: AppTheme.white60,
+                                size: AppTheme.cardPadding * 0.75,
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+
+              // Arkade HTLC with copy feedback
+              if (_swapInfo!.arkadeHtlcAddress != null)
+                ArkListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.elementSpacing * 0.75,
+                    vertical: AppTheme.elementSpacing * 0.5,
+                  ),
+                  text: 'Arkade HTLC',
+                  onTap: _copyArkadeHtlc,
+                  trailing: SizedBox(
+                    width: AppTheme.cardPadding * 6,
+                    child: _showArkadeHtlcCopied
+                        ? Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              const Icon(
+                                Icons.check,
+                                color: AppTheme.successColor,
+                                size: AppTheme.cardPadding * 0.75,
+                              ),
+                              const SizedBox(
+                                  width: AppTheme.elementSpacing / 2),
+                              const Text(
+                                'Copied',
+                                style: TextStyle(color: AppTheme.successColor),
+                              ),
+                            ],
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _swapInfo!.arkadeHtlcAddress!,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(
+                                  width: AppTheme.elementSpacing / 2),
+                              Icon(
+                                Icons.copy,
+                                color: AppTheme.white60,
+                                size: AppTheme.cardPadding * 0.75,
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+
+              // Transaction hash with copy feedback
+              if (_swapInfo!.evmHtlcClaimTxid != null &&
+                  _swapInfo!.direction == 'btc_to_evm')
+                ArkListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.elementSpacing * 0.75,
+                    vertical: AppTheme.elementSpacing * 0.5,
+                  ),
+                  text: 'Transaction',
+                  onTap: _copyTxHash,
+                  trailing: SizedBox(
+                    width: AppTheme.cardPadding * 6,
+                    child: _showTxCopied
+                        ? Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              const Icon(
+                                Icons.check,
+                                color: AppTheme.successColor,
+                                size: AppTheme.cardPadding * 0.75,
+                              ),
+                              const SizedBox(
+                                  width: AppTheme.elementSpacing / 2),
+                              const Text(
+                                'Copied',
+                                style: TextStyle(color: AppTheme.successColor),
+                              ),
+                            ],
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _swapInfo!.evmHtlcClaimTxid!,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(
+                                  width: AppTheme.elementSpacing / 2),
+                              Icon(
+                                Icons.copy,
+                                color: AppTheme.white60,
+                                size: AppTheme.cardPadding * 0.75,
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDetailRow(
-    BuildContext context,
-    String label,
-    String value,
-    bool isDarkMode, {
-    VoidCallback? onTap,
-  }) {
-    final content = Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-            fontSize: 14,
-          ),
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            if (onTap != null) ...[
-              const SizedBox(width: 4),
-              Icon(
-                Icons.copy_rounded,
-                size: 14,
-                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-              ),
-            ],
-          ],
-        ),
-      ],
-    );
-
-    if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: content);
+  String _formatFee(int feeSats) {
+    if (feeSats >= 100000) {
+      // Show in BTC for large amounts
+      final btc = feeSats / BitcoinConstants.satsPerBtc;
+      return '${btc.toStringAsFixed(8)} BTC';
+    } else if (feeSats >= 1000) {
+      // Show in sats with comma formatting
+      return '${_formatNumber(feeSats)} sats';
+    } else {
+      return '$feeSats sats';
     }
-    return content;
+  }
+
+  String _formatNumber(int number) {
+    return number.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
   }
 
   void _navigateToDeposit() {

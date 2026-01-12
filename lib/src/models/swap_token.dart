@@ -133,7 +133,7 @@ enum SwapToken {
   String get network {
     switch (this) {
       case SwapToken.bitcoin:
-        return 'Bitcoin';
+        return 'Arkade';
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
         return 'Polygon';
