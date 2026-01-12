@@ -1,5 +1,6 @@
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
+import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
 import 'package:ark_flutter/src/ui/screens/loans/loans_screen.dart';
 import 'package:ark_flutter/src/ui/screens/swap/swap_screen.dart';
 import 'package:ark_flutter/src/ui/screens/core/walletscreen.dart';
@@ -39,9 +40,10 @@ class _BottomNavState extends State<BottomNav> {
       LoansScreen(key: _loansKey, aspId: widget.aspId),
     ];
 
-    // Initialize payment monitoring after first frame
+    // Initialize monitoring services after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initPaymentMonitoring();
+      _initSwapMonitoring();
     });
   }
 
@@ -62,6 +64,18 @@ class _BottomNavState extends State<BottomNav> {
       _onItemTapped(0);
       _walletKey.currentState?.fetchWalletData();
     };
+  }
+
+  void _initSwapMonitoring() {
+    final swapService = context.read<SwapMonitoringService>();
+
+    swapService.initialize(
+      context: context,
+      onWalletRefresh: () {
+        logger.i("Swap claimed - refreshing wallet");
+        _walletKey.currentState?.fetchWalletData();
+      },
+    );
   }
 
   void _onItemTapped(int index) {
