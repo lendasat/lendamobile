@@ -74,6 +74,11 @@ workflows:
           source "$HOME/.cargo/env"
           just ios-build
 
+      - name: Precache Flutter iOS artifacts
+        script: |
+          export PATH="$HOME/fvm/bin:$PATH"
+          fvm flutter precache --ios
+
       - name: Install CocoaPods dependencies
         script: cd ios && pod install
 
