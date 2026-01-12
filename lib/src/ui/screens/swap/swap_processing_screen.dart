@@ -4,6 +4,8 @@ import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
+import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -51,30 +53,39 @@ class SwapProcessingScreen extends StatefulWidget {
 
 class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   final LendaSwapService _swapService = LendaSwapService();
+  final SwapMonitoringService _swapMonitor = SwapMonitoringService();
   final WalletConnectService _walletService = WalletConnectService();
   SwapInfo? _swapInfo;
   Timer? _pollTimer;
+  StreamSubscription<SwapClaimEvent>? _claimSubscription;
   bool _isLoading = true;
   String? _errorMessage;
-  bool _isClaimingGelato = false;
-  bool _hasAttemptedClaim = false;
   bool _showWalletConnectClaim = false;
-
-  /// Check if this is an Ethereum swap (requires gas payment for claiming)
-  bool get _isEthereumTarget =>
-      widget.targetToken.chainId.toLowerCase() == 'ethereum';
+  bool _isClaimingWalletConnect = false;
 
   @override
   void initState() {
     super.initState();
     _loadSwapInfo();
     _startPolling();
+    _listenToClaimEvents();
   }
 
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _claimSubscription?.cancel();
     super.dispose();
+  }
+
+  void _listenToClaimEvents() {
+    _claimSubscription = _swapMonitor.claimEvents.listen((event) {
+      if (event.swapId == widget.swapId && event.success) {
+        logger.i('[SwapProcessing] Received claim success event for our swap');
+        // Refresh to get updated status
+        _loadSwapInfo();
+      }
+    });
   }
 
   void _startPolling() {
@@ -91,10 +102,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
       logger.i('[SwapProcessing] - id: ${swap.id}');
       logger.i('[SwapProcessing] - status: ${swap.status}');
       logger.i('[SwapProcessing] - detailedStatus: ${swap.detailedStatus}');
-      logger.i('[SwapProcessing] - direction: ${swap.direction}');
       logger.i('[SwapProcessing] - canClaimGelato: ${swap.canClaimGelato}');
       logger.i('[SwapProcessing] - canClaimVhtlc: ${swap.canClaimVhtlc}');
-      logger.i('[SwapProcessing] - canRefund: ${swap.canRefund}');
       logger.i('[SwapProcessing] - isCompleted: ${swap.isCompleted}');
 
       if (mounted) {
@@ -105,19 +114,15 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
 
         // Check if completed or failed
         if (swap.isCompleted) {
-          logger.i(
-              '[SwapProcessing] Swap is COMPLETED! Stopping polling and navigating to success');
+          logger.i('[SwapProcessing] Swap is COMPLETED! Navigating to success');
           _pollTimer?.cancel();
           _navigateToSuccess();
         } else if (swap.status == SwapStatusSimple.failed ||
             swap.status == SwapStatusSimple.expired) {
-          logger.w(
-              '[SwapProcessing] Swap is FAILED or EXPIRED. Stopping polling.');
+          logger.w('[SwapProcessing] Swap is FAILED or EXPIRED.');
           _pollTimer?.cancel();
         } else {
-          logger.d(
-              '[SwapProcessing] Swap still in progress, attempting auto-claim...');
-          // Auto-claim if ready
+          // Auto-claim via SwapMonitoringService
           await _attemptAutoClaim(swap);
         }
       }
@@ -132,86 +137,21 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     }
   }
 
-  /// Attempt to auto-claim the swap if it's ready.
+  /// Attempt to auto-claim the swap using SwapMonitoringService.
   Future<void> _attemptAutoClaim(SwapInfo swap) async {
-    logger.d('[SwapProcessing] _attemptAutoClaim called');
-    logger.d('[SwapProcessing] - _isClaimingGelato: $_isClaimingGelato');
-    logger.d('[SwapProcessing] - _hasAttemptedClaim: $_hasAttemptedClaim');
-    logger.d('[SwapProcessing] - swap.canClaimGelato: ${swap.canClaimGelato}');
-    logger.d('[SwapProcessing] - swap.canClaimVhtlc: ${swap.canClaimVhtlc}');
-    logger.d('[SwapProcessing] - _isEthereumTarget: $_isEthereumTarget');
-
-    // Don't attempt if already claiming
-    if (_isClaimingGelato) {
-      logger.d('[SwapProcessing] Already claiming, skipping');
+    // For Ethereum targets, show WalletConnect UI (requires gas payment)
+    if (_swapMonitor.requiresWalletConnect(swap)) {
+      logger.i('[SwapProcessing] Ethereum target - showing WalletConnect claim UI');
+      if (!_showWalletConnectClaim) {
+        setState(() => _showWalletConnectClaim = true);
+      }
       return;
     }
 
-    // BTC → EVM swaps: claim when server has funded
-    if (swap.canClaimGelato && !_hasAttemptedClaim) {
-      logger.i('[SwapProcessing] canClaimGelato=true, proceeding with claim');
-      // For Ethereum targets, show WalletConnect claim UI instead of auto-claiming
-      // because Gelato gasless claiming is not supported on Ethereum mainnet
-      if (_isEthereumTarget) {
-        logger.i(
-            '[SwapProcessing] Ethereum target - showing WalletConnect claim UI');
-        setState(() => _showWalletConnectClaim = true);
-        return;
-      }
-
-      // For Polygon targets, use Gelato gasless claiming
-      logger.i(
-          '[SwapProcessing] Auto-claiming BTC→EVM swap ${swap.id} via Gelato');
-      setState(() {
-        _isClaimingGelato = true;
-      });
-
-      try {
-        await _swapService.claimGelato(swap.id);
-        logger.i('[SwapProcessing] Gelato claim submitted for swap ${swap.id}');
-        // Only mark as attempted on success - polling will detect completion
-        setState(() => _hasAttemptedClaim = true);
-      } catch (e) {
-        logger.e('[SwapProcessing] Failed to auto-claim via Gelato: $e');
-        // Don't mark as attempted on failure - allow retry on next poll
-      } finally {
-        if (mounted) {
-          setState(() => _isClaimingGelato = false);
-        }
-      }
-    } else if (swap.canClaimGelato) {
-      logger.d('[SwapProcessing] canClaimGelato=true but already attempted');
-    }
-
-    // EVM → BTC swaps: claim VHTLC when server has funded
-    if (swap.canClaimVhtlc && !_hasAttemptedClaim) {
-      logger.i(
-          '[SwapProcessing] canClaimVhtlc=true, Auto-claiming EVM→BTC swap ${swap.id} via VHTLC');
-      setState(() {
-        _isClaimingGelato = true; // reuse flag
-      });
-
-      try {
-        final txid = await _swapService.claimVhtlc(swap.id);
-        logger.i(
-            '[SwapProcessing] VHTLC claimed for swap ${swap.id}, txid: $txid');
-        // Only mark as attempted on success - polling will detect completion
-        setState(() => _hasAttemptedClaim = true);
-      } catch (e) {
-        logger.e('[SwapProcessing] Failed to auto-claim VHTLC: $e');
-        // Don't mark as attempted on failure - allow retry on next poll
-      } finally {
-        if (mounted) {
-          setState(() => _isClaimingGelato = false);
-        }
-      }
-    } else if (swap.canClaimVhtlc) {
-      logger.d('[SwapProcessing] canClaimVhtlc=true but already attempted');
-    }
-
-    if (!swap.canClaimGelato && !swap.canClaimVhtlc) {
-      logger.d(
-          '[SwapProcessing] Neither canClaimGelato nor canClaimVhtlc is true - waiting for server to fund');
+    // Let the monitoring service handle claiming
+    if (swap.canClaimGelato || swap.canClaimVhtlc) {
+      logger.d('[SwapProcessing] Triggering claim via SwapMonitoringService');
+      await _swapMonitor.claimSwapIfReady(swap);
     }
   }
 
@@ -251,6 +191,9 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     }
 
     if (!mounted) return;
+
+    // Trigger wallet refresh when swap completes
+    PaymentMonitoringService().switchToWalletTab();
 
     Navigator.pushReplacement(
       context,
@@ -752,11 +695,11 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
             if (_walletService.isConnected) ...[
               const SizedBox(height: AppTheme.cardPadding),
               LongButtonWidget(
-                title: _isClaimingGelato ? 'Claiming...' : 'Claim Tokens',
+                title: _isClaimingWalletConnect ? 'Claiming...' : 'Claim Tokens',
                 customWidth: double.infinity,
                 state:
-                    _isClaimingGelato ? ButtonState.loading : ButtonState.idle,
-                onTap: _isClaimingGelato ? null : _claimViaWalletConnect,
+                    _isClaimingWalletConnect ? ButtonState.loading : ButtonState.idle,
+                onTap: _isClaimingWalletConnect ? null : _claimViaWalletConnect,
               ),
             ],
           ],
@@ -771,7 +714,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
       return;
     }
 
-    setState(() => _isClaimingGelato = true);
+    setState(() => _isClaimingWalletConnect = true);
 
     try {
       // Use Gelato claim but with WalletConnect signature
@@ -779,7 +722,6 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
       await _swapService.claimGelato(widget.swapId);
       logger.i('Ethereum claim submitted for swap ${widget.swapId}');
       setState(() {
-        _hasAttemptedClaim = true;
         _showWalletConnectClaim = false;
       });
     } catch (e) {
@@ -789,7 +731,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isClaimingGelato = false);
+        setState(() => _isClaimingWalletConnect = false);
       }
     }
   }

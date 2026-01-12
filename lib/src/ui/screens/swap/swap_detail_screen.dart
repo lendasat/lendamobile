@@ -14,10 +14,12 @@ import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/screens/swap/swap_processing_screen.dart';
+import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 /// Screen showing detailed swap information with refund option for failed swaps.
 class SwapDetailScreen extends StatefulWidget {
@@ -554,7 +556,22 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
   Widget _buildSwapDetails(BuildContext context, bool isDarkMode) {
     if (_swapInfo == null) return const SizedBox.shrink();
 
+    final currencyService = context.watch<CurrencyPreferenceService>();
+    final showCoinBalance = currencyService.showCoinBalance;
+
     final createdAt = _formatTimestamp(_swapInfo!.createdAt);
+    final feeSats = _swapInfo!.feeSats.toInt();
+
+    // Calculate fiat value of fee using the swap's exchange rate
+    // Exchange rate = targetAmountUsd / (sourceAmountSats / satsPerBtc)
+    final sourceAmountSats = _swapInfo!.sourceAmountSats.toInt();
+    final targetAmountUsd = _swapInfo!.targetAmountUsd;
+    final btcPrice = sourceAmountSats > 0
+        ? targetAmountUsd / (sourceAmountSats / BitcoinConstants.satsPerBtc)
+        : 0.0;
+    final feeFiat = (feeSats / BitcoinConstants.satsPerBtc) * btcPrice;
+    final feeFiatFormatted = currencyService.formatAmount(feeFiat);
+    final feeSatsFormatted = _formatFee(feeSats);
 
     return GlassContainer(
       borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
@@ -585,14 +602,15 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
               createdAt,
               isDarkMode,
             ),
-            // Fee display
-            if (_swapInfo!.feeSats.toInt() > 0) ...[
+            // Fee display (tappable to toggle sats/fiat)
+            if (feeSats > 0) ...[
               const SizedBox(height: AppTheme.elementSpacing),
-              _buildDetailRow(
+              _buildFeeRow(
                 context,
                 'Fee',
-                _formatFee(_swapInfo!.feeSats.toInt()),
+                showCoinBalance ? feeSatsFormatted : feeFiatFormatted,
                 isDarkMode,
+                onTap: () => currencyService.toggleShowCoinBalance(),
               ),
             ],
             if (_swapInfo!.evmHtlcAddress != null) ...[
@@ -683,6 +701,54 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
       return GestureDetector(onTap: onTap, child: content);
     }
     return content;
+  }
+
+  Widget _buildFeeRow(
+    BuildContext context,
+    String label,
+    String value,
+    bool isDarkMode, {
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: TextStyle(
+                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.swap_horiz_rounded,
+                size: 14,
+                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   void _navigateToDeposit() {
@@ -808,6 +874,8 @@ class _SwapDetailScreenState extends State<SwapDetailScreen> {
             onTap: _isRefunding ? null : _handleRefund,
           ),
         ],
+        // Bottom spacing
+        const SizedBox(height: AppTheme.cardPadding),
       ],
     );
   }
