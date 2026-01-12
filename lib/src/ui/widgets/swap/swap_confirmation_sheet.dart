@@ -104,48 +104,42 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
         text: AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
         hasBackButton: false,
       ),
-      body: Padding(
+      floatingActionButton: SizedBox(
+        width: MediaQuery.of(context).size.width - (AppTheme.cardPadding * 2),
+        child: LongButtonWidget(
+          title: AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
+          customWidth: double.infinity,
+          state: widget.isLoading ? ButtonState.loading : ButtonState.idle,
+          onTap: widget.isLoading ? null : widget.onConfirm,
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
         child: Column(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const SizedBox(height: AppTheme.cardPadding * 2),
-                    // You pay card
-                    _buildPayCard(context, isDarkMode),
-                    const SizedBox(height: AppTheme.elementSpacing),
-                    // Arrow
-                    Icon(
-                      Icons.arrow_downward_rounded,
-                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                    ),
-                    const SizedBox(height: AppTheme.elementSpacing),
-                    // You receive card (with net amount after fees)
-                    _buildReceiveCard(context, isDarkMode),
-                    const SizedBox(height: AppTheme.cardPadding),
-                    // Collapsible fees section
-                    _buildFeesSection(context, isDarkMode),
-                    // Receiving address (if applicable)
-                    if (widget.targetAddress != null) ...[
-                      const SizedBox(height: AppTheme.elementSpacing),
-                      _buildAddressRow(context, isDarkMode),
-                    ],
-                  ],
-                ),
-              ),
+            const SizedBox(height: AppTheme.cardPadding * 2),
+            // You pay card
+            _buildPayCard(context, isDarkMode),
+            const SizedBox(height: AppTheme.elementSpacing),
+            // Arrow
+            Icon(
+              Icons.arrow_downward_rounded,
+              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
             ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            // You receive card (with net amount after fees)
+            _buildReceiveCard(context, isDarkMode),
             const SizedBox(height: AppTheme.cardPadding),
-            // Confirm button
-            LongButtonWidget(
-              title:
-                  AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
-              customWidth: double.infinity,
-              state: widget.isLoading ? ButtonState.loading : ButtonState.idle,
-              onTap: widget.isLoading ? null : widget.onConfirm,
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
+            // Collapsible fees section
+            _buildFeesSection(context, isDarkMode),
+            // Receiving address (if applicable)
+            if (widget.targetAddress != null) ...[
+              const SizedBox(height: AppTheme.elementSpacing),
+              _buildAddressRow(context, isDarkMode),
+            ],
+            // Extra space at bottom for floating button
+            const SizedBox(height: AppTheme.cardPadding * 5),
           ],
         ),
       ),
