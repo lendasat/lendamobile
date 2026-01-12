@@ -637,8 +637,8 @@ class SwapScreenState extends State<SwapScreen> {
     return "Swap ${sourceToken.symbol} to ${targetToken.symbol}";
   }
 
-  /// Set the maximum swappable amount (balance minus estimated fees)
-  void _setMaxAmount() {
+  /// Set the maximum swappable amount (balance minus fees from quote)
+  void _setMaxAmount() async {
     logger.i(
         "Max tapped - isBtc: ${sourceToken.isBtc}, isLoadingBalance: $_isLoadingBalance, balance: $_availableBalanceSats");
 
@@ -654,17 +654,52 @@ class SwapScreenState extends State<SwapScreen> {
       return;
     }
 
-    // Estimate fees based on typical quote values:
-    // - Protocol fee: ~0.5% (actual varies, but this is typical)
-    // - Network fee: ~250 sats (actual varies based on mempool)
-    // The confirmation sheet will show exact fees from the quote
-    final estimatedProtocolFee = (availableSats * 0.005).round();
-    const estimatedNetworkFee = 250;
-    final estimatedFees = estimatedProtocolFee + estimatedNetworkFee;
-    final maxSwapSats = (availableSats - estimatedFees).clamp(0, availableSats);
+    // If no quote exists yet, fetch one first to get accurate fee info
+    if (_quote == null) {
+      logger.i("No quote available, fetching quote for fee calculation...");
+
+      // Fetch a quote for the full balance to get fee percentages
+      try {
+        final quote = await lendaswap_api.lendaswapGetQuote(
+          fromToken: sourceToken.tokenId,
+          toToken: targetToken.tokenId,
+          amountSats: BigInt.from(availableSats),
+        );
+        if (mounted) {
+          setState(() {
+            _quote = quote;
+          });
+          // Now that we have a quote, call setMaxAmount again
+          _setMaxAmount();
+        }
+      } catch (e) {
+        logger.e("Failed to fetch quote for max calculation: $e");
+        OverlayService().showError('Failed to calculate fees');
+      }
+      return;
+    }
+
+    // Use actual fee values from the quote API
+    // Protocol fee is a percentage, network fee is fixed sats
+    final protocolFeePercent = _quote!.protocolFeePercent;
+    final networkFeeSats = _quote!.networkFeeSats.toInt();
+
+    // Calculate max amount: balance - fees
+    // Protocol fee formula: maxAmount * (protocolFeePercent / 100) = protocolFee
+    // So: maxAmount + maxAmount * (protocolFeePercent / 100) + networkFee = availableSats
+    // Therefore: maxAmount = (availableSats - networkFee) / (1 + protocolFeePercent / 100)
+    final maxSwapSats = protocolFeePercent > 0
+        ? ((availableSats - networkFeeSats) / (1 + protocolFeePercent / 100))
+            .floor()
+            .clamp(0, availableSats)
+        : (availableSats - networkFeeSats).clamp(0, availableSats);
+
+    final calculatedProtocolFee =
+        (maxSwapSats * protocolFeePercent / 100).round();
+    final totalFees = calculatedProtocolFee + networkFeeSats;
 
     logger.i(
-        "Max calculation - balance: $availableSats, estimated fees: $estimatedFees (protocol: $estimatedProtocolFee, network: $estimatedNetworkFee), max: $maxSwapSats");
+        "Max calculation - balance: $availableSats, fees: $totalFees (protocol: $calculatedProtocolFee @ ${protocolFeePercent}%, network: $networkFeeSats), max: $maxSwapSats");
 
     // Always set the max amount, even if below minimum
     // The button will show "Amount too small" if below minimum

@@ -4,6 +4,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -301,6 +302,8 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                       title: AppLocalizations.of(context)?.done ?? 'Done',
                       customWidth: double.infinity,
                       onTap: () {
+                        // Trigger wallet refresh when returning from success screen
+                        PaymentMonitoringService().switchToWalletTab();
                         Navigator.of(context)
                             .popUntil((route) => route.isFirst);
                       },
