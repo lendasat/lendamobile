@@ -74,8 +74,9 @@ workflows:
       - name: Set up provisioning profiles settings on Xcode project
         script: xcode-project use-profiles
 
-      - name: Build release ip
+      - name: Build release ios
         script: |
+          source "$HOME/.cargo/env"
           export PATH="$HOME/fvm/bin:$PATH"
           just ios release
 
