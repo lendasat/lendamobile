@@ -63,17 +63,6 @@ workflows:
           export PATH="$HOME/fvm/bin:$PATH"
           fvm flutter pub get
 
-      - name: Build FFI bindings
-        script: |
-          source "$HOME/.cargo/env"
-          export PATH="$HOME/fvm/bin:$PATH"
-          just ffi-build
-
-      - name: Build Rust for iOS
-        script: |
-          source "$HOME/.cargo/env"
-          just ios-build
-
       - name: Precache Flutter iOS artifacts
         script: |
           export PATH="$HOME/fvm/bin:$PATH"
@@ -85,16 +74,10 @@ workflows:
       - name: Set up provisioning profiles settings on Xcode project
         script: xcode-project use-profiles
 
-      - name: Build ipa for distribution
+      - name: Build release ip
         script: |
           export PATH="$HOME/fvm/bin:$PATH"
-          BUILD_NAME=$(yq -r .version pubspec.yaml)
-          BUILD_NUMBER=$(git rev-list --count HEAD)
-          fvm flutter build ipa \
-            --release \
-            --build-name=$BUILD_NAME \
-            --build-number=$BUILD_NUMBER \
-            --export-options-plist=/Users/builder/export_options.plist
+          just ios release
 
     artifacts:
       - build/ios/ipa/*.ipa
