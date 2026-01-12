@@ -166,7 +166,15 @@ class _LongButtonWidgetState extends State<LongButtonWidget> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                AppTheme.white90,
+                                widget.textColor ??
+                                    (widget.buttonType == ButtonType.solid ||
+                                            widget.buttonType ==
+                                                ButtonType.primary
+                                        ? const Color(
+                                            0xFF1A0A00) // Very dark brown for solid buttons
+                                        : theme.brightness == Brightness.light
+                                            ? AppTheme.black70
+                                            : AppTheme.white90),
                               ),
                             ),
                           ),
