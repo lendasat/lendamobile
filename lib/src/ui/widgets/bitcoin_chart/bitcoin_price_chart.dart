@@ -98,7 +98,8 @@ class _BitcoinPriceChartState extends State<BitcoinPriceChart> {
             ),
             markerSettings: TrackballMarkerSettings(
               markerVisibility: TrackballVisibilityMode.visible,
-              color: chartLineColor, // Use chart line color for better visibility
+              color:
+                  chartLineColor, // Use chart line color for better visibility
               borderColor: Colors.white,
               borderWidth: 2,
               height: 10,

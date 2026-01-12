@@ -5,6 +5,7 @@ This document describes the feedback/bug reporting feature implementation and th
 ## Overview
 
 The feedback feature allows users to:
+
 - Report bugs
 - Request features
 - Provide general feedback
@@ -40,6 +41,7 @@ The current implementation uses the `mailto:` URI scheme to open the user's emai
 7. User manually attaches screenshots if needed
 
 **Limitations:**
+
 - Screenshots cannot be automatically attached via `mailto:` on most platforms
 - Requires user to have an email app configured
 - User must manually send the email
@@ -69,26 +71,26 @@ Create an API endpoint (e.g., `POST /api/feedback`) that:
 #### Example Backend Implementation (Node.js with SendGrid)
 
 ```javascript
-const sgMail = require('@sendgrid/mail');
-const multer = require('multer');
+const sgMail = require("@sendgrid/mail");
+const multer = require("multer");
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-app.post('/api/feedback', upload.array('attachments', 5), async (req, res) => {
+app.post("/api/feedback", upload.array("attachments", 5), async (req, res) => {
   const { type, message, deviceInfo } = req.body;
   const attachments = req.files?.map(file => ({
-    content: file.buffer.toString('base64'),
+    content: file.buffer.toString("base64"),
     filename: file.originalname,
     type: file.mimetype,
-    disposition: 'attachment'
+    disposition: "attachment",
   })) || [];
 
   const msg = {
-    to: 'support@lendasat.com',
-    from: 'noreply@lendasat.com', // Must be verified sender
+    to: "support@lendasat.com",
+    from: "noreply@lendasat.com", // Must be verified sender
     subject: `[${type}] Lenda App Feedback`,
-    text: `${message}\n\n---\nDevice Info:\n${deviceInfo || 'Not provided'}`,
-    attachments
+    text: `${message}\n\n---\nDevice Info:\n${deviceInfo || "Not provided"}`,
+    attachments,
   };
 
   try {
@@ -96,7 +98,7 @@ app.post('/api/feedback', upload.array('attachments', 5), async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, error: 'Failed to send feedback' });
+    res.status(500).json({ success: false, error: "Failed to send feedback" });
   }
 });
 ```
@@ -151,22 +153,22 @@ exports.sendFeedback = functions.https.onCall(async (data, context) => {
 
   // Use nodemailer with Gmail or SendGrid
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
+      pass: process.env.EMAIL_PASS,
+    },
   });
 
   await transporter.sendMail({
-    from: 'noreply@lendasat.com',
-    to: 'support@lendasat.com',
+    from: "noreply@lendasat.com",
+    to: "support@lendasat.com",
     subject: `[${type}] Lenda App Feedback`,
     text: message,
     attachments: attachments?.map(a => ({
       filename: a.name,
-      content: Buffer.from(a.data, 'base64')
-    }))
+      content: Buffer.from(a.data, "base64"),
+    })),
   });
 
   return { success: true };
@@ -183,6 +185,7 @@ Consider using dedicated feedback services:
 - **UserVoice** - Product feedback management
 
 These services provide:
+
 - Automatic screenshot capture
 - Session recordings
 - Crash logs
@@ -224,6 +227,7 @@ FROM_EMAIL=noreply@lendasat.com
 ## Summary of Required Steps
 
 ### Immediate (Current Implementation Works)
+
 - [x] Add `url_launcher` dependency
 - [x] Create feedback UI screen
 - [x] Add to settings menu
@@ -232,6 +236,7 @@ FROM_EMAIL=noreply@lendasat.com
 - [ ] Test mailto functionality
 
 ### For Production (Full Functionality)
+
 - [ ] Set up email service (SendGrid/AWS SES/etc.)
 - [ ] Create backend API endpoint for feedback
 - [ ] Update Flutter app to use API

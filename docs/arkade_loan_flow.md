@@ -32,10 +32,10 @@ LendaSat uses the Ark protocol for instant, offchain Bitcoin collateral. When a 
 
 There are **two distinct claim flows** depending on VTXO state:
 
-| Flow | VTXO State | Endpoints | When Used |
-|------|------------|-----------|-----------|
-| **Offchain Claim** | Non-recoverable | `claim-ark` -> `broadcast-claim-ark` | Normal case |
-| **Settlement** | Recoverable | `settle-ark` -> `finish-settle-ark` | VTXOs swept to recoverable state |
+| Flow               | VTXO State      | Endpoints                            | When Used                        |
+| ------------------ | --------------- | ------------------------------------ | -------------------------------- |
+| **Offchain Claim** | Non-recoverable | `claim-ark` -> `broadcast-claim-ark` | Normal case                      |
+| **Settlement**     | Recoverable     | `settle-ark` -> `finish-settle-ark`  | VTXOs swept to recoverable state |
 
 ---
 
@@ -49,15 +49,16 @@ PreConfirmed --> Confirmed --+--> Spent (offchain tx completed)
                              +--> Recoverable --> Settled (via batch)
 ```
 
-| Status | Meaning | Offchain Claimable? |
-|--------|---------|---------------------|
-| `Confirmed` | VTXO is spendable | Yes |
-| `PreConfirmed` | Pending confirmation | No (wait) |
-| `Spent` | Already spent | N/A |
-| `Recoverable` | Needs settlement flow | No (use settle-ark) |
-| `Settled` | Completed via batch | N/A |
+| Status         | Meaning               | Offchain Claimable? |
+| -------------- | --------------------- | ------------------- |
+| `Confirmed`    | VTXO is spendable     | Yes                 |
+| `PreConfirmed` | Pending confirmation  | No (wait)           |
+| `Spent`        | Already spent         | N/A                 |
+| `Recoverable`  | Needs settlement flow | No (use settle-ark) |
+| `Settled`      | Completed via batch   | N/A                 |
 
 **Why do VTXOs become recoverable?**
+
 - Ark periodically "sweeps" old VTXOs into new rounds
 - If a VTXO is swept while collateral is locked, it becomes recoverable
 - Recoverable VTXOs cannot be spent offchain - must go through settlement
@@ -70,19 +71,19 @@ Each collateral VTXO uses a custom Taproot tree with **6 spending paths**:
 
 ### Offchain Paths (require Ark server signature)
 
-| Script | Signers Required | Purpose |
-|--------|------------------|---------|
-| `borrower_hub_script` | Borrower + Hub + Server | Borrower claims after repayment |
-| `lender_hub_script` | Lender + Hub + Server | Lender liquidates on default |
-| `borrower_lender_script` | Borrower + Lender + Server | Cooperative spend |
+| Script                   | Signers Required           | Purpose                         |
+| ------------------------ | -------------------------- | ------------------------------- |
+| `borrower_hub_script`    | Borrower + Hub + Server    | Borrower claims after repayment |
+| `lender_hub_script`      | Lender + Hub + Server      | Lender liquidates on default    |
+| `borrower_lender_script` | Borrower + Lender + Server | Cooperative spend               |
 
 ### Onchain Paths (time-locked, no server needed)
 
-| Script | Signers Required | Purpose |
-|--------|------------------|---------|
-| `unilateral_borrower_hub_script` | Borrower + Hub + CSV delay | Unilateral exit by borrower |
-| `unilateral_lender_hub_script` | Lender + Hub + CSV delay | Unilateral exit by lender |
-| `unilateral_borrower_lender_script` | Borrower + Lender + CSV delay | Cooperative unilateral |
+| Script                              | Signers Required              | Purpose                     |
+| ----------------------------------- | ----------------------------- | --------------------------- |
+| `unilateral_borrower_hub_script`    | Borrower + Hub + CSV delay    | Unilateral exit by borrower |
+| `unilateral_lender_hub_script`      | Lender + Hub + CSV delay      | Unilateral exit by lender   |
+| `unilateral_borrower_lender_script` | Borrower + Lender + CSV delay | Cooperative unilateral      |
 
 The CSV (CheckSequenceVerify) delay ensures the server has time to respond before unilateral exits are possible.
 
@@ -97,6 +98,7 @@ This is the **normal, fast path** for claiming collateral after loan repayment.
 #### Step 1: `GET /api/contracts/{id}/claim-ark`
 
 **What happens on the backend:**
+
 1. Validates contract belongs to borrower
 2. Checks loan is fully repaid (`balance_outstanding == 0`)
 3. Loads collateral VTXOs from database
@@ -107,6 +109,7 @@ This is the **normal, fast path** for claiming collateral after loan repayment.
 8. Returns to client
 
 **Response:**
+
 ```json
 {
   "ark_psbt": "<hex-encoded main PSBT, hub-signed>",
@@ -119,12 +122,14 @@ This is the **normal, fast path** for claiming collateral after loan repayment.
 #### Step 2: Borrower Signs PSBTs Locally
 
 The borrower signs using their **Ark identity key** (NOT Lendasat auth key):
+
 - Main Ark PSBT
 - All checkpoint PSBTs
 
 #### Step 3: `POST /api/contracts/{id}/broadcast-claim-ark`
 
 **What happens on the backend:**
+
 1. Receives signed PSBTs from borrower
 2. Connects to Arkade server
 3. Submits offchain transaction: `submit_offchain_transaction_request(ark_psbt, checkpoint_psbts)`
@@ -142,6 +147,7 @@ This flow is required when VTXOs are in **recoverable state** (cannot be spent o
 #### Step 1: `GET /api/contracts/{id}/settle-ark`
 
 **What happens on the backend:**
+
 1. Validates contract (same as offchain)
 2. Builds **Intent PSBT** (declares what outputs the user wants)
 3. Builds **Forfeit PSBTs** (one per VTXO - exchanged for new confirmed VTXOs)
@@ -150,6 +156,7 @@ This flow is required when VTXOs are in **recoverable state** (cannot be spent o
 6. Returns to client
 
 **Response:**
+
 ```json
 {
   "intent_message": "<message for Ark server>",
@@ -166,6 +173,7 @@ This flow is required when VTXOs are in **recoverable state** (cannot be spent o
 #### Step 2: Borrower Signs All PSBTs Locally
 
 The borrower signs with their **Ark identity key**:
+
 - Intent proof PSBT (after converting BASE64 -> HEX)
 - All forfeit PSBTs (after converting BASE64 -> HEX)
 - Then converts signed PSBTs back to BASE64 for the API
@@ -200,6 +208,7 @@ Forfeit transactions are a critical safety mechanism in the Ark protocol.
 **Purpose:** Allow the Ark server to claim old VTXOs if the user abandons the batch.
 
 **Structure:**
+
 ```
 Old VTXO ----+
              |
@@ -210,10 +219,12 @@ Forfeit TX --+--> Connector Output (links to commitment tx)
 ```
 
 **When they execute:**
+
 - Only if user doesn't complete batch participation
 - Ark server broadcasts them to take custody of abandoned VTXOs
 
 **When they DON'T execute:**
+
 - Normal flow: user completes batch -> gets new confirmed VTXOs
 - Forfeit TXs are never broadcast
 
@@ -379,18 +390,18 @@ Future<String> _claimArkViaSettlement(String contractId) async {
 
 ### Is lendamobile Following All Steps Correctly?
 
-| Step | Required | lendamobile | Status |
-|------|----------|-------------|--------|
-| Use Ark identity key for `borrower_pk` | Yes | Yes | CORRECT |
-| Use Ark offchain address for collateral | Yes | Yes | CORRECT |
-| Check `requiresArkSettlement` before claiming | Yes | Yes | CORRECT |
-| Sign with Ark identity (not Lendasat key) | Yes | Yes | CORRECT |
-| Handle BASE64 <-> HEX conversion for settlement | Yes | Yes | CORRECT |
-| Sign main Ark PSBT | Yes | Yes | CORRECT |
-| Sign all checkpoint PSBTs | Yes | Yes | CORRECT |
-| Sign intent proof PSBT (settlement) | Yes | Yes | CORRECT |
-| Sign all forfeit PSBTs (settlement) | Yes | Yes | CORRECT |
-| Call correct broadcast/finish endpoint | Yes | Yes | CORRECT |
+| Step                                            | Required | lendamobile | Status  |
+| ----------------------------------------------- | -------- | ----------- | ------- |
+| Use Ark identity key for `borrower_pk`          | Yes      | Yes         | CORRECT |
+| Use Ark offchain address for collateral         | Yes      | Yes         | CORRECT |
+| Check `requiresArkSettlement` before claiming   | Yes      | Yes         | CORRECT |
+| Sign with Ark identity (not Lendasat key)       | Yes      | Yes         | CORRECT |
+| Handle BASE64 <-> HEX conversion for settlement | Yes      | Yes         | CORRECT |
+| Sign main Ark PSBT                              | Yes      | Yes         | CORRECT |
+| Sign all checkpoint PSBTs                       | Yes      | Yes         | CORRECT |
+| Sign intent proof PSBT (settlement)             | Yes      | Yes         | CORRECT |
+| Sign all forfeit PSBTs (settlement)             | Yes      | Yes         | CORRECT |
+| Call correct broadcast/finish endpoint          | Yes      | Yes         | CORRECT |
 
 ### Summary
 
@@ -420,12 +431,12 @@ Future<String> _claimArkViaSettlement(String contractId) async {
 
 ## Key Participants
 
-| Participant | Role | Key Path | When Signs |
-|-------------|------|----------|------------|
-| **Borrower** | Collateral owner | `m/83696968'/11811'/0/0` | Claims after repayment |
-| **Lender** | Loan provider | (lender's key) | Liquidates on default |
-| **Hub** | LendaSat server | (server key) | All operations (escrow) |
-| **Ark Server** | Arkade server | (server key) | Offchain transactions only |
+| Participant    | Role             | Key Path                 | When Signs                 |
+| -------------- | ---------------- | ------------------------ | -------------------------- |
+| **Borrower**   | Collateral owner | `m/83696968'/11811'/0/0` | Claims after repayment     |
+| **Lender**     | Loan provider    | (lender's key)           | Liquidates on default      |
+| **Hub**        | LendaSat server  | (server key)             | All operations (escrow)    |
+| **Ark Server** | Arkade server    | (server key)             | Offchain transactions only |
 
 ---
 
@@ -433,24 +444,24 @@ Future<String> _claimArkViaSettlement(String contractId) async {
 
 ### Offchain Claim
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/contracts/{id}/claim-ark` | GET | Get PSBTs for offchain claim |
-| `/api/contracts/{id}/broadcast-claim-ark` | POST | Broadcast signed claim |
+| Endpoint                                  | Method | Purpose                      |
+| ----------------------------------------- | ------ | ---------------------------- |
+| `/api/contracts/{id}/claim-ark`           | GET    | Get PSBTs for offchain claim |
+| `/api/contracts/{id}/broadcast-claim-ark` | POST   | Broadcast signed claim       |
 
 ### Settlement Claim
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/contracts/{id}/settle-ark` | GET | Get PSBTs for settlement |
-| `/api/contracts/{id}/finish-settle-ark` | POST | Complete settlement |
+| Endpoint                                | Method | Purpose                  |
+| --------------------------------------- | ------ | ------------------------ |
+| `/api/contracts/{id}/settle-ark`        | GET    | Get PSBTs for settlement |
+| `/api/contracts/{id}/finish-settle-ark` | POST   | Complete settlement      |
 
 ### Other
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/contracts/{id}/liquidate-ark` | POST | Lender liquidation |
-| `/api/contracts/{id}/finish-liquidate-ark` | POST | Complete liquidation |
+| Endpoint                                   | Method | Purpose              |
+| ------------------------------------------ | ------ | -------------------- |
+| `/api/contracts/{id}/liquidate-ark`        | POST   | Lender liquidation   |
+| `/api/contracts/{id}/finish-liquidate-ark` | POST   | Complete liquidation |
 
 ---
 
@@ -491,22 +502,22 @@ Borrower wants to claim collateral
 
 ### Backend (~/lendasat/lendasat)
 
-| File | Purpose |
-|------|---------|
-| `hub/src/routes/borrower/contracts.rs` | Borrower claim/settle endpoints |
-| `hub/src/routes/lender/contracts.rs` | Lender liquidation endpoints |
-| `hub/src/wallet.rs` | PSBT creation logic |
-| `hub/src/wallet/arkade.rs` | Ark batch protocol implementation |
-| `hub/src/model/arkade_script.rs` | Taproot script definitions |
-| `hub/src/db/collateral_vtxos.rs` | VTXO database model |
+| File                                   | Purpose                           |
+| -------------------------------------- | --------------------------------- |
+| `hub/src/routes/borrower/contracts.rs` | Borrower claim/settle endpoints   |
+| `hub/src/routes/lender/contracts.rs`   | Lender liquidation endpoints      |
+| `hub/src/wallet.rs`                    | PSBT creation logic               |
+| `hub/src/wallet/arkade.rs`             | Ark batch protocol implementation |
+| `hub/src/model/arkade_script.rs`       | Taproot script definitions        |
+| `hub/src/db/collateral_vtxos.rs`       | VTXO database model               |
 
 ### lendamobile
 
-| File | Purpose |
-|------|---------|
-| `rust/src/api/lendasat_api.rs` | Rust API client for LendaSat |
-| `lib/src/services/lendasat_service.dart` | Dart service layer |
-| `lib/src/ui/screens/contract_detail_screen.dart` | UI for contract actions |
+| File                                             | Purpose                      |
+| ------------------------------------------------ | ---------------------------- |
+| `rust/src/api/lendasat_api.rs`                   | Rust API client for LendaSat |
+| `lib/src/services/lendasat_service.dart`         | Dart service layer           |
+| `lib/src/ui/screens/contract_detail_screen.dart` | UI for contract actions      |
 
 ---
 
@@ -531,6 +542,7 @@ let (script, control_block) = match is_signed_with_borrower {
 For borrower claims, it uses `borrower_hub_script` (one of the 6 Taproot paths).
 
 The PSBTs are built with:
+
 - `tap_scripts`: Contains **only** the `borrower_hub_script` and its control block
 - `witness_utxo`: The VTXO being spent
 - `witness_script`: The spend script
@@ -564,7 +576,10 @@ for checkpoint_psbt in checkpoint_txs.iter_mut() {
 // ark-core/src/send.rs:447-496
 pub fn sign_ark_transaction<S>(sign_fn: S, psbt: &mut Psbt, input_index: usize) -> Result<(), Error>
 where
-    S: FnOnce(&mut psbt::Input, Message) -> Result<Vec<(schnorr::Signature, XOnlyPublicKey)>, Error>,
+    S: FnOnce(
+        &mut psbt::Input,
+        Message,
+    ) -> Result<Vec<(schnorr::Signature, XOnlyPublicKey)>, Error>,
 {
     // Get the first (and only) script from tap_scripts
     let (_, (vtxo_spend_script, leaf_version)) =
@@ -572,8 +587,12 @@ where
 
     // Compute the Taproot script-path sighash
     let leaf_hash = TapLeafHash::from_script(vtxo_spend_script, *leaf_version);
-    let tap_sighash = SighashCache::new(&psbt.unsigned_tx)
-        .taproot_script_spend_signature_hash(input_index, &prevouts, leaf_hash, TapSighashType::Default)?;
+    let tap_sighash = SighashCache::new(&psbt.unsigned_tx).taproot_script_spend_signature_hash(
+        input_index,
+        &prevouts,
+        leaf_hash,
+        TapSighashType::Default,
+    )?;
 
     let msg = secp256k1::Message::from_digest(tap_sighash.to_raw_hash().to_byte_array());
 
@@ -612,25 +631,26 @@ pub async fn sign_psbt_with_ark_identity(psbt_hex: String) -> Result<String> {
 
 #### 5. Why This Should Work
 
-| Component | Expectation | lendamobile | Status |
-|-----------|-------------|-------------|--------|
-| PSBT has `tap_scripts` | One entry with spend script | ✅ Hub provides this | Correct |
-| PSBT has `witness_utxo` | Set by hub | ✅ Hub provides this | Correct |
-| Correct signing key | Ark identity key | ✅ Uses `get_keypair_for_pk(&identity_pk)` | Correct |
-| Signing function | Returns (signature, pubkey) | ✅ Returns `vec![(sig, pk)]` | Correct |
-| Signature placement | `tap_script_sigs[(pk, leaf_hash)]` | ✅ Handled by `sign_ark_transaction` | Correct |
+| Component               | Expectation                        | lendamobile                                | Status  |
+| ----------------------- | ---------------------------------- | ------------------------------------------ | ------- |
+| PSBT has `tap_scripts`  | One entry with spend script        | ✅ Hub provides this                       | Correct |
+| PSBT has `witness_utxo` | Set by hub                         | ✅ Hub provides this                       | Correct |
+| Correct signing key     | Ark identity key                   | ✅ Uses `get_keypair_for_pk(&identity_pk)` | Correct |
+| Signing function        | Returns (signature, pubkey)        | ✅ Returns `vec![(sig, pk)]`               | Correct |
+| Signature placement     | `tap_script_sigs[(pk, leaf_hash)]` | ✅ Handled by `sign_ark_transaction`       | Correct |
 
 #### 6. The Script Requires 3 Signatures
 
 The `borrower_hub_script` requires: **Borrower + Hub + Server**
 
-| Signer | When Added | Key Used |
-|--------|------------|----------|
-| Hub | Before returning to client | Hub's keypair |
+| Signer   | When Added                                  | Key Used         |
+| -------- | ------------------------------------------- | ---------------- |
+| Hub      | Before returning to client                  | Hub's keypair    |
 | Borrower | Client-side (`sign_psbt_with_ark_identity`) | Ark identity key |
-| Server | During `broadcast-claim-ark` | Ark server key |
+| Server   | During `broadcast-claim-ark`                | Ark server key   |
 
 **Flow:**
+
 ```
 GET /claim-ark
     └── Hub creates PSBTs with borrower_hub_script
@@ -651,6 +671,7 @@ POST /broadcast-claim-ark
 For this to work, the borrower's signing key must match what's in the script.
 
 **Contract creation (rust/src/api/lendasat_api.rs:587-622):**
+
 ```rust
 let ark_identity_pubkey = get_ark_identity_pubkey().await?;
 
@@ -661,6 +682,7 @@ let request = CreateContractRequest {
 ```
 
 **Signing (rust/src/api/ark_api.rs:379-386):**
+
 ```rust
 let (_ark_address, vtxo) = client_arc.get_offchain_address()?;
 let identity_pk = vtxo.owner_pk();
@@ -681,15 +703,15 @@ The implementation is correct because:
 
 ### Comparison with iframe Reference
 
-| Aspect | iframe (sample-wallet) | lendamobile |
-|--------|------------------------|-------------|
-| Signing method | `psbtObj.signAllInputs(keyPair)` | `sign_ark_transaction(sign_fn, psbt, i)` |
-| Key source | User-provided raw private key | Ark SDK's key provider |
-| Script handling | bitcoinjs-lib handles automatically | ark-core handles correctly |
-| PSBT format | Hex | Hex |
+| Aspect          | iframe (sample-wallet)              | lendamobile                              |
+| --------------- | ----------------------------------- | ---------------------------------------- |
+| Signing method  | `psbtObj.signAllInputs(keyPair)`    | `sign_ark_transaction(sign_fn, psbt, i)` |
+| Key source      | User-provided raw private key       | Ark SDK's key provider                   |
+| Script handling | bitcoinjs-lib handles automatically | ark-core handles correctly               |
+| PSBT format     | Hex                                 | Hex                                      |
 
 Both approaches correctly handle Taproot script-path signing because the PSBTs are pre-formatted by the LendaSat hub with the correct script information.
 
 ---
 
-*Last updated: December 2024*
+_Last updated: December 2024_

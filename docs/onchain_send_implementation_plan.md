@@ -7,6 +7,7 @@ The fix has been implemented as described below. See commit history for changes.
 ## Problem
 
 When sending onchain (from Ark VTXOs to a Bitcoin address), the app fails with:
+
 ```
 INVALID_PSBT_INPUT (5): vtxo expires after 2026-01-20... (minExpiryGap: 695h53m36s)
 ```
@@ -22,39 +23,40 @@ export const collaborativeExitWithFees = async (
   wallet: IWallet,
   inputAmount: number,
   outputAmount: number,
-  address: string,  // Bitcoin onchain address
+  address: string, // Bitcoin onchain address
 ): Promise<string> => {
   // 1. Get all VTXOs
-  const vtxos = await wallet.getVtxos()
+  const vtxos = await wallet.getVtxos();
 
   // 2. Sort by batch expiry ASCENDING (use VTXOs expiring soonest first)
   const vtxosSorted = vtxos.sort((a, b) =>
     (a.virtualStatus.batchExpiry ?? 0) - (b.virtualStatus.batchExpiry ?? 0)
-  )
+  );
 
   // 3. Select VTXOs to cover the amount
-  const selectedVtxos = []
-  let selectedAmount = 0
+  const selectedVtxos = [];
+  let selectedAmount = 0;
   for (const vtxo of vtxosSorted) {
-    if (selectedAmount >= inputAmount) break
-    selectedVtxos.push(vtxo)
-    selectedAmount += vtxo.value
+    if (selectedAmount >= inputAmount) break;
+    selectedVtxos.push(vtxo);
+    selectedAmount += vtxo.value;
   }
 
   // 4. Build outputs (onchain address + change to offchain)
-  const outputs = [{ address, amount: BigInt(outputAmount) }]
-  const changeAmount = selectedAmount - inputAmount
+  const outputs = [{ address, amount: BigInt(outputAmount) }];
+  const changeAmount = selectedAmount - inputAmount;
   if (changeAmount > 0) {
-    const { offchainAddr } = await getReceivingAddresses(wallet)
-    outputs.push({ address: offchainAddr, amount: BigInt(changeAmount) })
+    const { offchainAddr } = await getReceivingAddresses(wallet);
+    outputs.push({ address: offchainAddr, amount: BigInt(changeAmount) });
   }
 
   // 5. Call settle with specific inputs and outputs
-  return await wallet.settle({ inputs: selectedVtxos, outputs })
-}
+  return await wallet.settle({ inputs: selectedVtxos, outputs });
+};
 ```
 
 **Key Insight**: Arkade uses `wallet.settle({ inputs, outputs })` which allows:
+
 - Specifying exactly which VTXOs to use as inputs
 - Specifying outputs including onchain Bitcoin addresses
 
@@ -92,7 +94,7 @@ Location: `~/.cargo/git/checkouts/ark-rs-df93e4a881b127c7/09b0732/ark-client/src
 pub struct VirtualTxOutPoint {
     pub outpoint: OutPoint,
     pub created_at: i64,
-    pub expires_at: i64,  // <-- Unix timestamp for expiry
+    pub expires_at: i64, // <-- Unix timestamp for expiry
     pub amount: Amount,
     pub script: ScriptBuf,
     pub is_preconfirmed: bool,
@@ -111,8 +113,9 @@ pub(crate) enum BatchOutputType {
         to_address: ArkAddress,
         to_amount: Amount,
     },
-    OffBoard {  // <-- This is what we need for onchain sends
-        to_address: Address,        // Bitcoin address
+    OffBoard {
+        // <-- This is what we need for onchain sends
+        to_address: Address, // Bitcoin address
         to_amount: Amount,
         change_address: ArkAddress, // Ark address for change
         change_amount: Amount,
@@ -148,6 +151,7 @@ Or fork ark-rs to: `~/lendasat/rust-sdk` or similar
 ### Option 2: Implement in Lendamobile Rust Layer
 
 Add a wrapper function that:
+
 1. Calls `client.list_vtxos()` to get VTXOs with expiry info
 2. Sorts by `expires_at` ascending
 3. Filters to only `confirmed()` VTXOs (not expired, not pre-confirmed)
@@ -158,10 +162,7 @@ Add a wrapper function that:
 
 ```rust
 /// Send to onchain address with proper VTXO selection (like Arkade wallet)
-pub async fn send_onchain_with_vtxo_selection(
-    address: Address,
-    amount: Amount,
-) -> Result<Txid> {
+pub async fn send_onchain_with_vtxo_selection(address: Address, amount: Amount) -> Result<Txid> {
     let client = get_client()?;
 
     // 1. Get all VTXOs
@@ -219,11 +220,10 @@ In `/mnt/c/Users/tobia/StudioProjects/lendamobile/rust/src/ark/client.rs`:
 use ark_core::server::VirtualTxOutPoint;
 
 /// Select VTXOs for onchain send, sorted by expiry (soonest first)
-async fn select_vtxos_for_amount(
-    client: &ArkClient,
-    amount: Amount,
-) -> Result<Vec<OutPoint>> {
-    let (vtxo_list, _) = client.list_vtxos().await
+async fn select_vtxos_for_amount(client: &ArkClient, amount: Amount) -> Result<Vec<OutPoint>> {
+    let (vtxo_list, _) = client
+        .list_vtxos()
+        .await
         .map_err(|e| anyhow!("Failed to list VTXOs: {e}"))?;
 
     // Get confirmed VTXOs only (not expired, not pre-confirmed)

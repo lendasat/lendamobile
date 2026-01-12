@@ -299,8 +299,8 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: AppTheme.colorBitcoin, width: 2),
+                      borderSide: const BorderSide(
+                          color: AppTheme.colorBitcoin, width: 2),
                     ),
                     errorText: errorMessage,
                   ),
@@ -321,8 +321,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
 
                     // Validate email
                     if (email.isEmpty) {
-                      setModalState(
-                          () => errorMessage = l10n.pleaseEnterEmail);
+                      setModalState(() => errorMessage = l10n.pleaseEnterEmail);
                       return;
                     }
 
@@ -358,7 +357,8 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
 
                       if (mounted) {
                         Navigator.of(context).pop();
-                        OverlayService().showSuccess('Registration successful!');
+                        OverlayService()
+                            .showSuccess('Registration successful!');
                         setState(() => _isRegistering = false);
                       }
                     } catch (e) {

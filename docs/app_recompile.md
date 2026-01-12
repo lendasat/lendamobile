@@ -18,6 +18,7 @@ cargo ndk -t arm64-v8a -o ../android/app/src/main/jniLibs build --release
 ### How to Verify Your Changes Are Applied
 
 Check the library timestamp after building:
+
 ```bash
 ls -la android/app/src/main/jniLibs/arm64-v8a/*.so
 ```
@@ -27,6 +28,7 @@ The timestamp should be recent (after your code changes).
 ### Common Mistake
 
 If you see unexpected behavior after changing Rust code:
+
 1. Check if the `.so` file timestamp is older than your code changes
 2. If yes, you forgot to recompile - run the command above
 3. Then restart the app
@@ -38,6 +40,7 @@ This guide explains how to build the Rust native libraries from Linux/WSL when t
 ## Problem
 
 When building on Windows, the OpenSSL vendored build may fail with:
+
 ```
 This perl implementation doesn't produce Unix like paths
 ```
@@ -82,6 +85,7 @@ export ANDROID_NDK_HOME=~/android-sdk/android-ndk-r27c
 ```
 
 Add to your `~/.bashrc` or `~/.zshrc` for persistence:
+
 ```bash
 export ANDROID_NDK_HOME=~/android-sdk/android-ndk-r27c
 ```
@@ -109,18 +113,19 @@ cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 -o ../android/app/src/main/jniLi
 
 ### Architecture Coverage
 
-| Architecture | Devices |
-|--------------|---------|
-| arm64-v8a | Modern phones (2017+), most common |
-| armeabi-v7a | Older 32-bit ARM devices |
-| x86_64 | Android emulators |
-| x86 | Old emulators, rare physical devices |
+| Architecture | Devices                              |
+| ------------ | ------------------------------------ |
+| arm64-v8a    | Modern phones (2017+), most common   |
+| armeabi-v7a  | Older 32-bit ARM devices             |
+| x86_64       | Android emulators                    |
+| x86          | Old emulators, rare physical devices |
 
 For most use cases, `arm64-v8a` is sufficient.
 
 ### After Building
 
 The compiled `.so` files will be in:
+
 ```
 android/app/src/main/jniLibs/
 ├── arm64-v8a/
@@ -140,6 +145,7 @@ flutter build apk --debug
 ```
 
 Or run directly:
+
 ```cmd
 flutter run
 ```
@@ -149,24 +155,31 @@ CargoKit will detect the pre-built libraries and skip the Rust compilation step.
 ## Troubleshooting
 
 ### "Could not find any NDK"
+
 Make sure `ANDROID_NDK_HOME` is set correctly:
+
 ```bash
 echo $ANDROID_NDK_HOME
 ls $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/
 ```
 
 ### Build takes too long
+
 The first build compiles all dependencies (~20-30 minutes). Subsequent builds are much faster as dependencies are cached.
 
 ### Library not found at runtime
+
 Ensure the library name matches what Flutter expects:
+
 ```bash
 ls android/app/src/main/jniLibs/arm64-v8a/
 # Should show: librust_lib_ark_flutter.so
 ```
 
 ### Content hash mismatch
+
 If you see hash mismatch errors, clean and rebuild:
+
 ```bash
 cd rust
 cargo clean
