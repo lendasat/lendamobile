@@ -15,9 +15,11 @@ import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/screens/swap/swap_processing_screen.dart';
+import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 /// Bottom sheet widget for displaying swap details.
 /// Uses the exact same UI as SwapDetailScreen.
@@ -646,9 +648,22 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
   Widget _buildSwapDetails(BuildContext context, bool isDarkMode) {
     if (_swapInfo == null) return const SizedBox.shrink();
 
+    final currencyService = context.watch<CurrencyPreferenceService>();
+    final showCoinBalance = currencyService.showCoinBalance;
+
     final createdAt = _formatTimestamp(_swapInfo!.createdAt);
     final feeSats = _swapInfo!.feeSats.toInt();
-    final feeFormatted = _formatFee(feeSats);
+    final (feeAmount, feeUnit, isSatsUnit) = _formatFeeWithUnit(feeSats);
+
+    // Calculate fiat value of fee using the swap's exchange rate
+    // Exchange rate = targetAmountUsd / (sourceAmountSats / satsPerBtc)
+    final sourceAmountSats = _swapInfo!.sourceAmountSats.toInt();
+    final targetAmountUsd = _swapInfo!.targetAmountUsd;
+    final btcPrice = sourceAmountSats > 0
+        ? targetAmountUsd / (sourceAmountSats / BitcoinConstants.satsPerBtc)
+        : 0.0;
+    final feeFiat = (feeSats / BitcoinConstants.satsPerBtc) * btcPrice;
+    final feeFiatFormatted = currencyService.formatAmount(feeFiat);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -743,17 +758,40 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                 ),
               ),
 
-              // Fee
+              // Fee (tappable to toggle sats/fiat)
               ArkListTile(
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: AppTheme.elementSpacing * 0.75,
                   vertical: AppTheme.elementSpacing * 0.5,
                 ),
                 text: 'Fee',
-                trailing: Text(
-                  feeFormatted,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                onTap: () => currencyService.toggleShowCoinBalance(),
+                trailing: showCoinBalance
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            feeAmount,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(width: 2),
+                          if (isSatsUnit)
+                            Icon(
+                              AppTheme.satoshiIcon,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            )
+                          else
+                            Text(
+                              ' $feeUnit',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                        ],
+                      )
+                    : Text(
+                        feeFiatFormatted,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
               ),
 
               // EVM Contract with copy feedback
@@ -916,16 +954,17 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     );
   }
 
-  String _formatFee(int feeSats) {
+  /// Returns (formattedAmount, unit, isSatsUnit)
+  (String, String, bool) _formatFeeWithUnit(int feeSats) {
     if (feeSats >= 100000) {
       // Show in BTC for large amounts
       final btc = feeSats / BitcoinConstants.satsPerBtc;
-      return '${btc.toStringAsFixed(8)} BTC';
+      return (btc.toStringAsFixed(8), 'BTC', false);
     } else if (feeSats >= 1000) {
       // Show in sats with comma formatting
-      return '${_formatNumber(feeSats)} sats';
+      return (_formatNumber(feeSats), 'sats', true);
     } else {
-      return '$feeSats sats';
+      return (feeSats.toString(), 'sats', true);
     }
   }
 
@@ -1061,6 +1100,8 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
             onTap: _isRefunding ? null : _handleRefund,
           ),
         ],
+        // Bottom spacing
+        const SizedBox(height: AppTheme.cardPadding),
       ],
     );
   }
