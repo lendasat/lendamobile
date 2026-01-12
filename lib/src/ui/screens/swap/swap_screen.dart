@@ -621,8 +621,10 @@ class SwapScreenState extends State<SwapScreen> {
   }
 
   /// Check if swap can actually be executed (amount valid and not loading)
+  /// Note: We don't include _isLoadingQuote here to prevent button flickering
+  /// while quotes are being fetched in the background
   bool get _canSwap {
-    return _isAmountValid && !isLoading && !_isLoadingQuote;
+    return _isAmountValid && !isLoading;
   }
 
   String _getButtonTitle() {
@@ -774,7 +776,7 @@ class SwapScreenState extends State<SwapScreen> {
   void _showEvmAddressInput() {
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.7,
+      height: MediaQuery.of(context).size.height * 0.85,
       child: EvmAddressInputSheet(
         tokenSymbol: targetToken.symbol,
         network: targetToken.network,
