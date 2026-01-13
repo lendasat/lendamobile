@@ -216,7 +216,34 @@ workflows:
 
       - name: Build android release bundle
         script: |
-          just android release
+          export PATH="$HOME/fvm/bin:$PATH"
+          
+          just -f common.just check-env
+          
+          BUILD_NAME=$(yq -r .version pubspec.yaml)
+          BUILD_NUMBER=$(git rev-list --count HEAD)
+          
+          just ffi-build
+          just android-build
+          fvm flutter build appbundle \
+          --release \
+          --build-name=$BUILD_NAME \
+          --build-number=$BUILD_NUMBER \
+          --dart-define=ESPLORA_URL=$ESPLORA_URL \
+          --dart-define=ARK_SERVER_URL=$ARK_SERVER_URL \
+          --dart-define=ARK_NETWORK=$ARK_NETWORK \
+          --dart-define=BOLTZ_URL=$BOLTZ_URL \
+          --dart-define=BACKEND_URL=$BACKEND_URL \
+          --dart-define=WEBSITE_URL=$WEBSITE_URL \
+          --dart-define=LENDASAT_API_KEY_SIGNET=$LENDASAT_API_KEY_SIGNET \
+          --dart-define=LENDASAT_API_KEY_MAINNET=$LENDASAT_API_KEY_MAINNET \
+          --dart-define=POSTHOG_API_KEY=$POSTHOG_API_KEY \
+          --dart-define=POSTHOG_HOST=$POSTHOG_HOST \
+          --dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY \
+          --dart-define=TURNSTILE_BASE_URL=$TURNSTILE_BASE_URL \
+          --dart-define=RAPIDAPI_KEY=$RAPIDAPI_KEY
+          
+          echo "You can now manually upload the bundle file"
 
     publishing:
       email:
