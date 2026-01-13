@@ -687,7 +687,8 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                                     : (transactionModel!
                                                             .status.confirmed
                                                         ? AppTheme.successColor
-                                                        : AppTheme.colorBitcoin),
+                                                        : AppTheme
+                                                            .colorBitcoin),
                                               ),
                                         ),
                                       ],
@@ -1235,7 +1236,8 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                                     : (widget.isConfirmed ==
                                                             true
                                                         ? AppTheme.successColor
-                                                        : AppTheme.colorBitcoin),
+                                                        : AppTheme
+                                                            .colorBitcoin),
                                               ),
                                         ),
                                       ],

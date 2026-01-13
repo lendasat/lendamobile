@@ -796,7 +796,8 @@ class _TransactionItemWidget extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                DateFormatter.formatTimeAgoFromTimestamp(createdAt),
+                                DateFormatter.formatTimeAgoFromTimestamp(
+                                    createdAt),
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),

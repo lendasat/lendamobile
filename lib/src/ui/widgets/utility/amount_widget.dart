@@ -99,9 +99,7 @@ class _AmountWidgetState extends State<AmountWidget>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         widget.onInputStateChange!(
-          initialSwapped
-              ? "currency"
-              : _service.currentUnit.name.toLowerCase(),
+          initialSwapped ? "currency" : _service.currentUnit.name.toLowerCase(),
         );
       });
     }
@@ -171,10 +169,17 @@ class _AmountWidgetState extends State<AmountWidget>
     // Handle auto-convert if enabled
     if (widget.autoConvert && !_service.swapped) {
       final amount = _service.currentUnit == CurrencyType.bitcoin
-          ? double.tryParse(widget.btcController.text.isEmpty ? "0" : widget.btcController.text) ?? 0.0
-          : double.tryParse(widget.satController.text.isEmpty ? "0" : widget.satController.text) ?? 0.0;
+          ? double.tryParse(widget.btcController.text.isEmpty
+                  ? "0"
+                  : widget.btcController.text) ??
+              0.0
+          : double.tryParse(widget.satController.text.isEmpty
+                  ? "0"
+                  : widget.satController.text) ??
+              0.0;
 
-      final unitEquivalent = _service.convertToBitcoinUnit(amount, _service.currentUnit);
+      final unitEquivalent =
+          _service.convertToBitcoinUnit(amount, _service.currentUnit);
       _service.processAutoConvert(unitEquivalent);
     }
   }
@@ -186,9 +191,8 @@ class _AmountWidgetState extends State<AmountWidget>
     // Notify parent of amount change
     if (widget.onAmountChange != null) {
       final currencyService = context.read<CurrencyPreferenceService>();
-      final currencyType = _service.swapped
-          ? currencyService.code
-          : _service.currentUnit.name;
+      final currencyType =
+          _service.swapped ? currencyService.code : _service.currentUnit.name;
       widget.onAmountChange!(
         currencyType,
         widget.btcController.text.isEmpty ? '0' : widget.btcController.text,
@@ -341,7 +345,8 @@ class _AmountWidgetState extends State<AmountWidget>
                 },
                 behavior: HitTestBehavior.opaque,
                 child: !_service.swapped
-                    ? _buildBitcoinToMoneyDisplay(context, bitcoinPrice, currencyService)
+                    ? _buildBitcoinToMoneyDisplay(
+                        context, bitcoinPrice, currencyService)
                     : _buildMoneyToBitcoinDisplay(context, currencyService),
               ),
             ],
@@ -358,7 +363,8 @@ class _AmountWidgetState extends State<AmountWidget>
     CurrencyPreferenceService currencyService,
   ) {
     final materialTheme = Theme.of(context);
-    final textColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
+    final textColor =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
 
     // Show placeholder if no value or no price
     if (_displayFiat.isEmpty || bitcoinPrice == null) {
@@ -387,7 +393,8 @@ class _AmountWidgetState extends State<AmountWidget>
     CurrencyPreferenceService currencyService,
   ) {
     final materialTheme = Theme.of(context);
-    final textColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
+    final textColor =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
 
     // Show placeholder if no value
     final displayValue = _displayBtc.isEmpty ? "0" : _displayBtc;
