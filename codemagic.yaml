@@ -153,3 +153,93 @@ workflows:
         # Optional boolean, defaults to false. Whether or not to submit the uploaded
         # build to App Store review. Note: This action is performed during post-processing.
         submit_to_app_store: false
+  android-workflow:
+    name: Android Release Workflow
+    environment:
+      android_signing:
+        - lendamobile-android-keystore
+      groups:
+        - production
+      vars:
+        PACKAGE_NAME: "com.lendasat.lendamobile"
+        GOOGLE_PLAY_TRACK: alpha
+    scripts:
+      - name: Install just
+        script: brew install just
+      - name: Install Rust
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env"
+          rustup target add armv7-linux-androideabi
+      - name: Install FVM
+        script: |
+          curl -fsSL https://fvm.app/install.sh | bash -s -- 4.0.5
+          echo "$HOME/fvm/bin" >> "$HOME/.bashrc"
+
+      - name: Install cargo expand
+        script: |
+          source "$HOME/.cargo/env"
+          cargo install cargo-expand
+
+      - name: Create .env file
+        script: |
+          cat > .env << EOF
+          BACKEND_URL=$BACKEND_URL
+          WEBSITE_URL=$WEBSITE_URL
+          LENDASAT_API_KEY_SIGNET=$LENDASAT_API_KEY_SIGNET
+          LENDASAT_API_KEY_MAINNET=$LENDASAT_API_KEY_MAINNET
+          POSTHOG_API_KEY=$POSTHOG_API_KEY
+          POSTHOG_HOST=$POSTHOG_HOST
+          TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY
+          TURNSTILE_SECRET_KEY=$TURNSTILE_SECRET_KEY
+          TURNSTILE_BASE_URL=$TURNSTILE_BASE_URL
+          RAPIDAPI_KEY=$RAPIDAPI_KEY
+          ARK_SERVER_URL=$ARK_SERVER_URL
+          ESPLORA_URL=$ESPLORA_URL
+          ARK_NETWORK=$ARK_NETWORK
+          BOLTZ_URL=$BOLTZ_URL
+          EOF
+
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+
+      - name: Install Flutter dependencies
+        script: |
+          export PATH="$HOME/fvm/bin:$PATH"
+          fvm flutter pub get
+
+      - name: Install flutter_rust_bridge_codegen
+        script: |
+          source "$HOME/.cargo/env"
+          cargo install flutter_rust_bridge_codegen
+
+      - name: Build android release bundle
+        script: |
+          just android release
+
+    publishing:
+      email:
+        recipients:
+          - philipp@lendasat.com
+        notify:
+          success: true
+          failure: false
+      google_play:
+        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+        #  ┌────────────┬──────────────────────────┐
+        #  │   Track    │ Google Play Console Name │
+        #  ├────────────┼──────────────────────────┤
+        #  │ internal   │ Internal testing         │
+        #  ├────────────┼──────────────────────────┤
+        #  │ alpha      │ Closed testing           │
+        #  ├────────────┼──────────────────────────┤
+        #  │ beta       │ Open testing             │
+        #  ├────────────┼──────────────────────────┤
+        #  │ production │ Production               │
+        track: alpha
+        submit_as_draft: true
+    artifacts:
+      - build/**/outputs/**/*.aab
+      - build/**/outputs/**/mapping.txt
+      - flutter_drive.log
