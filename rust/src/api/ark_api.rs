@@ -533,12 +533,12 @@ pub async fn estimate_arkade_fee(address: String, amount_sats: u64) -> Result<Fe
 
 /// Estimate fee for Lightning payment
 ///
-/// Lightning payments via Boltz submarine swap have a 0.25% fee.
-pub fn estimate_lightning_fee(amount_sats: u64) -> FeeEstimate {
-    let estimate = crate::ark::client::estimate_lightning_fee(amount_sats);
-    FeeEstimate {
+/// Fetches real-time fees from Boltz API including percentage fee and miner fees.
+pub async fn estimate_lightning_fee(amount_sats: u64) -> Result<FeeEstimate> {
+    let estimate = crate::ark::client::estimate_lightning_fee(amount_sats).await?;
+    Ok(FeeEstimate {
         fee_sats: estimate.fee_sats,
         fee_rate: estimate.fee_rate,
         num_inputs: estimate.num_inputs,
-    }
+    })
 }
