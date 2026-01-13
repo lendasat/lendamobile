@@ -1,3 +1,5 @@
+set dotenv-load := true
+
 # Common variables shared across all justfiles
 # Dart define flags - loaded from environment variables
 # These are injected at compile time via --dart-define

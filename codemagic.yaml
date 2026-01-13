@@ -74,11 +74,44 @@ workflows:
       - name: Set up provisioning profiles settings on Xcode project
         script: xcode-project use-profiles
 
-      - name: Build release ios
+      - name: Build FFI bindings
         script: |
           source "$HOME/.cargo/env"
           export PATH="$HOME/fvm/bin:$PATH"
-          just ios release
+          just ffi-build
+
+      - name: Build Rust for iOS
+        script: |
+          source "$HOME/.cargo/env"
+          just ios-build
+
+      - name: Build ipa for distribution
+        script: |
+          export PATH="$HOME/fvm/bin:$PATH"
+          
+          just -f common.just check-env
+          
+          BUILD_NAME=$(yq -r .version pubspec.yaml)
+          BUILD_NUMBER=$(git rev-list --count HEAD)
+          
+          fvm flutter build ipa \
+            --release \
+            --build-name=$BUILD_NAME \
+            --build-number=$BUILD_NUMBER \
+            --dart-define=ESPLORA_URL=$ESPLORA_URL \
+            --dart-define=ARK_SERVER_URL=$ARK_SERVER_URL \
+            --dart-define=ARK_NETWORK=$ARK_NETWORK \
+            --dart-define=BOLTZ_URL=$BOLTZ_URL \
+            --dart-define=BACKEND_URL=$BACKEND_URL \
+            --dart-define=WEBSITE_URL=$WEBSITE_URL \
+            --dart-define=LENDASAT_API_KEY_SIGNET=$LENDASAT_API_KEY_SIGNET \
+            --dart-define=LENDASAT_API_KEY_MAINNET=$LENDASAT_API_KEY_MAINNET \
+            --dart-define=POSTHOG_API_KEY=$POSTHOG_API_KEY \
+            --dart-define=POSTHOG_HOST=$POSTHOG_HOST \
+            --dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY \
+            --dart-define=TURNSTILE_BASE_URL=$TURNSTILE_BASE_URL \
+            --dart-define=RAPIDAPI_KEY=$RAPIDAPI_KEY \
+            --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
