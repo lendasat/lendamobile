@@ -214,6 +214,17 @@ workflows:
           source "$HOME/.cargo/env"
           cargo install flutter_rust_bridge_codegen
 
+      - name: Build FFI bindings
+        script: |
+          source "$HOME/.cargo/env"
+          export PATH="$HOME/fvm/bin:$PATH"
+          just ffi-build
+
+      - name: Build Rust for android
+        script: |
+          source "$HOME/.cargo/env"
+          just android-build
+
       - name: Build android release bundle
         script: |
           export PATH="$HOME/fvm/bin:$PATH"
@@ -223,8 +234,6 @@ workflows:
           BUILD_NAME=$(yq -r .version pubspec.yaml)
           BUILD_NUMBER=$(git rev-list --count HEAD)
           
-          just ffi-build
-          just android-build
           fvm flutter build appbundle \
           --release \
           --build-name=$BUILD_NAME \
