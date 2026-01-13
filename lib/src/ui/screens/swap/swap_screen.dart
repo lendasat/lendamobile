@@ -24,6 +24,7 @@ import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dar
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
+import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -931,6 +932,9 @@ class SwapScreenState extends State<SwapScreen> {
           targetChain: targetToken.chainId,
         );
         swapId = result.swapId;
+
+        // Start monitoring this swap for auto-claim
+        SwapMonitoringService().startMonitoringSwap(swapId);
 
         // Step 3: Automatically fund the swap by sending BTC to HTLC address
         final satsToSend = result.satsToSend;

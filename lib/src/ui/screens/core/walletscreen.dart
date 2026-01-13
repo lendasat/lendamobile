@@ -131,11 +131,24 @@ class WalletScreenState extends State<WalletScreen>
     _loadBitcoinPriceData();
     _loadRecoveryStatus();
 
+    // Listen to swap service changes for automatic UI updates
+    _swapService.addListener(_onSwapsChanged);
+
     // Fetch exchange rates and check for alpha warning
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CurrencyPreferenceService>().fetchExchangeRates();
       _checkAndShowAlphaWarning();
     });
+  }
+
+  /// Called when LendaSwapService notifies of changes
+  void _onSwapsChanged() {
+    if (mounted) {
+      setState(() {
+        _swaps = List.from(_swapService.swaps);
+      });
+      logger.d("Swaps updated from service notification");
+    }
   }
 
   /// Load cached balance from local storage for instant display
@@ -266,6 +279,7 @@ class WalletScreenState extends State<WalletScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _swapService.removeListener(_onSwapsChanged);
     _keyboardDebounceTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
@@ -445,7 +459,9 @@ class WalletScreenState extends State<WalletScreen>
       await _swapService.refreshSwaps();
       if (mounted) {
         setState(() {
-          _swaps = _swapService.swaps;
+          // Create a new list to ensure TransactionHistoryWidget sees the change
+          // (widget comparison is by reference, not by content)
+          _swaps = List.from(_swapService.swaps);
         });
       }
       logger.i("Fetched ${_swaps.length} swaps");

@@ -77,8 +77,11 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
   // Callback for wallet refresh (set by BottomNav or other parent widget)
   VoidCallback? onWalletRefreshNeeded;
 
-  // Poll interval in seconds
-  static const int _pollIntervalSeconds = 15;
+  // Poll interval - faster polling when actively monitoring pending swaps
+  static const int _pollIntervalSeconds = 5;
+
+  // Track swap IDs that we're actively monitoring
+  final Set<String> _pendingSwapIds = {};
 
   /// Whether the service is currently monitoring
   bool get isMonitoring => _isMonitoring;
@@ -106,7 +109,25 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     _isInitialized = true;
     logger.i("[SwapMonitor] Initialized");
 
-    // Start monitoring
+    // Initialize LendaSwapService if needed
+    if (!_swapService.isInitialized) {
+      try {
+        await _swapService.initialize();
+        logger.i("[SwapMonitor] LendaSwapService initialized");
+      } catch (e) {
+        logger.w("[SwapMonitor] Failed to initialize LendaSwapService: $e");
+        return;
+      }
+    }
+
+    // Check for any existing pending swaps and start monitoring if needed
+    await _checkForPendingSwaps();
+  }
+
+  /// Start monitoring a specific swap (call this when a new swap is created)
+  void startMonitoringSwap(String swapId) {
+    logger.i("[SwapMonitor] Starting to monitor swap: $swapId");
+    _pendingSwapIds.add(swapId);
     _startMonitoring();
   }
 
@@ -126,9 +147,9 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
 
     switch (state) {
       case AppLifecycleState.resumed:
-        logger.i("[SwapMonitor] App resumed, checking for claimable swaps");
-        _checkAndClaimSwaps(); // Check immediately on resume
-        _startMonitoring();
+        logger.i("[SwapMonitor] App resumed");
+        // Check for pending swaps and start monitoring if needed
+        _checkForPendingSwaps();
         break;
       case AppLifecycleState.paused:
         logger.i("[SwapMonitor] App paused, stopping monitoring");
@@ -139,11 +160,53 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  void _startMonitoring() {
+  /// Check if there are any pending swaps that need monitoring
+  Future<void> _checkForPendingSwaps() async {
+    if (!_swapService.isInitialized) return;
+
+    try {
+      await _swapService.refreshSwaps();
+      final swaps = _swapService.swaps;
+
+      // Find pending/processing swaps
+      _pendingSwapIds.clear();
+      for (final swap in swaps) {
+        if (swap.status == SwapStatusSimple.waitingForDeposit ||
+            swap.status == SwapStatusSimple.processing) {
+          _pendingSwapIds.add(swap.id);
+        }
+      }
+
+      if (_pendingSwapIds.isNotEmpty) {
+        logger.i(
+            "[SwapMonitor] Found ${_pendingSwapIds.length} pending swaps, starting monitoring");
+        _startMonitoring();
+      } else {
+        logger.d("[SwapMonitor] No pending swaps, not starting monitoring");
+        _stopMonitoring();
+      }
+    } catch (e) {
+      logger.w("[SwapMonitor] Failed to check for pending swaps: $e");
+    }
+  }
+
+  Future<void> _startMonitoring() async {
     if (_isMonitoring) return;
-    if (!_swapService.isInitialized) {
-      logger.d("[SwapMonitor] SwapService not initialized, skipping");
+    if (_pendingSwapIds.isEmpty) {
+      logger.d("[SwapMonitor] No pending swaps to monitor");
       return;
+    }
+
+    // Try to initialize LendaSwapService if not already done
+    if (!_swapService.isInitialized) {
+      try {
+        await _swapService.initialize();
+        logger.i(
+            "[SwapMonitor] LendaSwapService initialized in _startMonitoring");
+      } catch (e) {
+        logger.d("[SwapMonitor] SwapService not initialized, skipping: $e");
+        return;
+      }
     }
 
     _isMonitoring = true;
@@ -152,16 +215,18 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     // Check immediately
     _checkAndClaimSwaps();
 
-    // Start periodic polling
+    // Start periodic polling (every 5 seconds for pending swaps)
     _pollTimer = Timer.periodic(
       Duration(seconds: _pollIntervalSeconds),
       (_) => _checkAndClaimSwaps(),
     );
 
-    logger.i("[SwapMonitor] Started monitoring (interval: ${_pollIntervalSeconds}s)");
+    logger.i(
+        "[SwapMonitor] Started monitoring ${_pendingSwapIds.length} swaps (interval: ${_pollIntervalSeconds}s)");
   }
 
   void _stopMonitoring() {
+    if (!_isMonitoring) return;
     _pollTimer?.cancel();
     _pollTimer = null;
     _isMonitoring = false;
@@ -177,18 +242,36 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
       await _swapService.refreshSwaps();
 
       final swaps = _swapService.swaps;
-      logger.d("[SwapMonitor] Checking ${swaps.length} swaps");
+      logger.d(
+          "[SwapMonitor] Checking ${swaps.length} swaps, monitoring ${_pendingSwapIds.length} pending");
+
+      // Update pending swap IDs - remove completed ones, add new pending ones
+      final stillPending = <String>{};
 
       for (final swap in swaps) {
-        // Skip if already claimed or currently claiming
-        if (_claimedSwapIds.contains(swap.id)) continue;
-        if (_claimingSwapIds.contains(swap.id)) continue;
-
-        // Skip completed swaps
-        if (swap.status == SwapStatusSimple.completed) {
-          _claimedSwapIds.add(swap.id);
+        // Skip if currently claiming
+        if (_claimingSwapIds.contains(swap.id)) {
+          stillPending.add(swap.id);
           continue;
         }
+
+        // Check if a swap just completed
+        if (swap.status == SwapStatusSimple.completed) {
+          if (_pendingSwapIds.contains(swap.id)) {
+            logger.i("[SwapMonitor] Swap ${swap.id} has completed!");
+            _claimedSwapIds.add(swap.id);
+          }
+          continue;
+        }
+
+        // Track pending/processing swaps
+        if (swap.status == SwapStatusSimple.waitingForDeposit ||
+            swap.status == SwapStatusSimple.processing) {
+          stillPending.add(swap.id);
+        }
+
+        // Skip if already processed
+        if (_claimedSwapIds.contains(swap.id)) continue;
 
         // BTC → Polygon: Auto-claim via Gelato (gasless)
         if (swap.canClaimGelato) {
@@ -196,11 +279,13 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
           final isPolygonTarget = _isPolygonTarget(swap);
 
           if (isPolygonTarget) {
-            logger.i("[SwapMonitor] Found claimable BTC→Polygon swap: ${swap.id}");
+            logger.i(
+                "[SwapMonitor] Found claimable BTC→Polygon swap: ${swap.id}");
             await _claimGelato(swap);
           } else {
             // Ethereum targets require WalletConnect - can't auto-claim
-            logger.i("[SwapMonitor] Swap ${swap.id} requires manual claim (Ethereum target)");
+            logger.i(
+                "[SwapMonitor] Swap ${swap.id} requires manual claim (Ethereum target)");
           }
         }
 
@@ -209,6 +294,16 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
           logger.i("[SwapMonitor] Found claimable EVM→BTC swap: ${swap.id}");
           await _claimVhtlc(swap);
         }
+      }
+
+      // Update pending set
+      _pendingSwapIds.clear();
+      _pendingSwapIds.addAll(stillPending);
+
+      // Stop monitoring if no more pending swaps
+      if (_pendingSwapIds.isEmpty && _isMonitoring) {
+        logger.i("[SwapMonitor] All swaps completed, stopping monitoring");
+        _stopMonitoring();
       }
     } catch (e) {
       logger.e("[SwapMonitor] Error checking swaps: $e");
@@ -269,7 +364,8 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
       logger.i("[SwapMonitor] Auto-claiming swap ${swap.id} via VHTLC");
       final txid = await _swapService.claimVhtlc(swap.id);
 
-      logger.i("[SwapMonitor] Successfully claimed swap ${swap.id} via VHTLC, txid: $txid");
+      logger.i(
+          "[SwapMonitor] Successfully claimed swap ${swap.id} via VHTLC, txid: $txid");
       _claimedSwapIds.add(swap.id);
 
       // Emit event
@@ -374,6 +470,8 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
   void clearCache() {
     _claimedSwapIds.clear();
     _claimingSwapIds.clear();
+    _pendingSwapIds.clear();
+    _stopMonitoring();
     logger.i("[SwapMonitor] Cache cleared");
   }
 
