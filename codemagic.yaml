@@ -18,6 +18,9 @@ workflows:
       - name: Install just
         script: brew install just
 
+      - name: Fetch full git history
+        script: git fetch --unshallow || true
+
       - name: Install Rust
         script: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -168,6 +171,10 @@ workflows:
     scripts:
       - name: Install just
         script: brew install just
+
+      - name: Fetch full git history
+        script: git fetch --unshallow || true
+
       - name: Install Rust
         script: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
