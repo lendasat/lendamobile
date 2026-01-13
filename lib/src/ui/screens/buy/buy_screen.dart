@@ -339,7 +339,10 @@ class _BuyScreenState extends State<BuyScreen> {
   }
 
   Future<void> _processCoinbasePurchase(int sats, double btcAmount) async {
-    logger.i('[Coinbase] Processing purchase for $btcAmount BTC');
+    // Calculate fiat amount from BTC amount and current rate
+    final fiatAmount = btcAmount * _btcToUsdRate;
+    logger.i(
+        '[Coinbase] Processing purchase for $btcAmount BTC (~\$${fiatAmount.toStringAsFixed(2)})');
 
     final coinbaseService = CoinbaseService();
     coinbaseService.printConfig();
@@ -348,6 +351,7 @@ class _BuyScreenState extends State<BuyScreen> {
     final sessionResponse = await coinbaseService.getSessionToken(
       walletAddress: _walletAddress!,
       btcAmount: btcAmount,
+      fiatAmount: fiatAmount,
     );
 
     if (!sessionResponse.success || sessionResponse.onrampUrl == null) {
