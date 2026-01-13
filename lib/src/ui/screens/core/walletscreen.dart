@@ -429,6 +429,12 @@ class WalletScreenState extends State<WalletScreen>
     }
   }
 
+  /// Refreshes only swaps data - used when a swap status changes
+  /// This is lighter than fetchWalletData() as it doesn't refresh transactions/balance
+  Future<void> refreshSwapsOnly() async {
+    await _fetchSwaps();
+  }
+
   Future<void> _fetchSwaps() async {
     try {
       // Initialize swap service if needed
