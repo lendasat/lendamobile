@@ -162,7 +162,8 @@ class SendScreenState extends State<SendScreen> {
   /// Debounced address change handler - delays processing until user stops typing
   void _onAddressChanged() {
     _addressChangeTimer?.cancel();
-    _addressChangeTimer = Timer(const Duration(milliseconds: 300), _processAddressChange);
+    _addressChangeTimer =
+        Timer(const Duration(milliseconds: 300), _processAddressChange);
   }
 
   /// Process address changes (validation, LNURL fetching, fee fetching)

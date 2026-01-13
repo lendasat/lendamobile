@@ -828,7 +828,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                           customWidth: AppTheme.cardPadding * 4,
                           leadingIcon: Icon(
                             FontAwesomeIcons.arrowsRotate,
-                            color: isLight ? AppTheme.black60 : AppTheme.white80,
+                            color:
+                                isLight ? AppTheme.black60 : AppTheme.white80,
                             size: AppTheme.elementSpacing * 1.5,
                           ),
                           title: timerValue,

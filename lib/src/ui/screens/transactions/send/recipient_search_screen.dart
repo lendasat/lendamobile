@@ -388,106 +388,107 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
     // Wrap in RepaintBoundary to prevent unnecessary repaints during scroll
     return RepaintBoundary(
       child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _navigateToSendScreen(recipient.address),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            vertical: AppTheme.elementSpacing,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(
-              left: AppTheme.elementSpacing * 0.75,
-              right: AppTheme.elementSpacing * 1,
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToSendScreen(recipient.address),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppTheme.elementSpacing,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // LEFT SIDE
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Avatar instead of arrow icon
-                    const Avatar(
-                      size: AppTheme.cardPadding * 2,
-                      fallbackIcon: Icons.person,
-                    ),
-                    const SizedBox(width: AppTheme.elementSpacing * 0.75),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: AppTheme.cardPadding * 6.5,
-                          child: Text(
-                            _truncateAddress(recipient.address),
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall!
-                                .copyWith(
-                                  color: isDark
-                                      ? AppTheme.white90
-                                      : AppTheme.black90,
-                                ),
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.elementSpacing / 2),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              _formatTimeAgo(recipient.timestamp, l10n),
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: AppTheme.elementSpacing * 0.75,
+                right: AppTheme.elementSpacing * 1,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // LEFT SIDE
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Avatar instead of arrow icon
+                      const Avatar(
+                        size: AppTheme.cardPadding * 2,
+                        fallbackIcon: Icons.person,
+                      ),
+                      const SizedBox(width: AppTheme.elementSpacing * 0.75),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: AppTheme.cardPadding * 6.5,
+                            child: Text(
+                              _truncateAddress(recipient.address),
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelSmall,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall!
+                                  .copyWith(
+                                    color: isDark
+                                        ? AppTheme.white90
+                                        : AppTheme.black90,
+                                  ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.elementSpacing / 2,
-                              ),
-                              child: Text(
-                                '·',
+                          ),
+                          const SizedBox(height: AppTheme.elementSpacing / 2),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                _formatTimeAgo(recipient.timestamp, l10n),
+                                overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),
-                            ),
-                            Text(
-                              _getTypeLabel(recipient.type),
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                // RIGHT SIDE - Amount
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          showBtcAsMain
-                              ? NumberFormatter.formatSats(recipient.amountSats)
-                              : currencyService.formatAmount(fiatAmount),
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        if (showBtcAsMain)
-                          Icon(
-                            AppTheme.satoshiIcon,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppTheme.elementSpacing / 2,
+                                ),
+                                child: Text(
+                                  '·',
+                                  style: Theme.of(context).textTheme.labelSmall,
+                                ),
+                              ),
+                              Text(
+                                _getTypeLabel(recipient.type),
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                            ],
                           ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+                        ],
+                      ),
+                    ],
+                  ),
+                  // RIGHT SIDE - Amount
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            showBtcAsMain
+                                ? NumberFormatter.formatSats(
+                                    recipient.amountSats)
+                                : currencyService.formatAmount(fiatAmount),
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          if (showBtcAsMain)
+                            Icon(
+                              AppTheme.satoshiIcon,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
