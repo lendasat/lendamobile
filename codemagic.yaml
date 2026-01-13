@@ -178,7 +178,7 @@ workflows:
         - production
       vars:
         PACKAGE_NAME: "com.lendasat.lendamobile"
-        GOOGLE_PLAY_TRACK: alpha
+        GOOGLE_PLAY_TRACK: beta
     scripts:
       - name: Install just
         script: brew install just
