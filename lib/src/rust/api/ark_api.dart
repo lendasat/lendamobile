@@ -139,6 +139,32 @@ Future<PaymentReceived> waitForPayment(
         boltzSwapId: boltzSwapId,
         timeoutSeconds: timeoutSeconds);
 
+/// Estimate fee for on-chain send (collaborative redemption)
+///
+/// This estimates the fee for sending to a Bitcoin address.
+/// The fee depends on the current network fee rate and the number of VTXOs
+/// that need to be spent to cover the amount.
+Future<FeeEstimate> estimateOnchainFee(
+        {required String address, required BigInt amountSats}) =>
+    RustLib.instance.api.crateApiArkApiEstimateOnchainFee(
+        address: address, amountSats: amountSats);
+
+/// Estimate fee for Arkade (off-chain) send
+///
+/// Ark-to-Ark transfers are essentially free since they happen off-chain.
+/// Returns 0 fee.
+Future<FeeEstimate> estimateArkadeFee(
+        {required String address, required BigInt amountSats}) =>
+    RustLib.instance.api.crateApiArkApiEstimateArkadeFee(
+        address: address, amountSats: amountSats);
+
+/// Estimate fee for Lightning payment
+///
+/// Lightning payments via Boltz submarine swap have a 0.25% fee.
+Future<FeeEstimate> estimateLightningFee({required BigInt amountSats}) =>
+    RustLib.instance.api
+        .crateApiArkApiEstimateLightningFee(amountSats: amountSats);
+
 class Addresses {
   final String boarding;
   final String offchain;
@@ -242,6 +268,36 @@ class BoltzSwap {
           swapId == other.swapId &&
           amountSats == other.amountSats &&
           invoice == other.invoice;
+}
+
+/// Fee estimation result for display in the UI
+class FeeEstimate {
+  /// Estimated fee in satoshis
+  final BigInt feeSats;
+
+  /// Fee rate used (sat/vB for on-chain, percentage for Lightning)
+  final double feeRate;
+
+  /// Number of VTXOs that would be used (for on-chain sends)
+  final int numInputs;
+
+  const FeeEstimate({
+    required this.feeSats,
+    required this.feeRate,
+    required this.numInputs,
+  });
+
+  @override
+  int get hashCode => feeSats.hashCode ^ feeRate.hashCode ^ numInputs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FeeEstimate &&
+          runtimeType == other.runtimeType &&
+          feeSats == other.feeSats &&
+          feeRate == other.feeRate &&
+          numInputs == other.numInputs;
 }
 
 class Info {

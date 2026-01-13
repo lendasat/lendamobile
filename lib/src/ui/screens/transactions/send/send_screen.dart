@@ -80,7 +80,12 @@ class SendScreenState extends State<SendScreen> {
   RecommendedFees? _recommendedFees;
   bool _isFetchingFees = false;
 
-  // Estimated transaction size in vBytes (typical P2WPKH: 1 input, 2 outputs)
+  // Dynamic fee estimation from SDK
+  FeeEstimate? _dynamicFeeEstimate;
+  bool _isFetchingDynamicFee = false;
+  Timer? _feeEstimateTimer;
+
+  // Estimated transaction size in vBytes (fallback when SDK estimate unavailable)
   static const int _estimatedTxVbytes = 140;
 
   // Boltz submarine swap fee percentage (0.25% for paying Lightning invoices)
@@ -127,6 +132,9 @@ class SendScreenState extends State<SendScreen> {
     // Listen to address changes
     _addressController.addListener(_onAddressChanged);
 
+    // Listen to amount changes for dynamic fee estimation
+    _satController.addListener(_onAmountChanged);
+
     // Set initial address if provided (e.g., from QR scan or recipient search)
     if (widget.initialAddress != null && widget.initialAddress!.isNotEmpty) {
       _addressController.text = widget.initialAddress!;
@@ -148,7 +156,9 @@ class SendScreenState extends State<SendScreen> {
   @override
   void dispose() {
     _addressChangeTimer?.cancel();
+    _feeEstimateTimer?.cancel();
     _addressController.removeListener(_onAddressChanged);
+    _satController.removeListener(_onAmountChanged);
     _addressController.dispose();
     _btcController.dispose();
     _satController.dispose();
@@ -194,6 +204,75 @@ class SendScreenState extends State<SendScreen> {
     _addressChangeTimer?.cancel();
     _addressChangeTimer =
         Timer(const Duration(milliseconds: 300), _processAddressChange);
+  }
+
+  /// Debounced amount change handler - triggers fee estimation when amount changes
+  void _onAmountChanged() {
+    _feeEstimateTimer?.cancel();
+    _feeEstimateTimer =
+        Timer(const Duration(milliseconds: 500), _fetchDynamicFeeEstimate);
+  }
+
+  /// Fetch dynamic fee estimate from SDK based on current address and amount
+  Future<void> _fetchDynamicFeeEstimate() async {
+    final address = _addressController.text.trim();
+    final amountStr = _satController.text.trim();
+    final amount = int.tryParse(amountStr) ?? 0;
+
+    // Only fetch if we have a valid address and non-zero amount
+    if (!_hasValidAddress || amount <= 0) {
+      setState(() {
+        _dynamicFeeEstimate = null;
+      });
+      return;
+    }
+
+    final currentNetwork = _getCurrentNetworkName();
+
+    // Skip fee estimation if already fetching
+    if (_isFetchingDynamicFee) return;
+
+    setState(() {
+      _isFetchingDynamicFee = true;
+    });
+
+    try {
+      FeeEstimate? estimate;
+
+      if (currentNetwork == 'Onchain') {
+        // Get actual fee estimate for collaborative redemption
+        estimate = await estimateOnchainFee(
+          address: address,
+          amountSats: BigInt.from(amount),
+        );
+        logger.i(
+            'SDK onchain fee estimate: ${estimate.feeSats} sats (${estimate.feeRate.toStringAsFixed(1)} sat/vB, ${estimate.numInputs} inputs)');
+      } else if (currentNetwork == 'Arkade') {
+        // Arkade transfers are free
+        estimate = await estimateArkadeFee(
+          address: address,
+          amountSats: BigInt.from(amount),
+        );
+      } else if (currentNetwork == 'Lightning') {
+        // Lightning via Boltz
+        estimate = await estimateLightningFee(amountSats: BigInt.from(amount));
+      }
+
+      if (mounted) {
+        setState(() {
+          _dynamicFeeEstimate = estimate;
+          _isFetchingDynamicFee = false;
+        });
+      }
+    } catch (e) {
+      logger.w('Failed to fetch dynamic fee estimate: $e');
+      if (mounted) {
+        setState(() {
+          _dynamicFeeEstimate = null;
+          _isFetchingDynamicFee = false;
+        });
+      }
+    }
   }
 
   /// Process address changes (validation, LNURL fetching, fee fetching)
@@ -245,6 +324,8 @@ class SendScreenState extends State<SendScreen> {
       if (!isOnChain) {
         _recommendedFees = null;
       }
+      // Clear dynamic fee estimate when address changes
+      _dynamicFeeEstimate = null;
       // Reset zero-amount invoice flag if address is not a Lightning invoice
       // (it will be set by _tryParseAmountFromAddress if needed)
       if (!isLightningInvoice && !isUri) {
@@ -252,6 +333,11 @@ class SendScreenState extends State<SendScreen> {
         _isAmountLocked = false;
       }
     });
+
+    // Trigger dynamic fee estimation if address is valid and amount exists
+    if (isValid) {
+      _fetchDynamicFeeEstimate();
+    }
   }
 
   /// Fetch LNURL payment parameters
@@ -515,8 +601,19 @@ class SendScreenState extends State<SendScreen> {
   }
 
   /// Calculate estimated network fee in sats for on-chain transaction
+  /// Uses dynamic SDK estimate when available, falls back to mempool fee rate
   int get _estimatedNetworkFeeSats {
-    if (!_isOnChainAddress || _recommendedFees == null) {
+    if (!_isOnChainAddress) {
+      return 0;
+    }
+
+    // Prefer dynamic SDK estimate (accounts for actual VTXO count)
+    if (_dynamicFeeEstimate != null) {
+      return _dynamicFeeEstimate!.feeSats.toInt();
+    }
+
+    // Fallback to mempool fee rate estimate
+    if (_recommendedFees == null) {
       return 0;
     }
     // Use halfHourFee (standard) fee rate
@@ -532,9 +629,17 @@ class SendScreenState extends State<SendScreen> {
   }
 
   /// Calculate Boltz submarine swap fee for Lightning payments
+  /// Uses dynamic SDK estimate when available, falls back to percentage calculation
   int _calculateBoltzFee(double amountSats) {
     if (!_isLightningPayment) return 0;
-    // Boltz charges 0.25% for submarine swaps (paying LN invoices)
+
+    // Prefer dynamic SDK estimate for consistency
+    if (_dynamicFeeEstimate != null &&
+        _getCurrentNetworkName() == 'Lightning') {
+      return _dynamicFeeEstimate!.feeSats.toInt();
+    }
+
+    // Fallback: Boltz charges 0.25% for submarine swaps (paying LN invoices)
     return (amountSats * _boltzFeePercent / 100).round();
   }
 
@@ -1072,8 +1177,12 @@ class SendScreenState extends State<SendScreen> {
         }
         return actualFee;
       case 'Onchain':
-        // On-chain: use the same getter as fee display for consistency
-        // Use ceil() to be conservative and avoid 1 sat shortfall
+        // On-chain: prefer dynamic SDK estimate when available
+        // SDK estimate accounts for actual VTXO count, giving more accurate fees
+        if (_dynamicFeeEstimate != null) {
+          return _dynamicFeeEstimate!.feeSats.toInt();
+        }
+        // Fallback to mempool fee rate * conservative vBytes
         if (_recommendedFees == null) {
           // If fees haven't loaded yet, use conservative estimate
           return (_estimatedTxVbytes * 10.0).ceil();
