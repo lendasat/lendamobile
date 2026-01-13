@@ -737,3 +737,128 @@ pub(crate) fn info() -> Result<Info> {
         }
     }
 }
+
+/// Fee estimation result
+pub struct FeeEstimate {
+    /// Estimated fee in satoshis
+    pub fee_sats: u64,
+    /// Fee rate used (sat/vB for on-chain, percentage for Lightning)
+    pub fee_rate: f64,
+    /// Number of VTXOs that would be used
+    pub num_inputs: u32,
+}
+
+/// Estimate fee for on-chain send (collaborative redemption)
+///
+/// This estimates the fee for sending to a Bitcoin address, which creates
+/// an on-chain transaction via collaborative redemption.
+pub async fn estimate_onchain_fee(address: String, amount_sats: u64) -> Result<FeeEstimate> {
+    let maybe_client = ARK_CLIENT.try_get();
+
+    match maybe_client {
+        None => {
+            bail!("Ark client not initialized");
+        }
+        Some(client) => {
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+
+            // Validate address
+            if !is_btc_address(&address) {
+                bail!("Not a valid Bitcoin address");
+            }
+
+            let amount = Amount::from_sat(amount_sats);
+
+            // Get the VTXOs that would be selected for this amount
+            let vtxo_outpoints = select_vtxos_for_amount(&client, amount).await?;
+            let num_inputs = vtxo_outpoints.len() as u32;
+
+            // Get current fee rate from esplora
+            let esplora_url = ESPLORA_URL
+                .try_get()
+                .ok_or_else(|| anyhow!("Esplora URL not initialized"))?
+                .read()
+                .clone();
+
+            let esplora = EsploraClient::new(&esplora_url)
+                .map_err(|e| anyhow!("Could not create esplora client: {e:#}"))?;
+
+            // Get fee rate (sat/vB) - use medium priority (half hour target)
+            let fee_rate = esplora
+                .get_fee_rate()
+                .await
+                .map_err(|e| anyhow!("Could not get fee rate: {e:#}"))?;
+
+            // Estimate transaction size for collaborative redemption
+            // Collaborative redemption creates a commitment transaction with:
+            // - Inputs: VTXOs (Taproot script-path spends, ~58 vB each)
+            // - Outputs: 1 recipient output (P2WPKH ~31 vB or P2TR ~43 vB) + change
+            // Base tx overhead: ~10.5 vB
+            // Each VTXO input: ~58 vB (Taproot script-path)
+            // Recipient output: ~43 vB (P2TR, conservative)
+            // Change output: ~43 vB (P2TR)
+            let base_vbytes: f64 = 10.5;
+            let input_vbytes: f64 = 58.0 * num_inputs as f64;
+            let output_vbytes: f64 = 43.0 * 2.0; // recipient + change
+            let total_vbytes = base_vbytes + input_vbytes + output_vbytes;
+
+            // Calculate fee (round up to be conservative)
+            let fee_sats = (total_vbytes * fee_rate).ceil() as u64;
+
+            tracing::info!(
+                "Estimated onchain fee: {} sats (rate: {:.1} sat/vB, {} inputs, {:.0} vB)",
+                fee_sats,
+                fee_rate,
+                num_inputs,
+                total_vbytes
+            );
+
+            Ok(FeeEstimate {
+                fee_sats,
+                fee_rate,
+                num_inputs,
+            })
+        }
+    }
+}
+
+/// Estimate fee for Arkade (off-chain) send
+///
+/// Ark-to-Ark transfers are essentially free - they happen off-chain
+/// via batch settlement. Any "fee" is just dust-level rounding.
+pub async fn estimate_arkade_fee(_address: String, _amount_sats: u64) -> Result<FeeEstimate> {
+    // Arkade transfers are free (off-chain)
+    // The ASP subsidizes the batch transaction fees
+    Ok(FeeEstimate {
+        fee_sats: 0,
+        fee_rate: 0.0,
+        num_inputs: 0,
+    })
+}
+
+/// Estimate fee for Lightning payment via Boltz submarine swap
+///
+/// Boltz charges a percentage fee for submarine swaps.
+/// Current rate is 0.25% for paying Lightning invoices.
+pub fn estimate_lightning_fee(amount_sats: u64) -> FeeEstimate {
+    // Boltz submarine swap fee: 0.25%
+    const BOLTZ_FEE_PERCENT: f64 = 0.25;
+
+    let fee_sats = ((amount_sats as f64) * BOLTZ_FEE_PERCENT / 100.0).ceil() as u64;
+
+    tracing::debug!(
+        "Estimated Lightning fee: {} sats ({}% of {} sats)",
+        fee_sats,
+        BOLTZ_FEE_PERCENT,
+        amount_sats
+    );
+
+    FeeEstimate {
+        fee_sats,
+        fee_rate: BOLTZ_FEE_PERCENT,
+        num_inputs: 0,
+    }
+}
