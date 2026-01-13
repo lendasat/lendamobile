@@ -5,6 +5,7 @@ import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
@@ -39,6 +40,7 @@ class SwapDetailSheet extends StatefulWidget {
 
 class _SwapDetailSheetState extends State<SwapDetailSheet> {
   final LendaSwapService _swapService = LendaSwapService();
+  final SwapMonitoringService _swapMonitor = SwapMonitoringService();
   SwapInfo? _swapInfo;
   bool _isLoading = true;
   bool _isRefunding = false;
@@ -61,11 +63,20 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     }
     _loadSwapInfo();
     _startPollingIfNeeded();
+    // Listen for background claim state changes
+    _swapMonitor.addListener(_onMonitorStateChanged);
+  }
+
+  void _onMonitorStateChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _swapMonitor.removeListener(_onMonitorStateChanged);
     super.dispose();
   }
 
@@ -1055,14 +1066,20 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
             ),
           ),
           const SizedBox(height: AppTheme.cardPadding),
-          LongButtonWidget(
-            title: _swapInfo!.canClaimGelato
-                ? 'Claim ${_getTargetToken().symbol}'
-                : 'Claim BTC',
-            customWidth: double.infinity,
-            state: _isClaiming ? ButtonState.loading : ButtonState.idle,
-            onTap: _isClaiming ? null : _handleClaim,
-          ),
+          Builder(builder: (context) {
+            // Check both local claiming state and background auto-claim state
+            final isClaimingAnywhere =
+                _isClaiming || _swapMonitor.isClaimingSwap(widget.swapId);
+            return LongButtonWidget(
+              title: _swapInfo!.canClaimGelato
+                  ? 'Claim ${_getTargetToken().symbol}'
+                  : 'Claim BTC',
+              customWidth: double.infinity,
+              state:
+                  isClaimingAnywhere ? ButtonState.loading : ButtonState.idle,
+              onTap: isClaimingAnywhere ? null : _handleClaim,
+            );
+          }),
         ],
         // Refund section
         if (canRefund) ...[

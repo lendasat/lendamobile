@@ -66,6 +66,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   @override
   void initState() {
     super.initState();
+    // Tell the monitoring service to watch this swap
+    _swapMonitor.startMonitoringSwap(widget.swapId);
     _loadSwapInfo();
     _startPolling();
     _listenToClaimEvents();
@@ -141,7 +143,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   Future<void> _attemptAutoClaim(SwapInfo swap) async {
     // For Ethereum targets, show WalletConnect UI (requires gas payment)
     if (_swapMonitor.requiresWalletConnect(swap)) {
-      logger.i('[SwapProcessing] Ethereum target - showing WalletConnect claim UI');
+      logger.i(
+          '[SwapProcessing] Ethereum target - showing WalletConnect claim UI');
       if (!_showWalletConnectClaim) {
         setState(() => _showWalletConnectClaim = true);
       }
@@ -695,10 +698,12 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
             if (_walletService.isConnected) ...[
               const SizedBox(height: AppTheme.cardPadding),
               LongButtonWidget(
-                title: _isClaimingWalletConnect ? 'Claiming...' : 'Claim Tokens',
+                title:
+                    _isClaimingWalletConnect ? 'Claiming...' : 'Claim Tokens',
                 customWidth: double.infinity,
-                state:
-                    _isClaimingWalletConnect ? ButtonState.loading : ButtonState.idle,
+                state: _isClaimingWalletConnect
+                    ? ButtonState.loading
+                    : ButtonState.idle,
                 onTap: _isClaimingWalletConnect ? null : _claimViaWalletConnect,
               ),
             ],
