@@ -163,7 +163,8 @@ class SettingsService {
   }
 
   // Get cached balance (returns null if not cached)
-  Future<({double total, double confirmed, double pending})?> getCachedBalance() async {
+  Future<({double total, double confirmed, double pending})?>
+      getCachedBalance() async {
     final prefs = await SharedPreferences.getInstance();
     final total = prefs.getDouble(_cachedTotalBalanceKey);
     final confirmed = prefs.getDouble(_cachedConfirmedBalanceKey);
