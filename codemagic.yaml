@@ -5,7 +5,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: 'release/v*'
+        - pattern: "release/v*"
           include: true
           source: true
       cancel_previous_builds: true
@@ -167,7 +167,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: 'release/v*'
+        - pattern: "release/v*"
           include: true
           source: true
       cancel_previous_builds: true

@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Git ref to checkout (commit SHA, tag, or branch)'
+        description: "Git ref to checkout (commit SHA, tag, or branch)"
         required: false
-        default: ''
+        default: ""
 
 jobs:
   build-ios:
