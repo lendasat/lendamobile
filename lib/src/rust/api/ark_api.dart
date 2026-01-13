@@ -160,7 +160,7 @@ Future<FeeEstimate> estimateArkadeFee(
 
 /// Estimate fee for Lightning payment
 ///
-/// Lightning payments via Boltz submarine swap have a 0.25% fee.
+/// Fetches real-time fees from Boltz API including percentage fee and miner fees.
 Future<FeeEstimate> estimateLightningFee({required BigInt amountSats}) =>
     RustLib.instance.api
         .crateApiArkApiEstimateLightningFee(amountSats: amountSats);
