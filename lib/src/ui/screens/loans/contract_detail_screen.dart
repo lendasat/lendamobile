@@ -1235,12 +1235,14 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                 : hasInsufficientBalance
                     ? 'BALANCE TOO LOW'
                     : 'PAY COLLATERAL',
-            buttonType:
-                hasInsufficientBalance ? ButtonType.secondary : ButtonType.primary,
+            buttonType: hasInsufficientBalance
+                ? ButtonType.secondary
+                : ButtonType.primary,
             customWidth: buttonWidth,
             isLoading: isPayingCollateral,
-            onTap:
-                isPayingCollateral || hasInsufficientBalance ? null : _payCollateral,
+            onTap: isPayingCollateral || hasInsufficientBalance
+                ? null
+                : _payCollateral,
           ),
         if (hasInsufficientBalance)
           Padding(
