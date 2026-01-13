@@ -301,7 +301,7 @@ workflows:
         #  │ beta       │ Open testing             │
         #  ├────────────┼──────────────────────────┤
         #  │ production │ Production               │
-        track: alpha
+        track: beta
         submit_as_draft: true
     artifacts:
       - build/**/outputs/**/*.aab
