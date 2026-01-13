@@ -170,7 +170,12 @@ workflows:
         script: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source "$HOME/.cargo/env"
-          rustup target add armv7-linux-androideabi
+          run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+
+      - name: Install cargo-ndk
+        script: |
+          cargo install cargo-ndk
+
       - name: Install FVM
         script: |
           curl -fsSL https://fvm.app/install.sh | bash -s -- 4.0.5
