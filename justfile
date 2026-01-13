@@ -1,5 +1,3 @@
-set dotenv-load := true
-
 import 'common.just'
 
 mod ios
