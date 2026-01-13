@@ -53,150 +53,154 @@ class TransactionFilterScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                if (showFilterPills) ...[
-                  Text(
-                    'Filter Options',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.paddingM),
-                  Wrap(
-                    spacing: AppTheme.paddingS,
-                    runSpacing: AppTheme.paddingS,
-                    children: [
-                      _FilterPill(
-                        label: 'Onchain',
-                        isSelected:
-                            filterService.selectedFilters.contains('Onchain'),
-                        onTap: () => filterService.toggleFilter('Onchain'),
-                      ),
-                      _FilterPill(
-                        label: 'Arkade',
-                        isSelected:
-                            filterService.selectedFilters.contains('Arkade'),
-                        onTap: () => filterService.toggleFilter('Arkade'),
-                      ),
-                      _FilterPill(
-                        label: 'Swap',
-                        isSelected:
-                            filterService.selectedFilters.contains('Swap'),
-                        onTap: () => filterService.toggleFilter('Swap'),
-                      ),
-                      _FilterPill(
-                        label: AppLocalizations.of(context)!.sent,
-                        isSelected:
-                            filterService.selectedFilters.contains('Sent'),
-                        onTap: () => filterService.toggleFilter('Sent'),
-                      ),
-                      _FilterPill(
-                        label: AppLocalizations.of(context)!.received,
-                        isSelected:
-                            filterService.selectedFilters.contains('Received'),
-                        onTap: () => filterService.toggleFilter('Received'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.paddingL * 1.5),
-                ],
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                  if (showFilterPills) ...[
                     Text(
-                      'Time Frame',
+                      'Filter Options',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (filterService.hasTimeframeFilter)
-                      IconButton(
-                        icon: Icon(
-                          Icons.clear,
-                          size: 20,
+                    const SizedBox(height: AppTheme.paddingM),
+                    Wrap(
+                      spacing: AppTheme.paddingS,
+                      runSpacing: AppTheme.paddingS,
+                      children: [
+                        _FilterPill(
+                          label: 'Onchain',
+                          isSelected:
+                              filterService.selectedFilters.contains('Onchain'),
+                          onTap: () => filterService.toggleFilter('Onchain'),
+                        ),
+                        _FilterPill(
+                          label: 'Arkade',
+                          isSelected:
+                              filterService.selectedFilters.contains('Arkade'),
+                          onTap: () => filterService.toggleFilter('Arkade'),
+                        ),
+                        _FilterPill(
+                          label: 'Swap',
+                          isSelected:
+                              filterService.selectedFilters.contains('Swap'),
+                          onTap: () => filterService.toggleFilter('Swap'),
+                        ),
+                        _FilterPill(
+                          label: AppLocalizations.of(context)!.sent,
+                          isSelected:
+                              filterService.selectedFilters.contains('Sent'),
+                          onTap: () => filterService.toggleFilter('Sent'),
+                        ),
+                        _FilterPill(
+                          label: AppLocalizations.of(context)!.received,
+                          isSelected: filterService.selectedFilters
+                              .contains('Received'),
+                          onTap: () => filterService.toggleFilter('Received'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.paddingL * 1.5),
+                  ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Time Frame',
+                        style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
-                        onPressed: () {
-                          filterService.resetTimeframe();
-                        },
                       ),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.paddingM),
-                Row(
-                  children: [
-                    Expanded(
-                      child: GlassContainer(
-                        child: InkWell(
-                          onTap: () async {
-                            final selected =
-                                await filterService.selectDate(context);
-                            if (selected != null) {
-                              filterService.setStartDate(selected);
-                            }
+                      if (filterService.hasTimeframeFilter)
+                        IconButton(
+                          icon: Icon(
+                            Icons.clear,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          onPressed: () {
+                            filterService.resetTimeframe();
                           },
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppTheme.paddingS),
-                            child: Center(
-                              child: Text(
-                                filterService.startDate != null
-                                    ? DateFormat('dd-MM-yyyy')
-                                        .format(filterService.startDate!)
-                                    : 'Start Date',
-                                style: TextStyle(
-                                  color: filterService.startDate != null
-                                      ? Theme.of(context).colorScheme.onSurface
-                                      : Theme.of(context).hintColor,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.paddingM),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GlassContainer(
+                          child: InkWell(
+                            onTap: () async {
+                              final selected =
+                                  await filterService.selectDate(context);
+                              if (selected != null) {
+                                filterService.setStartDate(selected);
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppTheme.paddingS),
+                              child: Center(
+                                child: Text(
+                                  filterService.startDate != null
+                                      ? DateFormat('dd-MM-yyyy')
+                                          .format(filterService.startDate!)
+                                      : 'Start Date',
+                                  style: TextStyle(
+                                    color: filterService.startDate != null
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                        : Theme.of(context).hintColor,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.paddingS),
-                      child: Text(
-                        'to',
-                        style: TextStyle(color: Theme.of(context).hintColor),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.paddingS),
+                        child: Text(
+                          'to',
+                          style: TextStyle(color: Theme.of(context).hintColor),
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: GlassContainer(
-                        child: InkWell(
-                          onTap: () async {
-                            final selected =
-                                await filterService.selectDate(context);
-                            if (selected != null) {
-                              filterService.setEndDate(selected);
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppTheme.paddingS),
-                            child: Center(
-                              child: Text(
-                                filterService.endDate != null
-                                    ? DateFormat('dd-MM-yyyy')
-                                        .format(filterService.endDate!)
-                                    : 'End Date',
-                                style: TextStyle(
-                                  color: filterService.endDate != null
-                                      ? Theme.of(context).colorScheme.onSurface
-                                      : Theme.of(context).hintColor,
+                      Expanded(
+                        child: GlassContainer(
+                          child: InkWell(
+                            onTap: () async {
+                              final selected =
+                                  await filterService.selectDate(context);
+                              if (selected != null) {
+                                filterService.setEndDate(selected);
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppTheme.paddingS),
+                              child: Center(
+                                child: Text(
+                                  filterService.endDate != null
+                                      ? DateFormat('dd-MM-yyyy')
+                                          .format(filterService.endDate!)
+                                      : 'End Date',
+                                  style: TextStyle(
+                                    color: filterService.endDate != null
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                        : Theme.of(context).hintColor,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
               ),
             ),
           ),

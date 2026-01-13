@@ -80,10 +80,12 @@ class AmountWidgetService extends ChangeNotifier {
   void _syncBitcoinControllers() {
     if (_currentUnit == CurrencyType.sats) {
       final sats = double.tryParse(_satController!.text) ?? 0;
-      _btcController!.text = (sats / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
+      _btcController!.text =
+          (sats / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
     } else {
       final btc = double.tryParse(_btcController!.text) ?? 0;
-      _satController!.text = (btc * BitcoinConstants.satsPerBtc).toInt().toString();
+      _satController!.text =
+          (btc * BitcoinConstants.satsPerBtc).toInt().toString();
     }
   }
 
@@ -119,7 +121,9 @@ class AmountWidgetService extends ChangeNotifier {
   /// Update bitcoin display value from current fiat amount
   void _updateBitcoinFromFiat(double? bitcoinPrice, double? fiatRate) {
     // Check if there's actual input
-    if (_currController!.text.isEmpty || bitcoinPrice == null || fiatRate == null) {
+    if (_currController!.text.isEmpty ||
+        bitcoinPrice == null ||
+        fiatRate == null) {
       _cachedBtcDisplay = "";
       return;
     }
