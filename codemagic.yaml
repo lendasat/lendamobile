@@ -1,6 +1,14 @@
 workflows:
   ios-workflow:
     name: iOS Workflow
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'release/v*'
+          include: true
+          source: true
+      cancel_previous_builds: true
     integrations:
       app_store_connect: lendamobile-22.12.2025
     environment:
@@ -155,6 +163,14 @@ workflows:
         submit_to_app_store: false
   android-workflow:
     name: Android Release Workflow
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'release/v*'
+          include: true
+          source: true
+      cancel_previous_builds: true
     environment:
       android_signing:
         - lendamobile-android-keystore
