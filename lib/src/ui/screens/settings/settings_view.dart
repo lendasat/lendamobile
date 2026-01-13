@@ -677,7 +677,8 @@ class SettingsViewState extends State<SettingsView> {
                 leading: RoundedButtonWidget(
                   iconData: Icons.code_rounded,
                   onTap: () {
-                    setState(() => _showDeveloperOptions = !_showDeveloperOptions);
+                    setState(
+                        () => _showDeveloperOptions = !_showDeveloperOptions);
                     if (_showDeveloperOptions) _loadVtxoBalance();
                   },
                   size: AppTheme.iconSize * 1.5,
@@ -694,7 +695,8 @@ class SettingsViewState extends State<SettingsView> {
                       : AppTheme.black60,
                 ),
                 onTap: () {
-                  setState(() => _showDeveloperOptions = !_showDeveloperOptions);
+                  setState(
+                      () => _showDeveloperOptions = !_showDeveloperOptions);
                   if (_showDeveloperOptions) _loadVtxoBalance();
                 },
               ),
@@ -822,7 +824,8 @@ class SettingsViewState extends State<SettingsView> {
                                 color: _expiredSats > BigInt.zero
                                     ? AppTheme.colorBitcoin
                                     : null),
-                            _buildVtxoBalanceRow('Recoverable', _recoverableSats,
+                            _buildVtxoBalanceRow(
+                                'Recoverable', _recoverableSats,
                                 color: _recoverableSats > BigInt.zero
                                     ? AppTheme.colorBitcoin
                                     : null),
@@ -858,11 +861,14 @@ class SettingsViewState extends State<SettingsView> {
                                         ),
                                       )
                                     : const Icon(Icons.sync_rounded, size: 18),
-                                label: Text(_isSettling ? 'Settling...' : 'Settle VTXOs'),
+                                label: Text(_isSettling
+                                    ? 'Settling...'
+                                    : 'Settle VTXOs'),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppTheme.colorBitcoin,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(
                                         AppTheme.borderRadiusSmall),
