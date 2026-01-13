@@ -91,14 +91,14 @@ workflows:
       - name: Build ipa for distribution
         script: |
           export PATH="$HOME/fvm/bin:$PATH"
-          
+
           just -f common.just check-env
-          
+
           BUILD_NAME=$(yq -r .version pubspec.yaml)
           BUILD_NUMBER=$(git rev-list --count HEAD)
-          
+
           echo "Building ip version ${BUILD_NAME} and build number ${BUILD_NUMBER}"
-          
+
           fvm flutter build ipa \
             --release \
             --build-name=$BUILD_NAME \
@@ -238,14 +238,14 @@ workflows:
       - name: Build android release bundle
         script: |
           export PATH="$HOME/fvm/bin:$PATH"
-          
+
           just -f common.just check-env
-          
+
           BUILD_NAME=$(yq -r .version pubspec.yaml)
           BUILD_NUMBER=$(git rev-list --count HEAD)
-          
+
           echo "Building appbundle version ${BUILD_NAME} and build number ${BUILD_NUMBER}"
-          
+
           fvm flutter build appbundle \
           --release \
           --build-name=$BUILD_NAME \
@@ -263,7 +263,7 @@ workflows:
           --dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY \
           --dart-define=TURNSTILE_BASE_URL=$TURNSTILE_BASE_URL \
           --dart-define=RAPIDAPI_KEY=$RAPIDAPI_KEY
-          
+
           echo "You can now manually upload the bundle file"
 
     publishing:
