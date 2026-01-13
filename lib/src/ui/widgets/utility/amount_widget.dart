@@ -272,7 +272,8 @@ class _AmountWidgetState extends State<AmountWidget>
       listenable: _service,
       builder: (context, _) {
         // Only mark formatters for update when service state actually changed
-        if (_lastSwapped != _service.swapped || _lastUnit != _service.currentUnit) {
+        if (_lastSwapped != _service.swapped ||
+            _lastUnit != _service.currentUnit) {
           _formattersNeedUpdate = true;
           _lastSwapped = _service.swapped;
           _lastUnit = _service.currentUnit;
