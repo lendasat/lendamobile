@@ -1634,177 +1634,204 @@ class SendScreenState extends State<SendScreen> {
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
           child: Column(
             children: [
-              const SizedBox(height: AppTheme.cardPadding),
-              // Transaction details
-              GlassContainer(
-                opacity: 0.05,
-                borderRadius: AppTheme.cardRadiusSmall,
-                padding: const EdgeInsets.all(AppTheme.elementSpacing),
-                child: Column(
-                  children: [
-                    // Address row
-                    ArkListTile(
-                      margin: EdgeInsets.zero,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.elementSpacing * 0.75,
-                        vertical: AppTheme.elementSpacing * 0.5,
-                      ),
-                      text: l10n.address,
-                      trailing: Text(
-                        _truncateAddress(_addressController.text),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                      ),
-                    ),
-                    // Amount row
-                    ArkListTile(
-                      margin: EdgeInsets.zero,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.elementSpacing * 0.75,
-                        vertical: AppTheme.elementSpacing * 0.5,
-                      ),
-                      text: l10n.amount,
-                      trailing: Text(
-                        '${amountSats.toInt()} sats',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                      ),
-                    ),
-                    // Network row (with picker for BIP21)
-                    ArkListTile(
-                      margin: EdgeInsets.zero,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.elementSpacing * 0.75,
-                        vertical: AppTheme.elementSpacing * 0.5,
-                      ),
-                      text: l10n.network,
-                      trailing: hasMultipleNetworks
-                          ? GestureDetector(
-                              onTap: () {
-                                Navigator.pop(context);
-                                _showNetworkPicker(context);
-                              },
-                              child: GlassContainer(
-                                opacity: 0.05,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppTheme.elementSpacing,
-                                  vertical: AppTheme.elementSpacing / 2,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _buildNetworkIconWidget(
-                                      currentNetwork,
-                                      AppTheme.cardPadding * 0.75,
-                                      Theme.of(context).hintColor,
-                                    ),
-                                    const SizedBox(
-                                        width: AppTheme.elementSpacing / 2),
-                                    Text(
-                                      currentNetwork,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium,
-                                    ),
-                                    const SizedBox(
-                                        width: AppTheme.elementSpacing / 2),
-                                    Icon(
-                                      Icons.keyboard_arrow_down,
-                                      size: 16,
-                                      color: Theme.of(context).hintColor,
-                                    ),
-                                  ],
-                                ),
+              // Scrollable content area
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: AppTheme.cardPadding),
+                      // Transaction details
+                      GlassContainer(
+                        opacity: 0.05,
+                        borderRadius: AppTheme.cardRadiusSmall,
+                        padding: const EdgeInsets.all(AppTheme.elementSpacing),
+                        child: Column(
+                          children: [
+                            // Address row
+                            ArkListTile(
+                              margin: EdgeInsets.zero,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.elementSpacing * 0.75,
+                                vertical: AppTheme.elementSpacing * 0.5,
                               ),
-                            )
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildNetworkIconWidget(
-                                  currentNetwork,
-                                  AppTheme.cardPadding * 0.75,
-                                  Theme.of(context).hintColor,
-                                ),
-                                const SizedBox(
-                                    width: AppTheme.elementSpacing / 2),
-                                Text(
-                                  currentNetwork,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface,
+                              text: l10n.address,
+                              trailing: Text(
+                                _truncateAddress(_addressController.text),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
+                              ),
+                            ),
+                            // Amount row
+                            ArkListTile(
+                              margin: EdgeInsets.zero,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.elementSpacing * 0.75,
+                                vertical: AppTheme.elementSpacing * 0.5,
+                              ),
+                              text: l10n.amount,
+                              trailing: Text(
+                                '${amountSats.toInt()} sats',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
+                              ),
+                            ),
+                            // Network row (with picker for BIP21)
+                            ArkListTile(
+                              margin: EdgeInsets.zero,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.elementSpacing * 0.75,
+                                vertical: AppTheme.elementSpacing * 0.5,
+                              ),
+                              text: l10n.network,
+                              trailing: hasMultipleNetworks
+                                  ? GestureDetector(
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        _showNetworkPicker(context);
+                                      },
+                                      child: GlassContainer(
+                                        opacity: 0.05,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppTheme.elementSpacing,
+                                          vertical: AppTheme.elementSpacing / 2,
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            _buildNetworkIconWidget(
+                                              currentNetwork,
+                                              AppTheme.cardPadding * 0.75,
+                                              Theme.of(context).hintColor,
+                                            ),
+                                            const SizedBox(
+                                                width: AppTheme.elementSpacing /
+                                                    2),
+                                            Text(
+                                              currentNetwork,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium,
+                                            ),
+                                            const SizedBox(
+                                                width: AppTheme.elementSpacing /
+                                                    2),
+                                            Icon(
+                                              Icons.keyboard_arrow_down,
+                                              size: 16,
+                                              color:
+                                                  Theme.of(context).hintColor,
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                ),
-                              ],
+                                    )
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        _buildNetworkIconWidget(
+                                          currentNetwork,
+                                          AppTheme.cardPadding * 0.75,
+                                          Theme.of(context).hintColor,
+                                        ),
+                                        const SizedBox(
+                                            width: AppTheme.elementSpacing / 2),
+                                        Text(
+                                          currentNetwork,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                              onTap: hasMultipleNetworks
+                                  ? () {
+                                      Navigator.pop(context);
+                                      _showNetworkPicker(context);
+                                    }
+                                  : null,
                             ),
-                      onTap: hasMultipleNetworks
-                          ? () {
-                              Navigator.pop(context);
-                              _showNetworkPicker(context);
-                            }
-                          : null,
-                    ),
-                    // Network Fees row
-                    ArkListTile(
-                      margin: EdgeInsets.zero,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.elementSpacing * 0.75,
-                        vertical: AppTheme.elementSpacing * 0.5,
-                      ),
-                      text: l10n.networkFees,
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (_isOnChainAddress && _isFetchingFees)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: SizedBox(
-                                width: 12,
-                                height: 12,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 1.5,
-                                  color: Theme.of(context).hintColor,
-                                ),
+                            // Network Fees row
+                            ArkListTile(
+                              margin: EdgeInsets.zero,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.elementSpacing * 0.75,
+                                vertical: AppTheme.elementSpacing * 0.5,
+                              ),
+                              text: l10n.networkFees,
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_isOnChainAddress && _isFetchingFees)
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: SizedBox(
+                                        width: 12,
+                                        height: 12,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 1.5,
+                                          color: Theme.of(context).hintColor,
+                                        ),
+                                      ),
+                                    ),
+                                  Text(
+                                    feeText,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                        ),
+                                  ),
+                                ],
                               ),
                             ),
-                          Text(
-                            feeText,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Total row
-                    ArkListTile(
-                      margin: EdgeInsets.zero,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.elementSpacing * 0.75,
-                        vertical: AppTheme.elementSpacing * 0.5,
-                      ),
-                      text: l10n.total,
-                      trailing: Text(
-                        _isFetchingFees ? '...' : '$total sats',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontWeight: FontWeight.w600,
+                            // Total row
+                            ArkListTile(
+                              margin: EdgeInsets.zero,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.elementSpacing * 0.75,
+                                vertical: AppTheme.elementSpacing * 0.5,
+                              ),
+                              text: l10n.total,
+                              trailing: Text(
+                                _isFetchingFees ? '...' : '$total sats',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
                             ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              const Spacer(),
               // Action buttons
               Row(
                 children: [
