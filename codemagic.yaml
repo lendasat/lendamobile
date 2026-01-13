@@ -94,6 +94,8 @@ workflows:
           BUILD_NAME=$(yq -r .version pubspec.yaml)
           BUILD_NUMBER=$(git rev-list --count HEAD)
           
+          echo "Building ip version ${BUILD_NAME} and build number ${BUILD_NUMBER}"
+          
           fvm flutter build ipa \
             --release \
             --build-name=$BUILD_NAME \
@@ -239,6 +241,8 @@ workflows:
           
           BUILD_NAME=$(yq -r .version pubspec.yaml)
           BUILD_NUMBER=$(git rev-list --count HEAD)
+          
+          echo "Building appbundle version ${BUILD_NAME} and build number ${BUILD_NUMBER}"
           
           fvm flutter build appbundle \
           --release \
