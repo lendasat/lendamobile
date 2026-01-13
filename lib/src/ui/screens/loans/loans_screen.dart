@@ -1068,7 +1068,6 @@ class _OfferCard extends StatelessWidget {
                     ),
                   ],
                 ),
-
               ],
             ),
           ),
