@@ -302,7 +302,7 @@ workflows:
         #  ├────────────┼──────────────────────────┤
         #  │ production │ Production               │
         track: beta
-        submit_as_draft: false
+        submit_as_draft: true
     artifacts:
       - build/**/outputs/**/*.aab
       - build/**/outputs/**/mapping.txt
