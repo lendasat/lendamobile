@@ -56,13 +56,14 @@ class LendaSwapService extends ChangeNotifier {
       // Get API URLs based on network
       final apiUrl = _getApiUrl(networkStr);
       final arkadeUrl = _getArkadeUrl(networkStr);
+      final esploraUrl = await settingsService.getEsploraUrl();
 
       await lendaswap_api.lendaswapInit(
-        dataDir: dataDir.path,
-        network: networkStr,
-        apiUrl: apiUrl,
-        arkadeUrl: arkadeUrl,
-      );
+          dataDir: dataDir.path,
+          network: networkStr,
+          apiUrl: apiUrl,
+          arkadeUrl: arkadeUrl,
+          esploraUrl: esploraUrl);
 
       _isInitialized = true;
       logger.i('LendaSwap initialized on network: $networkStr');

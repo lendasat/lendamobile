@@ -7,8 +7,10 @@
 //! for seamless integration.
 
 pub mod storage;
+pub mod vtxo_swap_db;
 
 use crate::lendaswap::storage::{FileSwapStorage, FileWalletStorage};
+use crate::lendaswap::vtxo_swap_db::VtxoSwapDb;
 use anyhow::{Result, anyhow};
 use lendaswap_core::api::{
     AssetPair, BtcToEvmSwapResponse, EvmChain, EvmToBtcSwapResponse, GetSwapResponse, QuoteRequest,
@@ -24,7 +26,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::RwLock;
 
 /// Type alias for the LendaSwap client with our storage implementations.
-type LendaSwapClient = Client<FileWalletStorage, FileSwapStorage>;
+type LendaSwapClient = Client<FileWalletStorage, FileSwapStorage, VtxoSwapDb>;
 
 /// Atomic flag to track initialization state (for sync access).
 static LENDASWAP_INITIALIZED: AtomicBool = AtomicBool::new(false);
@@ -39,6 +41,7 @@ struct InitParams {
     network: Network,
     api_url: String,
     arkade_url: String,
+    esplora_url: String,
 }
 
 /// Global storage for init params
@@ -71,6 +74,7 @@ pub async fn init_client(
     network: Network,
     api_url: String,
     arkade_url: String,
+    esplora_url: String,
 ) -> Result<()> {
     // Store init params for potential re-initialization
     {
@@ -81,13 +85,25 @@ pub async fn init_client(
             network,
             api_url: api_url.clone(),
             arkade_url: arkade_url.clone(),
+            esplora_url: esplora_url.clone(),
         });
     }
 
     let wallet_storage = FileWalletStorage::new(data_dir.clone());
-    let swap_storage = FileSwapStorage::new(data_dir)?;
+    let swap_storage = FileSwapStorage::new(data_dir.clone())?;
+    let vtxo_swap_storage = VtxoSwapDb::new(data_dir)
+        .await
+        .map_err(|e| anyhow!("Failed to create VtxoSwapDb: {}", e))?;
 
-    let client = Client::new(api_url, wallet_storage, swap_storage, network, arkade_url);
+    let client = Client::new(
+        api_url,
+        wallet_storage,
+        swap_storage,
+        vtxo_swap_storage,
+        network,
+        arkade_url,
+        esplora_url,
+    );
 
     // Initialize with existing mnemonic (shared with Ark wallet)
     client
@@ -282,6 +298,7 @@ pub async fn get_swap(swap_id: &str) -> Result<ExtendedSwapStorageData> {
             let status = match &data.response {
                 GetSwapResponse::BtcToEvm(r) => format!("{:?}", r.common.status),
                 GetSwapResponse::EvmToBtc(r) => format!("{:?}", r.common.status),
+                GetSwapResponse::BtcToArkade(r) => format!("{:?}", r.status),
             };
             tracing::info!(
                 "[LendaSwap] get_swap SUCCESS - swap_id: {}, status: {}",
@@ -323,6 +340,9 @@ pub async fn list_swaps() -> Result<Vec<ExtendedSwapStorageData>> {
                     }
                     GetSwapResponse::EvmToBtc(r) => {
                         (r.common.id.to_string(), format!("{:?}", r.common.status))
+                    }
+                    GetSwapResponse::BtcToArkade(r) => {
+                        (r.id.to_string(), format!("{:?}", r.status))
                     }
                 };
                 tracing::debug!("[LendaSwap] - swap {} status: {}", id, status);
@@ -457,12 +477,20 @@ pub async fn clear_local_storage() -> Result<()> {
     // Reset the client first to release any file handles
     reset_client().await;
 
-    // Delete the swaps directory
+    // Delete the swaps directory (FileSwapStorage)
     let swaps_dir = Path::new(&params.data_dir).join("lendaswap_swaps");
     if swaps_dir.exists() {
         fs::remove_dir_all(&swaps_dir)
             .map_err(|e| anyhow!("Failed to delete lendaswap_swaps directory: {}", e))?;
         tracing::info!("Cleared lendaswap_swaps directory");
+    }
+
+    // Delete the VTXO swaps SQLite database
+    let vtxo_db_path = Path::new(&params.data_dir).join("lendaswap_vtxo_swaps.sqlite");
+    if vtxo_db_path.exists() {
+        fs::remove_file(&vtxo_db_path)
+            .map_err(|e| anyhow!("Failed to delete lendaswap_vtxo_swaps.sqlite: {}", e))?;
+        tracing::info!("Cleared lendaswap_vtxo_swaps.sqlite");
     }
 
     // Re-initialize the client with stored parameters
@@ -471,6 +499,7 @@ pub async fn clear_local_storage() -> Result<()> {
         params.network,
         params.api_url,
         params.arkade_url,
+        params.esplora_url,
     )
     .await?;
 
@@ -533,6 +562,7 @@ impl From<ApiSwapStatus> for SwapStatusSimple {
     fn from(status: ApiSwapStatus) -> Self {
         match status {
             ApiSwapStatus::Pending => SwapStatusSimple::WaitingForDeposit,
+            ApiSwapStatus::ClientFundingSeen => SwapStatusSimple::Processing,
             ApiSwapStatus::ClientFunded => SwapStatusSimple::Processing,
             ApiSwapStatus::ServerFunded => SwapStatusSimple::Processing,
             ApiSwapStatus::ClientRedeeming => SwapStatusSimple::Processing,
@@ -650,6 +680,9 @@ impl SwapInfo {
                     detailed_status: format!("{:?}", r.common.status),
                     evm_htlc_claim_txid: r.evm_htlc_claim_txid.clone(),
                 }
+            }
+            GetSwapResponse::BtcToArkade(_) => {
+                unimplemented!("not supported at the moment")
             }
         }
     }

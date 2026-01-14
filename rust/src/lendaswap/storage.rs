@@ -1,7 +1,10 @@
 //! Storage implementations for LendaSwap SDK.
 //!
-//! This module provides file-based storage adapters that integrate with the
+//! This module provides storage adapters that integrate with the
 //! existing Ark wallet mnemonic storage.
+//!
+//! - `FileWalletStorage`: File-based wallet storage for mnemonic and key index.
+//! - `FileSwapStorage`: File-based swap storage using JSON files with in-memory cache.
 
 use crate::ark::mnemonic_file;
 use anyhow::Result;
