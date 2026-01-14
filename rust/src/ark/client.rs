@@ -207,11 +207,11 @@ pub async fn send(address: String, amount: Amount) -> Result<Txid> {
                 // This uses up older VTXOs first, leaving fresher ones available
                 let vtxo_outpoints = select_vtxos_for_amount(&client, amount).await?;
 
-                // Use collaborative_redeem_with_vtxos to send with ordered VTXOs
+                // Use collaborative_redeem_vtxo_selection to send with ordered VTXOs
                 let txid = client
-                    .collaborative_redeem_with_vtxos(
+                    .collaborative_redeem_vtxo_selection(
                         rng,
-                        &vtxo_outpoints,
+                        vtxo_outpoints.into_iter(),
                         address.assume_checked(),
                         amount,
                     )
@@ -734,6 +734,171 @@ pub(crate) fn info() -> Result<Info> {
             };
             let info = client.server_info.clone();
             Ok(info)
+        }
+    }
+}
+
+/// Fee estimation result
+pub struct FeeEstimate {
+    /// Estimated fee in satoshis
+    pub fee_sats: u64,
+    /// Fee rate used (sat/vB for on-chain, percentage for Lightning)
+    pub fee_rate: f64,
+    /// Number of VTXOs that would be used
+    pub num_inputs: u32,
+}
+
+/// Estimate fee for on-chain send (collaborative redemption)
+///
+/// This estimates the fee for sending to a Bitcoin address, which creates
+/// an on-chain transaction via collaborative redemption.
+/// Uses the Arkade SDK's estimate_onchain_fees API for accurate fee estimation.
+pub async fn estimate_onchain_fee(address: String, amount_sats: u64) -> Result<FeeEstimate> {
+    let maybe_client = ARK_CLIENT.try_get();
+
+    match maybe_client {
+        None => {
+            bail!("Ark client not initialized");
+        }
+        Some(client) => {
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+
+            // Validate address
+            if !is_btc_address(&address) {
+                bail!("Not a valid Bitcoin address");
+            }
+
+            let amount = Amount::from_sat(amount_sats);
+
+            // Parse the Bitcoin address
+            let to_address = Address::from_str(&address)
+                .map_err(|e| anyhow!("Invalid Bitcoin address: {e}"))?
+                .assume_checked();
+
+            // Use SDK's fee estimation API
+            let mut rng = StdRng::from_entropy();
+            let fee_signed = client
+                .estimate_onchain_fees(&mut rng, to_address, amount)
+                .await
+                .map_err(|e| anyhow!("Failed to estimate onchain fee: {e}"))?;
+
+            // Convert SignedAmount to u64 (fee should always be positive)
+            let fee_sats = fee_signed.to_sat().unsigned_abs();
+
+            tracing::info!(
+                "Estimated onchain fee from SDK: {} sats for {} sats to {}",
+                fee_sats,
+                amount_sats,
+                address
+            );
+
+            Ok(FeeEstimate {
+                fee_sats,
+                fee_rate: 0.0, // SDK doesn't return fee rate directly
+                num_inputs: 0, // SDK doesn't return input count
+            })
+        }
+    }
+}
+
+/// Estimate fee for Arkade (off-chain) send
+///
+/// Ark-to-Ark transfers happen off-chain via batch settlement.
+/// Uses the Arkade SDK's estimate_batch_fees API for accurate fee estimation.
+pub async fn estimate_arkade_fee(address: String, _amount_sats: u64) -> Result<FeeEstimate> {
+    let maybe_client = ARK_CLIENT.try_get();
+
+    match maybe_client {
+        None => {
+            bail!("Ark client not initialized");
+        }
+        Some(client) => {
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+
+            // Validate and parse Ark address
+            if !is_ark_address(&address) {
+                bail!("Not a valid Ark address");
+            }
+
+            let ark_address =
+                ArkAddress::from_str(&address).map_err(|e| anyhow!("Invalid Ark address: {e}"))?;
+
+            // Use SDK's fee estimation API
+            let mut rng = StdRng::from_entropy();
+            let fee_signed = client
+                .estimate_batch_fees(&mut rng, ark_address)
+                .await
+                .map_err(|e| anyhow!("Failed to estimate batch fee: {e}"))?;
+
+            // Convert SignedAmount to u64 (fee should always be positive)
+            let fee_sats = fee_signed.to_sat().unsigned_abs();
+
+            tracing::info!(
+                "Estimated Arkade batch fee from SDK: {} sats to {}",
+                fee_sats,
+                address
+            );
+
+            Ok(FeeEstimate {
+                fee_sats,
+                fee_rate: 0.0,
+                num_inputs: 0,
+            })
+        }
+    }
+}
+
+/// Estimate fee for Lightning payment via Boltz submarine swap
+///
+/// Fetches real-time fees from Boltz API including percentage fee and miner fees.
+/// Uses the Arkade SDK's get_fees API for accurate fee estimation.
+pub async fn estimate_lightning_fee(amount_sats: u64) -> Result<FeeEstimate> {
+    let maybe_client = ARK_CLIENT.try_get();
+
+    match maybe_client {
+        None => {
+            bail!("Ark client not initialized");
+        }
+        Some(client) => {
+            let client = {
+                let guard = client.read();
+                Arc::clone(&*guard)
+            };
+
+            // Fetch real-time fees from Boltz via SDK
+            let boltz_fees = client
+                .get_fees()
+                .await
+                .map_err(|e| anyhow!("Failed to fetch Boltz fees: {e}"))?;
+
+            // Submarine swap fees (Ark -> Lightning)
+            let percentage = boltz_fees.submarine.percentage;
+            let miner_fee = boltz_fees.submarine.miner_fees;
+
+            // Calculate total fee: percentage of amount + fixed miner fee
+            let percentage_fee = ((amount_sats as f64) * percentage / 100.0).ceil() as u64;
+            let total_fee = percentage_fee + miner_fee;
+
+            tracing::info!(
+                "Estimated Lightning fee from Boltz API: {} sats ({}% = {} sats + {} sats miner fee) for {} sats",
+                total_fee,
+                percentage,
+                percentage_fee,
+                miner_fee,
+                amount_sats
+            );
+
+            Ok(FeeEstimate {
+                fee_sats: total_fee,
+                fee_rate: percentage,
+                num_inputs: 0,
+            })
         }
     }
 }
