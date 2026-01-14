@@ -7,9 +7,11 @@
 //! for seamless integration.
 
 pub mod storage;
+pub mod swap_db;
 pub mod vtxo_swap_db;
 
-use crate::lendaswap::storage::{FileSwapStorage, FileWalletStorage};
+use crate::lendaswap::storage::FileWalletStorage;
+use crate::lendaswap::swap_db::SwapDb;
 use crate::lendaswap::vtxo_swap_db::VtxoSwapDb;
 use anyhow::{Result, anyhow};
 use lendaswap_core::api::{
@@ -26,7 +28,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::RwLock;
 
 /// Type alias for the LendaSwap client with our storage implementations.
-type LendaSwapClient = Client<FileWalletStorage, FileSwapStorage, VtxoSwapDb>;
+type LendaSwapClient = Client<FileWalletStorage, SwapDb, VtxoSwapDb>;
 
 /// Atomic flag to track initialization state (for sync access).
 static LENDASWAP_INITIALIZED: AtomicBool = AtomicBool::new(false);
@@ -90,7 +92,9 @@ pub async fn init_client(
     }
 
     let wallet_storage = FileWalletStorage::new(data_dir.clone());
-    let swap_storage = FileSwapStorage::new(data_dir.clone())?;
+    let swap_storage = SwapDb::new(data_dir.clone())
+        .await
+        .map_err(|e| anyhow!("Failed to create SwapDb: {}", e))?;
     let vtxo_swap_storage = VtxoSwapDb::new(data_dir)
         .await
         .map_err(|e| anyhow!("Failed to create VtxoSwapDb: {}", e))?;
@@ -477,12 +481,20 @@ pub async fn clear_local_storage() -> Result<()> {
     // Reset the client first to release any file handles
     reset_client().await;
 
-    // Delete the swaps directory (FileSwapStorage)
-    let swaps_dir = Path::new(&params.data_dir).join("lendaswap_swaps");
-    if swaps_dir.exists() {
-        fs::remove_dir_all(&swaps_dir)
+    // Delete the swaps SQLite database
+    let swaps_db_path = Path::new(&params.data_dir).join("lendaswap_swaps.sqlite");
+    if swaps_db_path.exists() {
+        fs::remove_file(&swaps_db_path)
+            .map_err(|e| anyhow!("Failed to delete lendaswap_swaps.sqlite: {}", e))?;
+        tracing::info!("Cleared lendaswap_swaps.sqlite");
+    }
+
+    // Also delete legacy JSON directory if it exists (from pre-migration)
+    let legacy_swaps_dir = Path::new(&params.data_dir).join("lendaswap_swaps");
+    if legacy_swaps_dir.exists() {
+        fs::remove_dir_all(&legacy_swaps_dir)
             .map_err(|e| anyhow!("Failed to delete lendaswap_swaps directory: {}", e))?;
-        tracing::info!("Cleared lendaswap_swaps directory");
+        tracing::info!("Cleared legacy lendaswap_swaps directory");
     }
 
     // Delete the VTXO swaps SQLite database
