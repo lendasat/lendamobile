@@ -1,33 +1,37 @@
-name: CI
+name: Build check iOS
 
 on:
-  pull_request:
-  merge_group:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to checkout (commit SHA, tag, or branch)"
+        required: false
+        default: ""
 
 jobs:
-  code-checks:
-    name: Code Quality Checks
-    runs-on: ubuntu-latest
+  build-ios:
+    name: Build iOS
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+
+      - name: Add iOS target
+        run: rustup target add aarch64-apple-ios
+
+      - name: Install cargo expand
+        run: cargo install cargo-expand
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
       - uses: extractions/setup-just@v3
-
-      - name: Install dprint
-        run: |
-          curl -fsSL https://dprint.dev/install.sh | sh
-          echo "/home/runner/.dprint/bin" >> $GITHUB_PATH
-
-      - name: Verify dprint installation
-        run: dprint --version
 
       - name: Setup flutter rust bridge
         run: cargo install flutter_rust_bridge_codegen
@@ -53,8 +57,5 @@ jobs:
       - name: Build rust library
         run: just ffi-build
 
-      - name: Verify formatting
-        run: just fmt-check
-
-      - name: Clippy
-        run: just clippy
+      - name: Build for ios
+        run: just ios-build
