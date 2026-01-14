@@ -366,5 +366,6 @@
   "sendFeedback": "发送反馈",
   "sender": "发送者",
   "receiver": "接收者",
-  "scan": "扫描"
+  "scan": "扫描",
+  "copied": "已复制"
 }

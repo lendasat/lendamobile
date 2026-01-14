@@ -71,18 +71,16 @@ class AmountWidgetService extends ChangeNotifier {
     }
 
     if (_swapped) {
-      final btcAmount = _currentUnit == CurrencyType.bitcoin
-          ? double.tryParse(
-                _btcController!.text.isEmpty ? "0.0" : _btcController!.text,
-              ) ??
-              0.0
-          : (int.tryParse(
-                    _satController!.text.isEmpty ? "0" : _satController!.text,
-                  ) ??
-                  0)
-              .toDouble();
+      // Switching to fiat mode - check if source has content
+      final hasSourceContent = _currentUnit == CurrencyType.bitcoin
+          ? _btcController!.text.isNotEmpty
+          : _satController!.text.isNotEmpty;
 
-      if (bitcoinPrice != null) {
+      if (hasSourceContent && bitcoinPrice != null) {
+        final btcAmount = _currentUnit == CurrencyType.bitcoin
+            ? double.tryParse(_btcController!.text) ?? 0.0
+            : (int.tryParse(_satController!.text) ?? 0).toDouble();
+
         final currencyEquivalent = _convertCurrency(
           _currentUnit,
           btcAmount,
@@ -93,14 +91,15 @@ class AmountWidgetService extends ChangeNotifier {
         _currController!.text = double.parse(
           currencyEquivalent,
         ).toStringAsFixed(2);
+      } else {
+        // Keep fiat controller empty if source was empty
+        _currController!.text = '';
       }
     } else {
-      final currAmount = double.tryParse(
-            _currController!.text.isEmpty ? "0.0" : _currController!.text,
-          ) ??
-          0.0;
+      // Switching to bitcoin mode - check if fiat has content
+      if (_currController!.text.isNotEmpty && bitcoinPrice != null) {
+        final currAmount = double.tryParse(_currController!.text) ?? 0.0;
 
-      if (bitcoinPrice != null) {
         final btcEquivalent = _convertCurrency(
           CurrencyType.usd,
           currAmount,
@@ -108,6 +107,10 @@ class AmountWidgetService extends ChangeNotifier {
           bitcoinPrice,
         );
         _btcController!.text = btcEquivalent;
+      } else {
+        // Keep bitcoin controller empty if fiat was empty
+        _btcController!.text = '';
+        _satController!.text = '';
       }
     }
 
@@ -252,6 +255,8 @@ class AmountWidgetService extends ChangeNotifier {
     if (_currentUnit == CurrencyType.sats && !_swapped) {
       formatters.add(FilteringTextInputFormatter.allow(RegExp(r'(^\d+)')));
     } else {
+      // Allow both comma and dot as decimal separators, convert comma to dot
+      formatters.add(const CommaToDecimalFormatter());
       formatters.add(
         FilteringTextInputFormatter.allow(RegExp(r'(^\d*\.?\d*)')),
       );
@@ -378,6 +383,31 @@ class NumericalRangeFormatter extends TextInputFormatter {
     }
 
     return newValue;
+  }
+}
+
+/// Input formatter that converts comma to dot for decimal input
+/// This allows users with European/Apple keyboards to use comma as decimal separator
+class CommaToDecimalFormatter extends TextInputFormatter {
+  const CommaToDecimalFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Replace comma with dot
+    final newText = newValue.text.replaceAll(',', '.');
+
+    if (newText == newValue.text) {
+      return newValue;
+    }
+
+    // Adjust cursor position if text changed
+    return TextEditingValue(
+      text: newText,
+      selection: newValue.selection,
+    );
   }
 }
 

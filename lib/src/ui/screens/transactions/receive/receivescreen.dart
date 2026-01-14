@@ -11,13 +11,11 @@ import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/qr_border_painter.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
@@ -71,6 +69,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
   // Payment monitoring
   bool _waitingForPayment = false;
+
+  // Copy feedback
+  bool _showCopied = false;
 
   // Lightning invoice timer
   Timer? _invoiceTimer;
@@ -216,15 +217,28 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     });
 
     try {
-      // Only pass amount when fetching Lightning invoice
-      // Passing null skips Lightning/Boltz entirely
+      // Pass amount only when fetching Lightning invoice
+      // (Rust API generates Lightning when amount is provided)
       final BigInt? amountSats = includeLightning && (_currentAmount ?? 0) > 0
           ? BigInt.from(_currentAmount!)
           : null;
 
       final addresses = await address(amount: amountSats);
+
+      // Construct BIP21 with amount if set (for non-Lightning types)
+      String bip21 = addresses.bip21;
+      if (!includeLightning && (_currentAmount ?? 0) > 0) {
+        // Add amount to BIP21 if not already present
+        final amountBtc = _currentAmount! / 100000000.0;
+        if (!bip21.contains('?')) {
+          bip21 = '$bip21?amount=$amountBtc';
+        } else if (!bip21.contains('amount=')) {
+          bip21 = '$bip21&amount=$amountBtc';
+        }
+      }
+
       setState(() {
-        _bip21Address = addresses.bip21;
+        _bip21Address = bip21;
         _arkAddress = addresses.offchain;
         _btcAddress = addresses.boarding;
         _boltzSwapId = addresses.lightning?.swapId;
@@ -248,12 +262,28 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   // Default amount for Lightning invoices (Boltz minimum is 333 sats)
   static const int _defaultLightningAmount = 10000;
 
+  // Boltz fee constants for reverse swaps (receiving Lightning)
+  static const double _boltzServiceFeePercent = 0.25;
+  static const int _boltzClaimFeeSats = 250;
+
+  /// Calculate the gross invoice amount needed to receive a specific net amount
+  /// Formula: Gross = (Net + ClaimFee) / (1 - ServiceFeePercent/100)
+  int _calculateGrossAmount(int netAmount) {
+    return ((netAmount + _boltzClaimFeeSats) /
+            (1 - _boltzServiceFeePercent / 100))
+        .ceil();
+  }
+
   Future<void> _fetchLightningInvoice() async {
     try {
       // Boltz requires minimum 333 sats, use default if no amount set
-      final int amount =
+      final int requestedAmount =
           (_currentAmount ?? 0) > 0 ? _currentAmount! : _defaultLightningAmount;
-      final BigInt amountSats = BigInt.from(amount);
+
+      // Calculate gross amount so receiver gets exactly what they requested
+      // Sender covers the Boltz fees
+      final int grossAmount = _calculateGrossAmount(requestedAmount);
+      final BigInt amountSats = BigInt.from(grossAmount);
       final addresses = await address(amount: amountSats);
 
       setState(() {
@@ -368,39 +398,23 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       case ReceiveType.combined:
         return _bip21Address;
       case ReceiveType.ark:
+        // Return Arkade address with amount if set
+        if ((_currentAmount ?? 0) > 0) {
+          final amountBtc = _currentAmount! / 100000000.0;
+          return '$_arkAddress?amount=$amountBtc';
+        }
         return _arkAddress;
       case ReceiveType.onchain:
+        // Return BIP21 URI with amount if set
+        if ((_currentAmount ?? 0) > 0) {
+          final amountBtc = _currentAmount! / 100000000.0;
+          return 'bitcoin:$_btcAddress?amount=$amountBtc';
+        }
         return _btcAddress;
       case ReceiveType.lightning:
         // Prefix with lightning: for proper QR code scanning
         final invoice = _lightningInvoice ?? "";
         return invoice.isNotEmpty ? "lightning:$invoice" : "";
-    }
-  }
-
-  String _getReceiveTypeLabel() {
-    switch (_receiveType) {
-      case ReceiveType.combined:
-        return 'Unified';
-      case ReceiveType.ark:
-        return 'Ark';
-      case ReceiveType.onchain:
-        return 'Onchain';
-      case ReceiveType.lightning:
-        return 'Lightning';
-    }
-  }
-
-  IconData _getReceiveTypeIcon() {
-    switch (_receiveType) {
-      case ReceiveType.combined:
-        return FontAwesomeIcons.qrcode;
-      case ReceiveType.ark:
-        return FontAwesomeIcons.water;
-      case ReceiveType.onchain:
-        return FontAwesomeIcons.link;
-      case ReceiveType.lightning:
-        return FontAwesomeIcons.bolt;
     }
   }
 
@@ -418,14 +432,25 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     }
   }
 
-  /// Get the raw address/invoice for copying (without URI prefix)
+  /// Get the raw address/invoice for copying
+  /// Includes amount query param when set
   String _getRawAddress() {
     switch (_receiveType) {
       case ReceiveType.combined:
         return _bip21Address;
       case ReceiveType.ark:
+        // Return Arkade address with amount if set
+        if ((_currentAmount ?? 0) > 0) {
+          final amountBtc = _currentAmount! / 100000000.0;
+          return '$_arkAddress?amount=$amountBtc';
+        }
         return _arkAddress;
       case ReceiveType.onchain:
+        // Return BIP21 URI with amount if set
+        if ((_currentAmount ?? 0) > 0) {
+          final amountBtc = _currentAmount! / 100000000.0;
+          return 'bitcoin:$_btcAddress?amount=$amountBtc';
+        }
         return _btcAddress;
       case ReceiveType.lightning:
         return _lightningInvoice ?? "";
@@ -439,8 +464,18 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   void _copyAddress() {
     final address = _getRawAddress();
     Clipboard.setData(ClipboardData(text: address));
-    OverlayService()
-        .showSuccess(AppLocalizations.of(context)!.addressCopiedToClipboard);
+
+    setState(() {
+      _showCopied = true;
+    });
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showCopied = false;
+        });
+      }
+    });
   }
 
   void _shareAddress() {
@@ -448,194 +483,172 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     Share.share(address);
   }
 
-  void _refreshAddress() {
-    _animationController.reset();
-    _animationController.forward();
-    _fetchAddresses();
-  }
-
-  void _showReceiveTypeSheet() {
-    arkBottomSheet(
-      context: context,
-      height: MediaQuery.of(context).size.height * 0.55,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      child: ArkScaffold(
-        context: context,
-        appBar: BitNetAppBar(
-          context: context,
-          hasBackButton: false,
-          text: "Select Receive Type",
-        ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.elementSpacing,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ArkListTile(
-                text: "Unified QR Code",
-                selected: _receiveType == ReceiveType.combined,
-                leading: RoundedButtonWidget(
-                  buttonType: ButtonType.transparent,
-                  iconData: FontAwesomeIcons.qrcode,
-                  size: AppTheme.cardPadding * 1.25,
-                  onTap: () {
-                    setState(() => _receiveType = ReceiveType.combined);
-                    Navigator.of(context).pop();
-                  },
-                ),
-                onTap: () {
-                  setState(() => _receiveType = ReceiveType.combined);
-                  Navigator.of(context).pop();
-                },
-              ),
-              ArkListTile(
-                text: "Ark",
-                selected: _receiveType == ReceiveType.ark,
-                leading: RoundedButtonWidget(
-                  buttonType: ButtonType.transparent,
-                  iconData: FontAwesomeIcons.water,
-                  size: AppTheme.cardPadding * 1.25,
-                  onTap: () {
-                    setState(() => _receiveType = ReceiveType.ark);
-                    Navigator.of(context).pop();
-                  },
-                ),
-                onTap: () {
-                  setState(() => _receiveType = ReceiveType.ark);
-                  Navigator.of(context).pop();
-                },
-              ),
-              ArkListTile(
-                text: "Onchain",
-                selected: _receiveType == ReceiveType.onchain,
-                leading: RoundedButtonWidget(
-                  buttonType: ButtonType.transparent,
-                  iconData: FontAwesomeIcons.link,
-                  size: AppTheme.cardPadding * 1.25,
-                  onTap: () {
-                    setState(() => _receiveType = ReceiveType.onchain);
-                    Navigator.of(context).pop();
-                  },
-                ),
-                onTap: () {
-                  setState(() => _receiveType = ReceiveType.onchain);
-                  Navigator.of(context).pop();
-                },
-              ),
-              ArkListTile(
-                text: "Lightning",
-                subtitle: Text(
-                  "Default: 10,000 sats",
-                  style: TextStyle(
-                    color: Theme.of(context).hintColor,
-                    fontSize: 12,
-                  ),
-                ),
-                selected: _receiveType == ReceiveType.lightning,
-                leading: RoundedButtonWidget(
-                  buttonType: ButtonType.transparent,
-                  iconData: FontAwesomeIcons.bolt,
-                  size: AppTheme.cardPadding * 1.25,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    setState(() {
-                      _receiveType = ReceiveType.lightning;
-                      // Set default amount for Lightning if not already set
-                      if ((_currentAmount ?? 0) <= 0) {
-                        _currentAmount = _defaultLightningAmount;
-                      }
-                    });
-                    _fetchLightningInvoice();
-                  },
-                ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _receiveType = ReceiveType.lightning;
-                    // Set default amount for Lightning if not already set
-                    if ((_currentAmount ?? 0) <= 0) {
-                      _currentAmount = _defaultLightningAmount;
-                    }
-                  });
-                  _fetchLightningInvoice();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _showAmountSheet() {
-    _satController.text = _currentAmount?.toString() ?? "0";
+    // Only pre-fill if there's an actual amount set (not 0)
+    // Empty string shows hint text "0"
+    if (_currentAmount != null && _currentAmount! > 0) {
+      _satController.text = _currentAmount.toString();
+    } else {
+      _satController.clear();
+    }
+
+    // Auto-focus the text field after the sheet is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _amountFocusNode.requestFocus();
+    });
+
+    final isLightning = _receiveType == ReceiveType.lightning;
 
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: MediaQuery.of(context).size.height * 0.85,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      child: ArkScaffold(
-        context: context,
-        appBar: BitNetAppBar(
-          context: context,
-          hasBackButton: false,
-          text: AppLocalizations.of(context)!.setAmount,
-          actions: [
-            IconButton(
-              icon: Icon(Icons.close,
-                  color: Theme.of(context).colorScheme.onSurface),
-              onPressed: () {
-                _unfocusAll();
-                Navigator.pop(context);
-              },
+      child: StatefulBuilder(
+        builder: (context, setSheetState) {
+          final amountText = _satController.text.trim();
+          final amount = int.tryParse(amountText) ?? 0;
+          final isBelowMinimum =
+              isLightning && amount < _defaultLightningAmount;
+
+          return ArkScaffold(
+            context: context,
+            appBar: BitNetAppBar(
+              context: context,
+              hasBackButton: false,
+              text: AppLocalizations.of(context)!.setAmount,
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.close,
+                      color: Theme.of(context).colorScheme.onSurface),
+                  onPressed: () {
+                    _unfocusAll();
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppTheme.cardPadding * 2,
-                  horizontal: AppTheme.cardPadding,
-                ),
-                child: AmountWidget(
-                  enabled: () => true,
-                  btcController: _btcController,
-                  satController: _satController,
-                  currController: _currController,
-                  focusNode: _amountFocusNode,
-                  bitcoinUnit: CurrencyType.sats,
-                  swapped: false,
-                  autoConvert: true,
-                  bitcoinPrice: _bitcoinPrice,
-                ),
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppTheme.cardPadding * 2,
+                      horizontal: AppTheme.cardPadding,
+                    ),
+                    child: AmountWidget(
+                      enabled: () => true,
+                      btcController: _btcController,
+                      satController: _satController,
+                      currController: _currController,
+                      focusNode: _amountFocusNode,
+                      bitcoinUnit: CurrencyType.sats,
+                      swapped: false,
+                      autoConvert: true,
+                      bitcoinPrice: _bitcoinPrice,
+                      onAmountChange: (_, __) {
+                        // Rebuild the sheet to update button state
+                        setSheetState(() {});
+                      },
+                    ),
+                  ),
+                  // Show Boltz fee breakdown for Lightning
+                  if (isLightning && amount >= _defaultLightningAmount) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.cardPadding,
+                      ),
+                      child: Builder(
+                        builder: (context) {
+                          // Calculate gross amount (what sender pays)
+                          final int grossAmount = _calculateGrossAmount(amount);
+                          final int serviceFee =
+                              (grossAmount * _boltzServiceFeePercent / 100)
+                                  .round();
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
+
+                          return Container(
+                            padding: const EdgeInsets.all(AppTheme.cardPadding),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.05)
+                                  : Colors.black.withValues(alpha: 0.03),
+                              borderRadius: AppTheme.cardRadiusSmall,
+                            ),
+                            child: Column(
+                              children: [
+                                _buildFeeRow(
+                                  context,
+                                  'You receive',
+                                  '$amount sats',
+                                  isDark,
+                                  isTotal: true,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Divider(height: 1),
+                                ),
+                                _buildFeeRow(
+                                  context,
+                                  'Service fee (0.25%)',
+                                  '+$serviceFee sats',
+                                  isDark,
+                                ),
+                                const SizedBox(height: 8),
+                                _buildFeeRow(
+                                  context,
+                                  'Claim fee',
+                                  '+$_boltzClaimFeeSats sats',
+                                  isDark,
+                                ),
+                                const SizedBox(height: 8),
+                                _buildFeeRow(
+                                  context,
+                                  'Sender pays',
+                                  '~$grossAmount sats',
+                                  isDark,
+                                  isTotal: true,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.cardPadding),
+                  ] else
+                    const SizedBox(height: AppTheme.cardPadding),
+                  LongButtonWidget(
+                    title: isBelowMinimum
+                        ? 'Amount too low'
+                        : AppLocalizations.of(context)!.apply,
+                    buttonType: isBelowMinimum
+                        ? ButtonType.transparent
+                        : ButtonType.primary,
+                    customWidth: AppTheme.cardPadding * 10,
+                    customHeight: AppTheme.cardPadding * 2,
+                    onTap: isBelowMinimum
+                        ? null
+                        : () {
+                            final amountText = _satController.text.trim();
+                            final amount = int.tryParse(amountText) ?? 0;
+                            setState(() =>
+                                _currentAmount = amount >= 0 ? amount : 0);
+                            _unfocusAll();
+                            Navigator.pop(context);
+                            // Re-fetch Lightning invoice if on Lightning, otherwise fetch addresses
+                            if (_receiveType == ReceiveType.lightning) {
+                              _fetchLightningInvoice();
+                            } else {
+                              _fetchAddresses();
+                            }
+                          },
+                  ),
+                ],
               ),
-              const SizedBox(height: AppTheme.cardPadding),
-              LongButtonWidget(
-                title: AppLocalizations.of(context)!.apply,
-                buttonType: ButtonType.primary,
-                customWidth: AppTheme.cardPadding * 10,
-                customHeight: AppTheme.cardPadding * 2,
-                onTap: () {
-                  final amountText = _satController.text.trim();
-                  final amount = int.tryParse(amountText) ?? 0;
-                  setState(() => _currentAmount = amount >= 0 ? amount : 0);
-                  _unfocusAll();
-                  Navigator.pop(context);
-                  // Re-fetch Lightning invoice if on Lightning, otherwise fetch addresses
-                  if (_receiveType == ReceiveType.lightning) {
-                    _fetchLightningInvoice();
-                  } else {
-                    _fetchAddresses();
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     ).whenComplete(() {
       // Ensure keyboard is dismissed when bottom sheet closes by any means
@@ -745,13 +758,17 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                             const SizedBox(height: AppTheme.cardPadding),
                             // QR Code
                             _buildQrCode(isLight),
+                            const SizedBox(height: AppTheme.elementSpacing),
+                            // Type selector tabs
+                            _buildTypeSelector(),
                             const SizedBox(height: AppTheme.cardPadding),
                             // Address tile
                             _buildAddressTile(),
                             // Amount tile
                             _buildAmountTile(l10n),
-                            // Type tile
-                            _buildTypeTile(),
+                            const SizedBox(height: AppTheme.cardPadding * 2),
+                            // Share button
+                            _buildShareButton(),
                             const SizedBox(height: AppTheme.cardPadding * 2),
                           ],
                         ),
@@ -760,6 +777,22 @@ class _ReceiveScreenState extends State<ReceiveScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildShareButton() {
+    final qrData = _getCurrentQrData();
+    final isLoading = qrData.isEmpty;
+
+    return Center(
+      child: LongButtonWidget(
+        customHeight: AppTheme.cardPadding * 2,
+        customWidth: AppTheme.cardPadding * 5,
+        title: AppLocalizations.of(context)!.share,
+        leadingIcon: const Icon(Icons.share_rounded),
+        onTap: isLoading ? null : _shareAddress,
+        buttonType: ButtonType.transparent,
       ),
     );
   }
@@ -823,14 +856,6 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 ),
               ),
             ),
-            LongButtonWidget(
-              customHeight: AppTheme.cardPadding * 2,
-              customWidth: AppTheme.cardPadding * 5,
-              title: AppLocalizations.of(context)!.share,
-              leadingIcon: const Icon(Icons.share_rounded),
-              onTap: isLoading ? null : _shareAddress,
-              buttonType: ButtonType.transparent,
-            ),
           ],
         ),
       ),
@@ -844,21 +869,43 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
     return ArkListTile(
       text: label,
-      trailing: PostHogMaskWidget(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.copy,
-                color: Theme.of(context).hintColor,
-                size: AppTheme.cardPadding * 0.75),
-            const SizedBox(width: AppTheme.elementSpacing / 2),
-            Text(
-              _trimAddress(_getRawAddress()),
-              style: Theme.of(context).textTheme.bodySmall,
+      trailing: _showCopied
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const Icon(
+                  Icons.check,
+                  color: AppTheme.successColor,
+                  size: AppTheme.cardPadding * 0.75,
+                ),
+                const SizedBox(width: AppTheme.elementSpacing / 2),
+                Text(
+                  AppLocalizations.of(context)!.copied,
+                  style: TextStyle(
+                    color: AppTheme.successColor,
+                    fontSize: Theme.of(context).textTheme.bodySmall?.fontSize,
+                  ),
+                ),
+              ],
+            )
+          : PostHogMaskWidget(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.copy,
+                    color: Theme.of(context).hintColor,
+                    size: AppTheme.cardPadding * 0.75,
+                  ),
+                  const SizedBox(width: AppTheme.elementSpacing / 2),
+                  Text(
+                    _trimAddress(_getRawAddress()),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
       onTap: _copyAddress,
     );
   }
@@ -889,35 +936,185 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     );
   }
 
-  Widget _buildTypeTile() {
-    return ArkListTile(
-      text: "Type",
-      trailing: GlassContainer(
-        opacity: 0.05,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.elementSpacing,
-          vertical: AppTheme.elementSpacing / 2,
+  Widget _buildTypeSelector() {
+    final selectedIndex = ReceiveType.values.indexOf(_receiveType);
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    const double containerPadding = 4;
+    const double indicatorMargin = 2;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.elementSpacing),
+      child: Container(
+        height: 48,
+        padding: const EdgeInsets.all(containerPadding),
+        decoration: BoxDecoration(
+          color: isLight
+              ? Colors.black.withValues(alpha: 0.05)
+              : Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(24),
         ),
-        child: GestureDetector(
-          onTap: _showReceiveTypeSheet,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                _getReceiveTypeIcon(),
-                size: AppTheme.cardPadding * 0.75,
-                color: Theme.of(context).hintColor,
-              ),
-              const SizedBox(width: AppTheme.elementSpacing / 2),
-              Text(
-                _getReceiveTypeLabel(),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final tabWidth = constraints.maxWidth / 4;
+            final indicatorHeight = constraints.maxHeight;
+            return Stack(
+              children: [
+                // Animated sliding pill indicator
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeOutExpo,
+                  left: selectedIndex * tabWidth + indicatorMargin,
+                  top: 0,
+                  height: indicatorHeight,
+                  width: tabWidth - (indicatorMargin * 2),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isLight
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black
+                              .withValues(alpha: isLight ? 0.08 : 0.15),
+                          blurRadius: 6,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Tab items
+                Row(
+                  children: ReceiveType.values.map((type) {
+                    final isSelected = _receiveType == type;
+                    final icon = switch (type) {
+                      ReceiveType.combined => FontAwesomeIcons.qrcode,
+                      ReceiveType.ark => FontAwesomeIcons.spaceAwesome,
+                      ReceiveType.onchain => FontAwesomeIcons.link,
+                      ReceiveType.lightning => FontAwesomeIcons.bolt,
+                    };
+                    final label = switch (type) {
+                      ReceiveType.combined => 'Unified',
+                      ReceiveType.ark => 'Arkade',
+                      ReceiveType.onchain => 'Onchain',
+                      ReceiveType.lightning => 'Lightning',
+                    };
+
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => _onTypeSelected(type),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          height: double.infinity,
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: indicatorMargin),
+                          alignment: Alignment.center,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  icon,
+                                  size: 12,
+                                  color: isSelected
+                                      ? (isLight
+                                          ? Colors.black87
+                                          : Colors.white)
+                                      : (isLight
+                                          ? Colors.black38
+                                          : Colors.white38),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  label,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                    color: isSelected
+                                        ? (isLight
+                                            ? Colors.black87
+                                            : Colors.white)
+                                        : (isLight
+                                            ? Colors.black38
+                                            : Colors.white38),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            );
+          },
         ),
       ),
-      onTap: _showReceiveTypeSheet,
+    );
+  }
+
+  void _onTypeSelected(ReceiveType type) {
+    if (type == _receiveType) return;
+
+    final wasLightning = _receiveType == ReceiveType.lightning;
+    final hadDefaultLightningAmount = _currentAmount == _defaultLightningAmount;
+
+    setState(() {
+      _receiveType = type;
+
+      if (type == ReceiveType.lightning) {
+        // Lightning requires minimum amount (Boltz minimum is 333 sats, we use 10k default)
+        // Auto-adjust to 10k if amount is not set or below minimum
+        if ((_currentAmount ?? 0) < _defaultLightningAmount) {
+          _currentAmount = _defaultLightningAmount;
+        }
+      } else if (wasLightning && hadDefaultLightningAmount) {
+        // Reset amount when leaving Lightning if it was the auto-set default
+        _currentAmount = 0;
+      }
+    });
+
+    // Fetch Lightning invoice if switching to Lightning
+    if (type == ReceiveType.lightning) {
+      _fetchLightningInvoice();
+    }
+  }
+
+  Widget _buildFeeRow(
+    BuildContext context,
+    String label,
+    String value,
+    bool isDark, {
+    bool isTotal = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: isDark ? AppTheme.white60 : AppTheme.black60,
+                fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
+              ),
+        ),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: isTotal
+                    ? (isDark ? Colors.white : Colors.black)
+                    : (isDark ? AppTheme.white60 : AppTheme.black60),
+                fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
+              ),
+        ),
+      ],
     );
   }
 }

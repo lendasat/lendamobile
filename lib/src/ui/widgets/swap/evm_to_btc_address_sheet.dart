@@ -95,7 +95,7 @@ class _EvmToBtcAddressSheetState extends State<EvmToBtcAddressSheet> {
         _btcError = null;
         _isBtcValid = false;
       } else if (!_validateBtcAddress(value)) {
-        _btcError = 'Invalid Bitcoin/Ark address';
+        _btcError = 'Invalid Bitcoin/Arkade address';
         _isBtcValid = false;
       } else {
         _btcError = null;

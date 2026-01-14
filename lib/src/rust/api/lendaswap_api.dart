@@ -18,16 +18,19 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// * `network` - Bitcoin network: "bitcoin", "testnet", "signet", or "regtest"
 /// * `api_url` - LendaSwap API URL (e.g., "https://api.lendaswap.com")
 /// * `arkade_url` - Arkade server URL (e.g., "https://arkade.computer")
+/// * `esplora_url` - Esplora API URL (e.g., "https://mutinynet.com/api")
 Future<void> lendaswapInit(
         {required String dataDir,
         required String network,
         required String apiUrl,
-        required String arkadeUrl}) =>
+        required String arkadeUrl,
+        required String esploraUrl}) =>
     RustLib.instance.api.crateApiLendaswapApiLendaswapInit(
         dataDir: dataDir,
         network: network,
         apiUrl: apiUrl,
-        arkadeUrl: arkadeUrl);
+        arkadeUrl: arkadeUrl,
+        esploraUrl: esploraUrl);
 
 /// Check if LendaSwap is initialized.
 bool lendaswapIsInitialized() =>

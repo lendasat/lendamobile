@@ -64,3 +64,5 @@ rust/src/frb_generated.rs
 # Build and log files
 *.log
 firebase-debug.log
+
+ .claude/settings.local.json

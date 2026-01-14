@@ -10,24 +10,26 @@ import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/lnurl_service.dart';
 import 'package:ark_flutter/src/utils/address_validator.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/services/pending_transaction_service.dart';
-import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
+import 'package:ark_flutter/src/services/recipient_storage_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:bolt11_decoder/bolt11_decoder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -37,20 +39,21 @@ class SendScreen extends StatefulWidget {
   final String aspId;
   final double availableSats;
   final String? initialAddress;
+  final bool fromClipboard;
 
   const SendScreen({
     super.key,
     required this.aspId,
     required this.availableSats,
     this.initialAddress,
+    this.fromClipboard = false,
   });
 
   @override
   SendScreenState createState() => SendScreenState();
 }
 
-class SendScreenState extends State<SendScreen>
-    with SingleTickerProviderStateMixin {
+class SendScreenState extends State<SendScreen> {
   // Controllers
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _btcController = TextEditingController();
@@ -59,13 +62,8 @@ class SendScreenState extends State<SendScreen>
   final FocusNode _amountFocusNode = FocusNode();
   final FocusNode _addressFocusNode = FocusNode();
 
-  // Image picker and scanner for QR from gallery
-  final ImagePicker _imagePicker = ImagePicker();
-  MobileScannerController? _scannerController;
-
   // State
   bool _isLoading = false;
-  bool _isAddressExpanded = false;
   bool _hasValidAddress = false;
   String? _addressError; // Error message for invalid address format
   String? _description;
@@ -82,43 +80,46 @@ class SendScreenState extends State<SendScreen>
   // Boltz submarine swap fee percentage (0.25% for paying Lightning invoices)
   static const double _boltzFeePercent = 0.25;
 
+  // Minimum sats for Lightning payments (Boltz minimum)
+  static const int _minLightningSats = 333;
+
   // LNURL state
   LnurlPayParams? _lnurlParams;
   bool _isFetchingLnurl = false;
 
-  // Animation controller for address field expansion
-  late AnimationController _expandController;
-  late Animation<double> _expandAnimation;
+  // BIP21 multi-network support
+  Map<String, String> _availableNetworks = {}; // network name -> address
+  String? _selectedNetwork;
+
+  // Amount locked state (when amount comes from Lightning invoice)
+  bool _isAmountLocked = false;
+
+  // Zero-amount Lightning invoice (not supported by SDK)
+  bool _isZeroAmountLightningInvoice = false;
+
+  // Amount input state (tracks whether showing fiat or bitcoin)
+  String _amountInputState = 'sats'; // 'sats', 'bitcoin', or 'currency'
 
   @override
   void initState() {
     super.initState();
     logger.i("SendScreen initialized with ASP ID: ${widget.aspId}");
 
-    // Initialize animation controller
-    _expandController = AnimationController(
-      duration: AppTheme.animationDuration,
-      vsync: this,
-    );
-    _expandAnimation = CurvedAnimation(
-      parent: _expandController,
-      curve: AppTheme.animationCurve,
-    );
-
-    // Initialize controllers with default values
-    _satController.text = '0';
-    _btcController.text = '0.0';
-    _currController.text = '0.0';
+    // Initialize controllers as empty - hint text will show "0"
+    _satController.text = '';
+    _btcController.text = '';
+    _currController.text = '';
 
     // Listen to address changes
     _addressController.addListener(_onAddressChanged);
 
-    // Set initial address if provided (e.g., from QR scan)
+    // Set initial address if provided (e.g., from QR scan or recipient search)
     if (widget.initialAddress != null && widget.initialAddress!.isNotEmpty) {
       _addressController.text = widget.initialAddress!;
-      // Expand address field and validate
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _onAddressChanged();
+        // Autofocus amount field and open keyboard
+        _amountFocusNode.requestFocus();
       });
     }
 
@@ -135,8 +136,6 @@ class SendScreenState extends State<SendScreen>
     _currController.dispose();
     _amountFocusNode.dispose();
     _addressFocusNode.dispose();
-    _expandController.dispose();
-    _scannerController?.dispose();
     super.dispose();
   }
 
@@ -160,12 +159,18 @@ class SendScreenState extends State<SendScreen>
 
     // If it looks like a complete invoice/URI with an amount, parse it
     // Only parse if the amount field is empty/zero to avoid overwriting user input
-    // Also check for URI patterns to avoid re-parsing already extracted addresses
+    // Check for URI patterns, Lightning invoices, or Arkade addresses with query params
     final isUri = text.toLowerCase().startsWith('bitcoin:') ||
         text.toLowerCase().startsWith('lightning:');
+    final isArkadeWithAmount =
+        (text.startsWith('ark1') || text.startsWith('tark1')) &&
+            text.contains('?amount=');
+    final isLightningInvoice = _isLightningInvoice(text);
     final amountIsDefault =
         _satController.text.isEmpty || _satController.text == '0';
-    if (isValid && isUri && amountIsDefault) {
+    if (isValid &&
+        (isUri || isLightningInvoice || isArkadeWithAmount) &&
+        amountIsDefault) {
       _tryParseAmountFromAddress(text);
     }
 
@@ -194,6 +199,12 @@ class SendScreenState extends State<SendScreen>
       if (!isOnChain) {
         _recommendedFees = null;
       }
+      // Reset zero-amount invoice flag if address is not a Lightning invoice
+      // (it will be set by _tryParseAmountFromAddress if needed)
+      if (!isLightningInvoice && !isUri) {
+        _isZeroAmountLightningInvoice = false;
+        _isAmountLocked = false;
+      }
     });
   }
 
@@ -219,12 +230,7 @@ class SendScreenState extends State<SendScreen>
         setState(() {
           _lnurlParams = params;
           _isFetchingLnurl = false;
-          // Set default amount to minimum if no amount entered
-          if (_satController.text.isEmpty || _satController.text == '0') {
-            _satController.text = params.minSats.toString();
-            _btcController.text = (params.minSats / BitcoinConstants.satsPerBtc)
-                .toStringAsFixed(8);
-          }
+          // Don't auto-fill amount - let user enter it manually (like Ark addresses)
           // Set description from LNURL metadata if available
           if (params.description != null && _description == null) {
             _description = params.description;
@@ -247,41 +253,78 @@ class SendScreenState extends State<SendScreen>
   }
 
   /// Try to extract address and amount from pasted Lightning invoice or BIP21 URI
-  /// Also updates the address controller with the preferred address (ark > lightning > bitcoin)
+  /// Also extracts all available networks for BIP21 URIs and selects the best one
   void _tryParseAmountFromAddress(String text) {
     int? amount;
     String address = text;
     bool addressExtracted = false;
+    Map<String, String> networks = {};
+    String? selectedNetwork;
 
     // Handle Lightning URI (lightning:lnbc...)
     if (text.toLowerCase().startsWith('lightning:')) {
       address = text.substring(10);
       addressExtracted = true;
+      networks['Lightning'] = address;
+      selectedNetwork = 'Lightning';
     }
-    // Parse BIP21 URI for amount
+    // Handle Arkade address with amount query param (ark1...?amount=0.0001)
+    else if ((text.startsWith('ark1') || text.startsWith('tark1')) &&
+        text.contains('?')) {
+      final parts = text.split('?');
+      address = parts[0];
+      addressExtracted = true;
+      networks['Arkade'] = address;
+      selectedNetwork = 'Arkade';
+
+      // Parse amount from query string
+      if (parts.length > 1) {
+        final queryString = parts[1];
+        final params = Uri.splitQueryString(queryString);
+        if (params.containsKey('amount')) {
+          final btcAmount = double.tryParse(params['amount'] ?? '');
+          if (btcAmount != null) {
+            amount = (btcAmount * BitcoinConstants.satsPerBtc).round();
+            logger.i("Extracted amount from Arkade address: $amount sats");
+          }
+        }
+      }
+    }
+    // Parse BIP21 URI for amount and all available networks
     else if (text.toLowerCase().startsWith('bitcoin:')) {
       final uri = Uri.tryParse(text);
       if (uri != null) {
+        // Extract all available addresses
+        if (uri.path.isNotEmpty) {
+          networks['Onchain'] = uri.path;
+        }
+        if (uri.queryParameters.containsKey('lightning')) {
+          networks['Lightning'] = uri.queryParameters['lightning']!;
+        }
+        if (uri.queryParameters.containsKey('ark')) {
+          networks['Arkade'] = uri.queryParameters['ark']!;
+        } else if (uri.queryParameters.containsKey('arkade')) {
+          networks['Arkade'] = uri.queryParameters['arkade']!;
+        }
+
         // Priority order for address selection (lower fees first):
         // 1. Ark address (lowest fees)
         // 2. Lightning invoice
         // 3. Bitcoin address (highest fees)
-        if (uri.queryParameters.containsKey('ark')) {
-          address = uri.queryParameters['ark']!;
-          addressExtracted = true;
-          logger.i("Using ark address from BIP21 for lower fees");
-        } else if (uri.queryParameters.containsKey('arkade')) {
-          address = uri.queryParameters['arkade']!;
-          addressExtracted = true;
-          logger.i("Using arkade address from BIP21 for lower fees");
-        } else if (uri.queryParameters.containsKey('lightning')) {
-          address = uri.queryParameters['lightning']!;
-          addressExtracted = true;
-        } else {
-          // Use bitcoin address from path
-          address = uri.path;
-          addressExtracted = true;
+        if (networks.containsKey('Arkade')) {
+          address = networks['Arkade']!;
+          selectedNetwork = 'Arkade';
+          logger.i("Using Ark address from BIP21 for lower fees");
+        } else if (networks.containsKey('Lightning')) {
+          address = networks['Lightning']!;
+          selectedNetwork = 'Lightning';
+          logger.i("Using Lightning address from BIP21");
+        } else if (networks.containsKey('Onchain')) {
+          address = networks['Onchain']!;
+          selectedNetwork = 'Onchain';
         }
+        addressExtracted = true;
+
         // Parse amount from query parameters
         if (uri.queryParameters.containsKey('amount')) {
           final btcAmount =
@@ -294,18 +337,38 @@ class SendScreenState extends State<SendScreen>
     }
 
     // Parse Lightning invoice amount if it's a BOLT11 invoice
+    bool amountFromInvoice = false;
+    bool isZeroAmountInvoice = false;
     if (_isLightningInvoice(address) && amount == null) {
       try {
         final invoice = Bolt11PaymentRequest(address);
         final btcAmount = invoice.amount.toDouble();
         if (btcAmount > 0) {
           amount = (btcAmount * BitcoinConstants.satsPerBtc).round();
-          logger.i("Extracted amount from pasted invoice: $amount sats");
+          amountFromInvoice = true;
+          logger.i(
+              "Extracted amount from Lightning invoice: $amount sats (locked)");
+        } else {
+          // Zero-amount invoice - NOT SUPPORTED by SDK
+          // The Ark SDK's Boltz submarine swap implementation only reads amount from the invoice
+          isZeroAmountInvoice = true;
+          logger.w(
+              "Zero-amount Lightning invoice detected - NOT SUPPORTED by SDK");
         }
       } catch (e) {
         // Ignore parse errors for incomplete invoices
       }
     }
+
+    // Store available networks for switching
+    setState(() {
+      _availableNetworks = networks;
+      _selectedNetwork = selectedNetwork;
+      // Lock amount if it came from a Lightning invoice with amount (can't be changed)
+      _isAmountLocked = amountFromInvoice;
+      // Track zero-amount invoices (not supported by SDK)
+      _isZeroAmountLightningInvoice = isZeroAmountInvoice;
+    });
 
     // Update address controller if we extracted a better address
     if (addressExtracted && address != text) {
@@ -318,6 +381,37 @@ class SendScreenState extends State<SendScreen>
       _btcController.text =
           (amount / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
     }
+  }
+
+  /// Switch to a different network from available BIP21 options
+  void _switchNetwork(String network) {
+    if (_availableNetworks.containsKey(network)) {
+      final newAddress = _availableNetworks[network]!;
+      setState(() {
+        _selectedNetwork = network;
+        _addressController.text = newAddress;
+      });
+      // Re-validate and update state
+      _onAddressChanged();
+      logger
+          .i("Switched to $network network: ${newAddress.substring(0, 20)}...");
+    }
+  }
+
+  /// Get the current network name based on address type
+  String _getCurrentNetworkName() {
+    if (_selectedNetwork != null) {
+      return _selectedNetwork!;
+    }
+    final address = _addressController.text.trim();
+    if (_isLightningInvoice(address) || _isLnurlOrLightningAddress(address)) {
+      return 'Lightning';
+    } else if (_isOnChainBitcoinAddress(address)) {
+      return 'Onchain';
+    } else if (_hasValidAddress) {
+      return 'Arkade';
+    }
+    return 'Unknown';
   }
 
   /// Check if address is valid using AddressValidator
@@ -393,170 +487,6 @@ class SendScreenState extends State<SendScreen>
     if (!_isLightningPayment) return 0;
     // Boltz charges 0.25% for submarine swaps (paying LN invoices)
     return (amountSats * _boltzFeePercent / 100).round();
-  }
-
-  void _toggleAddressExpanded() {
-    setState(() {
-      _isAddressExpanded = !_isAddressExpanded;
-      if (_isAddressExpanded) {
-        _expandController.forward();
-        // Focus the address field when expanded
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _addressFocusNode.requestFocus();
-        });
-      } else {
-        _expandController.reverse();
-        _addressFocusNode.unfocus();
-      }
-    });
-  }
-
-  Future<void> _handleQRScan() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const QrScannerScreen(),
-      ),
-    );
-
-    if (result != null && result is String && mounted) {
-      _parseScannedData(result);
-    }
-  }
-
-  /// Paste address from clipboard
-  Future<void> _pasteFromClipboard() async {
-    try {
-      final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-      if (clipboardData?.text != null && clipboardData!.text!.isNotEmpty) {
-        final text = clipboardData.text!.trim();
-        _parseScannedData(text);
-      }
-    } catch (e) {
-      logger.e('Error pasting from clipboard: $e');
-    }
-  }
-
-  /// Pick image from gallery and scan for QR code
-  Future<void> _pickImageAndScan() async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-      );
-
-      if (image != null) {
-        // Create scanner controller if needed
-        _scannerController ??= MobileScannerController();
-
-        final BarcodeCapture? result = await _scannerController!.analyzeImage(
-          image.path,
-        );
-
-        if (result != null && result.barcodes.isNotEmpty) {
-          final String? code = result.barcodes.first.rawValue;
-          if (code != null && mounted) {
-            _parseScannedData(code);
-          }
-        } else {
-          if (mounted) {
-            OverlayService().showError('No QR code found in image');
-          }
-        }
-      }
-    } catch (e) {
-      logger.e('Error picking/scanning image: $e');
-      if (mounted) {
-        OverlayService().showError('Error scanning image: $e');
-      }
-    }
-  }
-
-  void _parseScannedData(String data) {
-    String address = data;
-    int? amount;
-    String? description;
-
-    // Handle Lightning URI (lightning:lnbc...)
-    if (data.toLowerCase().startsWith('lightning:')) {
-      address = data.substring(10); // Remove "lightning:" prefix
-    }
-    // Parse BIP21 URI if applicable
-    else if (data.toLowerCase().startsWith('bitcoin:')) {
-      final uri = Uri.tryParse(data);
-      if (uri != null) {
-        address = uri.path;
-
-        // Priority order for address selection (lower fees first):
-        // 1. Ark address (lowest fees)
-        // 2. Lightning invoice
-        // 3. Bitcoin address (highest fees)
-        if (uri.queryParameters.containsKey('ark')) {
-          // Prefer ark address for lower fees
-          address = uri.queryParameters['ark']!;
-          logger.i("Using ark address from BIP21 for lower fees");
-        } else if (uri.queryParameters.containsKey('arkade')) {
-          // Legacy arkade parameter support
-          address = uri.queryParameters['arkade']!;
-          logger.i("Using arkade address from BIP21 for lower fees");
-        } else if (uri.queryParameters.containsKey('lightning')) {
-          // Fall back to lightning invoice
-          address = uri.queryParameters['lightning']!;
-        }
-        // Otherwise use the bitcoin address from uri.path
-
-        // Parse query parameters
-        if (uri.queryParameters.containsKey('amount')) {
-          final btcAmount =
-              double.tryParse(uri.queryParameters['amount'] ?? '');
-          if (btcAmount != null) {
-            amount = (btcAmount * BitcoinConstants.satsPerBtc).round();
-          }
-        }
-        if (uri.queryParameters.containsKey('message')) {
-          description = uri.queryParameters['message'];
-        }
-        if (uri.queryParameters.containsKey('label')) {
-          description ??= uri.queryParameters['label'];
-        }
-      }
-    }
-
-    // Parse Lightning invoice amount if it's a BOLT11 invoice
-    if (_isLightningInvoice(address) && amount == null) {
-      try {
-        final invoice = Bolt11PaymentRequest(address);
-        // Amount is in BTC, convert to sats
-        final btcAmount = invoice.amount.toDouble();
-        if (btcAmount > 0) {
-          amount = (btcAmount * BitcoinConstants.satsPerBtc).round();
-          logger.i("Extracted amount from Lightning invoice: $amount sats");
-        }
-        // Try to get description from invoice tags
-        if (invoice.tags.length > 1) {
-          description ??= invoice.tags[1].data.toString();
-        }
-      } catch (e) {
-        logger.w("Failed to parse Lightning invoice: $e");
-      }
-    }
-
-    setState(() {
-      _addressController.text = address;
-      _hasValidAddress = _isValidAddress(address);
-      if (amount != null && amount > 0) {
-        _satController.text = amount.toString();
-        _btcController.text =
-            (amount / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
-      }
-      if (description != null) {
-        _description = description;
-      }
-      // Collapse the address field after scanning
-      if (_isAddressExpanded) {
-        _isAddressExpanded = false;
-        _expandController.reverse();
-      }
-    });
   }
 
   Future<void> _handleSend() async {
@@ -643,30 +573,63 @@ class SendScreenState extends State<SendScreen>
             "Got invoice from LNURL: ${invoiceToPaymentRequest.substring(0, 30)}...");
       }
 
+      String? txid;
       if (invoiceToPaymentRequest != null) {
         // Pay the LNURL-generated invoice via submarine swap
         logger.i("Paying LNURL invoice via submarine swap...");
         final result = await payLnInvoice(invoice: invoiceToPaymentRequest);
-        logger.i("LNURL payment successful! TXID: ${result.txid}");
+        txid = result.txid;
+        logger.i("LNURL payment successful! TXID: $txid");
       } else {
         // Pay Lightning invoice via submarine swap
         logger.i("Paying Lightning invoice: ${address.substring(0, 20)}...");
         final result = await payLnInvoice(invoice: address);
-        logger.i("Lightning payment successful! TXID: ${result.txid}");
+        txid = result.txid;
+        logger.i("Lightning payment successful! TXID: $txid");
       }
 
-      // Return to wallet and show success
+      // Save recipient for future use
+      // For LNURL, save the original address (reusable)
+      // For direct invoice, save as non-reusable
+      final recipientAddress = _lnurlParams?.callback != null
+          ? _addressController.text // Original LNURL/Lightning Address
+          : address;
+      final recipientType = _lnurlParams?.callback != null
+          ? RecipientType.lightning
+          : RecipientType.lightningInvoice;
+      await RecipientStorageService.saveRecipient(
+        address: recipientAddress,
+        type: recipientType,
+        amountSats: amountSats,
+        txid: txid,
+      );
+
+      // Return to wallet and show success bottom sheet
       if (mounted) {
         _unfocusAll();
         Navigator.of(context).popUntil((route) => route.isFirst);
-        OverlayService().showSuccess('Lightning payment sent!');
+
+        // Trigger wallet refresh to show the new transaction
+        PaymentMonitoringService().triggerWalletRefresh();
+
+        // Show proper success bottom sheet with bani
+        PendingTransactionService().showSuccessBottomSheet(
+          address: address,
+          amountSats: amountSats,
+          txid: txid,
+        );
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
       if (mounted) {
-        OverlayService().showError('${l10n.transactionFailed} ${e.toString()}');
+        // Show proper error bottom sheet
+        PendingTransactionService().showErrorBottomSheet(
+          address: address,
+          amountSats: amountSats,
+          errorMessage: e.toString(),
+        );
       }
     }
   }
@@ -674,6 +637,16 @@ class SendScreenState extends State<SendScreen>
   /// Handle onchain/Ark sends in the background for better UX
   Future<void> _handleBackgroundSend(String address, int amountSats) async {
     logger.i("Starting background send to $address for $amountSats sats");
+
+    // Determine recipient type
+    final recipientType = RecipientStorageService.determineType(address);
+
+    // Save recipient before starting (so we have it even if tx fails for retry)
+    await RecipientStorageService.saveRecipient(
+      address: address,
+      type: recipientType,
+      amountSats: amountSats,
+    );
 
     // Add pending transaction and start background send
     await PendingTransactionService().addPendingTransaction(
@@ -686,6 +659,10 @@ class SendScreenState extends State<SendScreen>
           amountSats: BigInt.from(amountSats),
         );
         logger.i("Background: Send completed with txid: $txid");
+
+        // Update recipient with txid on success
+        await RecipientStorageService.updateRecipientTxid(address, txid);
+
         return txid;
       },
     );
@@ -715,26 +692,10 @@ class SendScreenState extends State<SendScreen>
         .showSuccess(AppLocalizations.of(context)!.walletAddressCopied);
   }
 
-  /// Truncates an address for display (shows first 10 and last 10 chars)
+  /// Truncates an address for display (shows first 10 and last 8 chars)
   String _truncateAddress(String address) {
-    if (address.length <= 24) return address;
-    return '${address.substring(0, 10)}...${address.substring(address.length - 10)}';
-  }
-
-  /// Resets all form values to their defaults
-  /// Can be called when user wants to clear and start over
-  void resetValues() {
-    setState(() {
-      _addressController.clear();
-      _satController.text = '0';
-      _btcController.text = '0.0';
-      _currController.text = '0.0';
-      _hasValidAddress = false;
-      _addressError = null;
-      _description = null;
-      _isAddressExpanded = true;
-      _expandController.forward();
-    });
+    if (address.length <= 20) return address;
+    return '${address.substring(0, 10)}...${address.substring(address.length - 8)}';
   }
 
   /// Unfocus all text fields to dismiss keyboard
@@ -798,12 +759,12 @@ class SendScreenState extends State<SendScreen>
                     children: [
                       Column(
                         children: [
-                          const SizedBox(height: AppTheme.cardPadding * 4),
+                          const SizedBox(height: AppTheme.cardPadding * 2),
                           // Bitcoin amount widget
                           Center(
                             child: _buildBitcoinWidget(context),
                           ),
-                          const SizedBox(height: AppTheme.cardPadding * 3.5),
+                          const SizedBox(height: AppTheme.cardPadding * 1.75),
                           // Description if available
                           if (_description != null &&
                               _description!.isNotEmpty) ...[
@@ -826,7 +787,6 @@ class SendScreenState extends State<SendScreen>
                             ),
                           ],
                           // Available balance display
-                          const SizedBox(height: AppTheme.cardPadding),
                           _buildAvailableBalance(context, l10n),
                           // Transaction details preview
                           const SizedBox(height: AppTheme.cardPadding),
@@ -855,144 +815,112 @@ class SendScreenState extends State<SendScreen>
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.cardPadding,
       ),
-      child: GlassContainer(
-        padding: const EdgeInsets.all(AppTheme.elementSpacing),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Main tile row
-            Row(
+      child: Row(
+        children: [
+          // Avatar
+          const Avatar(
+            isNft: false,
+            size: AppTheme.cardPadding * 2,
+          ),
+          const SizedBox(width: AppTheme.elementSpacing),
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar
-                const Avatar(
-                  isNft: false,
-                  size: AppTheme.cardPadding * 2,
-                ),
-                const SizedBox(width: AppTheme.elementSpacing),
-                // Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _addressError != null
-                            ? _addressError!
-                            : _hasValidAddress
-                                ? (_isLightningPayment
-                                    ? 'Lightning'
-                                    : l10n.recipient)
-                                : l10n.unknown,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: _addressError != null
-                                  ? AppTheme.errorColor
-                                  : Theme.of(context).colorScheme.onSurface,
-                            ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Address display with copy - masked for PostHog
-                      if (_hasValidAddress)
-                        PostHogMaskWidget(
-                          child: GestureDetector(
-                            onTap: _copyAddress,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  CupertinoIcons.doc_on_doc,
-                                  color: Theme.of(context).hintColor,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    _addressController.text,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(
-                                          color: Theme.of(context).hintColor,
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                Row(
+                  children: [
+                    Text(
+                      _addressError != null
+                          ? _addressError!
+                          : _hasValidAddress
+                              ? (_isLightningPayment
+                                  ? 'Lightning'
+                                  : l10n.recipient)
+                              : l10n.unknown,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: _addressError != null
+                                ? AppTheme.errorColor
+                                : Theme.of(context).colorScheme.onSurface,
                           ),
-                        )
-                      else
-                        Text(
-                          l10n.recipientAddress,
+                    ),
+                    // Show "from clipboard" indicator
+                    if (widget.fromClipboard && _hasValidAddress) ...[
+                      const SizedBox(width: AppTheme.elementSpacing / 2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .hintColor
+                              .withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          l10n.fromClipboard,
                           style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
                                     color: Theme.of(context).hintColor,
                                   ),
                         ),
+                      ),
                     ],
-                  ),
+                  ],
                 ),
-                // Edit button
-                GestureDetector(
-                  onTap: _toggleAddressExpanded,
-                  child: Container(
-                    padding: const EdgeInsets.all(AppTheme.elementSpacing),
-                    child: Icon(
-                      _isAddressExpanded
-                          ? CupertinoIcons.chevron_up
-                          : CupertinoIcons.pencil,
-                      color: Theme.of(context).hintColor,
-                      size: AppTheme.cardPadding,
+                const SizedBox(height: 4),
+                // Address display with copy - masked for PostHog
+                if (_hasValidAddress)
+                  PostHogMaskWidget(
+                    child: GestureDetector(
+                      onTap: _copyAddress,
+                      child: Row(
+                        children: [
+                          Icon(
+                            CupertinoIcons.doc_on_doc,
+                            color: Theme.of(context).hintColor,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _truncateAddress(_addressController.text),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).hintColor,
+                                    ),
+                          ),
+                        ],
+                      ),
                     ),
+                  )
+                else
+                  Text(
+                    l10n.recipientAddress,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).hintColor,
+                        ),
                   ),
-                ),
               ],
             ),
-            // Expandable address input
-            SizeTransition(
-              sizeFactor: _expandAnimation,
-              child: Column(
-                children: [
-                  const SizedBox(height: AppTheme.elementSpacing),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: AppTheme.cardRadiusSmall,
-                    ),
-                    child: PostHogMaskWidget(
-                      child: TextField(
-                        controller: _addressController,
-                        focusNode: _addressFocusNode,
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface),
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: AppTheme.cardPadding,
-                            vertical: AppTheme.elementSpacing,
-                          ),
-                          hintText: l10n.bitcoinOrArkAddress,
-                          hintStyle:
-                              TextStyle(color: Theme.of(context).hintColor),
-                          suffixIcon: _addressController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: Icon(
-                                    Icons.close_rounded,
-                                    color: Theme.of(context).hintColor,
-                                    size: 20,
-                                  ),
-                                  onPressed: () {
-                                    _addressController.clear();
-                                    // Listener will call _onAddressChanged()
-                                  },
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+          ),
+          // Edit button - go back to recipient search screen
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              _unfocusAll();
+              Navigator.pop(context);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(AppTheme.cardPadding),
+              child: Icon(
+                CupertinoIcons.pencil,
+                color: Theme.of(context).hintColor,
+                size: AppTheme.cardPadding,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1004,7 +932,7 @@ class SendScreenState extends State<SendScreen>
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           AmountWidget(
-            enabled: () => true,
+            enabled: () => !_isAmountLocked,
             btcController: _btcController,
             satController: _satController,
             currController: _currController,
@@ -1020,10 +948,81 @@ class SendScreenState extends State<SendScreen>
               // Update state when amount changes
               setState(() {});
             },
+            onInputStateChange: (inputState) {
+              setState(() {
+                _amountInputState = inputState;
+              });
+            },
           ),
+          // Show locked indicator when amount is from invoice
+          if (_isAmountLocked)
+            Padding(
+              padding: const EdgeInsets.only(top: AppTheme.elementSpacing / 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    CupertinoIcons.lock_fill,
+                    size: 12,
+                    color: Theme.of(context).hintColor,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Amount set by invoice',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).hintColor,
+                        ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  /// Calculate estimated fees for the current network type
+  int _getEstimatedFees() {
+    final currentNetwork = _getCurrentNetworkName();
+    switch (currentNetwork) {
+      case 'Arkade':
+        // Ark has no fees
+        return 0;
+      case 'Lightning':
+        // Lightning via Boltz: ~0.25% swap fee + small base fee
+        // Use 0.5% to be safe (includes routing fees)
+        return (widget.availableSats * 0.005).ceil();
+      case 'Onchain':
+        // On-chain: estimate based on fee rate
+        // Typical P2WPKH transaction is ~140 vbytes
+        // Use medium fee rate estimate (e.g., 10 sat/vbyte as fallback)
+        const estimatedVbytes = 140;
+        final feeRate = _recommendedFees?.fastestFee ?? 10.0;
+        return (estimatedVbytes * feeRate).ceil();
+      default:
+        return 0;
+    }
+  }
+
+  void _setMaxAmount() {
+    final estimatedFees = _getEstimatedFees();
+    final maxSats = (widget.availableSats - estimatedFees).floor();
+    final safeMax = maxSats > 0 ? maxSats : 0;
+
+    setState(() {
+      _satController.text = safeMax.toString();
+      // Update BTC controller
+      final btcAmount = safeMax / BitcoinConstants.satsPerBtc;
+      _btcController.text = btcAmount.toStringAsFixed(8);
+      // Update currency controller if we have bitcoin price
+      if (_bitcoinPrice != null) {
+        final currencyService = context.read<CurrencyPreferenceService>();
+        final exchangeRates = currencyService.exchangeRates;
+        final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+        final fiatAmount = btcAmount * _bitcoinPrice! * fiatRate;
+        _currController.text = fiatAmount.toStringAsFixed(2);
+      }
+    });
   }
 
   Widget _buildAvailableBalance(
@@ -1031,71 +1030,102 @@ class SendScreenState extends State<SendScreen>
     AppLocalizations l10n,
   ) {
     final currencyService = context.watch<CurrencyPreferenceService>();
-    final satsAvailable = widget.availableSats.toStringAsFixed(0);
-    // formatAmount already converts from USD, so don't multiply by fiatRate
-    final fiatAvailable = _bitcoinPrice != null
-        ? currencyService.formatAmount(
-            (widget.availableSats / BitcoinConstants.satsPerBtc) *
-                _bitcoinPrice!)
-        : '\$0.00';
+
+    // Format available balance based on current input state
+    String availableDisplay;
+    if (_amountInputState == 'currency') {
+      // Show in fiat
+      availableDisplay = _bitcoinPrice != null
+          ? currencyService.formatAmount(
+              (widget.availableSats / BitcoinConstants.satsPerBtc) *
+                  _bitcoinPrice!)
+          : '\$0.00';
+    } else if (_amountInputState == 'bitcoin') {
+      // Show in BTC
+      final btcAvailable = widget.availableSats / BitcoinConstants.satsPerBtc;
+      availableDisplay = '${btcAvailable.toStringAsFixed(8)} BTC';
+    } else {
+      // Show in sats (default)
+      availableDisplay = '${widget.availableSats.toStringAsFixed(0)} sats';
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
-      child: ArkListTile(
-        text: l10n.available,
-        trailing: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '$satsAvailable SATS',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            Text(
-              fiatAvailable,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).hintColor,
-                  ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '${l10n.available}: ',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).hintColor,
+                ),
+          ),
+          Text(
+            availableDisplay,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).hintColor,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          // Hide Max button when amount is locked from invoice
+          if (!_isAmountLocked) ...[
+            const SizedBox(width: AppTheme.elementSpacing),
+            GestureDetector(
+              onTap: _setMaxAmount,
+              child: GlassContainer(
+                opacity: 0.1,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.elementSpacing,
+                  vertical: AppTheme.elementSpacing / 4,
+                ),
+                child: Text(
+                  'Max',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildTransactionDetails(BuildContext context, AppLocalizations l10n) {
     final amountSats = double.tryParse(_satController.text) ?? 0;
-    if (!_hasValidAddress || amountSats <= 0) {
-      return const SizedBox.shrink();
-    }
+    final hasAmount = amountSats > 0;
 
-    // Calculate network fees based on address type
-    int networkFees;
-    if (_isOnChainAddress) {
-      networkFees = _estimatedNetworkFeeSats;
-    } else if (_isLightningPayment) {
-      networkFees = _calculateBoltzFee(amountSats);
-    } else {
-      networkFees = 0; // Ark payments have no fees
+    // Calculate network fees based on address type (only if we have an amount)
+    int networkFees = 0;
+    if (hasAmount) {
+      if (_isOnChainAddress) {
+        networkFees = _estimatedNetworkFeeSats;
+      } else if (_isLightningPayment) {
+        networkFees = _calculateBoltzFee(amountSats);
+      } else {
+        networkFees = 0; // Ark payments have no fees
+      }
     }
     final total = amountSats.toInt() + networkFees;
 
-    // Fee display text
-    String feeText;
-    if (_isOnChainAddress) {
-      if (_isFetchingFees) {
-        feeText = '...';
-      } else if (_recommendedFees != null) {
-        feeText = '~$networkFees SATS';
+    // Fee display text (only show if we have an amount)
+    String? feeText;
+    if (hasAmount) {
+      if (_isOnChainAddress) {
+        if (_isFetchingFees) {
+          feeText = '...';
+        } else if (_recommendedFees != null) {
+          feeText = '~$networkFees sats';
+        } else {
+          feeText = '? sats';
+        }
+      } else if (_isLightningPayment) {
+        feeText = '~$networkFees sats';
       } else {
-        feeText = '? SATS';
+        feeText = '0 sats';
       }
-    } else if (_isLightningPayment) {
-      feeText = '~$networkFees SATS (${_boltzFeePercent}%)';
-    } else {
-      feeText = '0 SATS';
     }
 
     return Padding(
@@ -1106,7 +1136,7 @@ class SendScreenState extends State<SendScreen>
         padding: const EdgeInsets.all(AppTheme.elementSpacing),
         child: Column(
           children: [
-            // Address row
+            // Address row - always show
             ArkListTile(
               margin: EdgeInsets.zero,
               contentPadding: const EdgeInsets.symmetric(
@@ -1121,7 +1151,7 @@ class SendScreenState extends State<SendScreen>
                     ),
               ),
             ),
-            // Amount row
+            // Amount row - show empty if no amount
             ArkListTile(
               margin: EdgeInsets.zero,
               contentPadding: const EdgeInsets.symmetric(
@@ -1130,13 +1160,15 @@ class SendScreenState extends State<SendScreen>
               ),
               text: l10n.amount,
               trailing: Text(
-                '${amountSats.toInt()} SATS',
+                hasAmount ? '${amountSats.toInt()} sats' : '',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
               ),
             ),
-            // Network Fees row
+            // Network row - always show
+            _buildNetworkRow(context, l10n),
+            // Network Fees row - show empty if no amount
             ArkListTile(
               margin: EdgeInsets.zero,
               contentPadding: const EdgeInsets.symmetric(
@@ -1147,7 +1179,7 @@ class SendScreenState extends State<SendScreen>
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_isOnChainAddress && _isFetchingFees)
+                  if (hasAmount && _isOnChainAddress && _isFetchingFees)
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: SizedBox(
@@ -1160,7 +1192,7 @@ class SendScreenState extends State<SendScreen>
                       ),
                     ),
                   Text(
-                    feeText,
+                    feeText ?? '',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
@@ -1168,7 +1200,7 @@ class SendScreenState extends State<SendScreen>
                 ],
               ),
             ),
-            // Total row
+            // Total row - show empty if no amount
             ArkListTile(
               margin: EdgeInsets.zero,
               contentPadding: const EdgeInsets.symmetric(
@@ -1177,7 +1209,7 @@ class SendScreenState extends State<SendScreen>
               ),
               text: l10n.total,
               trailing: Text(
-                _isFetchingFees ? '...' : '$total SATS',
+                hasAmount ? (_isFetchingFees ? '...' : '$total sats') : '',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
@@ -1190,15 +1222,163 @@ class SendScreenState extends State<SendScreen>
     );
   }
 
+  Widget _buildNetworkRow(BuildContext context, AppLocalizations l10n) {
+    final currentNetwork = _getCurrentNetworkName();
+    final hasMultipleNetworks = _availableNetworks.length > 1;
+
+    return ArkListTile(
+      margin: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.elementSpacing * 0.75,
+        vertical: AppTheme.elementSpacing * 0.5,
+      ),
+      text: l10n.network,
+      trailing: hasMultipleNetworks
+          ? GlassContainer(
+              opacity: 0.05,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.elementSpacing,
+                vertical: AppTheme.elementSpacing / 2,
+              ),
+              child: GestureDetector(
+                onTap: () => _showNetworkPicker(context),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _getNetworkIcon(currentNetwork),
+                      size: AppTheme.cardPadding * 0.75,
+                      color: Theme.of(context).hintColor,
+                    ),
+                    const SizedBox(width: AppTheme.elementSpacing / 2),
+                    Text(
+                      currentNetwork,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _getNetworkIcon(currentNetwork),
+                  size: AppTheme.cardPadding * 0.75,
+                  color: Theme.of(context).hintColor,
+                ),
+                const SizedBox(width: AppTheme.elementSpacing / 2),
+                Text(
+                  currentNetwork,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                ),
+              ],
+            ),
+      onTap: hasMultipleNetworks ? () => _showNetworkPicker(context) : null,
+    );
+  }
+
+  void _showNetworkPicker(BuildContext context) {
+    final networks = _availableNetworks.keys.toList();
+    // Sort: Ark first, then Lightning, then Bitcoin
+    networks.sort((a, b) {
+      const order = {'Arkade': 0, 'Lightning': 1, 'Onchain': 2};
+      return (order[a] ?? 3).compareTo(order[b] ?? 3);
+    });
+
+    arkBottomSheet(
+      context: context,
+      height: MediaQuery.of(context).size.height * 0.45,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: ArkScaffold(
+        context: context,
+        appBar: BitNetAppBar(
+          context: context,
+          hasBackButton: false,
+          text: AppLocalizations.of(context)!.selectNetwork,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.elementSpacing,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: networks.map((network) {
+              final isSelected = _selectedNetwork == network;
+              final feeHint = _getNetworkFeeHint(network);
+
+              return ArkListTile(
+                text: network,
+                subtitle: Text(
+                  feeHint,
+                  style: TextStyle(
+                    color: Theme.of(context).hintColor,
+                    fontSize: 12,
+                  ),
+                ),
+                selected: isSelected,
+                leading: RoundedButtonWidget(
+                  buttonType: ButtonType.transparent,
+                  iconData: _getNetworkIcon(network),
+                  size: AppTheme.cardPadding * 1.25,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _switchNetwork(network);
+                  },
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _switchNetwork(network);
+                },
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getNetworkIcon(String network) {
+    switch (network) {
+      case 'Lightning':
+        return FontAwesomeIcons.bolt;
+      case 'Onchain':
+        return FontAwesomeIcons.link;
+      case 'Arkade':
+        return FontAwesomeIcons.spaceAwesome;
+      default:
+        return FontAwesomeIcons.question;
+    }
+  }
+
+  String _getNetworkFeeHint(String network) {
+    switch (network) {
+      case 'Arkade':
+        return 'Instant, no fees';
+      case 'Lightning':
+        return '~0.25% swap fee';
+      case 'Onchain':
+        return 'On-chain fees apply';
+      default:
+        return '';
+    }
+  }
+
   Widget _buildSendButton(
     BuildContext context,
     AppLocalizations l10n,
   ) {
     final amountSats = double.tryParse(_satController.text) ?? 0;
     final hasInsufficientFunds = amountSats > widget.availableSats;
+    final isBelowLightningMinimum =
+        _isLightningPayment && amountSats > 0 && amountSats < _minLightningSats;
     final canSend = _hasValidAddress &&
         amountSats > 0 &&
         !hasInsufficientFunds &&
+        !isBelowLightningMinimum &&
+        !_isZeroAmountLightningInvoice &&
         !_isLoading;
 
     return Positioned(
@@ -1224,7 +1404,7 @@ class SendScreenState extends State<SendScreen>
               ),
             ),
           ),
-          // Show quick action buttons when no valid address, otherwise show send button
+          // Send button
           Container(
             width: double.infinity,
             color: Theme.of(context).scaffoldBackgroundColor,
@@ -1233,10 +1413,13 @@ class SendScreenState extends State<SendScreen>
               right: AppTheme.cardPadding,
               bottom: AppTheme.cardPadding,
             ),
-            child: _hasValidAddress
-                ? _buildSendButtonContent(
-                    context, l10n, canSend, hasInsufficientFunds)
-                : _buildQuickActionButtons(context),
+            child: _buildSendButtonContent(
+                context,
+                l10n,
+                canSend,
+                hasInsufficientFunds,
+                isBelowLightningMinimum,
+                _isZeroAmountLightningInvoice),
           ),
         ],
       ),
@@ -1248,7 +1431,24 @@ class SendScreenState extends State<SendScreen>
     AppLocalizations l10n,
     bool canSend,
     bool hasInsufficientFunds,
+    bool isBelowLightningMinimum,
+    bool isZeroAmountInvoice,
   ) {
+    // Determine button text based on state
+    String buttonText;
+    if (hasInsufficientFunds) {
+      buttonText = l10n.notEnoughFunds;
+    } else if (isBelowLightningMinimum) {
+      buttonText = 'Minimum $_minLightningSats sats required';
+    } else if (isZeroAmountInvoice) {
+      buttonText = 'Zero-amount invoices not supported';
+    } else {
+      buttonText = l10n.sendNow;
+    }
+
+    final isDisabledState =
+        hasInsufficientFunds || isBelowLightningMinimum || isZeroAmountInvoice;
+
     return GestureDetector(
       onTap: canSend ? _handleSend : null,
       child: Container(
@@ -1269,7 +1469,7 @@ class SendScreenState extends State<SendScreen>
               : Theme.of(context)
                   .colorScheme
                   .secondary
-                  .withValues(alpha: hasInsufficientFunds ? 0.5 : 1.0),
+                  .withValues(alpha: isDisabledState ? 0.5 : 1.0),
           borderRadius: AppTheme.cardRadiusBig,
           boxShadow: canSend
               ? [
@@ -1290,91 +1490,23 @@ class SendScreenState extends State<SendScreen>
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      canSend ? Colors.black : Theme.of(context).hintColor,
+                      canSend
+                          ? const Color(
+                              0xFF1A0A00) // Dark brown/orange like button text
+                          : Theme.of(context).hintColor,
                     ),
                   ),
                 )
               : Text(
-                  hasInsufficientFunds ? l10n.notEnoughFunds : l10n.sendNow,
+                  buttonText,
                   style: TextStyle(
-                    color: canSend ? Colors.black : Theme.of(context).hintColor,
+                    color: canSend
+                        ? const Color(0xFF1A0A00) // Dark brown/orange
+                        : Theme.of(context).hintColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionButtons(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconColor = isDark ? AppTheme.white90 : AppTheme.black90;
-    const buttonSize = 56.0;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Left side buttons: Image, QR Scan, Paste
-        Row(
-          children: [
-            // Image/Gallery button
-            _buildQuickActionButton(
-              icon: CupertinoIcons.photo_fill,
-              onTap: _pickImageAndScan,
-              iconColor: iconColor,
-              size: buttonSize,
-            ),
-            const SizedBox(width: AppTheme.elementSpacing),
-            // QR Scan button
-            _buildQuickActionButton(
-              icon: CupertinoIcons.qrcode_viewfinder,
-              onTap: _handleQRScan,
-              iconColor: iconColor,
-              size: buttonSize,
-            ),
-            const SizedBox(width: AppTheme.elementSpacing),
-            // Paste button
-            _buildQuickActionButton(
-              icon: CupertinoIcons.doc_on_clipboard_fill,
-              onTap: _pasteFromClipboard,
-              iconColor: iconColor,
-              size: buttonSize,
-            ),
-          ],
-        ),
-        // Right side: Close button
-        _buildQuickActionButton(
-          icon: CupertinoIcons.xmark,
-          onTap: () => Navigator.pop(context),
-          iconColor: iconColor,
-          size: buttonSize,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActionButton({
-    required IconData icon,
-    required VoidCallback onTap,
-    required Color iconColor,
-    required double size,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(size / 2),
-        ),
-        child: Center(
-          child: Icon(
-            icon,
-            color: iconColor,
-            size: 24,
-          ),
         ),
       ),
     );

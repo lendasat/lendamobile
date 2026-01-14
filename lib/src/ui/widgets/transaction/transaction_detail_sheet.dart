@@ -6,6 +6,7 @@ import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/recipient_storage_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
@@ -60,6 +61,11 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
   bool hasError = false;
   String? txID;
   bool _isSettling = false;
+  String? _recipientAddress;
+
+  // Copy feedback states
+  bool _showTxIdCopied = false;
+  bool _showAddressCopied = false;
 
   @override
   void initState() {
@@ -67,9 +73,45 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     txID = widget.txid;
     if (txID != null) {
       _loadTransaction();
+      _loadRecipientAddress();
     } else {
       isLoading = false;
     }
+  }
+
+  Future<void> _loadRecipientAddress() async {
+    if (txID == null) return;
+
+    try {
+      final recipients = await RecipientStorageService.getRecipients();
+      // Find recipient by txid
+      final match = recipients.where((r) => r.txid == txID).firstOrNull;
+      if (match != null && mounted) {
+        setState(() {
+          _recipientAddress = match.address;
+        });
+      }
+    } catch (e) {
+      // Silently fail - address is optional
+    }
+  }
+
+  void _copyTxId() {
+    if (txID == null) return;
+    Clipboard.setData(ClipboardData(text: txID!));
+    setState(() => _showTxIdCopied = true);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _showTxIdCopied = false);
+    });
+  }
+
+  void _copyAddress() {
+    if (_recipientAddress == null) return;
+    Clipboard.setData(ClipboardData(text: _recipientAddress!));
+    setState(() => _showAddressCopied = true);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _showAddressCopied = false);
+    });
   }
 
   Future<void> _loadTransaction() async {
@@ -439,32 +481,67 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                       vertical: AppTheme.elementSpacing * 0.5,
                                     ),
                                     text: l10n.transactionId,
-                                    onTap: () async {
-                                      await Clipboard.setData(
-                                          ClipboardData(text: txID!));
-                                      if (context.mounted) {
-                                        OverlayService().showSuccess(
-                                            l10n.copiedToClipboard);
-                                      }
-                                    },
+                                    onTap: _copyTxId,
                                     trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         SizedBox(
-                                          width: AppTheme.cardPadding * 5,
-                                          child: Text(
-                                            txID!,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                            width: AppTheme.elementSpacing / 2),
-                                        Icon(
-                                          Icons.copy,
-                                          color: AppTheme.white60,
-                                          size: AppTheme.cardPadding * 0.75,
+                                          width: AppTheme.cardPadding * 6,
+                                          child: _showTxIdCopied
+                                              ? Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.check,
+                                                      color:
+                                                          AppTheme.successColor,
+                                                      size:
+                                                          AppTheme.cardPadding *
+                                                              0.75,
+                                                    ),
+                                                    const SizedBox(
+                                                        width: AppTheme
+                                                                .elementSpacing /
+                                                            2),
+                                                    Text(
+                                                      l10n.copied,
+                                                      style: const TextStyle(
+                                                        color: AppTheme
+                                                            .successColor,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                              : Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        txID!,
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodyMedium,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(
+                                                        width: AppTheme
+                                                                .elementSpacing /
+                                                            2),
+                                                    Icon(
+                                                      Icons.copy,
+                                                      color: AppTheme.white60,
+                                                      size:
+                                                          AppTheme.cardPadding *
+                                                              0.75,
+                                                    ),
+                                                  ],
+                                                ),
                                         ),
                                         const SizedBox(
                                             width: AppTheme.elementSpacing / 2),
@@ -487,6 +564,73 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                       ],
                                     ),
                                   ),
+
+                                  // Recipient Address (if available from storage)
+                                  if (_recipientAddress != null)
+                                    ArkListTile(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal:
+                                            AppTheme.elementSpacing * 0.75,
+                                        vertical: AppTheme.elementSpacing * 0.5,
+                                      ),
+                                      text: l10n.address,
+                                      onTap: _copyAddress,
+                                      trailing: SizedBox(
+                                        width: AppTheme.cardPadding * 6,
+                                        child: _showAddressCopied
+                                            ? Row(
+                                                mainAxisSize: MainAxisSize.max,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.check,
+                                                    color:
+                                                        AppTheme.successColor,
+                                                    size: AppTheme.cardPadding *
+                                                        0.75,
+                                                  ),
+                                                  const SizedBox(
+                                                      width: AppTheme
+                                                              .elementSpacing /
+                                                          2),
+                                                  Text(
+                                                    l10n.copied,
+                                                    style: const TextStyle(
+                                                      color:
+                                                          AppTheme.successColor,
+                                                    ),
+                                                  ),
+                                                ],
+                                              )
+                                            : Row(
+                                                mainAxisSize: MainAxisSize.max,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      _recipientAddress!,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodyMedium,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                      width: AppTheme
+                                                              .elementSpacing /
+                                                          2),
+                                                  Icon(
+                                                    Icons.copy,
+                                                    color: AppTheme.white60,
+                                                    size: AppTheme.cardPadding *
+                                                        0.75,
+                                                  ),
+                                                ],
+                                              ),
+                                      ),
+                                    ),
 
                                   // Block
                                   ArkListTile(
@@ -909,39 +1053,79 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                       vertical: AppTheme.elementSpacing * 0.5,
                                     ),
                                     text: l10n.transactionId,
-                                    onTap: txID != null
-                                        ? () async {
-                                            await Clipboard.setData(
-                                              ClipboardData(text: txID!),
-                                            );
-                                            if (context.mounted) {
-                                              OverlayService().showSuccess(
-                                                  l10n.copiedToClipboard);
-                                            }
-                                          }
-                                        : null,
+                                    onTap: txID != null ? _copyTxId : null,
                                     trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         SizedBox(
-                                          width: AppTheme.cardPadding * 5,
-                                          child: Text(
-                                            txID ?? '--',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
+                                          width: AppTheme.cardPadding * 6,
+                                          child: txID != null
+                                              ? (_showTxIdCopied
+                                                  ? Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.check,
+                                                          color: AppTheme
+                                                              .successColor,
+                                                          size: AppTheme
+                                                                  .cardPadding *
+                                                              0.75,
+                                                        ),
+                                                        const SizedBox(
+                                                            width: AppTheme
+                                                                    .elementSpacing /
+                                                                2),
+                                                        Text(
+                                                          l10n.copied,
+                                                          style:
+                                                              const TextStyle(
+                                                            color: AppTheme
+                                                                .successColor,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    )
+                                                  : Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        Expanded(
+                                                          child: Text(
+                                                            txID!,
+                                                            style: Theme.of(
+                                                                    context)
+                                                                .textTheme
+                                                                .bodyMedium,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            width: AppTheme
+                                                                    .elementSpacing /
+                                                                2),
+                                                        Icon(
+                                                          Icons.copy,
+                                                          color:
+                                                              AppTheme.white60,
+                                                          size: AppTheme
+                                                                  .cardPadding *
+                                                              0.75,
+                                                        ),
+                                                      ],
+                                                    ))
+                                              : Text(
+                                                  '--',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium,
+                                                ),
                                         ),
-                                        if (txID != null)
-                                          const SizedBox(
-                                            width: AppTheme.elementSpacing / 2,
-                                          ),
-                                        if (txID != null)
-                                          Icon(
-                                            Icons.copy,
-                                            color: AppTheme.white60,
-                                            size: AppTheme.cardPadding * 0.75,
-                                          ),
                                         if (txID != null)
                                           const SizedBox(
                                             width: AppTheme.elementSpacing / 2,
@@ -957,15 +1141,82 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                                         .externalApplication);
                                               }
                                             },
-                                            child: const Icon(
+                                            child: Icon(
                                               Icons.open_in_new,
-                                              color: AppTheme.colorBitcoin,
+                                              color: AppTheme.white60,
                                               size: AppTheme.cardPadding * 0.75,
                                             ),
                                           ),
                                       ],
                                     ),
                                   ),
+
+                                  // Recipient Address (if available from storage)
+                                  if (_recipientAddress != null)
+                                    ArkListTile(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal:
+                                            AppTheme.elementSpacing * 0.75,
+                                        vertical: AppTheme.elementSpacing * 0.5,
+                                      ),
+                                      text: l10n.address,
+                                      onTap: _copyAddress,
+                                      trailing: SizedBox(
+                                        width: AppTheme.cardPadding * 6,
+                                        child: _showAddressCopied
+                                            ? Row(
+                                                mainAxisSize: MainAxisSize.max,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.check,
+                                                    color:
+                                                        AppTheme.successColor,
+                                                    size: AppTheme.cardPadding *
+                                                        0.75,
+                                                  ),
+                                                  const SizedBox(
+                                                      width: AppTheme
+                                                              .elementSpacing /
+                                                          2),
+                                                  Text(
+                                                    l10n.copied,
+                                                    style: const TextStyle(
+                                                      color:
+                                                          AppTheme.successColor,
+                                                    ),
+                                                  ),
+                                                ],
+                                              )
+                                            : Row(
+                                                mainAxisSize: MainAxisSize.max,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      _recipientAddress!,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodyMedium,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                      width: AppTheme
+                                                              .elementSpacing /
+                                                          2),
+                                                  Icon(
+                                                    Icons.copy,
+                                                    color: AppTheme.white60,
+                                                    size: AppTheme.cardPadding *
+                                                        0.75,
+                                                  ),
+                                                ],
+                                              ),
+                                      ),
+                                    ),
 
                                   // Transaction Type
                                   if (widget.transactionType != null)

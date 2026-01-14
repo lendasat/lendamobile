@@ -366,5 +366,6 @@
   "sendFeedback": "Invia feedback",
   "sender": "Mittente",
   "receiver": "Destinatario",
-  "scan": "Scansiona"
+  "scan": "Scansiona",
+  "copied": "Copiato"
 }

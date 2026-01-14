@@ -14,6 +14,7 @@ import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/analytics/bitcoin_chart/bitcoin_chart_detail_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/receivescreen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
+import 'package:ark_flutter/src/ui/screens/transactions/send/recipient_search_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/send/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/settings.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/history/transaction_history_widget.dart';
@@ -97,6 +98,9 @@ class WalletScreenState extends State<WalletScreen>
 
   // Scroll controller for nested scrolling
   final ScrollController _scrollController = ScrollController();
+
+  // Refresh guard to prevent multiple simultaneous refreshes
+  bool _isRefreshing = false;
 
   @override
   void initState() {
@@ -335,23 +339,35 @@ class WalletScreenState extends State<WalletScreen>
   /// Fetches all wallet data (balance, transactions, swaps, and locked collateral)
   /// This is public so it can be called from parent widgets (e.g., after payment received)
   Future<void> fetchWalletData() async {
-    await Future.wait([
-      _fetchBalance(),
-      _fetchTransactions(),
-      _fetchSwaps(),
-      _fetchLockedCollateral(),
-      _fetchBoardingBalance(),
-    ]);
-
-    // Update gradient colors AFTER all data is fetched to ensure
-    // balance, transactions, and swaps are all up-to-date for the calculation
-    if (_bitcoinPriceData.isNotEmpty && mounted) {
-      _updateGradientColors();
+    // Guard against multiple simultaneous refreshes
+    if (_isRefreshing) {
+      logger.d("Skipping refresh - already in progress");
+      return;
     }
 
-    // Auto-settle if there are confirmed boarding UTXOs
-    if (_boardingBalanceSats > 0 && !_isSettling) {
-      _settleBoarding();
+    _isRefreshing = true;
+
+    try {
+      await Future.wait([
+        _fetchBalance(),
+        _fetchTransactions(),
+        _fetchSwaps(),
+        _fetchLockedCollateral(),
+        _fetchBoardingBalance(),
+      ]);
+
+      // Update gradient colors AFTER all data is fetched to ensure
+      // balance, transactions, and swaps are all up-to-date for the calculation
+      if (_bitcoinPriceData.isNotEmpty && mounted) {
+        _updateGradientColors();
+      }
+
+      // Auto-settle if there are confirmed boarding UTXOs
+      if (_boardingBalanceSats > 0 && !_isSettling) {
+        _settleBoarding();
+      }
+    } finally {
+      _isRefreshing = false;
     }
   }
 
@@ -570,7 +586,7 @@ class WalletScreenState extends State<WalletScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SendScreen(
+        builder: (context) => RecipientSearchScreen(
           aspId: widget.aspId,
           availableSats: _getSelectedBalance() * BitcoinConstants.satsPerBtc,
         ),
@@ -712,70 +728,74 @@ class WalletScreenState extends State<WalletScreen>
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           // Extend body behind status bar so gradient fills notch area
           extendBodyBehindAppBar: true,
-          body: Column(
-            children: [
-              // Fixed header with gradient and chart
-              Stack(
-                children: [
-                  // Dynamic gradient background - extends into status bar area
-                  _buildDynamicGradient(),
+          body: RefreshIndicator(
+            onRefresh: fetchWalletData,
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                // Main wallet header with gradient and chart
+                SliverToBoxAdapter(
+                  child: Stack(
+                    children: [
+                      // Dynamic gradient background - extends into status bar area
+                      _buildDynamicGradient(),
 
-                  // Chart overlay
-                  Opacity(
-                    opacity: 0.1,
-                    child: _buildChartWidget(),
-                  ),
+                      // Chart overlay
+                      Opacity(
+                        opacity: 0.1,
+                        child: _buildChartWidget(),
+                      ),
 
-                  // Main content with SafeArea for proper padding
-                  SafeArea(
-                    bottom: false,
-                    child: Column(
-                      children: [
-                        const SizedBox(height: AppTheme.cardPadding),
-                        _buildTopBar(),
-                        const SizedBox(height: AppTheme.cardPadding * 1.5),
-                        _buildBalanceDisplay(),
-                        if (_lockedCollateralSats > 0) ...[
-                          const SizedBox(height: AppTheme.elementSpacing * 0.5),
-                          _buildLockedCollateralDisplay(),
-                        ],
-                        if (_boardingBalanceSats > 0) ...[
-                          const SizedBox(height: AppTheme.elementSpacing * 0.5),
-                          _buildBoardingBalanceDisplay(),
-                        ],
-                        const SizedBox(height: AppTheme.elementSpacing),
-                        _buildPriceChangeIndicators(),
-                        const SizedBox(height: AppTheme.cardPadding * 1.5),
-                        _buildActionButtons(),
-                        const SizedBox(height: AppTheme.cardPadding),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              // Scrollable transaction list
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: fetchWalletData,
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: AppTheme.cardPadding),
-                        _buildTransactionList(),
-                        // Bottom padding with SafeArea for bottom inset
-                        const SafeArea(
-                          top: false,
-                          child: SizedBox(height: AppTheme.cardPadding * 2),
+                      // Main content with SafeArea for proper padding
+                      SafeArea(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: AppTheme.cardPadding),
+                            _buildTopBar(),
+                            const SizedBox(height: AppTheme.cardPadding * 1.5),
+                            _buildBalanceDisplay(),
+                            if (_lockedCollateralSats > 0) ...[
+                              const SizedBox(
+                                  height: AppTheme.elementSpacing * 0.5),
+                              _buildLockedCollateralDisplay(),
+                            ],
+                            if (_boardingBalanceSats > 0) ...[
+                              const SizedBox(
+                                  height: AppTheme.elementSpacing * 0.5),
+                              _buildBoardingBalanceDisplay(),
+                            ],
+                            const SizedBox(height: AppTheme.elementSpacing),
+                            _buildPriceChangeIndicators(),
+                            const SizedBox(height: AppTheme.cardPadding * 1.5),
+                            _buildActionButtons(),
+                            const SizedBox(height: AppTheme.cardPadding),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
+
+                // Spacing before transaction list
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppTheme.cardPadding),
+                ),
+
+                // Transaction list (TransactionHistoryWidget has its own header)
+                SliverToBoxAdapter(
+                  child: _buildTransactionList(),
+                ),
+
+                // Bottom padding with SafeArea for bottom inset
+                SliverToBoxAdapter(
+                  child: SafeArea(
+                    top: false,
+                    child: SizedBox(height: AppTheme.cardPadding * 2),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

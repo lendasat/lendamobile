@@ -514,16 +514,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get economy => 'Economy';
 
   @override
-  String get minutesAgo => 'minutes ago';
+  String get minutesAgo => 'Minuten';
 
   @override
-  String get hoursAgo => 'hours ago';
+  String get hoursAgo => 'Stunden';
 
   @override
   String get oneDayAgo => '1 day ago';
 
   @override
-  String get daysAgo => 'days ago';
+  String get daysAgo => 'Tage';
 
   @override
   String get miningInformation => 'Mining Information';
@@ -820,6 +820,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get unknown => 'Unknown';
+
+  @override
+  String get fromClipboard => 'aus Zwischenablage';
 
   @override
   String get walletAddressCopied => 'Wallet address copied';
@@ -1308,4 +1311,59 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get learnMoreAboutLendasat => 'Erfahren Sie mehr über LendaSat';
+
+  @override
+  String get sendingStatus => 'Wird gesendet...';
+
+  @override
+  String get sentStatus => 'Gesendet!';
+
+  @override
+  String get failedStatus => 'Fehlgeschlagen';
+
+  @override
+  String get chooseRecipient => 'Empfänger wählen';
+
+  @override
+  String get searchRecipient => 'Adresse suchen oder einfügen...';
+
+  @override
+  String get recent => 'Zuletzt';
+
+  @override
+  String get pasteOrScanAddress => 'Bitcoin-Adresse einfügen oder scannen';
+
+  @override
+  String get supportedFormats =>
+      'Unterstützt Bitcoin, Lightning, Ark und LNURL Adressen';
+
+  @override
+  String get justNow => 'Gerade eben';
+
+  @override
+  String get minuteAgo => 'Minute';
+
+  @override
+  String get hourAgo => 'Stunde';
+
+  @override
+  String get dayAgo => 'Tag';
+
+  @override
+  String get monthAgo => 'Monat';
+
+  @override
+  String get monthsAgo => 'Monate';
+
+  @override
+  String get yearAgo => 'Jahr';
+
+  @override
+  String get yearsAgo => 'Jahre';
+
+  @override
+  String get selectNetwork => 'Netzwerk wählen';
+
+  @override
+  String get copied => 'Kopiert';
 }

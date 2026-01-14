@@ -59,22 +59,29 @@ class _TransactionSuccessScreenState extends State<TransactionSuccessScreen> {
                 children: [
                   // Success Bani image
                   SizedBox(
-                    width: 150,
-                    height: 150,
+                    width: 180,
+                    height: 180,
                     child: Image.asset(
                       'assets/images/bani/bani_success.png',
                       fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppTheme.cardPadding * 2),
 
                   // Transaction details
                   Text(
-                    '${widget.amount.toInt()} SATS ${AppLocalizations.of(context)!.sentSuccessfully}',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 16,
-                    ),
+                    '${widget.amount.toInt()} SATS',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: AppTheme.elementSpacing),
+                  Text(
+                    AppLocalizations.of(context)!.sentSuccessfully,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Theme.of(context).hintColor,
+                        ),
                   ),
                 ],
               ),

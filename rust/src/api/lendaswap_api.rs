@@ -22,21 +22,24 @@ use std::str::FromStr;
 /// * `network` - Bitcoin network: "bitcoin", "testnet", "signet", or "regtest"
 /// * `api_url` - LendaSwap API URL (e.g., "https://api.lendaswap.com")
 /// * `arkade_url` - Arkade server URL (e.g., "https://arkade.computer")
+/// * `esplora_url` - Esplora API URL (e.g., "https://mutinynet.com/api")
 pub async fn lendaswap_init(
     data_dir: String,
     network: String,
     api_url: String,
     arkade_url: String,
+    esplora_url: String,
 ) -> Result<()> {
     tracing::info!(
-        "[LendaSwap API] init called - data_dir: {}, network: {}, api_url: {}, arkade_url: {}",
+        "[LendaSwap API] init called - data_dir: {}, network: {}, api_url: {}, arkade_url: {}, esplora_url: {}",
         data_dir,
         network,
         api_url,
-        arkade_url
+        arkade_url,
+        esplora_url
     );
     let network = lendaswap::parse_network(&network)?;
-    let result = lendaswap::init_client(data_dir, network, api_url, arkade_url).await;
+    let result = lendaswap::init_client(data_dir, network, api_url, arkade_url, esplora_url).await;
     match &result {
         Ok(_) => tracing::info!("[LendaSwap API] init SUCCESS"),
         Err(e) => tracing::error!("[LendaSwap API] init FAILED: {:?}", e),
