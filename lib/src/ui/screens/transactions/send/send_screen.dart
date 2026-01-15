@@ -83,10 +83,14 @@ class SendScreenState extends State<SendScreen> {
   // Dynamic fee estimation from SDK
   FeeEstimate? _dynamicFeeEstimate;
   bool _isFetchingDynamicFee = false;
+  bool _dynamicFeeError = false; // True if API returned an error
   Timer? _feeEstimateTimer;
 
-  // Estimated transaction size in vBytes (fallback when SDK estimate unavailable)
-  static const int _estimatedTxVbytes = 140;
+  // ValueNotifier to update BottomSheet when fees change
+  final ValueNotifier<int> _feeUpdateNotifier = ValueNotifier<int>(0);
+
+  // Fixed fallback fee in sats (only used when API returns error)
+  static const int _fallbackFeeSats = 200;
 
   // Boltz submarine swap fee percentage (0.25% for paying Lightning invoices)
   static const double _boltzFeePercent = 0.25;
@@ -157,6 +161,7 @@ class SendScreenState extends State<SendScreen> {
   void dispose() {
     _addressChangeTimer?.cancel();
     _feeEstimateTimer?.cancel();
+    _feeUpdateNotifier.dispose();
     _addressController.removeListener(_onAddressChanged);
     _satController.removeListener(_onAmountChanged);
     _addressController.dispose();
@@ -223,6 +228,7 @@ class SendScreenState extends State<SendScreen> {
     if (!_hasValidAddress || amount <= 0) {
       setState(() {
         _dynamicFeeEstimate = null;
+        _dynamicFeeError = false;
       });
       return;
     }
@@ -234,7 +240,10 @@ class SendScreenState extends State<SendScreen> {
 
     setState(() {
       _isFetchingDynamicFee = true;
+      _dynamicFeeError = false;
     });
+    // Notify BottomSheet to show loading indicator
+    _feeUpdateNotifier.value++;
 
     try {
       FeeEstimate? estimate;
@@ -262,7 +271,10 @@ class SendScreenState extends State<SendScreen> {
         setState(() {
           _dynamicFeeEstimate = estimate;
           _isFetchingDynamicFee = false;
+          _dynamicFeeError = false;
         });
+        // Notify BottomSheet to update
+        _feeUpdateNotifier.value++;
       }
     } catch (e) {
       logger.w('Failed to fetch dynamic fee estimate: $e');
@@ -270,7 +282,10 @@ class SendScreenState extends State<SendScreen> {
         setState(() {
           _dynamicFeeEstimate = null;
           _isFetchingDynamicFee = false;
+          _dynamicFeeError = true; // Mark as error to use fallback
         });
+        // Notify BottomSheet to update
+        _feeUpdateNotifier.value++;
       }
     }
   }
@@ -326,6 +341,7 @@ class SendScreenState extends State<SendScreen> {
       }
       // Clear dynamic fee estimate when address changes
       _dynamicFeeEstimate = null;
+      _dynamicFeeError = false;
       // Reset zero-amount invoice flag if address is not a Lightning invoice
       // (it will be set by _tryParseAmountFromAddress if needed)
       if (!isLightningInvoice && !isUri) {
@@ -601,25 +617,24 @@ class SendScreenState extends State<SendScreen> {
   }
 
   /// Calculate estimated network fee in sats for on-chain transaction
-  /// Uses dynamic SDK estimate when available, falls back to mempool fee rate
+  /// Uses dynamic SDK estimate, only falls back to fixed value on API error
   int get _estimatedNetworkFeeSats {
     if (!_isOnChainAddress) {
       return 0;
     }
 
-    // Prefer dynamic SDK estimate (accounts for actual VTXO count)
+    // Use dynamic SDK estimate when available
     if (_dynamicFeeEstimate != null) {
       return _dynamicFeeEstimate!.feeSats.toInt();
     }
 
-    // Fallback to mempool fee rate estimate
-    if (_recommendedFees == null) {
-      return 0;
+    // Only use fixed fallback if API returned an error
+    if (_dynamicFeeError) {
+      return _fallbackFeeSats;
     }
-    // Use halfHourFee (standard) fee rate
-    // Use ceil() to be conservative and match _getEstimatedFees()
-    final feeRate = _recommendedFees!.halfHourFee;
-    return (feeRate * _estimatedTxVbytes).ceil();
+
+    // Still loading or not yet fetched - return 0 (UI shows loading indicator)
+    return 0;
   }
 
   /// Check if this is a Lightning payment (invoice or LNURL/Lightning Address)
@@ -808,10 +823,13 @@ class SendScreenState extends State<SendScreen> {
 
     // Calculate miner fee for onchain transactions
     int? minerFeeSats;
-    if (recipientType == RecipientType.onchain && _recommendedFees != null) {
-      // Use fastest fee rate as default (user can change this in the future)
-      minerFeeSats =
-          (_estimatedTxVbytes * _recommendedFees!.fastestFee).round();
+    if (recipientType == RecipientType.onchain) {
+      // Use dynamic SDK estimate when available, fallback only on error
+      if (_dynamicFeeEstimate != null) {
+        minerFeeSats = _dynamicFeeEstimate!.feeSats.toInt();
+      } else if (_dynamicFeeError) {
+        minerFeeSats = _fallbackFeeSats;
+      }
     }
 
     // Save recipient before starting (so we have it even if tx fails for retry)
@@ -1177,18 +1195,16 @@ class SendScreenState extends State<SendScreen> {
         }
         return actualFee;
       case 'Onchain':
-        // On-chain: prefer dynamic SDK estimate when available
-        // SDK estimate accounts for actual VTXO count, giving more accurate fees
+        // On-chain: use dynamic SDK estimate when available
         if (_dynamicFeeEstimate != null) {
           return _dynamicFeeEstimate!.feeSats.toInt();
         }
-        // Fallback to mempool fee rate * conservative vBytes
-        if (_recommendedFees == null) {
-          // If fees haven't loaded yet, use conservative estimate
-          return (_estimatedTxVbytes * 10.0).ceil();
+        // Only use fixed fallback if API returned an error
+        if (_dynamicFeeError) {
+          return _fallbackFeeSats;
         }
-        // Use ceil() instead of round() to ensure we never underestimate
-        return (_estimatedTxVbytes * _recommendedFees!.halfHourFee).ceil();
+        // Still loading - return 0
+        return 0;
       default:
         return 0;
     }
@@ -1518,14 +1534,21 @@ class SendScreenState extends State<SendScreen> {
                   ),
                 ),
                 selected: isSelected,
-                leading: RoundedButtonWidget(
-                  buttonType: ButtonType.transparent,
-                  iconData: _getNetworkIcon(network),
-                  size: AppTheme.cardPadding * 1.25,
+                leading: GestureDetector(
                   onTap: () {
                     Navigator.of(context).pop();
                     _switchNetwork(network);
                   },
+                  child: Container(
+                    width: AppTheme.cardPadding * 1.25,
+                    height: AppTheme.cardPadding * 1.25,
+                    alignment: Alignment.center,
+                    child: _buildNetworkIconWidget(
+                      network,
+                      AppTheme.cardPadding * 0.75,
+                      Theme.of(context).hintColor,
+                    ),
+                  ),
                 ),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -1585,42 +1608,12 @@ class SendScreenState extends State<SendScreen> {
   void _showConfirmationSheet() {
     final l10n = AppLocalizations.of(context)!;
     final amountSats = double.tryParse(_satController.text) ?? 0;
-
-    // Calculate network fees based on address type
-    int networkFees = 0;
-    if (amountSats > 0) {
-      if (_isOnChainAddress) {
-        networkFees = _estimatedNetworkFeeSats;
-      } else if (_isLightningPayment) {
-        networkFees = _calculateBoltzFee(amountSats);
-      } else {
-        networkFees = 0; // Ark payments have no fees
-      }
-    }
-    final total = amountSats.toInt() + networkFees;
-
-    // Fee display text
-    String feeText;
-    if (_isOnChainAddress) {
-      if (_isFetchingFees) {
-        feeText = '...';
-      } else if (_recommendedFees != null) {
-        feeText = '~$networkFees sats';
-      } else {
-        feeText = '? sats';
-      }
-    } else if (_isLightningPayment) {
-      feeText = '~$networkFees sats';
-    } else {
-      feeText = '0 sats';
-    }
-
     final currentNetwork = _getCurrentNetworkName();
     final hasMultipleNetworks = _availableNetworks.length > 1;
 
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.55,
+      height: MediaQuery.of(context).size.height * 0.62,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ArkScaffoldUnsafe(
         context: context,
@@ -1632,82 +1625,155 @@ class SendScreenState extends State<SendScreen> {
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
-          child: Column(
-            children: [
-              // Scrollable content area
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: AppTheme.cardPadding),
-                      // Transaction details
-                      GlassContainer(
-                        opacity: 0.05,
-                        borderRadius: AppTheme.cardRadiusSmall,
-                        padding: const EdgeInsets.all(AppTheme.elementSpacing),
-                        child: Column(
-                          children: [
-                            // Address row
-                            ArkListTile(
-                              margin: EdgeInsets.zero,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.elementSpacing * 0.75,
-                                vertical: AppTheme.elementSpacing * 0.5,
-                              ),
-                              text: l10n.address,
-                              trailing: Text(
-                                _truncateAddress(_addressController.text),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                    ),
-                              ),
-                            ),
-                            // Amount row
-                            ArkListTile(
-                              margin: EdgeInsets.zero,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.elementSpacing * 0.75,
-                                vertical: AppTheme.elementSpacing * 0.5,
-                              ),
-                              text: l10n.amount,
-                              trailing: Text(
-                                '${amountSats.toInt()} sats',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                    ),
-                              ),
-                            ),
-                            // Network row (with picker for BIP21)
-                            ArkListTile(
-                              margin: EdgeInsets.zero,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.elementSpacing * 0.75,
-                                vertical: AppTheme.elementSpacing * 0.5,
-                              ),
-                              text: l10n.network,
-                              trailing: hasMultipleNetworks
-                                  ? GestureDetector(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        _showNetworkPicker(context);
-                                      },
-                                      child: GlassContainer(
-                                        opacity: 0.05,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: AppTheme.elementSpacing,
-                                          vertical: AppTheme.elementSpacing / 2,
+          child: ValueListenableBuilder<int>(
+            valueListenable: _feeUpdateNotifier,
+            builder: (context, _, __) {
+              // Calculate network fees dynamically on each rebuild
+              int networkFees = 0;
+              bool isLoadingFees = false;
+
+              if (amountSats > 0) {
+                if (_isOnChainAddress) {
+                  isLoadingFees = _isFetchingDynamicFee &&
+                      _dynamicFeeEstimate == null &&
+                      !_dynamicFeeError;
+                  networkFees = _estimatedNetworkFeeSats;
+                } else if (_isLightningPayment) {
+                  networkFees = _calculateBoltzFee(amountSats);
+                }
+              }
+
+              final total = amountSats.toInt() + networkFees;
+
+              // Fee display text - show empty while loading, value when ready
+              String feeText;
+              if (_isOnChainAddress) {
+                if (isLoadingFees) {
+                  feeText = ''; // Empty while loading
+                } else if (networkFees > 0) {
+                  feeText = '~$networkFees sats';
+                } else if (_dynamicFeeError) {
+                  feeText = '~$_fallbackFeeSats sats';
+                } else {
+                  feeText = ''; // Empty if not yet loaded
+                }
+              } else if (_isLightningPayment) {
+                feeText = '~$networkFees sats';
+              } else {
+                feeText = '0 sats'; // Ark payments are free
+              }
+
+              return Column(
+                children: [
+                  // Scrollable content area
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          const SizedBox(height: AppTheme.cardPadding),
+                          // Transaction details
+                          GlassContainer(
+                            opacity: 0.05,
+                            borderRadius: AppTheme.cardRadiusSmall,
+                            padding:
+                                const EdgeInsets.all(AppTheme.elementSpacing),
+                            child: Column(
+                              children: [
+                                // Address row
+                                ArkListTile(
+                                  margin: EdgeInsets.zero,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.elementSpacing * 0.75,
+                                    vertical: AppTheme.elementSpacing * 0.5,
+                                  ),
+                                  text: l10n.address,
+                                  trailing: Text(
+                                    _truncateAddress(_addressController.text),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
                                         ),
-                                        child: Row(
+                                  ),
+                                ),
+                                // Amount row
+                                ArkListTile(
+                                  margin: EdgeInsets.zero,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.elementSpacing * 0.75,
+                                    vertical: AppTheme.elementSpacing * 0.5,
+                                  ),
+                                  text: l10n.amount,
+                                  trailing: Text(
+                                    '${amountSats.toInt()} sats',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                        ),
+                                  ),
+                                ),
+                                // Network row (with picker for BIP21)
+                                ArkListTile(
+                                  margin: EdgeInsets.zero,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.elementSpacing * 0.75,
+                                    vertical: AppTheme.elementSpacing * 0.5,
+                                  ),
+                                  text: l10n.network,
+                                  trailing: hasMultipleNetworks
+                                      ? GestureDetector(
+                                          onTap: () {
+                                            Navigator.pop(context);
+                                            _showNetworkPicker(this.context);
+                                          },
+                                          child: GlassContainer(
+                                            opacity: 0.05,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal:
+                                                  AppTheme.elementSpacing,
+                                              vertical:
+                                                  AppTheme.elementSpacing / 2,
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                _buildNetworkIconWidget(
+                                                  currentNetwork,
+                                                  AppTheme.cardPadding * 0.75,
+                                                  Theme.of(context).hintColor,
+                                                ),
+                                                const SizedBox(
+                                                    width: AppTheme
+                                                            .elementSpacing /
+                                                        2),
+                                                Text(
+                                                  currentNetwork,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium,
+                                                ),
+                                                const SizedBox(
+                                                    width: AppTheme
+                                                            .elementSpacing /
+                                                        2),
+                                                Icon(
+                                                  Icons.keyboard_arrow_down,
+                                                  size: 16,
+                                                  color: Theme.of(context)
+                                                      .hintColor,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        )
+                                      : Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             _buildNetworkIconWidget(
@@ -1722,76 +1788,73 @@ class SendScreenState extends State<SendScreen> {
                                               currentNetwork,
                                               style: Theme.of(context)
                                                   .textTheme
-                                                  .bodyMedium,
-                                            ),
-                                            const SizedBox(
-                                                width: AppTheme.elementSpacing /
-                                                    2),
-                                            Icon(
-                                              Icons.keyboard_arrow_down,
-                                              size: 16,
-                                              color:
-                                                  Theme.of(context).hintColor,
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface,
+                                                  ),
                                             ),
                                           ],
                                         ),
+                                  onTap: hasMultipleNetworks
+                                      ? () {
+                                          Navigator.pop(context);
+                                          _showNetworkPicker(this.context);
+                                        }
+                                      : null,
+                                ),
+                                // Network Fees row
+                                ArkListTile(
+                                  margin: EdgeInsets.zero,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.elementSpacing * 0.75,
+                                    vertical: AppTheme.elementSpacing * 0.5,
+                                  ),
+                                  text: l10n.networkFees,
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (isLoadingFees)
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 8),
+                                          child: SizedBox(
+                                            width: 12,
+                                            height: 12,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 1.5,
+                                              color:
+                                                  Theme.of(context).hintColor,
+                                            ),
+                                          ),
+                                        ),
+                                      Text(
+                                        feeText,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
+                                            ),
                                       ),
-                                    )
-                                  : Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        _buildNetworkIconWidget(
-                                          currentNetwork,
-                                          AppTheme.cardPadding * 0.75,
-                                          Theme.of(context).hintColor,
-                                        ),
-                                        const SizedBox(
-                                            width: AppTheme.elementSpacing / 2),
-                                        Text(
-                                          currentNetwork,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                              onTap: hasMultipleNetworks
-                                  ? () {
-                                      Navigator.pop(context);
-                                      _showNetworkPicker(context);
-                                    }
-                                  : null,
-                            ),
-                            // Network Fees row
-                            ArkListTile(
-                              margin: EdgeInsets.zero,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.elementSpacing * 0.75,
-                                vertical: AppTheme.elementSpacing * 0.5,
-                              ),
-                              text: l10n.networkFees,
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (_isOnChainAddress && _isFetchingFees)
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: SizedBox(
-                                        width: 12,
-                                        height: 12,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 1.5,
-                                          color: Theme.of(context).hintColor,
-                                        ),
-                                      ),
-                                    ),
-                                  Text(
-                                    feeText,
+                                    ],
+                                  ),
+                                ),
+                                // Total row
+                                ArkListTile(
+                                  margin: EdgeInsets.zero,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.elementSpacing * 0.75,
+                                    vertical: AppTheme.elementSpacing * 0.5,
+                                  ),
+                                  text: l10n.total,
+                                  trailing: Text(
+                                    isLoadingFees
+                                        ? '${amountSats.toInt()} sats'
+                                        : '$total sats',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -1799,64 +1862,44 @@ class SendScreenState extends State<SendScreen> {
                                           color: Theme.of(context)
                                               .colorScheme
                                               .onSurface,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            // Total row
-                            ArkListTile(
-                              margin: EdgeInsets.zero,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.elementSpacing * 0.75,
-                                vertical: AppTheme.elementSpacing * 0.5,
-                              ),
-                              text: l10n.total,
-                              trailing: Text(
-                                _isFetchingFees ? '...' : '$total sats',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                            ),
-                          ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: LongButtonWidget(
+                          buttonType: ButtonType.transparent,
+                          title: l10n.cancel,
+                          onTap: () => Navigator.pop(context),
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.elementSpacing),
+                      Expanded(
+                        child: LongButtonWidget(
+                          buttonType: ButtonType.solid,
+                          title: 'Confirm',
+                          onTap: () {
+                            Navigator.pop(context);
+                            _handleSend();
+                          },
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-              // Action buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: LongButtonWidget(
-                      buttonType: ButtonType.transparent,
-                      title: l10n.cancel,
-                      onTap: () => Navigator.pop(context),
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.elementSpacing),
-                  Expanded(
-                    child: LongButtonWidget(
-                      buttonType: ButtonType.solid,
-                      title: 'Confirm',
-                      onTap: () {
-                        Navigator.pop(context);
-                        _handleSend();
-                      },
-                    ),
-                  ),
+                  const SizedBox(height: AppTheme.cardPadding),
                 ],
-              ),
-              const SizedBox(height: AppTheme.cardPadding),
-            ],
+              );
+            },
           ),
         ),
       ),
