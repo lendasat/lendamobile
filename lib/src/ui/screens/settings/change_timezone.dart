@@ -28,6 +28,7 @@ class _ChangeTimezoneState extends State<ChangeTimezone> {
         text: AppLocalizations.of(context)!.timezone,
         context: context,
         hasBackButton: true,
+        transparent: false,
         onTap: () => controller.switchTab('main'),
       ),
       body: const _TimezonePickerBody(),

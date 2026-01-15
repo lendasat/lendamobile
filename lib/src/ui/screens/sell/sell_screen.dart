@@ -39,7 +39,6 @@ class _SellScreenState extends State<SellScreen> {
   final FocusNode _focusNode = FocusNode();
 
   bool _isLoading = true;
-  String? _error;
 
   MoonPayQuote? _currentQuote;
   int _quoteTimer = 20;
@@ -74,22 +73,40 @@ class _SellScreenState extends State<SellScreen> {
     try {
       setState(() {
         _isLoading = true;
-        _error = null;
       });
 
-      final balance = await rust_api.balance();
-      _bitcoinBalance =
-          balance.offchain.totalSats.toDouble() / BitcoinConstants.satsPerBtc;
+      // Load balance - this is required
+      try {
+        final balance = await rust_api.balance();
+        _bitcoinBalance =
+            balance.offchain.totalSats.toDouble() / BitcoinConstants.satsPerBtc;
+      } catch (e) {
+        logger.e('Error fetching balance: $e');
+        // Continue with 0 balance if fetch fails
+      }
 
-      await Future.wait([_fetchLimits(), _fetchQuote()]);
+      // Try to fetch MoonPay data, but don't fail if unavailable
+      await Future.wait([
+        _fetchLimits().catchError((e) {
+          logger.w('MoonPay limits unavailable: $e');
+          return;
+        }),
+        _fetchQuote().catchError((e) {
+          logger.w('MoonPay quote unavailable: $e');
+          return;
+        }),
+      ]);
 
-      _startQuoteTimer();
+      // Only start quote timer if we got a quote
+      if (_currentQuote != null) {
+        _startQuoteTimer();
+      }
 
       setState(() => _isLoading = false);
     } catch (e) {
       logger.e('Error initializing sell screen: $e');
+      // Still show the UI even if initialization partially fails
       setState(() {
-        _error = e.toString();
         _isLoading = false;
       });
     }
@@ -102,12 +119,14 @@ class _SellScreenState extends State<SellScreen> {
         paymentMethod: _payoutMethodId,
       );
 
-      setState(() {
-        _limits = limits;
-      });
+      if (mounted) {
+        setState(() {
+          _limits = limits;
+        });
+      }
     } catch (e) {
       logger.e('Error fetching limits: $e');
-      rethrow;
+      // Don't rethrow - allow UI to work without limits
     }
   }
 
@@ -115,12 +134,14 @@ class _SellScreenState extends State<SellScreen> {
     try {
       final quote = await MoonPayService().getQuote();
 
-      setState(() {
-        _currentQuote = quote;
-      });
+      if (mounted) {
+        setState(() {
+          _currentQuote = quote;
+        });
+      }
     } catch (e) {
       logger.e('Error fetching quote: $e');
-      rethrow;
+      // Don't rethrow - allow UI to work without quote
     }
   }
 
@@ -306,106 +327,81 @@ class _SellScreenState extends State<SellScreen> {
       appBar: BitNetAppBar(
         context: context,
         hasBackButton: true,
+        transparent: false,
         text: l10n.sellBitcoin,
         onTap: () => Navigator.of(context).pop(),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: AppTheme.cardPadding),
-            child: LongButtonWidget(
-              buttonType: ButtonType.transparent,
-              customHeight: AppTheme.cardPadding * 1.5,
-              customWidth: AppTheme.cardPadding * 4,
-              leadingIcon: Icon(
-                FontAwesomeIcons.clockRotateLeft,
-                size: AppTheme.cardPadding * 0.75,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
+          // Only show quote timer if MoonPay is available
+          if (_currentQuote != null)
+            Padding(
+              padding: const EdgeInsets.only(right: AppTheme.cardPadding),
+              child: LongButtonWidget(
+                buttonType: ButtonType.transparent,
+                customHeight: AppTheme.cardPadding * 1.5,
+                customWidth: AppTheme.cardPadding * 4,
+                leadingIcon: Icon(
+                  FontAwesomeIcons.clockRotateLeft,
+                  size: AppTheme.cardPadding * 0.75,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+                title: "0:${_quoteTimer.toString().padLeft(2, '0')}",
+                onTap: _refreshQuote,
               ),
-              title: "0:${_quoteTimer.toString().padLeft(2, '0')}",
-              onTap: _refreshQuote,
             ),
-          ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? _buildErrorState(l10n)
-              : Stack(
-                  children: [
-                    SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          // Balance Info
-                          _buildBalanceInfo(l10n),
-                          const SizedBox(height: 15),
-                          // Amount Widget
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppTheme.cardPadding,
-                            ),
-                            child: _buildAmountWidget(),
-                          ),
-                          const SizedBox(height: 15),
-                          // Limit warning message
-                          if (_allowedAmountDifference != 0 &&
-                              _limits != null &&
-                              _limits!.quoteCurrency.maxBuyAmount > 0)
-                            _buildLimitWarning(),
-                          const SizedBox(height: 15),
-                          // Payout Method Selection
-                          _buildPayoutMethodSection(l10n),
-                          // Provider Selection
-                          _buildProviderSection(l10n),
-                          const SizedBox(height: 100), // Space for button
-                        ],
-                      ),
-                    ),
-                    // Bottom Sell Button
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 20.0),
-                        child: LongButtonWidget(
-                          customWidth: MediaQuery.of(context).size.width * 0.9,
-                          title: l10n.sellBitcoin,
-                          isLoading: _isProcessing,
-                          enabled: _isValidAmount() &&
-                              !_isProcessing &&
-                              _allowedAmountDifference == 0,
-                          onTap: _processSell,
-                          buttonType: ButtonType.solid,
+          : Stack(
+              children: [
+                SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      // Balance Info
+                      _buildBalanceInfo(l10n),
+                      const SizedBox(height: 15),
+                      // Amount Widget
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.cardPadding,
                         ),
+                        child: _buildAmountWidget(),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 15),
+                      // Limit warning message
+                      if (_allowedAmountDifference != 0 &&
+                          _limits != null &&
+                          _limits!.quoteCurrency.maxBuyAmount > 0)
+                        _buildLimitWarning(),
+                      const SizedBox(height: 15),
+                      // Payout Method Selection
+                      _buildPayoutMethodSection(l10n),
+                      // Provider Selection
+                      _buildProviderSection(l10n),
+                      const SizedBox(height: 100), // Space for button
+                    ],
+                  ),
                 ),
-    );
-  }
-
-  Widget _buildErrorState(AppLocalizations l10n) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.errorLoadingSellScreen,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 24),
-          LongButtonWidget(
-            title: l10n.retry,
-            onTap: _initialize,
-            buttonType: ButtonType.solid,
-          ),
-        ],
-      ),
+                // Bottom Sell Button
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: LongButtonWidget(
+                      customWidth: MediaQuery.of(context).size.width * 0.9,
+                      title: l10n.sellBitcoin,
+                      isLoading: _isProcessing,
+                      enabled: _isValidAmount() &&
+                          !_isProcessing &&
+                          _allowedAmountDifference == 0,
+                      onTap: _processSell,
+                      buttonType: ButtonType.solid,
+                    ),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 

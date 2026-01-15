@@ -14,6 +14,7 @@ import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/buy/buy_screen.dart';
+import 'package:ark_flutter/src/ui/screens/sell/sell_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/receivescreen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/send/recipient_search_screen.dart';
@@ -798,8 +799,8 @@ class WalletScreenState extends State<WalletScreen>
             text: l10n.bitcoinPriceChart,
           ),
           // Top spacing
-          SizedBox(height: AppTheme.cardPadding * 1.5),
-          // Chart content
+          const SizedBox(height: AppTheme.cardPadding),
+          // Chart content - takes available space
           Expanded(
             child: Padding(
               padding:
@@ -807,36 +808,81 @@ class WalletScreenState extends State<WalletScreen>
               child: const BitcoinChartCard(),
             ),
           ),
-          // About Bitcoin section
+          const SizedBox(height: AppTheme.cardPadding),
+          // TODO: Re-enable About Bitcoin section later
+          // Padding(
+          //   padding:
+          //       const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+          //   child: Column(
+          //     crossAxisAlignment: CrossAxisAlignment.start,
+          //     children: [
+          //       Text(
+          //         l10n.aboutBitcoin,
+          //         style: TextStyle(
+          //           color: Theme.of(context).colorScheme.onSurface,
+          //           fontSize: 18,
+          //           fontWeight: FontWeight.w600,
+          //         ),
+          //       ),
+          //       const SizedBox(height: 8),
+          //       Text(
+          //         l10n.bitcoinDescription,
+          //         style: TextStyle(
+          //           color: Theme.of(context).hintColor,
+          //           fontSize: 14,
+          //           height: 1.5,
+          //         ),
+          //         maxLines: 3,
+          //         overflow: TextOverflow.ellipsis,
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          // Bottom buttons
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.only(
+              left: AppTheme.cardPadding,
+              right: AppTheme.cardPadding,
+              bottom: AppTheme.cardPadding,
+            ),
+            child: Row(
               children: [
-                Text(
-                  l10n.aboutBitcoin,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                // Sell button (left)
+                Expanded(
+                  child: LongButtonWidget(
+                    title: l10n.sellBitcoin,
+                    buttonType: ButtonType.transparent,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SellScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.bitcoinDescription,
-                  style: TextStyle(
-                    color: Theme.of(context).hintColor,
-                    fontSize: 14,
-                    height: 1.5,
+                const SizedBox(width: AppTheme.elementSpacing),
+                // Buy button (right)
+                Expanded(
+                  child: LongButtonWidget(
+                    title: l10n.buyBitcoin,
+                    buttonType: ButtonType.solid,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const BuyScreen(),
+                        ),
+                      );
+                    },
                   ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.cardPadding),
         ],
       ),
     );
