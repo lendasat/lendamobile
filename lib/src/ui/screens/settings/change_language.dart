@@ -27,6 +27,7 @@ class _ChangeLanguageState extends State<ChangeLanguage> {
         text: AppLocalizations.of(context)!.language,
         context: context,
         hasBackButton: true,
+        transparent: false,
         onTap: () => controller.switchTab('main'),
       ),
       body: const _LanguagePickerBody(),
