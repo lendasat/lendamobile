@@ -11,8 +11,7 @@ anyhow = "1"
 base64 = "0.22"
 
 # SRP authentication
-# Using lendasat fork with collaborative_redeem_vtxo_selection for proper VTXO selection
-# TODO: Update to upstream master once fee estimation is synced to fork
+# Using lendasat fork with collaborative_redeem_with_vtxos for proper VTXO selection
 ark-bdk-wallet = { git = "https://github.com/lendasat/arkade-rust-sdk.git", branch = "feat/collaborative_redeem_with_vtxos" }
 ark-client = { git = "https://github.com/lendasat/arkade-rust-sdk.git", branch = "feat/collaborative_redeem_with_vtxos", default-features = false, features = ["tls-webpki-roots", "sqlite"] }
 ark-core = { git = "https://github.com/lendasat/arkade-rust-sdk.git", branch = "feat/collaborative_redeem_with_vtxos" }
@@ -51,9 +50,7 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
-# Patch lendaswap-core's arkade SDK dependency to use our fork
-# This resolves secp256k1 linking conflicts by ensuring all ark packages use the same revision
+# Patch arkade-os secp256k1 to use our fork to avoid native library linking conflicts
+# Only patching secp256k1 - NOT patching ark-core/ark-rs/ark-rest so lendaswap keeps its own APIs
 [patch."https://github.com/arkade-os/rust-sdk"]
 ark-secp256k1 = { git = "https://github.com/lendasat/arkade-rust-sdk.git", branch = "feat/collaborative_redeem_with_vtxos" }
-ark-core = { git = "https://github.com/lendasat/arkade-rust-sdk.git", branch = "feat/collaborative_redeem_with_vtxos" }
-ark-rest = { git = "https://github.com/lendasat/arkade-rust-sdk.git", branch = "feat/collaborative_redeem_with_vtxos" }

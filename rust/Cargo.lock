@@ -111,11 +111,11 @@ checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 [[package]]
 name = "ark-bdk-wallet"
 version = "0.7.0"
-source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#aa64ca7ecd0d7bfd4a7a8bcb6822c18744e8b9d8"
+source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#49d6f847baceae2149baa59078de90e882e59ec7"
 dependencies = [
  "anyhow",
  "ark-client",
- "ark-core",
+ "ark-core 0.7.0 (git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos)",
  "async-stream",
  "bdk_esplora",
  "bdk_wallet",
@@ -130,9 +130,9 @@ dependencies = [
 [[package]]
 name = "ark-client"
 version = "0.7.0"
-source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#aa64ca7ecd0d7bfd4a7a8bcb6822c18744e8b9d8"
+source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#49d6f847baceae2149baa59078de90e882e59ec7"
 dependencies = [
- "ark-core",
+ "ark-core 0.7.0 (git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos)",
  "ark-grpc",
  "ark-secp256k1",
  "async-stream",
@@ -167,7 +167,25 @@ dependencies = [
 [[package]]
 name = "ark-core"
 version = "0.7.0"
-source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#aa64ca7ecd0d7bfd4a7a8bcb6822c18744e8b9d8"
+source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#49d6f847baceae2149baa59078de90e882e59ec7"
+dependencies = [
+ "ark-secp256k1",
+ "bech32",
+ "bitcoin",
+ "getrandom 0.2.16",
+ "getrandom 0.3.4",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tracing",
+ "web-sys",
+]
+
+[[package]]
+name = "ark-core"
+version = "0.7.0"
+source = "git+https://github.com/arkade-os/rust-sdk?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28#09b073269c944a25eef5e1f92fd2ae2a5ef2ea28"
 dependencies = [
  "ark-secp256k1",
  "bech32",
@@ -185,9 +203,9 @@ dependencies = [
 [[package]]
 name = "ark-grpc"
 version = "0.7.0"
-source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#aa64ca7ecd0d7bfd4a7a8bcb6822c18744e8b9d8"
+source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#49d6f847baceae2149baa59078de90e882e59ec7"
 dependencies = [
- "ark-core",
+ "ark-core 0.7.0 (git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos)",
  "async-stream",
  "base64 0.22.1",
  "bitcoin",
@@ -203,9 +221,9 @@ dependencies = [
 [[package]]
 name = "ark-rest"
 version = "0.7.0"
-source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#aa64ca7ecd0d7bfd4a7a8bcb6822c18744e8b9d8"
+source = "git+https://github.com/arkade-os/rust-sdk?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28#09b073269c944a25eef5e1f92fd2ae2a5ef2ea28"
 dependencies = [
- "ark-core",
+ "ark-core 0.7.0 (git+https://github.com/arkade-os/rust-sdk?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28)",
  "base64 0.22.1",
  "bitcoin",
  "futures",
@@ -227,13 +245,13 @@ name = "ark-rs"
 version = "0.7.0"
 source = "git+https://github.com/arkade-os/rust-sdk?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28#09b073269c944a25eef5e1f92fd2ae2a5ef2ea28"
 dependencies = [
- "ark-core",
+ "ark-core 0.7.0 (git+https://github.com/arkade-os/rust-sdk?rev=09b073269c944a25eef5e1f92fd2ae2a5ef2ea28)",
 ]
 
 [[package]]
 name = "ark-secp256k1"
 version = "0.31.0"
-source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#aa64ca7ecd0d7bfd4a7a8bcb6822c18744e8b9d8"
+source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#49d6f847baceae2149baa59078de90e882e59ec7"
 dependencies = [
  "bitcoin_hashes",
  "rand 0.9.2",
@@ -3087,7 +3105,7 @@ dependencies = [
  "anyhow",
  "ark-bdk-wallet",
  "ark-client",
- "ark-core",
+ "ark-core 0.7.0 (git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos)",
  "async-trait",
  "base64 0.22.1",
  "bip39",
@@ -3298,7 +3316,7 @@ dependencies = [
 [[package]]
 name = "secp256k1-sys"
 version = "0.11.0"
-source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#aa64ca7ecd0d7bfd4a7a8bcb6822c18744e8b9d8"
+source = "git+https://github.com/lendasat/arkade-rust-sdk.git?branch=feat%2Fcollaborative_redeem_with_vtxos#49d6f847baceae2149baa59078de90e882e59ec7"
 dependencies = [
  "cc",
 ]

@@ -7,12 +7,9 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart' as rust_api;
 import 'package:ark_flutter/src/rust/models/moonpay.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
-import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/coinbase_service.dart';
 import 'package:ark_flutter/src/services/moonpay_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
-import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart'
-    show TimeRange;
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/amount_widget.dart';
@@ -85,11 +82,8 @@ class _BuyScreenState extends State<BuyScreen> {
   String _inputState = 'under';
   int _allowedAmountDifference = 0;
 
-  // Bitcoin price from BitcoinPriceService (used when MoonPay quote not available)
-  double _bitcoinPrice = 0;
-
-  /// Get current BTC price - prefer MoonPay quote, fallback to BitcoinPriceService
-  double get _btcToUsdRate => _currentQuote?.exchangeRate ?? _bitcoinPrice;
+  /// Get current BTC price from MoonPay quote, or 0 if not available.
+  double get _btcToUsdRate => _currentQuote?.exchangeRate ?? 0;
 
   /// Get fee for current provider and payment method
   double _getFeeForCurrentProvider(String methodId) {
@@ -120,21 +114,9 @@ class _BuyScreenState extends State<BuyScreen> {
       final addresses = await rust_api.address();
       _walletAddress = addresses.boarding;
 
-      // Fetch bitcoin price
-      try {
-        final priceData = await fetchBitcoinPriceData(TimeRange.day);
-        if (priceData.isNotEmpty) {
-          _bitcoinPrice = priceData.last.price;
-        }
-      } catch (e) {
-        logger.w('Failed to fetch BTC price: $e');
-        // Continue without price - user can still enter amounts in BTC
-      }
+      await Future.wait([_fetchLimits(), _fetchQuote()]);
 
-      await _fetchLimits();
-      // MoonPay quote disabled - using Coinbase only
-      // await _fetchQuote();
-      // _startQuoteTimer();
+      _startQuoteTimer();
 
       setState(() => _isLoading = false);
     } catch (e) {
@@ -339,10 +321,7 @@ class _BuyScreenState extends State<BuyScreen> {
   }
 
   Future<void> _processCoinbasePurchase(int sats, double btcAmount) async {
-    // Calculate fiat amount from BTC amount and current rate
-    final fiatAmount = btcAmount * _btcToUsdRate;
-    logger.i(
-        '[Coinbase] Processing purchase for $btcAmount BTC (~\$${fiatAmount.toStringAsFixed(2)})');
+    logger.i('[Coinbase] Processing purchase for $btcAmount BTC');
 
     final coinbaseService = CoinbaseService();
     coinbaseService.printConfig();
@@ -351,7 +330,6 @@ class _BuyScreenState extends State<BuyScreen> {
     final sessionResponse = await coinbaseService.getSessionToken(
       walletAddress: _walletAddress!,
       btcAmount: btcAmount,
-      fiatAmount: fiatAmount,
     );
 
     if (!sessionResponse.success || sessionResponse.onrampUrl == null) {
@@ -449,7 +427,30 @@ class _BuyScreenState extends State<BuyScreen> {
   }
 
   Widget _buildProviderTrailing() {
-    // MoonPay quotes disabled - just show arrow
+    // Check for MoonPay quotes
+    if (_providerId == "moonpay" && _currentQuote != null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '1 BTC',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+          Text(
+            '= \$${(_currentQuote!.exchangeRate).toStringAsFixed(2)}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      );
+    }
+
+    // Default arrow icon
     return const Icon(Icons.arrow_forward_ios, size: 16);
   }
 
@@ -475,24 +476,23 @@ class _BuyScreenState extends State<BuyScreen> {
         text: l10n.buyBitcoin,
         transparent: false,
         onTap: () => Navigator.of(context).pop(),
-        // MoonPay quote timer disabled - using Coinbase only
-        // actions: [
-        //   Padding(
-        //     padding: const EdgeInsets.only(right: AppTheme.cardPadding),
-        //     child: LongButtonWidget(
-        //       buttonType: ButtonType.transparent,
-        //       customHeight: AppTheme.cardPadding * 1.5,
-        //       customWidth: AppTheme.cardPadding * 4,
-        //       leadingIcon: Icon(
-        //         FontAwesomeIcons.clockRotateLeft,
-        //         size: AppTheme.cardPadding * 0.75,
-        //         color: Theme.of(context).textTheme.bodyLarge?.color,
-        //       ),
-        //       title: "0:${_quoteTimer.toString().padLeft(2, '0')}",
-        //       onTap: _refreshQuote,
-        //     ),
-        //   ),
-        // ],
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: AppTheme.cardPadding),
+            child: LongButtonWidget(
+              buttonType: ButtonType.transparent,
+              customHeight: AppTheme.cardPadding * 1.5,
+              customWidth: AppTheme.cardPadding * 4,
+              leadingIcon: Icon(
+                FontAwesomeIcons.clockRotateLeft,
+                size: AppTheme.cardPadding * 0.75,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+              title: "0:${_quoteTimer.toString().padLeft(2, '0')}",
+              onTap: _refreshQuote,
+            ),
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
