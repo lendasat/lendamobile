@@ -386,7 +386,6 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
       _showPaymentReceivedOverlay(payment);
     } catch (e) {
-      logger.e("Error waiting for payment: $e");
       if (!mounted) return;
 
       setState(() {
@@ -395,10 +394,11 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
       final errorStr = e.toString().toLowerCase();
 
-      // Don't show snackbar for expected errors:
+      // Don't log or show snackbar for expected errors:
       // - Timeouts (expected when waiting)
       // - Connection errors (expected when app goes to background)
       final isExpectedError = errorStr.contains('timeout') ||
+          errorStr.contains('timed out') ||
           errorStr.contains('transport error') ||
           errorStr.contains('connectionaborted') ||
           errorStr.contains('connection aborted') ||
@@ -408,6 +408,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
           errorStr.contains('cancelled');
 
       if (!isExpectedError) {
+        logger.e("Error waiting for payment: $e");
         OverlayService().showError(
           AppLocalizations.of(context)!.paymentMonitoringError(e.toString()),
         );
