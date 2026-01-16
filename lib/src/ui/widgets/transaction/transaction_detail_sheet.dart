@@ -6,7 +6,6 @@ import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
-import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/services/recipient_storage_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
@@ -58,7 +57,8 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
   final TextEditingController outputCtrl = TextEditingController();
 
   BitcoinTransaction? transactionModel;
-  bool isLoading = true;
+  // Start with isLoading = false - show basic info immediately, load details in background
+  bool isLoading = false;
   bool hasError = false;
   String? txID;
   bool _isSettling = false;
@@ -73,10 +73,10 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     super.initState();
     txID = widget.txid;
     if (txID != null) {
+      // Load transaction details in background - don't block UI
+      // The fallback view shows immediately with basic info
       _loadTransaction();
       _loadRecipientAddress();
-    } else {
-      isLoading = false;
     }
   }
 
@@ -100,7 +100,6 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
   void _copyTxId() {
     if (txID == null) return;
     Clipboard.setData(ClipboardData(text: txID!));
-    HapticFeedback.lightImpact();
     setState(() => _showTxIdCopied = true);
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) setState(() => _showTxIdCopied = false);
@@ -110,7 +109,6 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
   void _copyAddress() {
     if (_recipientAddress == null) return;
     Clipboard.setData(ClipboardData(text: _recipientAddress!));
-    HapticFeedback.lightImpact();
     setState(() => _showAddressCopied = true);
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) setState(() => _showAddressCopied = false);
@@ -279,8 +277,6 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     bool isSent,
   ) {
     final showCoinBalance = currencyService.showCoinBalance;
-    final userPrefs = context.watch<UserPreferencesService>();
-    final isObscured = !userPrefs.balancesVisible;
     final (formattedAmount, unit, isSatsUnit) =
         _formatAmountWithUnit(displayAmountSats);
 
@@ -371,20 +367,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                 ),
                                 const SizedBox(height: AppTheme.cardPadding),
                                 // Large amount - toggles between sats/BTC and fiat
-                                if (isObscured)
-                                  Text(
-                                    '****',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displayMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface,
-                                        ),
-                                  )
-                                else if (showCoinBalance)
+                                if (showCoinBalance)
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment:
@@ -829,8 +812,6 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     bool isSent,
   ) {
     final showCoinBalance = currencyService.showCoinBalance;
-    final userPrefs = context.watch<UserPreferencesService>();
-    final isObscured = !userPrefs.balancesVisible;
     final (formattedAmount, unit, isSatsUnit) =
         _formatAmountWithUnit(displayAmountSats);
 
@@ -933,20 +914,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                                 ),
                                 const SizedBox(height: AppTheme.cardPadding),
                                 // Large amount - toggles between sats/BTC and fiat
-                                if (isObscured)
-                                  Text(
-                                    '****',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displayMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface,
-                                        ),
-                                  )
-                                else if (showCoinBalance)
+                                if (showCoinBalance)
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment:

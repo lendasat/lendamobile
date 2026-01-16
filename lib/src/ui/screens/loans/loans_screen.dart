@@ -35,6 +35,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   String _searchQuery = '';
   final FocusNode _searchFocusNode = FocusNode();
   bool _wasKeyboardVisible = false;
+  Timer? _keyboardDebounceTimer;
 
   bool _isLoading = true;
   bool _isRegistering = false;
@@ -64,6 +65,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _autoRefreshTimer?.cancel();
+    _keyboardDebounceTimer?.cancel();
     _searchFocusNode.dispose();
     super.dispose();
   }
@@ -85,8 +87,9 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    // Detect keyboard dismiss and unfocus the search field
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Debounce keyboard detection to avoid ~60 callbacks during animation
+    _keyboardDebounceTimer?.cancel();
+    _keyboardDebounceTimer = Timer(const Duration(milliseconds: 100), () {
       if (!mounted) return;
       final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
       if (_wasKeyboardVisible && !keyboardVisible) {
@@ -126,11 +129,30 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
 
       // If data is empty after initial load, retry after a short delay
       // This handles the case where Ark keypair derivation is still in progress
-      if (_lendasatService.offers.isEmpty && mounted) {
+      if ((_lendasatService.offers.isEmpty ||
+              (_lendasatService.isAuthenticated &&
+                  _lendasatService.contracts.isEmpty)) &&
+          mounted) {
         logger.i('Lendasat: Initial data empty, retrying after delay...');
         await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) {
           await _loadData();
+        }
+
+        // If contracts are still empty after retry, try one more time
+        // This handles slow network or auth token propagation delays
+        if (_lendasatService.isAuthenticated &&
+            _lendasatService.contracts.isEmpty &&
+            mounted) {
+          logger.i('Lendasat: Contracts still empty, retrying once more...');
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (mounted) {
+            try {
+              await _lendasatService.refreshContracts();
+            } catch (e) {
+              logger.w('Could not load contracts on retry: $e');
+            }
+          }
         }
       }
     } catch (e) {
@@ -198,6 +220,13 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
         // Don't show error - user can still see offers
       } else if (result is AuthResult_Success) {
         logger.i('Lendasat: Auto-authentication successful');
+        // Immediately load contracts after successful auth
+        try {
+          await _lendasatService.refreshContracts();
+          logger.i('Lendasat: Contracts loaded after auth');
+        } catch (e) {
+          logger.w('Could not load contracts after auth: $e');
+        }
       }
     } catch (e) {
       logger.e('Lendasat auto-auth error: $e');
