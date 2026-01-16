@@ -124,6 +124,7 @@ workflows:
             --dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY \
             --dart-define=TURNSTILE_BASE_URL=$TURNSTILE_BASE_URL \
             --dart-define=RAPIDAPI_KEY=$RAPIDAPI_KEY \
+            --dart-define=MOONPAY_BACKEND_API=$MOONPAY_BACKEND_API \
             --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:

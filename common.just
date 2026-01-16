@@ -47,6 +47,7 @@ check-env:
         "TURNSTILE_SITE_KEY"
         "TURNSTILE_BASE_URL"
         "RAPIDAPI_KEY"
+        "MOONPAY_BACKEND_API"
     )
 
     for var in "${required_vars[@]}"; do
