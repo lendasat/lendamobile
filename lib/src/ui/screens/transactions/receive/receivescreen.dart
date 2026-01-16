@@ -6,6 +6,9 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
+import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
+import 'package:provider/provider.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
@@ -32,11 +35,13 @@ enum ReceiveType { combined, ark, onchain, lightning }
 class ReceiveScreen extends StatefulWidget {
   final String aspId;
   final int amount;
+  final double? bitcoinPrice; // Pass from parent to avoid redundant API call
 
   const ReceiveScreen({
     super.key,
     required this.aspId,
     required this.amount,
+    this.bitcoinPrice,
   });
 
   @override
@@ -74,11 +79,10 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   // Copy feedback
   bool _showCopied = false;
 
-  // Lightning invoice timer
+  // Lightning invoice timer - use ValueNotifier to avoid full screen rebuilds
   Timer? _invoiceTimer;
   Duration _invoiceDuration = const Duration(minutes: 5);
-  String _timerMin = "05";
-  String _timerSec = "00";
+  final ValueNotifier<String> _timerNotifier = ValueNotifier("05:00");
 
   // Animation
   late AnimationController _animationController;
@@ -86,6 +90,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
   // Keyboard visibility tracking for unfocusing amount field
   bool _wasKeyboardVisible = false;
+  Timer? _keyboardDebounceTimer;
 
   @override
   void initState() {
@@ -104,16 +109,28 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       curve: Curves.easeInOut,
     );
 
-    _satController.text = _currentAmount?.toString() ?? "0";
-    _btcController.text = "0.0";
-    _currController.text = "0.0";
+    // Only set controller values if there's an actual amount
+    // Empty controllers show hint text "0"
+    if (_currentAmount != null && _currentAmount! > 0) {
+      _satController.text = _currentAmount.toString();
+    }
+    // Leave btcController and currController empty - they'll show hint text
+
+    // Use passed bitcoin price if available, otherwise fetch
+    _bitcoinPrice = widget.bitcoinPrice;
 
     _fetchAddresses();
-    _fetchBitcoinPrice();
+    // Only fetch if not provided by parent
+    if (_bitcoinPrice == null) {
+      _fetchBitcoinPrice();
+    }
     _animationController.forward();
   }
 
   Future<void> _fetchBitcoinPrice() async {
+    // Skip if already have price from parent
+    if (_bitcoinPrice != null) return;
+
     try {
       final priceData = await fetchBitcoinPriceData(TimeRange.day);
       if (priceData.isNotEmpty && mounted) {
@@ -130,6 +147,8 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _invoiceTimer?.cancel();
+    _keyboardDebounceTimer?.cancel();
+    _timerNotifier.dispose();
     _animationController.dispose();
     _btcController.dispose();
     _satController.dispose();
@@ -152,9 +171,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    // Detect keyboard dismiss and unfocus the amount field
-    // This handles the case when AmountWidget is inside arkBottomSheet
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Debounce keyboard detection to avoid ~60 callbacks during animation
+    _keyboardDebounceTimer?.cancel();
+    _keyboardDebounceTimer = Timer(const Duration(milliseconds: 100), () {
       if (!mounted) return;
       final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
       if (_wasKeyboardVisible && !keyboardVisible) {
@@ -187,10 +206,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
     _invoiceTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_invoiceDuration.inSeconds > 0) {
-        setState(() {
-          _invoiceDuration = _invoiceDuration - const Duration(seconds: 1);
-          _updateTimerDisplay();
-        });
+        // Only update the notifier - no setState needed, avoiding full screen rebuild
+        _invoiceDuration = _invoiceDuration - const Duration(seconds: 1);
+        _updateTimerDisplay();
       } else {
         timer.cancel();
         // Auto-refresh when timer expires
@@ -202,8 +220,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
   }
 
   void _updateTimerDisplay() {
-    _timerMin = (_invoiceDuration.inMinutes % 60).toString().padLeft(2, '0');
-    _timerSec = (_invoiceDuration.inSeconds % 60).toString().padLeft(2, '0');
+    final min = (_invoiceDuration.inMinutes % 60).toString().padLeft(2, '0');
+    final sec = (_invoiceDuration.inSeconds % 60).toString().padLeft(2, '0');
+    _timerNotifier.value = "$min:$sec";
   }
 
   void _refreshLightningInvoice() {
@@ -644,11 +663,28 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
   void _showAmountInputSheet(bool isLightning) {
     // Only pre-fill if there's an actual amount set (not 0)
-    // Empty string shows hint text "0"
+    // Empty controllers show hint text "0"
     if (_currentAmount != null && _currentAmount! > 0) {
-      _satController.text = _currentAmount.toString();
+      // Sync all controllers so the value displays correctly regardless of currency mode
+      final sats = _currentAmount!;
+      final btc = sats / BitcoinConstants.satsPerBtc;
+
+      _satController.text = sats.toString();
+      _btcController.text = btc.toStringAsFixed(8);
+
+      // Calculate fiat value if bitcoin price is available
+      if (_bitcoinPrice != null) {
+        final currencyService = context.read<CurrencyPreferenceService>();
+        final exchangeRates = currencyService.exchangeRates;
+        final fiatRate = exchangeRates?.rates[currencyService.code] ?? 1.0;
+        final fiatValue = btc * _bitcoinPrice! * fiatRate;
+        _currController.text = fiatValue.toStringAsFixed(2);
+      }
     } else {
+      // Clear ALL controllers so hint text shows regardless of currency mode
       _satController.clear();
+      _btcController.clear();
+      _currController.clear();
     }
 
     // Auto-focus the text field after the sheet is built
@@ -783,18 +819,22 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                 axisAlignment: -1.0,
                 child: _receiveType == ReceiveType.lightning &&
                         _isLightningAvailable()
-                    ? LongButtonWidget(
-                        customShadow: isLight ? [] : null,
-                        buttonType: ButtonType.transparent,
-                        customHeight: AppTheme.cardPadding * 1.5,
-                        customWidth: AppTheme.cardPadding * 4,
-                        leadingIcon: Icon(
-                          FontAwesomeIcons.arrowsRotate,
-                          color: isLight ? AppTheme.black60 : AppTheme.white80,
-                          size: AppTheme.elementSpacing * 1.5,
+                    ? ValueListenableBuilder<String>(
+                        valueListenable: _timerNotifier,
+                        builder: (context, timerValue, _) => LongButtonWidget(
+                          customShadow: isLight ? [] : null,
+                          buttonType: ButtonType.transparent,
+                          customHeight: AppTheme.cardPadding * 1.5,
+                          customWidth: AppTheme.cardPadding * 4,
+                          leadingIcon: Icon(
+                            FontAwesomeIcons.arrowsRotate,
+                            color:
+                                isLight ? AppTheme.black60 : AppTheme.white80,
+                            size: AppTheme.elementSpacing * 1.5,
+                          ),
+                          title: timerValue,
+                          onTap: _refreshLightningInvoice,
                         ),
-                        title: "$_timerMin:$_timerSec",
-                        onTap: _refreshLightningInvoice,
                       )
                     : const SizedBox.shrink(),
               ),

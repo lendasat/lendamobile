@@ -845,6 +845,12 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
       // Replace space between date and time with 'T' for ISO format
       normalizedTimestamp = normalizedTimestamp.replaceFirst(' ', 'T');
 
+      // Add Z suffix to indicate UTC (server sends UTC timestamps)
+      if (!normalizedTimestamp.contains('Z') &&
+          !normalizedTimestamp.contains('+')) {
+        normalizedTimestamp += 'Z';
+      }
+
       final date = DateTime.parse(normalizedTimestamp).toLocal();
       final now = DateTime.now();
       final difference = now.difference(date);
