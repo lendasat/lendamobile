@@ -169,10 +169,14 @@ class SettingsViewState extends State<SettingsView> {
         final fileSize = await logFile.length();
         final fileSizeKb = (fileSize / 1024).toStringAsFixed(1);
 
+        final box = context.findRenderObject() as RenderBox?;
         await Share.shareXFiles(
           [XFile(logFile.path)],
           subject: 'Lenda App Logs',
           text: 'App logs (${fileSizeKb}KB) - Please attach to bug report',
+          sharePositionOrigin: box != null
+              ? box.localToGlobal(Offset.zero) & box.size
+              : Rect.fromLTWH(0, 0, MediaQuery.of(context).size.width, 100),
         );
       } else {
         if (mounted) {
