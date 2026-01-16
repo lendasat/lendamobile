@@ -5,6 +5,7 @@ This document explains how to test Bitcoin on-ramps (buy) and off-ramps (sell) l
 ## Overview
 
 The app supports multiple payment providers for buying Bitcoin:
+
 - **Coinbase** (active) - Primary provider
 - **MoonPay** (coming soon)
 - **Bringin** (coming soon)
@@ -36,6 +37,7 @@ The backend runs on `0.0.0.0:7337` by default.
 **IMPORTANT**: For the mobile app to reach your local backend, you must set up ADB reverse port forwarding.
 
 #### Check connected devices:
+
 ```bash
 adb devices
 ```
@@ -43,31 +45,37 @@ adb devices
 #### Set up port forwarding:
 
 **Single device:**
+
 ```bash
 adb reverse tcp:7337 tcp:7337
 ```
 
 **Multiple devices (specify device):**
+
 ```bash
 adb -s <device-id> reverse tcp:7337 tcp:7337
 ```
 
 Example with physical device:
+
 ```bash
 adb -s adb-R5CRB28QKVD-oD73CP._adb-tls-connect._tcp reverse tcp:7337 tcp:7337
 ```
 
 #### Verify forwarding is active:
+
 ```bash
 adb reverse --list
 ```
 
 Expected output:
+
 ```
 host-53 tcp:7337 tcp:7337
 ```
 
 #### Remove port forwarding:
+
 ```bash
 adb reverse --remove tcp:7337
 ```
@@ -77,11 +85,13 @@ adb reverse --remove tcp:7337
 The app uses build-time environment variables to determine which backend to use.
 
 #### Local Development (Flutter run):
+
 ```bash
 flutter run --dart-define=MOONPAY_BACKEND_API=http://127.0.0.1:7337
 ```
 
 #### Production Build:
+
 ```bash
 flutter build apk --dart-define=MOONPAY_BACKEND_API=https://apiborrow.lendasat.com
 ```
@@ -89,6 +99,7 @@ flutter build apk --dart-define=MOONPAY_BACKEND_API=https://apiborrow.lendasat.c
 ### 4. Service Configuration
 
 In `lib/src/services/coinbase_service.dart`:
+
 ```dart
 static const String _backendUrl = String.fromEnvironment(
   'MOONPAY_BACKEND_API',
@@ -132,12 +143,12 @@ static const String _backendUrl = String.fromEnvironment(
 
 ## Production vs Local Differences
 
-| Aspect | Local Development | Production |
-|--------|-------------------|------------|
-| Backend URL | `http://127.0.0.1:7337` | `https://apiborrow.lendasat.com` |
-| ADB Forwarding | Required | Not needed |
-| SSL | Not used | Required (HTTPS) |
-| Coinbase Environment | Sandbox (optional) | Production |
+| Aspect               | Local Development       | Production                       |
+| -------------------- | ----------------------- | -------------------------------- |
+| Backend URL          | `http://127.0.0.1:7337` | `https://apiborrow.lendasat.com` |
+| ADB Forwarding       | Required                | Not needed                       |
+| SSL                  | Not used                | Required (HTTPS)                 |
+| Coinbase Environment | Sandbox (optional)      | Production                       |
 
 ## Troubleshooting
 
@@ -181,6 +192,7 @@ POST /borrower/coinbase/session
 ```
 
 Request:
+
 ```json
 {
   "address": "tb1q...",
@@ -189,6 +201,7 @@ Request:
 ```
 
 Response:
+
 ```json
 {
   "url": "https://pay.coinbase.com/buy/select-asset?sessionToken=..."
@@ -198,6 +211,7 @@ Response:
 ## Restarting Services
 
 ### Restart Backend:
+
 ```bash
 # Find and kill existing process
 ps aux | grep hub
@@ -210,6 +224,7 @@ set -a; source .env; set +a
 ```
 
 ### Reset ADB Forwarding:
+
 ```bash
 adb reverse --remove-all
 adb reverse tcp:7337 tcp:7337
@@ -218,16 +233,19 @@ adb reverse tcp:7337 tcp:7337
 ## Provider-Specific Notes
 
 ### Coinbase
+
 - Uses CDP API with Ed25519 JWT authentication
 - Session tokens valid for limited time
 - Supports: Credit/Debit, Google Pay, Apple Pay, PayPal, SEPA
 - Fees: ~1.99% (SEPA) to ~4.49% (Card)
 
 ### MoonPay (Coming Soon)
+
 - Has separate limits endpoint
 - Requires API key validation
 - Minimum: ~0.000017 BTC
 
 ### Bringin (Coming Soon)
+
 - European focus
 - Lower fees for SEPA transfers
