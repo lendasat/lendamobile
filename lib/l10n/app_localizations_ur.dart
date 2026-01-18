@@ -21,6 +21,12 @@ class AppLocalizationsUr extends AppLocalizations {
   String get save => 'محفوظ کریں';
 
   @override
+  String get note => 'Note';
+
+  @override
+  String get addNote => 'Add a note';
+
+  @override
   String get apply => 'Apply';
 
   @override

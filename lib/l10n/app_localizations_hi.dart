@@ -21,6 +21,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get save => 'सहेजें';
 
   @override
+  String get note => 'Note';
+
+  @override
+  String get addNote => 'Add a note';
+
+  @override
   String get apply => 'Apply';
 
   @override

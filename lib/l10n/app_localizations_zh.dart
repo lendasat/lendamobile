@@ -21,6 +21,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get save => '保存';
 
   @override
+  String get note => 'Note';
+
+  @override
+  String get addNote => 'Add a note';
+
+  @override
   String get apply => 'Apply';
 
   @override

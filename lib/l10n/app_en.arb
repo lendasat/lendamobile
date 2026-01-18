@@ -16,6 +16,14 @@
   "@save": {
     "description": "Save button text"
   },
+  "note": "Note",
+  "@note": {
+    "description": "Note label"
+  },
+  "addNote": "Add a note",
+  "@addNote": {
+    "description": "Add note placeholder"
+  },
   "apply": "Apply",
   "@apply": {
     "description": "Apply button text"

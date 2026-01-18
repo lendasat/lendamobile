@@ -67,6 +67,7 @@ class SendScreenState extends State<SendScreen> {
   final TextEditingController _btcController = TextEditingController();
   final TextEditingController _satController = TextEditingController();
   final TextEditingController _currController = TextEditingController();
+  final TextEditingController _noteController = TextEditingController();
   final FocusNode _amountFocusNode = FocusNode();
   final FocusNode _addressFocusNode = FocusNode();
 
@@ -74,7 +75,6 @@ class SendScreenState extends State<SendScreen> {
   bool _isLoading = false;
   bool _hasValidAddress = false;
   String? _addressError; // Error message for invalid address format
-  String? _description;
   double? _bitcoinPrice;
 
   // On-chain fee state
@@ -170,6 +170,7 @@ class SendScreenState extends State<SendScreen> {
     _btcController.dispose();
     _satController.dispose();
     _currController.dispose();
+    _noteController.dispose();
     _amountFocusNode.dispose();
     _addressFocusNode.dispose();
     super.dispose();
@@ -381,9 +382,9 @@ class SendScreenState extends State<SendScreen> {
           _lnurlParams = params;
           _isFetchingLnurl = false;
           // Don't auto-fill amount - let user enter it manually (like Ark addresses)
-          // Set description from LNURL metadata if available
-          if (params.description != null && _description == null) {
-            _description = params.description;
+          // Set note from LNURL metadata if available (editable in confirmation sheet)
+          if (params.description != null && _noteController.text.isEmpty) {
+            _noteController.text = params.description!;
           }
         });
       } else {
@@ -967,27 +968,6 @@ class SendScreenState extends State<SendScreen> {
                             child: _buildBitcoinWidget(context),
                           ),
                           const SizedBox(height: AppTheme.cardPadding * 1.25),
-                          // Description if available
-                          if (_description != null &&
-                              _description!.isNotEmpty) ...[
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.cardPadding,
-                              ),
-                              child: Text(
-                                ',,${_description!}"',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                    ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
                           // Available balance display (hide when amount is locked from invoice)
                           if (!_isAmountLocked)
                             _buildAvailableBalance(context, l10n),
@@ -1608,6 +1588,78 @@ class SendScreenState extends State<SendScreen> {
     }
   }
 
+  /// Show a bottom sheet to edit the payment note
+  void _showNoteEditor(BuildContext sheetContext) {
+    final l10n = AppLocalizations.of(context)!;
+    final tempController = TextEditingController(text: _noteController.text);
+
+    arkBottomSheet(
+      context: sheetContext,
+      height: MediaQuery.of(context).size.height * 0.4,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.note,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            TextField(
+              controller: tempController,
+              autofocus: true,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: l10n.addNote,
+                border: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(AppTheme.borderRadiusSmall),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(AppTheme.borderRadiusSmall),
+                  borderSide: BorderSide(
+                    color: AppTheme.colorBitcoin,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+            const Spacer(),
+            Row(
+              children: [
+                Expanded(
+                  child: LongButtonWidget(
+                    buttonType: ButtonType.transparent,
+                    title: l10n.cancel,
+                    onTap: () => Navigator.pop(sheetContext),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.elementSpacing),
+                Expanded(
+                  child: LongButtonWidget(
+                    buttonType: ButtonType.solid,
+                    title: l10n.save,
+                    onTap: () {
+                      setState(() {
+                        _noteController.text = tempController.text;
+                      });
+                      Navigator.pop(sheetContext);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showConfirmationSheet() {
     final l10n = AppLocalizations.of(context)!;
     final amountSats = double.tryParse(_satController.text) ?? 0;
@@ -1722,6 +1774,55 @@ class SendScreenState extends State<SendScreen> {
                                         ),
                                   ),
                                 ),
+                                // Note row (for LNURL payments - editable)
+                                if (_lnurlParams != null)
+                                  ArkListTile(
+                                    margin: EdgeInsets.zero,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal:
+                                          AppTheme.elementSpacing * 0.75,
+                                      vertical: AppTheme.elementSpacing * 0.5,
+                                    ),
+                                    text: l10n.note,
+                                    trailing: GestureDetector(
+                                      onTap: () => _showNoteEditor(context),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              _noteController.text.isEmpty
+                                                  ? l10n.addNote
+                                                  : _noteController.text,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    color: _noteController
+                                                            .text.isEmpty
+                                                        ? Theme.of(context)
+                                                            .hintColor
+                                                        : Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface,
+                                                  ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                              width:
+                                                  AppTheme.elementSpacing / 2),
+                                          Icon(
+                                            CupertinoIcons.pencil,
+                                            size: 16,
+                                            color: Theme.of(context).hintColor,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    onTap: () => _showNoteEditor(context),
+                                  ),
                                 // Network row (with picker for BIP21)
                                 ArkListTile(
                                   margin: EdgeInsets.zero,

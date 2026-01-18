@@ -21,6 +21,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get save => 'Speichern';
 
   @override
+  String get note => 'Notiz';
+
+  @override
+  String get addNote => 'Notiz hinzufügen';
+
+  @override
   String get apply => 'Apply';
 
   @override
