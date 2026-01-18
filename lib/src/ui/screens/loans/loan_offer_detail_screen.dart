@@ -803,40 +803,38 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label row with wallet connection indicator
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'PAYOUT ADDRESS (POLYGON USDC)',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.8,
-                    fontSize: 9,
-                  ),
-            ),
-            if (_addressFromWallet)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    size: 12,
-                    color: AppTheme.successColor,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'From connected wallet',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.successColor,
-                          fontSize: 9,
-                        ),
-                  ),
-                ],
+        // Label
+        Text(
+          'PAYOUT ADDRESS (POLYGON USDC)',
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.8,
+                fontSize: 9,
               ),
-          ],
         ),
+        // Connected wallet indicator (below label)
+        if (_addressFromWallet) ...[
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.check_circle,
+                size: 12,
+                color: AppTheme.successColor,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'From connected wallet',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppTheme.successColor,
+                      fontSize: 9,
+                    ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 8),
         TextFormField(
           controller: _addressController,
