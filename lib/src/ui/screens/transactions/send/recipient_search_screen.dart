@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
@@ -317,11 +318,9 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
 
                 // Recent recipients section
                 if (_isLoading) ...[
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(AppTheme.cardPadding),
-                      child: CircularProgressIndicator(),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(AppTheme.cardPadding),
+                    child: dotProgress(context),
                   ),
                 ] else if (_recentRecipients.isNotEmpty) ...[
                   Padding(

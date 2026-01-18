@@ -1,6 +1,7 @@
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
@@ -195,9 +196,9 @@ class _BlockTransactionsState extends State<BlockTransactions> {
     final l10n = AppLocalizations.of(context)!;
 
     if (isLoading) {
-      return const Padding(
-        padding: EdgeInsets.all(32.0),
-        child: Center(child: CircularProgressIndicator()),
+      return Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: dotProgress(context),
       );
     }
 
@@ -220,11 +221,9 @@ class _BlockTransactionsState extends State<BlockTransactions> {
         itemCount: filteredTransactions.length + (isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (isLoadingMore && index == filteredTransactions.length) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 32),
-                child: CircularProgressIndicator(),
-              ),
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: dotProgress(context),
             );
           }
 

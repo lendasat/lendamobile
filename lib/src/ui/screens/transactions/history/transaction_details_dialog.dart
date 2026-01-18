@@ -1,5 +1,6 @@
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
@@ -41,10 +42,7 @@ class TransactionDetailsDialog extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context).colorScheme.primary),
-              ),
+              dotProgress(context),
               const SizedBox(height: AppTheme.elementSpacing),
               Text(
                 AppLocalizations.of(context)!.settlingTransaction,

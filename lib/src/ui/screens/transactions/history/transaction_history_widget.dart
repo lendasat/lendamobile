@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/services/pending_transaction_service.dart';
@@ -591,14 +592,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             ),
           )
         else if (widget.loading)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32.0),
-              child: CircularProgressIndicator(
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
-              ),
-            ),
+          Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: dotProgress(context),
           )
         else if (widget.transactions.isEmpty && widget.swaps.isEmpty)
           Center(

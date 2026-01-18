@@ -1,5 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/screens/analytics/mempool/hash_chart_model.dart';
 import 'package:flutter/material.dart';
@@ -111,9 +112,9 @@ class _HashrateChartState extends State<HashrateChart> {
           child: HashRealTimeValues(key: hashKey),
         ),
         widget.chartData.isEmpty
-            ? const SizedBox(
+            ? SizedBox(
                 height: AppTheme.cardPadding * 16,
-                child: Center(child: CircularProgressIndicator()),
+                child: dotProgress(context),
               )
             : SizedBox(
                 height: AppTheme.cardPadding * 16,

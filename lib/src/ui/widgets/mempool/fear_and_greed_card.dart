@@ -1,4 +1,5 @@
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:flutter/material.dart';
@@ -79,11 +80,9 @@ class FearAndGreedCard extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     if (isLoading) {
-      return const Center(
-        child: SizedBox(
-          height: 100,
-          child: CircularProgressIndicator(color: AppTheme.colorBitcoin),
-        ),
+      return SizedBox(
+        height: 100,
+        child: dotProgress(context),
       );
     }
 

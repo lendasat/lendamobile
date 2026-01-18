@@ -1,4 +1,5 @@
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/rust/api/lendaswap_api.dart';
@@ -540,12 +541,7 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
             ),
           ),
         ),
-        if (isActive && _isFunding)
-          const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+        if (isActive && _isFunding) dotProgressSmall(context),
       ],
     );
   }
@@ -848,11 +844,7 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+          dotProgressSmall(context),
           const SizedBox(width: 12),
           Text(
             message,

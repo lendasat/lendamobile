@@ -1,5 +1,6 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/widgets/mempool/data_widget.dart';
 import 'package:ark_flutter/src/models/mempool_new/bitcoin_data.dart';
@@ -131,7 +132,7 @@ class BlocksListView extends StatelessWidget {
 
   Widget _buildMempoolBlocks(BuildContext context) {
     if (isLoading) {
-      return const CircularProgressIndicator(color: AppTheme.colorBitcoin);
+      return dotProgress(context);
     }
 
     if (mempoolBlocks.isEmpty) {
@@ -185,7 +186,7 @@ class BlocksListView extends StatelessWidget {
     dynamic loc,
   ) {
     if (isLoading) {
-      return const CircularProgressIndicator(color: AppTheme.colorBitcoin);
+      return dotProgress(context);
     }
 
     if (confirmedBlocks.isEmpty) {

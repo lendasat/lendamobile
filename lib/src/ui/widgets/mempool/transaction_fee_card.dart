@@ -1,6 +1,7 @@
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/mempool/colorhelper.dart'
     as colorhelper;
@@ -24,9 +25,7 @@ class TransactionFeeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppTheme.colorBitcoin),
-      );
+      return dotProgress(context);
     }
 
     if (fees == null) {

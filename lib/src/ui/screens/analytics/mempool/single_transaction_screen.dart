@@ -1,6 +1,7 @@
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
 import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
@@ -211,7 +212,7 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
             )
           : null,
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? dotProgress(context)
           : transactionModel == null
               ? _buildFallbackView(context, l10n, timezoneService)
               : SingleChildScrollView(

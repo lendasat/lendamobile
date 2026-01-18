@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as rust_api;
 import 'package:ark_flutter/src/rust/models/moonpay.dart';
@@ -203,10 +204,9 @@ class _SellScreenState extends State<SellScreen> {
           ),
         );
 
-        // Track bitcoin sell transaction
-        await AnalyticsService().trackBitcoinTransaction(
+        // Track sell transaction
+        await AnalyticsService().trackSellTransaction(
           amountSats: sats,
-          type: 'sell',
           fiatCurrency: 'usd',
           provider: 'moonpay',
         );
@@ -327,7 +327,7 @@ class _SellScreenState extends State<SellScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? dotProgress(context)
           : _error != null
               ? _buildErrorState(l10n)
               : Stack(

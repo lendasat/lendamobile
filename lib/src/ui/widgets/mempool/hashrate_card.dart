@@ -1,4 +1,5 @@
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/models/mempool_new/chartline.dart';
@@ -118,9 +119,7 @@ class HashrateCard extends StatelessWidget {
 
   Widget _buildHashrateDisplay(BuildContext context) {
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppTheme.colorBitcoin),
-      );
+      return dotProgress(context);
     }
 
     return Center(
@@ -166,11 +165,9 @@ class HashrateCard extends StatelessWidget {
 
   Widget _buildChartSection(BuildContext context) {
     if (isLoading) {
-      return const Center(
-        child: SizedBox(
-          height: 180,
-          child: CircularProgressIndicator(color: AppTheme.colorBitcoin),
-        ),
+      return SizedBox(
+        height: 180,
+        child: dotProgress(context),
       );
     }
 

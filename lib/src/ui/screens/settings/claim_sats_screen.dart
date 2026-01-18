@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
@@ -214,7 +215,7 @@ class _ClaimSatsScreenState extends State<ClaimSatsScreen> {
         onTap: () => controller.resetToMain(),
       ),
       body: _isLoading || _isCheckingEligibility
-          ? const Center(child: CircularProgressIndicator())
+          ? dotProgress(context)
           : SingleChildScrollView(
               padding: const EdgeInsets.all(AppTheme.cardPadding),
               child: Column(

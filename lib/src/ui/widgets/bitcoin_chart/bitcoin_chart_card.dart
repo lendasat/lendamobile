@@ -1,4 +1,5 @@
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/percentage_change_widget.dart';
@@ -408,11 +409,7 @@ class _BitcoinChartCardState extends State<BitcoinChartCard> {
           SizedBox(
             height: AppTheme.cardPadding * 12,
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.orange,
-                    ),
-                  )
+                ? dotProgress(context)
                 : _errorMessage != null
                     ? Center(
                         child: Text(
