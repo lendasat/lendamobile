@@ -109,36 +109,26 @@ class _BitNetAppBarState extends State<BitNetAppBar> {
               : const SizedBox.shrink()),
       leading: widget.hasBackButton
           ? widget.customLeading ??
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: widget.onTap,
-                  child: Container(
-                    margin: const EdgeInsets.only(
-                      left: AppTheme.elementSpacing * 1.5,
-                      right: AppTheme.elementSpacing * 0.5,
-                      top: AppTheme.elementSpacing,
-                      bottom: AppTheme.elementSpacing,
-                    ),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () {
-                        if (widget.onTap != null) {
-                          widget.onTap!();
-                        } else {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      child: RoundedButtonWidget(
-                        buttonType: widget.buttonType ?? ButtonType.solid,
-                        iconData: widget.customIcon ?? Icons.arrow_back,
-                        iconColor: useBitcoinGradient
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.onSurface,
-                        onTap: null,
-                      ),
-                    ),
-                  ),
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: AppTheme.elementSpacing * 1.5,
+                  right: AppTheme.elementSpacing * 0.5,
+                  top: AppTheme.elementSpacing,
+                  bottom: AppTheme.elementSpacing,
+                ),
+                child: RoundedButtonWidget(
+                  buttonType: widget.buttonType ?? ButtonType.transparent,
+                  iconData: widget.customIcon ?? Icons.arrow_back,
+                  iconColor: useBitcoinGradient
+                      ? Colors.white
+                      : Theme.of(context).colorScheme.onSurface,
+                  onTap: () {
+                    if (widget.onTap != null) {
+                      widget.onTap!();
+                    } else {
+                      Navigator.of(context).pop();
+                    }
+                  },
                 ),
               )
           : null,

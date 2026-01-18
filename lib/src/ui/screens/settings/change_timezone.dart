@@ -46,16 +46,39 @@ class _TimezonePickerBody extends StatefulWidget {
 class _TimezonePickerBodyState extends State<_TimezonePickerBody> {
   String _searchText = '';
   bool _isLoading = true;
-  late List<Location> _locations;
+  late List<Location> _allLocations;
+  List<Location> _filteredLocations = [];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final locations = timeZoneDatabase.locations.values.toList();
+      // Sort alphabetically by name
+      locations.sort((a, b) => a.name.compareTo(b.name));
       setState(() {
-        _locations = timeZoneDatabase.locations.values.toList();
+        _allLocations = locations;
+        _filteredLocations = locations;
         _isLoading = false;
       });
+    });
+  }
+
+  void _filterTimezones(String searchText) {
+    setState(() {
+      _searchText = searchText;
+      if (searchText.isEmpty) {
+        _filteredLocations = _allLocations;
+      } else {
+        final searchLower = searchText.toLowerCase();
+        _filteredLocations = _allLocations.where((tz) {
+          final matchesAbbr = tz.currentTimeZone.abbreviation
+              .toLowerCase()
+              .startsWith(searchLower);
+          final matchesName = tz.name.toLowerCase().contains(searchLower);
+          return matchesAbbr || matchesName;
+        }).toList();
+      }
     });
   }
 
@@ -72,26 +95,22 @@ class _TimezonePickerBodyState extends State<_TimezonePickerBody> {
         padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.elementSpacing,
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: AppTheme.elementSpacing),
-              SearchFieldWidget(
-                hintText: AppLocalizations.of(context)!.search,
-                isSearchEnabled: true,
-                onChanged: (val) {
-                  setState(() {
-                    _searchText = val;
-                  });
-                },
-                handleSearch: (dynamic) {},
+        child: Column(
+          children: [
+            const SizedBox(height: AppTheme.elementSpacing),
+            SearchFieldWidget(
+              hintText: AppLocalizations.of(context)!.search,
+              isSearchEnabled: true,
+              onChanged: _filterTimezones,
+              handleSearch: (dynamic) {},
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            Expanded(
+              child: _TimezoneList(
+                timezones: _filteredLocations,
               ),
-              _TimezoneList(
-                timezones: _locations,
-                searchText: _searchText,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -101,46 +120,27 @@ class _TimezonePickerBodyState extends State<_TimezonePickerBody> {
 class _TimezoneList extends StatelessWidget {
   const _TimezoneList({
     required this.timezones,
-    required this.searchText,
   });
 
   final List<Location> timezones;
-  final String searchText;
 
   @override
   Widget build(BuildContext context) {
     final timezoneService = context.watch<TimezoneService>();
     final selectedTimezone = timezoneService.currentTimezone;
 
-    return SizedBox(
-      width: double.infinity,
-      child: ListView.builder(
-        itemCount: timezones.length,
-        shrinkWrap: true,
-        scrollDirection: Axis.vertical,
-        physics: const BouncingScrollPhysics(),
-        itemBuilder: (ctx, i) {
-          final timezone = timezones[i];
-
-          // Filter by search
-          if (searchText.isNotEmpty) {
-            final matchesAbbr = timezone.currentTimeZone.abbreviation
-                .toLowerCase()
-                .startsWith(searchText.toLowerCase());
-            final matchesName = timezone.name
-                .toLowerCase()
-                .startsWith(searchText.toLowerCase());
-            if (!matchesAbbr && !matchesName) {
-              return const SizedBox.shrink();
-            }
-          }
-
-          return _TimezoneTile(
-            timezone: timezone,
-            isSelected: timezone.name == selectedTimezone,
-          );
-        },
-      ),
+    return ListView.builder(
+      itemCount: timezones.length,
+      // No shrinkWrap - let the Expanded parent handle sizing
+      // This enables proper virtualization (only visible items are built)
+      physics: const BouncingScrollPhysics(),
+      itemBuilder: (ctx, i) {
+        final timezone = timezones[i];
+        return _TimezoneTile(
+          timezone: timezone,
+          isSelected: timezone.name == selectedTimezone,
+        );
+      },
     );
   }
 }
