@@ -36,9 +36,14 @@ class SwapScreen extends StatefulWidget {
   SwapScreenState createState() => SwapScreenState();
 }
 
-class SwapScreenState extends State<SwapScreen> {
+class SwapScreenState extends State<SwapScreen>
+    with SingleTickerProviderStateMixin {
   // Selected tokens
   SwapToken sourceToken = SwapToken.bitcoin;
+
+  // Swap button animation
+  late AnimationController _swapButtonController;
+  late Animation<double> _swapButtonAnimation;
   SwapToken targetToken = SwapToken.usdcPolygon;
 
   // Amount values (stored as strings for precise decimal handling)
@@ -96,6 +101,15 @@ class SwapScreenState extends State<SwapScreen> {
     super.initState();
     _loadBitcoinPrice();
     _loadBalance();
+
+    // Initialize swap button animation
+    _swapButtonController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _swapButtonAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
+      CurvedAnimation(parent: _swapButtonController, curve: Curves.easeInOut),
+    );
   }
 
   /// Load wallet balance for insufficient funds checking
@@ -144,6 +158,7 @@ class SwapScreenState extends State<SwapScreen> {
     _sourceFocusNode.dispose();
     _targetFocusNode.dispose();
     scrollController.dispose();
+    _swapButtonController.dispose();
     super.dispose();
   }
 
@@ -517,7 +532,21 @@ class SwapScreenState extends State<SwapScreen> {
     });
   }
 
+  void _onSwapButtonTapDown(TapDownDetails details) {
+    _swapButtonController.forward();
+  }
+
+  void _onSwapButtonTapUp(TapUpDetails details) {
+    // Ensure forward completes before reversing (for quick taps)
+    _swapButtonController.forward().then((_) => _swapButtonController.reverse());
+  }
+
+  void _onSwapButtonTapCancel() {
+    _swapButtonController.reverse();
+  }
+
   void _swapTokens() {
+    HapticFeedback.lightImpact();
     setState(() {
       // Swap the tokens
       final temp = sourceToken;
@@ -1223,32 +1252,42 @@ class SwapScreenState extends State<SwapScreen> {
                             child: Align(
                               alignment: Alignment.center,
                               child: GestureDetector(
+                                onTapDown: _onSwapButtonTapDown,
+                                onTapUp: _onSwapButtonTapUp,
+                                onTapCancel: _onSwapButtonTapCancel,
                                 onTap: _swapTokens,
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? const Color(0xFF1B1B1B)
-                                        : Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
+                                child: AnimatedBuilder(
+                                  animation: _swapButtonAnimation,
+                                  builder: (context, child) => Transform.scale(
+                                    scale: _swapButtonAnimation.value,
+                                    child: child,
+                                  ),
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
                                       color: Theme.of(context).brightness ==
                                               Brightness.dark
-                                          ? Colors.white.withValues(alpha: 0.1)
-                                          : Colors.black
-                                              .withValues(alpha: 0.08),
-                                      width: 4,
+                                          ? const Color(0xFF1B1B1B)
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white.withValues(alpha: 0.1)
+                                            : Colors.black
+                                                .withValues(alpha: 0.08),
+                                        width: 4,
+                                      ),
                                     ),
-                                  ),
-                                  child: Icon(
-                                    Icons.arrow_downward_rounded,
-                                    size: 20,
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white
-                                        : Colors.black,
+                                    child: Icon(
+                                      Icons.arrow_downward_rounded,
+                                      size: 20,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
                                   ),
                                 ),
                               ),

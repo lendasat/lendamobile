@@ -82,17 +82,17 @@ class _LongButtonWidgetState extends State<LongButtonWidget>
     super.dispose();
   }
 
-  bool _animating = false;
+  void _onTapDown(TapDownDetails details) {
+    _scaleController.forward();
+  }
 
-  void _triggerAnimation() {
-    if (!_animating) {
-      _animating = true;
-      _scaleController.forward().then((_) {
-        _scaleController.reverse().then((_) {
-          _animating = false;
-        });
-      });
-    }
+  void _onTapUp(TapUpDetails details) {
+    // Ensure forward completes before reversing (for quick taps)
+    _scaleController.forward().then((_) => _scaleController.reverse());
+  }
+
+  void _onTapCancel() {
+    _scaleController.reverse();
   }
 
   @override
@@ -191,10 +191,12 @@ class _LongButtonWidgetState extends State<LongButtonWidget>
               child: InkWell(
                 hoverColor: Colors.black.withValues(alpha: 0.1),
                 onHover: (value) => setState(() => _isHovered = value),
+                onTapDown: effectiveState == ButtonState.disabled ? null : _onTapDown,
+                onTapUp: effectiveState == ButtonState.disabled ? null : _onTapUp,
+                onTapCancel: effectiveState == ButtonState.disabled ? null : _onTapCancel,
                 onTap: effectiveState == ButtonState.disabled
                     ? widget.onTapDisabled
                     : () {
-                        _triggerAnimation();
                         HapticFeedback.lightImpact();
                         widget.onTap?.call();
                       },

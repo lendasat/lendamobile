@@ -9,7 +9,7 @@ import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bottom_action_buttons.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
@@ -194,21 +194,10 @@ class _SingleTransactionScreenState extends State<SingleTransactionScreen> {
         },
       ),
       bottomSheet: widget.isSettleable
-          ? Container(
-              padding: const EdgeInsets.all(AppTheme.cardPadding),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-              ),
-              child: SafeArea(
-                top: false,
-                child: LongButtonWidget(
-                  title: _isSettling ? l10n.settlingTransaction : l10n.settle,
-                  customWidth: double.infinity,
-                  customHeight: 48,
-                  isLoading: _isSettling,
-                  onTap: _isSettling ? null : () => _handleSettlement(context),
-                ),
-              ),
+          ? BottomCenterButton(
+              title: _isSettling ? l10n.settlingTransaction : l10n.settle,
+              isLoading: _isSettling,
+              onTap: _isSettling ? null : () => _handleSettlement(context),
             )
           : null,
       body: isLoading

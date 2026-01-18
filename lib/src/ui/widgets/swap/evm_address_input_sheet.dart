@@ -54,11 +54,29 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
     }
   }
 
-  void _prefillFromConnectedWallet() {
+  /// Get the required EVM chain based on the network parameter
+  EvmChain get _requiredChain {
+    final networkLower = widget.network.toLowerCase();
+    if (networkLower.contains('ethereum') || networkLower.contains('eth')) {
+      return EvmChain.ethereum;
+    }
+    // Default to Polygon for all other cases
+    return EvmChain.polygon;
+  }
+
+  Future<void> _prefillFromConnectedWallet() async {
     if (_walletConnectService.isConnected &&
         _walletConnectService.isEvmAddress) {
+      // First ensure we're on the correct chain
+      try {
+        await _walletConnectService.ensureCorrectChain(_requiredChain);
+      } catch (e) {
+        logger.e('Failed to switch chain: $e');
+      }
+
+      // Then get the address for this chain
       final address = _walletConnectService.connectedAddress;
-      if (address != null && address.startsWith('0x')) {
+      if (address != null && address.startsWith('0x') && mounted) {
         setState(() {
           _addressController.text = address;
           _addressFromWallet = true;
@@ -76,9 +94,11 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
       }
       await _walletConnectService.openModal();
 
-      // After connecting, switch to Polygon if needed
+      // After connecting, switch to the required chain and get address
       if (_walletConnectService.isConnected) {
-        await _walletConnectService.ensureCorrectChain(EvmChain.polygon);
+        await _walletConnectService.ensureCorrectChain(_requiredChain);
+        // Manually trigger prefill after chain switch
+        await _prefillFromConnectedWallet();
       }
     } catch (e) {
       logger.e('Error connecting wallet: $e');
