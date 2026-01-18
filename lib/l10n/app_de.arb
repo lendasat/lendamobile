@@ -16,6 +16,14 @@
   "@save": {
     "description": "Text der Speichern-Schaltfläche"
   },
+  "note": "Notiz",
+  "@note": {
+    "description": "Notiz Label"
+  },
+  "addNote": "Notiz hinzufügen",
+  "@addNote": {
+    "description": "Notiz Platzhalter"
+  },
   "apply": "Apply",
   "@apply": {
     "description": "Text der Anwenden-Schaltfläche"

@@ -5,7 +5,8 @@
       "Bash(git rebase:*)",
       "Bash(dprint check:*)",
       "Bash(git push:*)",
-      "Bash(flutter analyze:*)"
+      "Bash(flutter analyze:*)",
+      "Bash(find:*)"
     ]
   }
 }

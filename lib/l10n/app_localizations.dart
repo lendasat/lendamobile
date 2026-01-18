@@ -140,6 +140,18 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
+  /// Note label
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get note;
+
+  /// Add note placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note'**
+  String get addNote;
+
   /// Apply button text
   ///
   /// In en, this message translates to:
