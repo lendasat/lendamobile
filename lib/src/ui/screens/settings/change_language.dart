@@ -27,6 +27,7 @@ class _ChangeLanguageState extends State<ChangeLanguage> {
         text: AppLocalizations.of(context)!.language,
         context: context,
         hasBackButton: true,
+        transparent: false,
         onTap: () => controller.switchTab('main'),
       ),
       body: const _LanguagePickerBody(),
@@ -42,14 +43,35 @@ class _LanguagePickerBody extends StatefulWidget {
 }
 
 class _LanguagePickerBodyState extends State<_LanguagePickerBody> {
-  String _searchText = '';
+  static const _languages = LanguageService.languageNames;
+  late List<String> _allLanguageCodes;
+  List<String> _filteredLanguageCodes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _allLanguageCodes = _languages.keys.toList();
+    _filteredLanguageCodes = _allLanguageCodes;
+  }
+
+  void _filterLanguages(String searchText) {
+    setState(() {
+      if (searchText.isEmpty) {
+        _filteredLanguageCodes = _allLanguageCodes;
+      } else {
+        final searchLower = searchText.toLowerCase();
+        _filteredLanguageCodes = _allLanguageCodes.where((code) {
+          final name = _languages[code]!.toLowerCase();
+          return name.contains(searchLower) || code.startsWith(searchLower);
+        }).toList();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final languageService = context.watch<LanguageService>();
     final selectedLanguage = languageService.currentLocale;
-    const languages = LanguageService.languageNames;
-    final languageCodes = languages.keys.toList();
 
     return ArkScaffoldUnsafe(
       context: context,
@@ -58,57 +80,35 @@ class _LanguagePickerBodyState extends State<_LanguagePickerBody> {
         padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.elementSpacing,
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: AppTheme.elementSpacing),
-              SearchFieldWidget(
-                hintText: AppLocalizations.of(context)!.search,
-                isSearchEnabled: true,
-                onChanged: (val) {
-                  setState(() {
-                    _searchText = val;
-                  });
+        child: Column(
+          children: [
+            const SizedBox(height: AppTheme.elementSpacing),
+            // Fixed search bar at top
+            SearchFieldWidget(
+              hintText: AppLocalizations.of(context)!.search,
+              isSearchEnabled: true,
+              onChanged: _filterLanguages,
+              handleSearch: (dynamic) {},
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            // Scrollable list
+            Expanded(
+              child: ListView.builder(
+                itemCount: _filteredLanguageCodes.length,
+                physics: const BouncingScrollPhysics(),
+                itemBuilder: (context, index) {
+                  final languageCode = _filteredLanguageCodes[index];
+                  final languageName = _languages[languageCode]!;
+                  return _buildLanguageTile(
+                    languageCode,
+                    languageName,
+                    selectedLanguage,
+                  );
                 },
-                handleSearch: (dynamic) {},
               ),
-              _buildLanguageList(languageCodes, languages, selectedLanguage),
-            ],
-          ),
+            ),
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildLanguageList(
-    List<String> languageCodes,
-    Map<String, String> languages,
-    Locale selectedLanguage,
-  ) {
-    return SizedBox(
-      width: double.infinity,
-      child: ListView.builder(
-        itemCount: languageCodes.length,
-        shrinkWrap: true,
-        scrollDirection: Axis.vertical,
-        physics: const BouncingScrollPhysics(),
-        itemBuilder: (context, index) {
-          final languageCode = languageCodes[index];
-          final languageName = languages[languageCode]!;
-
-          if (_searchText.isNotEmpty &&
-              !languageName
-                  .toLowerCase()
-                  .startsWith(_searchText.toLowerCase())) {
-            return const SizedBox.shrink();
-          }
-
-          return _buildLanguageTile(
-            languageCode,
-            languageName,
-            selectedLanguage,
-          );
-        },
       ),
     );
   }

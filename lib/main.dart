@@ -2,6 +2,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/providers/theme_provider.dart';
 import 'package:ark_flutter/src/rust/api.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/biometric_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/language_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
@@ -13,6 +14,7 @@ import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/core/bottom_nav.dart';
+import 'package:ark_flutter/src/ui/screens/lock/lock_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/src/rust/frb_generated.dart';
 import 'package:ark_flutter/src/ui/screens/onboarding/onboarding_screen.dart';
@@ -176,6 +178,9 @@ class MyApp extends StatelessWidget {
           ChangeNotifierProvider(
             create: (context) => SwapMonitoringService(),
           ),
+          ChangeNotifierProvider(
+            create: (context) => BiometricService()..initialize(),
+          ),
         ],
         child: Consumer2<ThemeProvider, LanguageService>(
           builder: (context, themeProvider, languageService, _) => MaterialApp(
@@ -192,7 +197,7 @@ class MyApp extends StatelessWidget {
               GlobalCupertinoLocalizations.delegate,
             ],
             supportedLocales: LanguageService.supportedLocales,
-            home: startScreen,
+            home: LockScreen(child: startScreen),
           ),
         ),
       ),

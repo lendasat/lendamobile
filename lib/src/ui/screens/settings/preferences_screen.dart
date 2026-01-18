@@ -1,9 +1,12 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/services/biometric_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
@@ -11,8 +14,40 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 /// Preferences Screen - displays app preferences and settings
-class PreferencesScreen extends StatelessWidget {
+class PreferencesScreen extends StatefulWidget {
   const PreferencesScreen({super.key});
+
+  @override
+  State<PreferencesScreen> createState() => _PreferencesScreenState();
+}
+
+class _PreferencesScreenState extends State<PreferencesScreen> {
+  bool _isBiometricLoading = false;
+
+  Future<void> _handleBiometricToggle(BiometricService biometricService, bool enable) async {
+    if (_isBiometricLoading) return;
+
+    setState(() => _isBiometricLoading = true);
+
+    try {
+      final success = await biometricService.setEnabled(enable);
+
+      if (!success && enable && mounted) {
+        // Show error if enabling failed
+        OverlayService().showError(
+          'Could not enable biometric authentication. Please try again.',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        OverlayService().showError('Error: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBiometricLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +191,66 @@ class PreferencesScreen extends StatelessWidget {
                 ),
                 onTap: () => userPrefs.toggleAllowAnalytics(),
               ),
+            ),
+
+            const SizedBox(height: AppTheme.cardPadding),
+
+            // Security Section Header
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.elementSpacing,
+                vertical: AppTheme.elementSpacing / 2,
+              ),
+              child: Text(
+                'Security',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppTheme.white60 : AppTheme.black60,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+
+            // Biometric Authentication
+            Consumer<BiometricService>(
+              builder: (context, biometricService, _) {
+                final isAvailable = biometricService.isAvailable;
+                final biometricName = biometricService.getBiometricTypeName();
+
+                return ArkListTile(
+                  leading: RoundedButtonWidget(
+                    iconData: Icons.fingerprint_rounded,
+                    onTap: isAvailable
+                        ? () => biometricService.toggleEnabled()
+                        : null,
+                    size: AppTheme.iconSize * 1.5,
+                    buttonType: ButtonType.transparent,
+                  ),
+                  text: biometricName,
+                  subtitle: Text(
+                    isAvailable
+                        ? 'Require $biometricName to open app'
+                        : 'Not available on this device',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isAvailable
+                          ? (isDark ? AppTheme.white60 : AppTheme.black60)
+                          : AppTheme.errorColor.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  trailing: Switch.adaptive(
+                    value: biometricService.isEnabled,
+                    onChanged: isAvailable
+                        ? (value) => biometricService.setEnabled(value)
+                        : null,
+                    activeColor: AppTheme.primaryColor,
+                  ),
+                  onTap: isAvailable
+                      ? () => biometricService.toggleEnabled()
+                      : null,
+                );
+              },
             ),
           ],
         ),

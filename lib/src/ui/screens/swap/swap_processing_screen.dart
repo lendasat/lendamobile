@@ -126,6 +126,18 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
           logger.w('[SwapProcessing] Swap is FAILED or EXPIRED.');
           _pollTimer?.cancel();
         } else {
+          // For BTC → EVM swaps that don't require WalletConnect,
+          // navigate back to wallet - monitoring service handles completion
+          if (widget.sourceToken.isBtc && !_swapMonitor.requiresWalletConnect(swap)) {
+            final isProcessing = swap.status == SwapStatusSimple.processing ||
+                swap.status == SwapStatusSimple.waitingForDeposit;
+            if (isProcessing) {
+              logger.i('[SwapProcessing] BTC→EVM swap processing via Gelato - returning to wallet');
+              _pollTimer?.cancel();
+              _navigateBackToWallet();
+              return;
+            }
+          }
           // Auto-claim via SwapMonitoringService
           await _attemptAutoClaim(swap);
         }
@@ -158,6 +170,19 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
       logger.d('[SwapProcessing] Triggering claim via SwapMonitoringService');
       await _swapMonitor.claimSwapIfReady(swap);
     }
+  }
+
+  /// Navigate back to wallet screen - swap will complete in background
+  void _navigateBackToWallet() {
+    if (!mounted) return;
+
+    OverlayService().showSuccess('Swap processing - you\'ll be notified when complete');
+
+    // Pop back to wallet (through all swap screens)
+    Navigator.of(context).popUntil((route) => route.isFirst);
+
+    // Trigger wallet refresh
+    PaymentMonitoringService().switchToWalletTab();
   }
 
   Future<void> _navigateToSuccess() async {
@@ -323,7 +348,6 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     IconData icon;
     Color color;
     String statusText;
-    bool showSpinner = false;
 
     // For BTC → EVM swaps, "Waiting for Deposit" should show as "Processing"
     // since Arkade handles the payment automatically
@@ -337,13 +361,11 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
         icon = Icons.hourglass_empty_rounded;
         color = Colors.orange;
         statusText = 'Waiting for Deposit';
-        showSpinner = true;
         break;
       case SwapStatusSimple.processing:
         icon = Icons.sync_rounded;
         color = AppTheme.colorBitcoin;
         statusText = 'Processing';
-        showSpinner = true;
         break;
       case SwapStatusSimple.completed:
         icon = Icons.check_circle_rounded;
@@ -374,25 +396,14 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
 
     return Column(
       children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            if (showSpinner)
-              SizedBox(
-                width: 100,
-                height: 100,
-                child: dotProgress(context),
-              ),
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 40, color: color),
-            ),
-          ],
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 40, color: color),
         ),
         const SizedBox(height: AppTheme.cardPadding),
         Text(

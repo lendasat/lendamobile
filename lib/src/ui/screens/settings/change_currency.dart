@@ -29,6 +29,7 @@ class _ChangeCurrencyState extends State<ChangeCurrency> {
         text: AppLocalizations.of(context)!.currency,
         context: context,
         hasBackButton: true,
+        transparent: false,
         onTap: () => controller.switchTab('main'),
       ),
       body: const _CurrencyPickerBody(),
@@ -44,7 +45,30 @@ class _CurrencyPickerBody extends StatefulWidget {
 }
 
 class _CurrencyPickerBodyState extends State<_CurrencyPickerBody> {
-  String _searchText = '';
+  late List<FiatCurrency> _allCurrencies;
+  List<FiatCurrency> _filteredCurrencies = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _allCurrencies = rust.getSupportedCurrencies();
+    _filteredCurrencies = _allCurrencies;
+  }
+
+  void _filterCurrencies(String searchText) {
+    setState(() {
+      if (searchText.isEmpty) {
+        _filteredCurrencies = _allCurrencies;
+      } else {
+        final searchLower = searchText.toLowerCase();
+        _filteredCurrencies = _allCurrencies.where((currency) {
+          final name = _getCurrencyName(currency).toLowerCase();
+          final code = currency.name.toLowerCase();
+          return name.contains(searchLower) || code.startsWith(searchLower);
+        }).toList();
+      }
+    });
+  }
 
   String _getCurrencyName(FiatCurrency currency) {
     switch (currency) {
@@ -108,7 +132,6 @@ class _CurrencyPickerBodyState extends State<_CurrencyPickerBody> {
   Widget build(BuildContext context) {
     final currencyService = context.watch<CurrencyPreferenceService>();
     final selectedCurrency = currencyService.currentCurrency;
-    final currencies = rust.getSupportedCurrencies();
 
     return ArkScaffoldUnsafe(
       context: context,
@@ -117,50 +140,34 @@ class _CurrencyPickerBodyState extends State<_CurrencyPickerBody> {
         padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.elementSpacing,
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: AppTheme.elementSpacing),
-              SearchFieldWidget(
-                hintText: AppLocalizations.of(context)!.search,
-                isSearchEnabled: true,
-                onChanged: (val) {
-                  setState(() {
-                    _searchText = val;
-                  });
+        child: Column(
+          children: [
+            const SizedBox(height: AppTheme.elementSpacing),
+            // Fixed search bar at top
+            SearchFieldWidget(
+              hintText: AppLocalizations.of(context)!.search,
+              isSearchEnabled: true,
+              onChanged: _filterCurrencies,
+              handleSearch: (dynamic) {},
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            // Scrollable list
+            Expanded(
+              child: ListView.builder(
+                itemCount: _filteredCurrencies.length,
+                physics: const BouncingScrollPhysics(),
+                itemBuilder: (context, index) {
+                  final currency = _filteredCurrencies[index];
+                  return _buildCurrencyTile(
+                    currency,
+                    _getCurrencyName(currency),
+                    selectedCurrency,
+                  );
                 },
-                handleSearch: (dynamic) {},
               ),
-              _buildCurrencyList(currencies, selectedCurrency),
-            ],
-          ),
+            ),
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildCurrencyList(
-      List<FiatCurrency> currencies, FiatCurrency selectedCurrency) {
-    return SizedBox(
-      width: double.infinity,
-      child: ListView.builder(
-        itemCount: currencies.length,
-        shrinkWrap: true,
-        scrollDirection: Axis.vertical,
-        physics: const BouncingScrollPhysics(),
-        itemBuilder: (context, index) {
-          final currency = currencies[index];
-          final currencyName = _getCurrencyName(currency);
-
-          if (_searchText.isNotEmpty &&
-              !currencyName
-                  .toLowerCase()
-                  .startsWith(_searchText.toLowerCase())) {
-            return const SizedBox.shrink();
-          }
-
-          return _buildCurrencyTile(currency, currencyName, selectedCurrency);
-        },
       ),
     );
   }
