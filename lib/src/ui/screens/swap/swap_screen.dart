@@ -1191,7 +1191,12 @@ class SwapScreenState extends State<SwapScreen> {
                                     : null,
                                 availableTokens: _getAvailableSourceTokens(),
                                 onTokenChanged: _onSourceTokenChanged,
-                                showBalance: true,
+                                // Only show balance for BTC (we know the user's balance)
+                                // For EVM tokens, user sends from external wallet
+                                showBalance: sourceToken.isBtc,
+                                balanceSats: sourceToken.isBtc
+                                    ? _availableBalanceSats
+                                    : null,
                                 label: 'sell',
                                 isTopCard: true,
                                 btcUnit: _sourceBtcUnit,
@@ -1429,6 +1434,7 @@ class _SwapAmountCard extends StatelessWidget {
   final List<SwapToken> availableTokens;
   final ValueChanged<SwapToken> onTokenChanged;
   final bool showBalance;
+  final BigInt? balanceSats; // User's actual balance in sats
   final String? label;
   final bool isTopCard;
   final CurrencyType btcUnit; // Current BTC unit (sats or bitcoin)
@@ -1446,6 +1452,7 @@ class _SwapAmountCard extends StatelessWidget {
     required this.availableTokens,
     required this.onTokenChanged,
     required this.showBalance,
+    this.balanceSats,
     this.label,
     this.isTopCard = true,
     this.btcUnit = CurrencyType.sats,
@@ -1475,6 +1482,29 @@ class _SwapAmountCard extends StatelessWidget {
       return btcUnit == CurrencyType.sats ? '0' : '0.00000000';
     }
     return '0.00';
+  }
+
+  /// Format balance with thousands separator
+  String _formatBalance(BigInt sats) {
+    final value = sats.toInt();
+    if (value >= 1000000000) {
+      return '${(value / 1000000000).toStringAsFixed(2)}B';
+    } else if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(2)}M';
+    } else if (value >= 1000) {
+      // Format with thousands separator
+      final formatted = value.toString();
+      final result = StringBuffer();
+      final length = formatted.length;
+      for (int i = 0; i < length; i++) {
+        if (i > 0 && (length - i) % 3 == 0) {
+          result.write(',');
+        }
+        result.write(formatted[i]);
+      }
+      return result.toString();
+    }
+    return value.toString();
   }
 
   @override
@@ -1763,17 +1793,31 @@ class _SwapAmountCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (showBalance) ...[
+                if (showBalance && token.isBtc && balanceSats != null) ...[
                   const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.only(right: 8.0),
-                    child: Text(
-                      token.isBtc ? '1,000,000 sats' : '~\$500.00',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          AppTheme.satoshiIcon,
+                          size: 12,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          _formatBalance(balanceSats!),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
