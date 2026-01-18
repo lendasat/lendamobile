@@ -5,6 +5,10 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
+import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
+import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
+import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart'
     show LendaSwapService;
@@ -26,6 +30,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Screen to view contract details and perform actions.
@@ -55,11 +60,31 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   bool _showAddressCopied = false;
   bool _showBtcAddressCopied = false;
   BigInt _availableBalanceSats = BigInt.zero;
+  List<PriceData> _bitcoinPriceData = [];
 
   @override
   void initState() {
     super.initState();
     _loadContract();
+    _loadBitcoinPrice();
+  }
+
+  Future<void> _loadBitcoinPrice() async {
+    try {
+      final priceData = await fetchBitcoinPriceData(TimeRange.day);
+      if (mounted && priceData.isNotEmpty) {
+        setState(() {
+          _bitcoinPriceData = priceData;
+        });
+      }
+    } catch (e) {
+      // Silently fail - will use fallback
+    }
+  }
+
+  double _getCurrentBtcPrice() {
+    if (_bitcoinPriceData.isEmpty) return 0;
+    return _bitcoinPriceData.last.price;
   }
 
   @override
@@ -975,10 +1000,15 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
   Widget _buildCollateralDetails() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final currencyService = context.watch<CurrencyPreferenceService>();
+    final btcPrice = _getCurrentBtcPrice();
+    final showCoinBalance = currencyService.showCoinBalance;
+
     final collateralBtc = _contract!.depositedBtc > 0
         ? _contract!.depositedBtc
         : _contract!.effectiveCollateralBtc;
     final collateralSats = collateralBtc * BitcoinConstants.satsPerBtc;
+    final collateralUsd = collateralBtc * btcPrice;
 
     return GlassContainer(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
@@ -1000,10 +1030,23 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          _buildDetailRow(
-            'AMOUNT',
-            '${collateralSats.toStringAsFixed(0)} sats',
-            subtext: '${collateralBtc.toStringAsFixed(8)} BTC',
+          GestureDetector(
+            onTap: () => currencyService.toggleShowCoinBalance(),
+            behavior: HitTestBehavior.opaque,
+            child: _buildDetailRow(
+              'AMOUNT',
+              showCoinBalance
+                  ? '${collateralSats.toStringAsFixed(0)} sats'
+                  : currencyService.formatAmount(collateralUsd),
+              subtext: showCoinBalance
+                  ? currencyService.formatAmount(collateralUsd)
+                  : '${collateralSats.toStringAsFixed(0)} sats',
+              trailing: Icon(
+                Icons.swap_vert,
+                size: 14,
+                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+              ),
+            ),
           ),
           _buildDetailRow(
             'INITIAL LTV',
@@ -1012,10 +1055,6 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           _buildDetailRow(
             'LIQUIDATION PRICE',
             '\$${_contract!.liquidationPrice.toStringAsFixed(2)}',
-          ),
-          _buildDetailRow(
-            'NETWORK TYPE',
-            _contract!.isArkCollateral ? 'Arkade (Instant)' : 'On-chain',
           ),
           if (_contract!.contractAddress != null)
             ArkListTile(
@@ -1414,8 +1453,14 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value,
-      {String? subtext, bool isBold = false, bool highlight = false}) {
+  Widget _buildDetailRow(
+    String label,
+    String value, {
+    String? subtext,
+    bool isBold = false,
+    bool highlight = false,
+    Widget? trailing,
+  }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
@@ -1432,24 +1477,34 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                   fontSize: 9,
                 ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                value,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-                      color: highlight ? AppTheme.colorBitcoin : null,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    value,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                          color: highlight ? AppTheme.colorBitcoin : null,
+                        ),
+                  ),
+                  if (subtext != null)
+                    Text(
+                      subtext,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color:
+                                isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            fontSize: 10,
+                          ),
                     ),
+                ],
               ),
-              if (subtext != null)
-                Text(
-                  subtext,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                        fontSize: 10,
-                      ),
-                ),
+              if (trailing != null) ...[
+                const SizedBox(width: 8),
+                trailing,
+              ],
             ],
           ),
         ],
