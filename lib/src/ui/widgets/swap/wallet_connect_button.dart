@@ -175,13 +175,13 @@ class _WalletConnectButtonState extends State<WalletConnectButton> {
       );
     }
 
-    // Disconnected state
+    // Disconnected state - icon color matches text color for solid buttons
     return LongButtonWidget(
-      buttonType: ButtonType.secondary,
+      buttonType: ButtonType.solid,
       title: 'Connect ${widget.chain.name} Wallet',
-      leadingIcon: Icon(
+      leadingIcon: const Icon(
         Icons.account_balance_wallet_outlined,
-        color: isDark ? Colors.white : Colors.black,
+        color: Color(0xFF1A0A00), // Match text color for solid buttons
       ),
       customWidth: double.infinity,
       onTap: _openModal,

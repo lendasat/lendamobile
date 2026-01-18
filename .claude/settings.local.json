@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(git rebase:*)",
+      "Bash(dprint check:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}
