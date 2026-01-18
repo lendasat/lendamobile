@@ -21,6 +21,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bottom_action_buttons.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,6 +53,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   String? _errorMessage;
   Timer? _pollTimer;
   bool _showAddressCopied = false;
+  bool _showBtcAddressCopied = false;
   BigInt _availableBalanceSats = BigInt.zero;
 
   @override
@@ -179,6 +181,24 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       if (mounted) {
         setState(() {
           _showAddressCopied = false;
+        });
+      }
+    });
+  }
+
+  void _copyBtcAddress() {
+    if (_contract?.btcLoanRepaymentAddress == null) return;
+    Clipboard.setData(ClipboardData(text: _contract!.btcLoanRepaymentAddress!));
+    HapticFeedback.lightImpact();
+
+    setState(() {
+      _showBtcAddressCopied = true;
+    });
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showBtcAddressCopied = false;
         });
       }
     });
@@ -997,86 +1017,55 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             'NETWORK TYPE',
             _contract!.isArkCollateral ? 'Arkade (Instant)' : 'On-chain',
           ),
-          if (_contract!.contractAddress != null) ...[
-            const SizedBox(height: 16),
-            GestureDetector(
+          if (_contract!.contractAddress != null)
+            ArkListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.elementSpacing * 0.75,
+                vertical: AppTheme.elementSpacing * 0.5,
+              ),
+              text: 'Contract Address',
               onTap: _copyContractAddress,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.black.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              trailing: SizedBox(
+                width: AppTheme.cardPadding * 6,
+                child: _showAddressCopied
+                    ? Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(
-                            'CONTRACT ADDRESS',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(
-                                  color: isDarkMode
-                                      ? AppTheme.white60
-                                      : AppTheme.black60,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 8,
-                                ),
+                          const Icon(
+                            Icons.check,
+                            color: AppTheme.successColor,
+                            size: AppTheme.cardPadding * 0.75,
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _contract!.contractAddress!,
-                            style: TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 10,
-                              color: isDarkMode
-                                  ? AppTheme.white90
-                                  : AppTheme.black90,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          const SizedBox(width: AppTheme.elementSpacing / 2),
+                          const Text(
+                            'Copied',
+                            style: TextStyle(color: AppTheme.successColor),
                           ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    _showAddressCopied
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.check,
-                                color: AppTheme.successColor,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Copied',
-                                style: TextStyle(
-                                  color: AppTheme.successColor,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          )
-                        : Icon(
-                            Icons.copy_rounded,
-                            size: 14,
+                      )
+                    : Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _contract!.contractAddress!,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.elementSpacing / 2),
+                          Icon(
+                            Icons.copy,
                             color: isDarkMode
                                 ? AppTheme.white60
                                 : AppTheme.black60,
+                            size: AppTheme.cardPadding * 0.75,
                           ),
-                  ],
-                ),
+                        ],
+                      ),
               ),
             ),
-          ],
         ],
       ),
     );
@@ -1114,55 +1103,58 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
               isBold: true,
             ),
             if (_contract!.btcLoanRepaymentAddress != null &&
-                _contract!.btcLoanRepaymentAddress!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () => _copyToClipboard(
-                    _contract!.btcLoanRepaymentAddress!, 'BTC Address'),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.colorBitcoin.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: AppTheme.colorBitcoin.withValues(alpha: 0.1)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.currency_bitcoin_rounded,
-                          size: 16, color: AppTheme.colorBitcoin),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                _contract!.btcLoanRepaymentAddress!.isNotEmpty)
+              ArkListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.elementSpacing * 0.75,
+                  vertical: AppTheme.elementSpacing * 0.5,
+                ),
+                leading: const Icon(
+                  Icons.currency_bitcoin_rounded,
+                  size: 20,
+                  color: AppTheme.colorBitcoin,
+                ),
+                text: 'BTC Repayment Address',
+                onTap: _copyBtcAddress,
+                trailing: SizedBox(
+                  width: AppTheme.cardPadding * 6,
+                  child: _showBtcAddressCopied
+                      ? Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            Text(
-                              'BTC REPAYMENT ADDRESS',
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.colorBitcoin
-                                    .withValues(alpha: 0.7),
+                            const Icon(
+                              Icons.check,
+                              color: AppTheme.successColor,
+                              size: AppTheme.cardPadding * 0.75,
+                            ),
+                            const SizedBox(width: AppTheme.elementSpacing / 2),
+                            const Text(
+                              'Copied',
+                              style: TextStyle(color: AppTheme.successColor),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _contract!.btcLoanRepaymentAddress!,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            Text(
-                              _contract!.btcLoanRepaymentAddress!,
-                              style: const TextStyle(
-                                  fontSize: 10, fontFamily: 'monospace'),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            const SizedBox(width: AppTheme.elementSpacing / 2),
+                            Icon(
+                              Icons.copy,
+                              color: AppTheme.colorBitcoin.withValues(alpha: 0.7),
+                              size: AppTheme.cardPadding * 0.75,
                             ),
                           ],
                         ),
-                      ),
-                      Icon(Icons.copy_rounded,
-                          size: 14,
-                          color: AppTheme.colorBitcoin.withValues(alpha: 0.5)),
-                    ],
-                  ),
                 ),
               ),
-            ],
             const SizedBox(height: 16),
             Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
             const SizedBox(height: 16),
