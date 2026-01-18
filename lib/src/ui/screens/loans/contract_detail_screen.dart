@@ -160,6 +160,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
   Future<void> _copyToClipboard(String text, String label) async {
     await Clipboard.setData(ClipboardData(text: text));
+    HapticFeedback.lightImpact();
     if (mounted) {
       OverlayService().showOverlay('$label copied to clipboard');
     }
@@ -637,51 +638,53 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   Widget _buildContractDetails() {
     final hasActions = _hasActionButtons();
 
-    return Column(
+    return Stack(
       children: [
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _loadContract,
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                top: AppTheme.cardPadding * 3,
-                left: AppTheme.cardPadding,
-                right: AppTheme.cardPadding,
-                // Add extra bottom padding when there are floating action buttons
-                bottom: hasActions
-                    ? AppTheme.cardPadding * 8
-                    : AppTheme.cardPadding,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Status header
-                  _buildStatusHeader(),
+        // Main scrollable content
+        RefreshIndicator(
+          onRefresh: _loadContract,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              top: AppTheme.cardPadding * 3,
+              left: AppTheme.cardPadding,
+              right: AppTheme.cardPadding,
+              // Add extra bottom padding when there are floating action buttons
+              bottom:
+                  hasActions ? AppTheme.cardPadding * 8 : AppTheme.cardPadding,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Status header
+                _buildStatusHeader(),
+                const SizedBox(height: AppTheme.cardPadding),
+
+                // NOTE: Deposit card removed - collateral is now auto-sent from loan_offer_detail_screen
+
+                // Loan details
+                _buildLoanDetails(),
+                const SizedBox(height: AppTheme.cardPadding),
+
+                // Collateral details
+                _buildCollateralDetails(),
+                const SizedBox(height: AppTheme.cardPadding),
+
+                // Repayment schedule (if active loan or has installments)
+                if (_contract!.isActiveLoan ||
+                    _contract!.installments.isNotEmpty) ...[
+                  _buildRepaymentSchedule(),
                   const SizedBox(height: AppTheme.cardPadding),
-
-                  // NOTE: Deposit card removed - collateral is now auto-sent from loan_offer_detail_screen
-
-                  // Loan details
-                  _buildLoanDetails(),
-                  const SizedBox(height: AppTheme.cardPadding),
-
-                  // Collateral details
-                  _buildCollateralDetails(),
-                  const SizedBox(height: AppTheme.cardPadding),
-
-                  // Repayment schedule (if active loan or has installments)
-                  if (_contract!.isActiveLoan ||
-                      _contract!.installments.isNotEmpty) ...[
-                    _buildRepaymentSchedule(),
-                    const SizedBox(height: AppTheme.cardPadding),
-                  ],
                 ],
-              ),
+              ],
             ),
           ),
         ),
-        // Floating action buttons at bottom
-        if (hasActions) _buildFloatingActions(),
+        // Floating action buttons at bottom (overlays content with gradient)
+        if (hasActions)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: _buildFloatingActions(),
+          ),
       ],
     );
   }

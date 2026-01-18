@@ -70,6 +70,7 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
 
   Future<void> _copyToClipboard(BuildContext context, String text) async {
     await Clipboard.setData(ClipboardData(text: text));
+    HapticFeedback.lightImpact();
     if (context.mounted) {
       OverlayService().showSuccess('Copied to clipboard');
     }
