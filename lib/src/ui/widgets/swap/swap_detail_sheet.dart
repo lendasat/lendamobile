@@ -23,7 +23,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 /// Bottom sheet widget for displaying swap details.
-/// Uses the exact same UI as SwapDetailScreen.
 class SwapDetailSheet extends StatefulWidget {
   final String swapId;
   final SwapActivityItem? initialSwapItem;
