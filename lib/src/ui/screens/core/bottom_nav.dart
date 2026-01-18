@@ -9,6 +9,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/bottom_nav_gradient.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -92,6 +93,9 @@ class _BottomNavState extends State<BottomNav> {
   }
 
   void _onItemTapped(int index) {
+    // Haptic feedback
+    HapticFeedback.lightImpact();
+
     // Close any open bottom sheets/dialogs before switching tabs
     Navigator.of(context).popUntil((route) => route is! PopupRoute);
 

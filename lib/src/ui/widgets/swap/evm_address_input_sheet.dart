@@ -75,6 +75,11 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
         await _walletConnectService.initialize(context);
       }
       await _walletConnectService.openModal();
+
+      // After connecting, switch to Polygon if needed
+      if (_walletConnectService.isConnected) {
+        await _walletConnectService.ensureCorrectChain(EvmChain.polygon);
+      }
     } catch (e) {
       logger.e('Error connecting wallet: $e');
       OverlayService().showError('Failed to connect wallet');

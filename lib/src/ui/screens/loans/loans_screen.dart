@@ -456,13 +456,6 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return ArkScaffoldUnsafe(
       context: context,
-      extendBodyBehindAppBar: true,
-      appBar: BitNetAppBar(
-        context: context,
-        hasBackButton: false,
-        text: AppLocalizations.of(context)?.loansAndLeverage ??
-            'Loans Marketplace',
-      ),
       body: GestureDetector(
         onTap: () => _searchFocusNode.unfocus(),
         behavior: HitTestBehavior.translucent,
@@ -645,7 +638,6 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
             title: 'Sign Up',
             buttonType: ButtonType.primary,
             onTap: _showSignupModal,
-            customHeight: 48,
           ),
         ],
       ),
@@ -756,7 +748,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
 
     // Match wallet screen pattern: 112 + cardPadding for search bar visible
-    const double headerHeight = 112.0 + AppTheme.cardPadding;
+    const double headerHeight = 112.0 + AppTheme.elementSpacing;
 
     return SliverAppBar(
       pinned: true,
@@ -775,9 +767,9 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                bgColor,
-                bgColor,
-                bgColor.withValues(alpha: 0),
+                Colors.black,
+                Colors.black,
+                Colors.black.withValues(alpha: 0),
               ],
               stops: const [0.0, 0.92, 1.0],
             ),

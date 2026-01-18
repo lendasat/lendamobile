@@ -1145,14 +1145,7 @@ class SwapScreenState extends State<SwapScreen> {
       behavior: HitTestBehavior.translucent,
       child: ArkScaffoldUnsafe(
         context: context,
-        extendBodyBehindAppBar: true,
         resizeToAvoidBottomInset: true,
-        appBar: BitNetAppBar(
-          text: "Swap",
-          context: context,
-          hasBackButton: false,
-          transparent: false,
-        ),
         body: PopScope(
           canPop: true,
           onPopInvokedWithResult: (didPop, result) {
@@ -1167,7 +1160,7 @@ class SwapScreenState extends State<SwapScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: AppTheme.cardPadding * 4),
+                    const SizedBox(height: AppTheme.cardPadding * 3.5),
                     // Uniswap-style card stack with connected border
                     Container(
                       margin: const EdgeInsets.symmetric(
@@ -1897,7 +1890,6 @@ class _TokenSelectorSheetState extends State<_TokenSelectorSheet> {
       ),
       body: Column(
         children: [
-          const SizedBox(height: AppTheme.cardPadding * 2),
           // TODO: Re-enable search field when more currencies are supported
           // Padding(
           //   padding: const EdgeInsets.symmetric(
@@ -1934,7 +1926,7 @@ class _TokenSelectorSheetState extends State<_TokenSelectorSheet> {
           //   ),
           // ),
           // const SizedBox(height: AppTheme.elementSpacing),
-          const SizedBox(height: AppTheme.cardPadding * 2.5),
+          const SizedBox(height: AppTheme.cardPadding * 3),
           // Token list
           Expanded(
             child: ListView.builder(
