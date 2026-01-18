@@ -1,5 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/models/mempool_new/lnd_transaction_model.dart';
 import 'package:ark_flutter/src/models/mempool_new/transactiondata.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -75,13 +76,9 @@ class _RecentReplacementsState extends State<RecentReplacements> {
 
   Widget _buildContent(BuildContext context, AppLocalizations l10n) {
     if (widget.isLoading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(32.0),
-          child: CircularProgressIndicator(
-            color: AppTheme.colorBitcoin,
-          ),
-        ),
+      return Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: dotProgress(context),
       );
     }
 

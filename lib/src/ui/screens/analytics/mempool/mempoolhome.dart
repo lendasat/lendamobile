@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
@@ -525,13 +526,10 @@ class _MempoolHomeState extends State<MempoolHome> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (_socketLoading)
-                  const Padding(
-                    padding: EdgeInsets.only(top: AppTheme.cardPadding * 15),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: AppTheme.colorBitcoin,
-                      ),
-                    ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(top: AppTheme.cardPadding * 15),
+                    child: dotProgress(context),
                   )
                 else
                   Column(
@@ -556,11 +554,7 @@ class _MempoolHomeState extends State<MempoolHome> {
 
                       // Block details
                       if (_loadingDetail)
-                        const Center(
-                          child: CircularProgressIndicator(
-                            color: AppTheme.colorBitcoin,
-                          ),
-                        )
+                        dotProgress(context)
                       else
                         Column(
                           children: [

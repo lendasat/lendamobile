@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
@@ -1397,14 +1398,7 @@ class SendScreenState extends State<SendScreen> {
                   if (hasAmount && _isOnChainAddress && _isFetchingFees)
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
-                          color: Theme.of(context).hintColor,
-                        ),
-                      ),
+                      child: dotProgress(context, size: 14.0),
                     ),
                   Text(
                     feeText ?? '',
@@ -1819,15 +1813,8 @@ class SendScreenState extends State<SendScreen> {
                                         Padding(
                                           padding:
                                               const EdgeInsets.only(right: 8),
-                                          child: SizedBox(
-                                            width: 12,
-                                            height: 12,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 1.5,
-                                              color:
-                                                  Theme.of(context).hintColor,
-                                            ),
-                                          ),
+                                          child:
+                                              dotProgress(context, size: 14.0),
                                         ),
                                       Text(
                                         feeText,
@@ -2037,19 +2024,7 @@ class SendScreenState extends State<SendScreen> {
         ),
         child: Center(
           child: _isLoading
-              ? SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      canSend
-                          ? const Color(
-                              0xFF1A0A00) // Dark brown/orange like button text
-                          : Theme.of(context).hintColor,
-                    ),
-                  ),
-                )
+              ? dotProgress(context)
               : Text(
                   buttonText,
                   style: TextStyle(

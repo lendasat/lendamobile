@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
@@ -291,7 +292,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
         hasBackButton: false,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? dotProgress(context)
           : _errorMessage != null && _swapInfo == null
               ? _buildErrorState(context)
               : _buildContent(context, isDarkMode),

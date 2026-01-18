@@ -7,11 +7,15 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark;
 /// Tracks transaction events for monthly active user (MAU) calculation.
 ///
 /// A user is considered active in a month if they have at least 1 transaction:
-/// - loan_transaction
-/// - bitcoin_transaction (buy or sell)
 /// - send_transaction
 /// - receive_transaction
 /// - swap_transaction
+/// - buy_transaction
+/// - sell_transaction
+/// - loan_transaction
+///
+/// Additionally, all transactions fire a unified `app_transaction` event
+/// with a `category` property for simplified retention measurements in PostHog.
 class AnalyticsService {
   static final AnalyticsService _instance = AnalyticsService._internal();
   factory AnalyticsService() => _instance;
@@ -55,22 +59,39 @@ class AnalyticsService {
   /// Get current user pubkey (if identified)
   String? get userPubkey => _userPubkey;
 
+  /// Internal helper to track unified app_transaction event for retention measurements.
+  /// This event is fired alongside each specific transaction event.
+  Future<void> _trackAppTransaction(
+    String category,
+    Map<String, dynamic> properties,
+  ) async {
+    await Posthog().capture(
+      eventName: 'app_transaction',
+      properties: {
+        'category': category,
+        ...properties,
+      },
+    );
+  }
+
   /// Track a send transaction (on-chain or off-chain)
   Future<void> trackSendTransaction({
     required int amountSats,
     required String transactionType, // 'onchain' or 'offchain'
     String? txId,
   }) async {
+    final properties = {
+      'amount_sats': amountSats,
+      'transaction_type': transactionType,
+      if (txId != null) 'tx_id': txId,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
     try {
       await Posthog().capture(
         eventName: 'send_transaction',
-        properties: {
-          'amount_sats': amountSats,
-          'transaction_type': transactionType,
-          if (txId != null) 'tx_id': txId,
-          'timestamp': DateTime.now().toIso8601String(),
-        },
+        properties: properties,
       );
+      await _trackAppTransaction('send', properties);
       logger.i(
           '[Analytics] Tracked send_transaction: $amountSats sats ($transactionType)');
     } catch (e) {
@@ -84,16 +105,18 @@ class AnalyticsService {
     required String transactionType, // 'onchain' or 'offchain'
     String? txId,
   }) async {
+    final properties = {
+      'amount_sats': amountSats,
+      'transaction_type': transactionType,
+      if (txId != null) 'tx_id': txId,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
     try {
       await Posthog().capture(
         eventName: 'receive_transaction',
-        properties: {
-          'amount_sats': amountSats,
-          'transaction_type': transactionType,
-          if (txId != null) 'tx_id': txId,
-          'timestamp': DateTime.now().toIso8601String(),
-        },
+        properties: properties,
       );
+      await _trackAppTransaction('receive', properties);
       logger.i(
           '[Analytics] Tracked receive_transaction: $amountSats sats ($transactionType)');
     } catch (e) {
@@ -108,17 +131,19 @@ class AnalyticsService {
     required String toAsset,
     String? swapId,
   }) async {
+    final properties = {
+      'amount_sats': amountSats,
+      'from_asset': fromAsset,
+      'to_asset': toAsset,
+      if (swapId != null) 'swap_id': swapId,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
     try {
       await Posthog().capture(
         eventName: 'swap_transaction',
-        properties: {
-          'amount_sats': amountSats,
-          'from_asset': fromAsset,
-          'to_asset': toAsset,
-          if (swapId != null) 'swap_id': swapId,
-          'timestamp': DateTime.now().toIso8601String(),
-        },
+        properties: properties,
       );
+      await _trackAppTransaction('swap', properties);
       logger.i(
           '[Analytics] Tracked swap_transaction: $amountSats sats ($fromAsset -> $toAsset)');
     } catch (e) {
@@ -126,30 +151,55 @@ class AnalyticsService {
     }
   }
 
-  /// Track a bitcoin buy/sell transaction (fiat <-> BTC)
-  Future<void> trackBitcoinTransaction({
+  /// Track a bitcoin buy transaction (fiat -> BTC)
+  Future<void> trackBuyTransaction({
     required int amountSats,
-    required String type, // 'buy' or 'sell'
     required String fiatCurrency,
     double? fiatAmount,
     String? provider,
   }) async {
+    final properties = {
+      'amount_sats': amountSats,
+      'fiat_currency': fiatCurrency,
+      if (fiatAmount != null) 'fiat_amount': fiatAmount,
+      if (provider != null) 'provider': provider,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
     try {
       await Posthog().capture(
-        eventName: 'bitcoin_transaction',
-        properties: {
-          'amount_sats': amountSats,
-          'type': type,
-          'fiat_currency': fiatCurrency,
-          if (fiatAmount != null) 'fiat_amount': fiatAmount,
-          if (provider != null) 'provider': provider,
-          'timestamp': DateTime.now().toIso8601String(),
-        },
+        eventName: 'buy_transaction',
+        properties: properties,
       );
-      logger
-          .i('[Analytics] Tracked bitcoin_transaction: $type $amountSats sats');
+      await _trackAppTransaction('buy', properties);
+      logger.i('[Analytics] Tracked buy_transaction: $amountSats sats');
     } catch (e) {
-      logger.w('[Analytics] Failed to track bitcoin_transaction: $e');
+      logger.w('[Analytics] Failed to track buy_transaction: $e');
+    }
+  }
+
+  /// Track a bitcoin sell transaction (BTC -> fiat)
+  Future<void> trackSellTransaction({
+    required int amountSats,
+    required String fiatCurrency,
+    double? fiatAmount,
+    String? provider,
+  }) async {
+    final properties = {
+      'amount_sats': amountSats,
+      'fiat_currency': fiatCurrency,
+      if (fiatAmount != null) 'fiat_amount': fiatAmount,
+      if (provider != null) 'provider': provider,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    try {
+      await Posthog().capture(
+        eventName: 'sell_transaction',
+        properties: properties,
+      );
+      await _trackAppTransaction('sell', properties);
+      logger.i('[Analytics] Tracked sell_transaction: $amountSats sats');
+    } catch (e) {
+      logger.w('[Analytics] Failed to track sell_transaction: $e');
     }
   }
 
@@ -161,18 +211,20 @@ class AnalyticsService {
     double? interestRate,
     int? durationDays,
   }) async {
+    final properties = {
+      'amount_sats': amountSats,
+      'type': type,
+      if (loanId != null) 'loan_id': loanId,
+      if (interestRate != null) 'interest_rate': interestRate,
+      if (durationDays != null) 'duration_days': durationDays,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
     try {
       await Posthog().capture(
         eventName: 'loan_transaction',
-        properties: {
-          'amount_sats': amountSats,
-          'type': type,
-          if (loanId != null) 'loan_id': loanId,
-          if (interestRate != null) 'interest_rate': interestRate,
-          if (durationDays != null) 'duration_days': durationDays,
-          'timestamp': DateTime.now().toIso8601String(),
-        },
+        properties: properties,
       );
+      await _trackAppTransaction('loan', properties);
       logger.i('[Analytics] Tracked loan_transaction: $type $amountSats sats');
     } catch (e) {
       logger.w('[Analytics] Failed to track loan_transaction: $e');

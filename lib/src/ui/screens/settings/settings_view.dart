@@ -1,5 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/logger/hybrid_logger.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
@@ -714,15 +715,10 @@ class SettingsViewState extends State<SettingsView> {
                       // Export Logs
                       ArkListTile(
                         leading: _isExportingLogs
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: AppTheme.iconSize * 1.5,
                                 height: AppTheme.iconSize * 1.5,
-                                child: Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
+                                child: dotProgressSmall(context),
                               )
                             : RoundedButtonWidget(
                                 iconData: Icons.description_outlined,
@@ -802,13 +798,7 @@ class SettingsViewState extends State<SettingsView> {
                                 GestureDetector(
                                   onTap: _loadVtxoBalance,
                                   child: _isLoadingVtxoBalance
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        )
+                                      ? dotProgressSmall(context)
                                       : Icon(
                                           Icons.refresh_rounded,
                                           size: 18,
@@ -856,14 +846,7 @@ class SettingsViewState extends State<SettingsView> {
                               child: ElevatedButton.icon(
                                 onPressed: _isSettling ? null : _manualSettle,
                                 icon: _isSettling
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
+                                    ? dotProgressSmall(context)
                                     : const Icon(Icons.sync_rounded, size: 18),
                                 label: Text(_isSettling
                                     ? 'Settling...'

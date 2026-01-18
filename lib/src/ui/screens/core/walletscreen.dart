@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
@@ -1341,17 +1342,7 @@ class WalletScreenState extends State<WalletScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               if (_isSettling)
-                SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.5,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.6),
-                  ),
-                )
+                dotProgress(context, size: 14.0)
               else
                 Icon(
                   FontAwesomeIcons.arrowDown,
@@ -1610,11 +1601,13 @@ class WalletScreenState extends State<WalletScreen>
         ? 112.0 + AppTheme.cardPadding
         : 40.0 + AppTheme.cardPadding;
 
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+
     return SliverAppBar(
       pinned: true,
       floating: false,
       automaticallyImplyLeading: false,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       shadowColor: Colors.transparent,
       elevation: 0,
@@ -1622,7 +1615,18 @@ class WalletScreenState extends State<WalletScreen>
       toolbarHeight: headerHeight,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
-          color: Theme.of(context).scaffoldBackgroundColor,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                bgColor,
+                bgColor,
+                bgColor.withValues(alpha: 0),
+              ],
+              stops: const [0.0, 0.92, 1.0],
+            ),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

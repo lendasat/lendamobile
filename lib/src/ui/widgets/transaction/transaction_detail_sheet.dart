@@ -18,6 +18,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/blinking_dot.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -293,7 +294,7 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
             )
           : null,
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? dotProgress(context)
           : transactionModel == null
               ? _buildFallbackView(context, l10n, timezoneService,
                   currencyService, displayAmountSats, isSent)

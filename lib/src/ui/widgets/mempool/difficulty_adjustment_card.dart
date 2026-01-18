@@ -1,4 +1,5 @@
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/rust/models/mempool.dart';
@@ -23,11 +24,7 @@ class DifficultyAdjustmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Center(
-        child: CircularProgressIndicator(
-          color: AppTheme.colorBitcoin,
-        ),
-      );
+      return dotProgress(context);
     }
 
     if (da == null) {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
@@ -232,7 +233,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
         hasBackButton: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? dotProgress(context)
           : _errorMessage != null
               ? _buildErrorState(context)
               : _buildProcessingState(context, isDarkMode),
@@ -379,12 +380,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
               SizedBox(
                 width: 100,
                 height: 100,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    color.withValues(alpha: 0.3),
-                  ),
-                ),
+                child: dotProgress(context),
               ),
             Container(
               width: 80,

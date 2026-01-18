@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
@@ -556,7 +557,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? dotProgress(context)
           : _errorMessage != null
               ? _buildErrorView()
               : _contract == null
@@ -1322,15 +1323,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            AppTheme.successColor),
-                      ),
-                    ),
+                    dotProgress(context, size: 14.0),
                     const SizedBox(width: 12),
                     Flexible(
                       child: Text(

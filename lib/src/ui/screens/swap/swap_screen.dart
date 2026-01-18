@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart'
     show CurrencyType;
@@ -1380,11 +1381,9 @@ class SwapScreenState extends State<SwapScreen> {
                 ),
               )
             else if (_isLoadingQuote)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(AppTheme.cardPadding),
-                  child: CircularProgressIndicator(),
-                ),
+              Padding(
+                padding: const EdgeInsets.all(AppTheme.cardPadding),
+                child: dotProgress(context),
               )
             else ...[
               _FeeInfoRow(

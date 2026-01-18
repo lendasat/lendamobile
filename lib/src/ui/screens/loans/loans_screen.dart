@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
@@ -450,7 +451,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
         onTap: () => _searchFocusNode.unfocus(),
         behavior: HitTestBehavior.translucent,
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? dotProgress(context)
             : _errorMessage != null
                 ? _buildErrorView()
                 : RefreshIndicator(
@@ -495,51 +496,8 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                         // Offers list
                         _buildOffersSliver(),
 
-                        // My Contracts section with search
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppTheme.cardPadding,
-                              AppTheme.cardPadding,
-                              AppTheme.cardPadding,
-                              AppTheme.elementSpacing,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  AppLocalizations.of(context)?.myContracts ??
-                                      'My Contracts',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                                const SizedBox(height: AppTheme.elementSpacing),
-                                // Search bar
-                                SearchFieldWidget(
-                                  hintText:
-                                      AppLocalizations.of(context)?.search ??
-                                          'Search',
-                                  isSearchEnabled: true,
-                                  node: _searchFocusNode,
-                                  handleSearch: (value) {
-                                    setState(() {
-                                      _searchQuery = value.toLowerCase();
-                                    });
-                                  },
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _searchQuery = value.toLowerCase();
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        // My Contracts section with sticky header
+                        _buildStickyContractsHeader(),
 
                         // Contracts list
                         _buildContractsSliver(),
@@ -770,6 +728,84 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
             );
           },
           childCount: offers.length,
+        ),
+      ),
+    );
+  }
+
+  /// Builds the sticky "My Contracts" header with gradient fade
+  Widget _buildStickyContractsHeader() {
+    final l10n = AppLocalizations.of(context);
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+
+    // Header height: top padding + title + spacing + search bar + small fade area
+    const double headerHeight = AppTheme.cardPadding + // top padding
+        24.0 + // title
+        AppTheme.elementSpacing + // spacing
+        48.0 + // search bar
+        AppTheme.elementSpacing; // bottom for fade
+
+    return SliverAppBar(
+      pinned: true,
+      floating: false,
+      automaticallyImplyLeading: false,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      toolbarHeight: headerHeight,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                bgColor,
+                bgColor,
+                bgColor.withValues(alpha: 0),
+              ],
+              stops: const [0.0, 0.92, 1.0],
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: AppTheme.cardPadding),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.cardPadding),
+                child: Text(
+                  l10n?.myContracts ?? 'My Contracts',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+              const SizedBox(height: AppTheme.elementSpacing),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.cardPadding),
+                child: SearchFieldWidget(
+                  hintText: l10n?.search ?? 'Search',
+                  isSearchEnabled: true,
+                  node: _searchFocusNode,
+                  handleSearch: (value) {
+                    setState(() {
+                      _searchQuery = value.toLowerCase();
+                    });
+                  },
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value.toLowerCase();
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

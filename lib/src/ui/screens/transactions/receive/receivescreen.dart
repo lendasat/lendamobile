@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
@@ -1003,12 +1004,9 @@ class _ReceiveScreenState extends State<ReceiveScreen>
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(24),
                             ),
-                            child: const Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: CircularProgressIndicator(
-                                strokeWidth: 3,
-                                color: AppTheme.colorBitcoin,
-                              ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: dotProgress(context),
                             ),
                           ),
                       ],

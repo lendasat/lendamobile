@@ -1,5 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
@@ -363,12 +364,7 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
         },
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
-              ),
-            )
+          ? dotProgress(context)
           : _errorMessage != null
               ? _buildErrorView(isDark)
               : _buildCurrentStep(isDark),
@@ -662,7 +658,7 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
 
   Widget _buildConfirmMnemonicView(bool isDark) {
     if (_mnemonic == null) {
-      return const Center(child: CircularProgressIndicator());
+      return dotProgress(context);
     }
 
     return SingleChildScrollView(
