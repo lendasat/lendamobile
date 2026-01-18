@@ -48,6 +48,7 @@ class _AgbsAndImpressumScreenState extends State<AgbsAndImpressumScreen> {
       appBar: BitNetAppBar(
         text: AppLocalizations.of(context)!.legalInformation,
         context: context,
+        transparent: false,
         onTap: _handleBack,
       ),
       body: SingleChildScrollView(
