@@ -34,6 +34,7 @@ class LoanOfferDetailScreen extends StatefulWidget {
 
 class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   final LendasatService _lendasatService = LendasatService();
+  final WalletConnectService _walletConnectService = WalletConnectService();
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _amountController;
@@ -45,6 +46,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   double _calculatedInterest = 0;
   double _originationFee = 0;
   double _originationFeeAmount = 0;
+  bool _addressFromWallet = false;
 
   // Polling configuration
   static const int _maxPollingAttempts = 60; // 60 attempts = ~60 seconds
@@ -61,10 +63,48 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     );
     _addressController = TextEditingController();
     _calculateLoanTerms();
+
+    // Prefill address from connected wallet if available
+    _prefillFromConnectedWallet();
+
+    // Listen to wallet connection changes
+    _walletConnectService.addListener(_onWalletConnectionChanged);
+  }
+
+  void _onWalletConnectionChanged() {
+    if (mounted) {
+      _prefillFromConnectedWallet();
+    }
+  }
+
+  void _prefillFromConnectedWallet() {
+    if (_walletConnectService.isConnected &&
+        _walletConnectService.isEvmAddress) {
+      final address = _walletConnectService.connectedAddress;
+      if (address != null && address.startsWith('0x')) {
+        setState(() {
+          _addressController.text = address;
+          _addressFromWallet = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _connectWallet() async {
+    try {
+      if (!_walletConnectService.isInitialized) {
+        await _walletConnectService.initialize(context);
+      }
+      await _walletConnectService.openModal();
+    } catch (e) {
+      logger.e('Error connecting wallet: $e');
+      OverlayService().showError('Failed to connect wallet');
+    }
   }
 
   @override
   void dispose() {
+    _walletConnectService.removeListener(_onWalletConnectionChanged);
     _amountController.dispose();
     _durationController.dispose();
     _addressController.dispose();
@@ -339,68 +379,51 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       ),
       body: Stack(
         children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(AppTheme.cardPadding),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Lender info
-                  _buildLenderCard(),
-                  const SizedBox(height: AppTheme.cardPadding),
-
-                  // Offer details
-                  _buildOfferDetails(),
-                  const SizedBox(height: AppTheme.cardPadding),
-
-                  // Loan configuration
-                  _buildLoanConfiguration(),
-                  const SizedBox(height: AppTheme.cardPadding),
-
-                  // Calculated terms
-                  _buildCalculatedTerms(),
-                  const SizedBox(height: AppTheme.cardPadding),
-
-                  // KYC warning if required
-                  if (widget.offer.requiresKyc) ...[
-                    _buildKycWarning(),
-                    const SizedBox(height: AppTheme.cardPadding),
-                  ],
-
-                  // Create button
-                  LongButtonWidget(
-                    title:
-                        _isCreating ? 'Processing...' : 'Create Loan Request',
-                    customWidth: MediaQuery.of(context).size.width -
-                        AppTheme.cardPadding * 2,
-                    buttonType: widget.offer.isAvailable &&
-                            !_isCreating &&
-                            _lendasatService.isAuthenticated
-                        ? ButtonType.primary
-                        : ButtonType.secondary,
-                    onTap: widget.offer.isAvailable &&
-                            !_isCreating &&
-                            _lendasatService.isAuthenticated
-                        ? _createContract
-                        : null,
+          Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    left: AppTheme.cardPadding,
+                    right: AppTheme.cardPadding,
+                    top: AppTheme.cardPadding,
+                    // Extra bottom padding for floating button
+                    bottom: AppTheme.cardPadding * 6,
                   ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Lender info
+                        _buildLenderCard(),
+                        const SizedBox(height: AppTheme.cardPadding),
 
-                  if (!_lendasatService.isAuthenticated)
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(top: AppTheme.elementSpacing),
-                      child: Text(
-                        'Please sign in to create a loan request',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.errorColor,
-                            ),
-                        textAlign: TextAlign.center,
-                      ),
+                        // Offer details
+                        _buildOfferDetails(),
+                        const SizedBox(height: AppTheme.cardPadding),
+
+                        // Loan configuration
+                        _buildLoanConfiguration(),
+                        const SizedBox(height: AppTheme.cardPadding),
+
+                        // Calculated terms
+                        _buildCalculatedTerms(),
+                        const SizedBox(height: AppTheme.cardPadding),
+
+                        // KYC warning if required
+                        if (widget.offer.requiresKyc) ...[
+                          _buildKycWarning(),
+                          const SizedBox(height: AppTheme.cardPadding),
+                        ],
+                      ],
                     ),
-                ],
+                  ),
+                ),
               ),
-            ),
+              // Floating action button at bottom
+              _buildFloatingActionButton(),
+            ],
           ),
           // Processing overlay
           if (_isCreating)
@@ -422,6 +445,57 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                     ],
                   ),
                 ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingActionButton() {
+    return Container(
+      padding: EdgeInsets.only(
+        left: AppTheme.cardPadding,
+        right: AppTheme.cardPadding,
+        top: AppTheme.cardPadding,
+        bottom: MediaQuery.of(context).padding.bottom + AppTheme.cardPadding,
+      ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          LongButtonWidget(
+            title: _isCreating ? 'Processing...' : 'Create Loan Request',
+            customWidth: double.infinity,
+            buttonType: widget.offer.isAvailable &&
+                    !_isCreating &&
+                    _lendasatService.isAuthenticated
+                ? ButtonType.primary
+                : ButtonType.secondary,
+            onTap: widget.offer.isAvailable &&
+                    !_isCreating &&
+                    _lendasatService.isAuthenticated
+                ? _createContract
+                : null,
+          ),
+          if (!_lendasatService.isAuthenticated)
+            Padding(
+              padding: const EdgeInsets.only(top: AppTheme.elementSpacing),
+              child: Text(
+                'Please sign in to create a loan request',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.errorColor,
+                    ),
+                textAlign: TextAlign.center,
               ),
             ),
         ],
@@ -714,22 +788,156 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Address input
-          _buildSpecialField(
-            label: 'PAYOUT ADDRESS (POLYGON USDC)',
-            controller: _addressController,
-            hint: '0x...',
-            helper: 'Enter your Polygon wallet address to receive USDC.',
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) return 'Required';
-              if (!value.trim().startsWith('0x') || value.trim().length != 42) {
-                return 'Enter a valid Polygon address (0x...)';
-              }
-              return null;
-            },
-          ),
+          // Address input with wallet connect option
+          _buildAddressField(),
         ],
       ),
+    );
+  }
+
+  Widget _buildAddressField() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isConnected = _walletConnectService.isConnected;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Label row with wallet connection indicator
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'PAYOUT ADDRESS (POLYGON USDC)',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.8,
+                    fontSize: 9,
+                  ),
+            ),
+            if (_addressFromWallet)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    size: 12,
+                    color: AppTheme.successColor,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'From connected wallet',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppTheme.successColor,
+                          fontSize: 9,
+                        ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _addressController,
+          cursorColor: Theme.of(context).colorScheme.primary,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+          decoration: InputDecoration(
+            hintText: '0x...',
+            helperText: _addressFromWallet
+                ? null
+                : 'Enter your Polygon wallet address to receive USDC.',
+            helperStyle: TextStyle(
+              fontSize: 10,
+              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            filled: true,
+            fillColor: Colors.black.withValues(alpha: 0.05),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                  color: _addressFromWallet
+                      ? AppTheme.successColor.withValues(alpha: 0.3)
+                      : Colors.white.withValues(alpha: 0.05),
+                  width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.3),
+                  width: 1),
+            ),
+            errorStyle: const TextStyle(fontSize: 10),
+          ),
+          onChanged: (value) {
+            // If user manually edits, clear the "from wallet" indicator
+            if (_addressFromWallet &&
+                value != _walletConnectService.connectedAddress) {
+              setState(() {
+                _addressFromWallet = false;
+              });
+            }
+            _calculateLoanTerms();
+          },
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) return 'Required';
+            if (!value.trim().startsWith('0x') || value.trim().length != 42) {
+              return 'Enter a valid Polygon address (0x...)';
+            }
+            return null;
+          },
+        ),
+
+        // Connect wallet button (only show if not connected and address is empty)
+        if (!isConnected && _addressController.text.isEmpty) ...[
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: _connectWallet,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.account_balance_wallet_outlined,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Connect Wallet',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 

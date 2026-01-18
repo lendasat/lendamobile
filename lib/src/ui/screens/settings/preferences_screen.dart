@@ -138,6 +138,25 @@ class PreferencesScreen extends StatelessWidget {
                 onTap: () => userPrefs.toggleAutoReadClipboard(),
               ),
             ),
+
+            // Allow Analytics
+            Consumer<UserPreferencesService>(
+              builder: (context, userPrefs, _) => ArkListTile(
+                leading: RoundedButtonWidget(
+                  iconData: Icons.analytics_outlined,
+                  onTap: () => userPrefs.toggleAllowAnalytics(),
+                  size: AppTheme.iconSize * 1.5,
+                  buttonType: ButtonType.transparent,
+                ),
+                text: 'Allow Analytics',
+                trailing: Switch.adaptive(
+                  value: userPrefs.allowAnalytics,
+                  onChanged: (value) => userPrefs.setAllowAnalytics(value),
+                  activeColor: AppTheme.primaryColor,
+                ),
+                onTap: () => userPrefs.toggleAllowAnalytics(),
+              ),
+            ),
           ],
         ),
       ),

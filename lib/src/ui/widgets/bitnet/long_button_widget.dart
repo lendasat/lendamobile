@@ -210,8 +210,9 @@ class _LongButtonWidgetState extends State<LongButtonWidget>
                       borderRadius: borderRadius,
                     ),
                     child: effectiveState == ButtonState.loading
-                        ? dotProgressSmall(
+                        ? dotProgress(
                             context,
+                            size: 14,
                             color: widget.textColor ??
                                 (widget.buttonType == ButtonType.solid ||
                                         widget.buttonType == ButtonType.primary

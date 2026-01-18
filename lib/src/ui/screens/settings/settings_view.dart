@@ -20,6 +20,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsView extends StatefulWidget {
   final String aspId;
@@ -203,6 +204,13 @@ class SettingsViewState extends State<SettingsView> {
       setState(() {
         _wordRecoverySet = wordSet;
       });
+    }
+  }
+
+  Future<void> _openFeedbackTelegram() async {
+    final uri = Uri.parse('https://t.me/+6TLWEwib3nw0ZWFi');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -486,24 +494,24 @@ class SettingsViewState extends State<SettingsView> {
               //   onTap: () => controller.switchTab('recovery'),
               // ),
 
-              // Feedback / Report Bug - temporarily disabled
-              // ArkListTile(
-              //   leading: RoundedButtonWidget(
-              //     iconData: Icons.feedback_rounded,
-              //     onTap: () => controller.switchTab('feedback'),
-              //     size: AppTheme.iconSize * 1.5,
-              //     buttonType: ButtonType.transparent,
-              //   ),
-              //   text: AppLocalizations.of(context)!.reportBugFeedback,
-              //   trailing: Icon(
-              //     Icons.arrow_forward_ios_rounded,
-              //     size: AppTheme.iconSize * 0.75,
-              //     color: Theme.of(context).brightness == Brightness.dark
-              //         ? AppTheme.white60
-              //         : AppTheme.black60,
-              //   ),
-              //   onTap: () => controller.switchTab('feedback'),
-              // ),
+              // Feedback / Report Bug
+              ArkListTile(
+                leading: RoundedButtonWidget(
+                  iconData: Icons.feedback_rounded,
+                  onTap: _openFeedbackTelegram,
+                  size: AppTheme.iconSize * 1.5,
+                  buttonType: ButtonType.transparent,
+                ),
+                text: AppLocalizations.of(context)!.reportBugFeedback,
+                trailing: Icon(
+                  Icons.open_in_new_rounded,
+                  size: AppTheme.iconSize * 0.75,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.white60
+                      : AppTheme.black60,
+                ),
+                onTap: _openFeedbackTelegram,
+              ),
 
               // Claim Gifts - temporarily disabled
               // ArkListTile(

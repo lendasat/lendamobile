@@ -3,6 +3,9 @@ import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
+import 'package:ark_flutter/src/services/wallet_connect_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -31,11 +34,56 @@ class EvmAddressInputSheet extends StatefulWidget {
 
 class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
   final TextEditingController _addressController = TextEditingController();
+  final WalletConnectService _walletConnectService = WalletConnectService();
   String? _errorText;
   bool _isValid = false;
+  bool _addressFromWallet = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Prefill address from connected wallet if available
+    _prefillFromConnectedWallet();
+    // Listen to wallet connection changes
+    _walletConnectService.addListener(_onWalletConnectionChanged);
+  }
+
+  void _onWalletConnectionChanged() {
+    if (mounted) {
+      _prefillFromConnectedWallet();
+    }
+  }
+
+  void _prefillFromConnectedWallet() {
+    if (_walletConnectService.isConnected &&
+        _walletConnectService.isEvmAddress) {
+      final address = _walletConnectService.connectedAddress;
+      if (address != null && address.startsWith('0x')) {
+        setState(() {
+          _addressController.text = address;
+          _addressFromWallet = true;
+          _isValid = _validateEvmAddress(address);
+          _errorText = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _connectWallet() async {
+    try {
+      if (!_walletConnectService.isInitialized) {
+        await _walletConnectService.initialize(context);
+      }
+      await _walletConnectService.openModal();
+    } catch (e) {
+      logger.e('Error connecting wallet: $e');
+      OverlayService().showError('Failed to connect wallet');
+    }
+  }
 
   @override
   void dispose() {
+    _walletConnectService.removeListener(_onWalletConnectionChanged);
     _addressController.dispose();
     super.dispose();
   }
@@ -48,6 +96,12 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
 
   void _onAddressChanged(String value) {
     setState(() {
+      // If user manually edits, clear the "from wallet" indicator
+      if (_addressFromWallet &&
+          value != _walletConnectService.connectedAddress) {
+        _addressFromWallet = false;
+      }
+
       if (value.isEmpty) {
         _errorText = null;
         _isValid = false;
@@ -131,17 +185,126 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
                 ),
           ),
           const SizedBox(height: AppTheme.elementSpacing),
-          // Info text
-          Text(
-            infoText,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+          // Info text with wallet connection indicator
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  infoText,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                      ),
                 ),
+              ),
+              if (_addressFromWallet)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      size: 14,
+                      color: AppTheme.successColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Connected',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppTheme.successColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ],
+                ),
+            ],
           ),
-          const SizedBox(height: AppTheme.cardPadding),
+          const SizedBox(height: AppTheme.elementSpacing),
+
+          // Connect wallet button (if not connected and address is empty)
+          if (!_walletConnectService.isConnected &&
+              _addressController.text.isEmpty) ...[
+            GestureDetector(
+              onTap: _connectWallet,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet_outlined,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Connect Wallet',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            Row(
+              children: [
+                Expanded(
+                  child: Divider(
+                    color: isDarkMode
+                        ? Colors.white.withOpacity(0.2)
+                        : Colors.black.withOpacity(0.2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.elementSpacing),
+                  child: Text(
+                    'or enter manually',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: isDarkMode
+                              ? Colors.white.withOpacity(0.4)
+                              : Colors.black.withOpacity(0.4),
+                        ),
+                  ),
+                ),
+                Expanded(
+                  child: Divider(
+                    color: isDarkMode
+                        ? Colors.white.withOpacity(0.2)
+                        : Colors.black.withOpacity(0.2),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+          ],
+
           // Address input
           GlassContainer(
             borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+            border: _addressFromWallet
+                ? Border.all(
+                    color: AppTheme.successColor.withValues(alpha: 0.3),
+                    width: 1,
+                  )
+                : null,
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppTheme.cardPadding,

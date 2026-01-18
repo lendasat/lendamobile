@@ -143,7 +143,7 @@ class _RoundedButtonWidgetState extends State<RoundedButtonWidget>
         border: border,
       ),
       child: widget.isLoading
-          ? dotProgressSmall(context, color: fgColor)
+          ? dotProgress(context, size: 14, color: fgColor)
           : Center(
               child: Icon(
                 widget.iconData,

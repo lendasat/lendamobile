@@ -1,9 +1,8 @@
-import 'dart:async';
-
 import 'package:ark_flutter/l10n/app_localizations.dart';
-import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
-import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,58 +32,27 @@ class PaymentOverlayService {
     _suppressPaymentNotifications = false;
   }
 
-  /// Show a payment received overlay at the top of the screen
-  Future<void> showPaymentReceivedOverlay({
+  /// Show a payment received bottom sheet
+  Future<void> showPaymentReceivedBottomSheet({
     required BuildContext context,
     required PaymentReceived payment,
     VoidCallback? onDismiss,
-    Duration duration = const Duration(seconds: 4),
   }) async {
     // Haptic feedback for success
     await HapticFeedback.mediumImpact();
 
-    final overlayState = Overlay.of(context);
-
-    // Create animation controller with the overlay as ticker provider
-    final animationController = AnimationController(
-      duration: const Duration(milliseconds: 350),
-      vsync: overlayState,
-    );
-
-    final offsetAnimation = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: animationController,
-      curve: Curves.elasticOut,
-    ));
-
-    // Track if already dismissed to prevent double-dismiss
-    bool isDismissed = false;
-
-    late final OverlayEntry overlay;
-
-    void dismiss() {
-      if (isDismissed) return;
-      isDismissed = true;
-      overlay.remove();
-      animationController.dispose();
-      onDismiss?.call();
-    }
-
-    overlay = OverlayEntry(
-      builder: (context) => _PaymentReceivedOverlayWidget(
+    await arkBottomSheet(
+      context: context,
+      isDismissible: true,
+      enableDrag: true,
+      child: _PaymentReceivedBottomSheetContent(
         payment: payment,
-        animation: offsetAnimation,
-        onDismiss: dismiss,
+        onDismiss: onDismiss,
       ),
     );
 
-    overlayState.insert(overlay);
-    animationController.forward();
-
-    // Auto-dismiss after duration
-    Future.delayed(duration, dismiss);
+    // Call onDismiss when bottom sheet is closed
+    onDismiss?.call();
   }
 
   /// Show a simple success overlay
@@ -186,172 +154,86 @@ class PaymentOverlayService {
   }
 }
 
-/// Payment received overlay widget with transaction details
-class _PaymentReceivedOverlayWidget extends StatelessWidget {
+/// Payment received bottom sheet content widget
+class _PaymentReceivedBottomSheetContent extends StatelessWidget {
   final PaymentReceived payment;
-  final Animation<Offset> animation;
-  final VoidCallback onDismiss;
+  final VoidCallback? onDismiss;
 
-  const _PaymentReceivedOverlayWidget({
+  const _PaymentReceivedBottomSheetContent({
     required this.payment,
-    required this.animation,
-    required this.onDismiss,
+    this.onDismiss,
   });
 
-  String _formatAmount(BigInt sats) {
-    final amount = sats.toInt();
-    if (amount >= BitcoinConstants.satsPerBtc) {
-      return '${(amount / BitcoinConstants.satsPerBtc).toStringAsFixed(8)} BTC';
-    } else if (amount >= 1000000) {
-      return '${(amount / 1000000).toStringAsFixed(2)}M sats';
-    } else if (amount >= 1000) {
-      return '${(amount / 1000).toStringAsFixed(1)}k sats';
-    }
-    return '$amount sats';
-  }
-
-  String _truncateTxid(String txid) {
-    if (txid.length <= 16) return txid;
-    return '${txid.substring(0, 8)}...${txid.substring(txid.length - 8)}';
+  String _formatAmount(int sats) {
+    // Format with thousands separator
+    final formatted = sats.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
+    return formatted;
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final mediaQuery = MediaQuery.of(context);
-    final topPadding = mediaQuery.padding.top;
+    final theme = Theme.of(context);
 
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: SlideTransition(
-        position: animation,
-        child: GestureDetector(
-          onTap: onDismiss,
-          onVerticalDragEnd: (details) {
-            if (details.primaryVelocity != null &&
-                details.primaryVelocity! < -100) {
-              onDismiss();
-            }
-          },
-          child: Material(
-            type: MaterialType.transparency,
-            child: Container(
-              padding: EdgeInsets.only(
-                top: topPadding + AppTheme.elementSpacing,
-                bottom: AppTheme.cardPadding,
-                left: AppTheme.cardPadding,
-                right: AppTheme.cardPadding,
-              ),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppTheme.successColor,
-                    AppTheme.successColorGradient,
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(AppTheme.borderRadiusBig),
-                  bottomRight: Radius.circular(AppTheme.borderRadiusBig),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.successColor.withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header row with icon and title
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding:
-                            const EdgeInsets.all(AppTheme.elementSpacing / 2),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.check_rounded,
-                          color: Colors.white,
-                          size: AppTheme.cardPadding,
-                        ),
-                      ),
-                      const SizedBox(width: AppTheme.elementSpacing),
-                      Text(
-                        l10n?.paymentReceived ?? 'Payment Received!',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.elementSpacing),
-                  // Amount display
-                  GlassContainer(
-                    opacity: 0.15,
-                    customColor: Colors.white.withValues(alpha: 0.15),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.cardPadding,
-                      vertical: AppTheme.elementSpacing,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '+${_formatAmount(payment.amountSats)}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _truncateTxid(payment.txid),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                  ),
-                            ),
-                          ],
-                        ),
-                        Icon(
-                          Icons.arrow_downward_rounded,
-                          color: Colors.white.withValues(alpha: 0.8),
-                          size: AppTheme.cardPadding * 1.5,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.elementSpacing / 2),
-                  Text(
-                    'Tap to dismiss',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.6),
-                        ),
-                  ),
-                ],
-              ),
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.cardPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: AppTheme.cardPadding),
+          // Bani image
+          SizedBox(
+            width: 160,
+            height: 160,
+            child: Image.asset(
+              'assets/images/bani/bani_receive_bitcoin.png',
+              fit: BoxFit.contain,
             ),
           ),
-        ),
+          const SizedBox(height: AppTheme.cardPadding * 1.5),
+          // Title
+          Text(
+            l10n?.paymentReceived ?? 'Payment Received!',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+          // Amount display
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '+${_formatAmount(payment.amountSats.toInt())}',
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: AppTheme.successColor,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Image.asset(
+                'assets/images/sats.png',
+                width: 24,
+                height: 24,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.cardPadding * 2),
+          // Back to wallet button
+          LongButtonWidget(
+            title: l10n?.backToWallet ?? 'Back to Wallet',
+            buttonType: ButtonType.transparent,
+            customWidth: double.infinity,
+            customHeight: 56,
+            onTap: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+        ],
       ),
     );
   }

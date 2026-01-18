@@ -3,6 +3,7 @@ import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/transaction_filter_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/filter_pill.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -68,26 +69,26 @@ class TransactionFilterScreen extends StatelessWidget {
                       spacing: AppTheme.paddingS,
                       runSpacing: AppTheme.paddingS,
                       children: [
-                        _FilterPill(
+                        FilterPill(
                           label: 'Onchain',
                           isSelected: filterService.isNetworkEnabled('Onchain'),
                           onTap: () =>
                               filterService.toggleNetworkFilter('Onchain'),
                         ),
-                        _FilterPill(
+                        FilterPill(
                           label: 'Lightning',
                           isSelected:
                               filterService.isNetworkEnabled('Lightning'),
                           onTap: () =>
                               filterService.toggleNetworkFilter('Lightning'),
                         ),
-                        _FilterPill(
+                        FilterPill(
                           label: 'Arkade',
                           isSelected: filterService.isNetworkEnabled('Arkade'),
                           onTap: () =>
                               filterService.toggleNetworkFilter('Arkade'),
                         ),
-                        _FilterPill(
+                        FilterPill(
                           label: 'Swap',
                           isSelected: filterService.isNetworkEnabled('Swap'),
                           onTap: () =>
@@ -110,13 +111,13 @@ class TransactionFilterScreen extends StatelessWidget {
                       spacing: AppTheme.paddingS,
                       runSpacing: AppTheme.paddingS,
                       children: [
-                        _FilterPill(
+                        FilterPill(
                           label: AppLocalizations.of(context)!.sent,
                           isSelected: filterService.isDirectionEnabled('Sent'),
                           onTap: () =>
                               filterService.toggleDirectionFilter('Sent'),
                         ),
-                        _FilterPill(
+                        FilterPill(
                           label: AppLocalizations.of(context)!.received,
                           isSelected:
                               filterService.isDirectionEnabled('Received'),
@@ -236,90 +237,15 @@ class TransactionFilterScreen extends StatelessWidget {
               right: AppTheme.paddingM,
               bottom: MediaQuery.of(context).padding.bottom + AppTheme.paddingS,
             ),
-            child: SizedBox(
-              width: double.infinity,
-              child: LongButtonWidget(
-                title: AppLocalizations.of(context)!.apply,
-                customWidth: double.infinity,
-                customHeight: 56,
-                onTap: () {
-                  Navigator.pop(context);
-                },
-              ),
+            child: LongButtonWidget(
+              title: AppLocalizations.of(context)!.apply,
+              customWidth: double.infinity,
+              onTap: () {
+                Navigator.pop(context);
+              },
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _FilterPill extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _FilterPill({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTheme.borderRadiusBig),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.paddingM,
-          vertical: AppTheme.paddingS * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark
-                  ? Colors.white.withValues(alpha: 0.15)
-                  : Colors.black.withValues(alpha: 0.1))
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppTheme.borderRadiusBig),
-          border: Border.all(
-            color: isSelected
-                ? (isDark
-                    ? Colors.white.withValues(alpha: 0.3)
-                    : Colors.black.withValues(alpha: 0.3))
-                : (isDark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.1)),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isSelected) ...[
-              Icon(
-                Icons.check,
-                size: 14,
-                color: isDark ? Colors.white : Colors.black,
-              ),
-              const SizedBox(width: 4),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected
-                    ? (isDark ? Colors.white : Colors.black)
-                    : (isDark
-                        ? Colors.white.withValues(alpha: 0.4)
-                        : Colors.black.withValues(alpha: 0.4)),
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/src/services/onchain_monitoring_service.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
 import 'package:ark_flutter/src/ui/screens/loans/loans_screen.dart';
@@ -44,6 +45,7 @@ class _BottomNavState extends State<BottomNav> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initPaymentMonitoring();
       _initSwapMonitoring();
+      _initOnchainMonitoring();
     });
   }
 
@@ -74,6 +76,17 @@ class _BottomNavState extends State<BottomNav> {
       onWalletRefresh: () {
         logger.i("Swap status changed - refreshing swaps only");
         _walletKey.currentState?.refreshSwapsOnly();
+      },
+    );
+  }
+
+  void _initOnchainMonitoring() {
+    final onchainService = OnchainMonitoringService();
+
+    onchainService.initialize(
+      onWalletRefresh: () {
+        logger.i("Onchain transaction confirmed - refreshing wallet");
+        _walletKey.currentState?.fetchWalletData();
       },
     );
   }

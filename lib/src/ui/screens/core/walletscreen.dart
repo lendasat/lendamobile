@@ -1685,7 +1685,7 @@ class WalletScreenState extends State<WalletScreen>
                     },
                     suffixIcon: IconButton(
                       icon: Icon(
-                        Icons.filter_list,
+                        Icons.tune,
                         color: isDark ? AppTheme.white60 : AppTheme.black60,
                         size: AppTheme.cardPadding * 0.75,
                       ),

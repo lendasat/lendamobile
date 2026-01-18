@@ -634,44 +634,97 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   }
 
   Widget _buildContractDetails() {
-    return RefreshIndicator(
-      onRefresh: _loadContract,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.only(
-          top: AppTheme.cardPadding * 3,
-          left: AppTheme.cardPadding,
-          right: AppTheme.cardPadding,
-          bottom: AppTheme.cardPadding,
+    final hasActions = _hasActionButtons();
+
+    return Column(
+      children: [
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _loadContract,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                top: AppTheme.cardPadding * 3,
+                left: AppTheme.cardPadding,
+                right: AppTheme.cardPadding,
+                // Add extra bottom padding when there are floating action buttons
+                bottom: hasActions
+                    ? AppTheme.cardPadding * 8
+                    : AppTheme.cardPadding,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Status header
+                  _buildStatusHeader(),
+                  const SizedBox(height: AppTheme.cardPadding),
+
+                  // NOTE: Deposit card removed - collateral is now auto-sent from loan_offer_detail_screen
+
+                  // Loan details
+                  _buildLoanDetails(),
+                  const SizedBox(height: AppTheme.cardPadding),
+
+                  // Collateral details
+                  _buildCollateralDetails(),
+                  const SizedBox(height: AppTheme.cardPadding),
+
+                  // Repayment schedule (if active loan or has installments)
+                  if (_contract!.isActiveLoan ||
+                      _contract!.installments.isNotEmpty) ...[
+                    _buildRepaymentSchedule(),
+                    const SizedBox(height: AppTheme.cardPadding),
+                  ],
+                ],
+              ),
+            ),
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Status header
-            _buildStatusHeader(),
-            const SizedBox(height: AppTheme.cardPadding),
+        // Floating action buttons at bottom
+        if (hasActions) _buildFloatingActions(),
+      ],
+    );
+  }
 
-            // NOTE: Deposit card removed - collateral is now auto-sent from loan_offer_detail_screen
+  /// Check if there are any action buttons to show
+  bool _hasActionButtons() {
+    if (_contract == null) return false;
 
-            // Loan details
-            _buildLoanDetails(),
-            const SizedBox(height: AppTheme.cardPadding),
+    final canCancel = _contract!.status == ContractStatus.requested;
+    final canPayCollateral = _contract!.status == ContractStatus.approved &&
+        _contract!.contractAddress != null &&
+        _contract!.effectiveCollateralSats > 0;
 
-            // Collateral details
-            _buildCollateralDetails(),
-            const SizedBox(height: AppTheme.cardPadding),
+    return canCancel ||
+        canPayCollateral ||
+        _contract!.canRepayWithLendaswap ||
+        _contract!.canClaim ||
+        _contract!.canRecover ||
+        (_contract!.isActiveLoan &&
+            _contract!.balanceOutstanding > 0 &&
+            !_contract!.isAwaitingRepaymentConfirmation) ||
+        _contract!.isAwaitingRepaymentConfirmation;
+  }
 
-            // Repayment schedule (if active loan or has installments)
-            if (_contract!.isActiveLoan ||
-                _contract!.installments.isNotEmpty) ...[
-              _buildRepaymentSchedule(),
-              const SizedBox(height: AppTheme.cardPadding),
-            ],
-
-            // Actions
-            _buildActions(),
-          ],
-        ),
+  /// Floating action buttons container at the bottom
+  Widget _buildFloatingActions() {
+    return Container(
+      padding: EdgeInsets.only(
+        left: AppTheme.cardPadding,
+        right: AppTheme.cardPadding,
+        top: AppTheme.cardPadding,
+        bottom: MediaQuery.of(context).padding.bottom + AppTheme.cardPadding,
       ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: _buildActions(),
     );
   }
 
@@ -855,10 +908,9 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
       return AppTheme.errorColor;
     } else if (_contract!.canClaim || _contract!.canRecover) {
       return AppTheme.successColor;
-    } else if (_contract!.isAwaitingDeposit) {
-      return Colors.orange;
     } else {
-      return Theme.of(context).colorScheme.primary;
+      // Use orange for all pending/in-progress states (approved, awaiting deposit, etc.)
+      return Colors.orange;
     }
   }
 
@@ -1218,8 +1270,6 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     final canPayCollateral = _contract!.status == ContractStatus.approved &&
         _contract!.contractAddress != null &&
         _contract!.effectiveCollateralSats > 0;
-    final buttonWidth =
-        MediaQuery.of(context).size.width - AppTheme.cardPadding * 2;
     final isPayingCollateral = _isActionLoading;
 
     // Check if user has enough balance for collateral
@@ -1228,6 +1278,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         canPayCollateral && _availableBalanceSats < requiredSats;
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         if (canPayCollateral)
           LongButtonWidget(
@@ -1239,7 +1290,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             buttonType: hasInsufficientBalance
                 ? ButtonType.secondary
                 : ButtonType.primary,
-            customWidth: buttonWidth,
+            customWidth: double.infinity,
             isLoading: isPayingCollateral,
             onTap: isPayingCollateral || hasInsufficientBalance
                 ? null
@@ -1261,7 +1312,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: _isRepaying ? 'SWAPPING...' : 'REPAY',
             buttonType: ButtonType.primary,
-            customWidth: buttonWidth,
+            customWidth: double.infinity,
             buttonGradient: const LinearGradient(
               colors: [Color(0xFF8247E5), Color(0xFF6C3DC1)],
             ),
@@ -1299,7 +1350,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: _isMarkingPaid ? 'CONFIRMING...' : 'I ALREADY PAID',
             buttonType: ButtonType.secondary,
-            customWidth: buttonWidth,
+            customWidth: double.infinity,
             onTap: _isMarkingPaid || _isActionLoading || _isRepaying
                 ? null
                 : _showMarkAsPaidDialog,
@@ -1309,7 +1360,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
         if (_contract!.isAwaitingRepaymentConfirmation) ...[
           const SizedBox(height: 12),
           Container(
-            width: buttonWidth,
+            width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.successColor.withValues(alpha: 0.1),
@@ -1354,7 +1405,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: 'CONTACT SUPPORT',
             buttonType: ButtonType.secondary,
-            customWidth: buttonWidth,
+            customWidth: double.infinity,
             onTap: _openSupportDiscord,
           ),
         ],
@@ -1363,7 +1414,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: 'CLAIM COLLATERAL',
             buttonType: ButtonType.primary,
-            customWidth: buttonWidth,
+            customWidth: double.infinity,
             onTap: _isActionLoading ? null : _showClaimSheet,
           ),
         ],
@@ -1372,7 +1423,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: 'RECOVER COLLATERAL',
             buttonType: ButtonType.primary,
-            customWidth: buttonWidth,
+            customWidth: double.infinity,
             onTap: _isActionLoading ? null : _showRecoverSheet,
           ),
         ],
@@ -1381,7 +1432,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           LongButtonWidget(
             title: 'CANCEL REQUEST',
             buttonType: ButtonType.secondary,
-            customWidth: buttonWidth,
+            customWidth: double.infinity,
             onTap: _isActionLoading ? null : _cancelContract,
           ),
         ],

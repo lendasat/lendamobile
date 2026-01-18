@@ -295,7 +295,7 @@ class PaymentMonitoringService extends ChangeNotifier
       return;
     }
 
-    overlayService.showPaymentReceivedOverlay(
+    overlayService.showPaymentReceivedBottomSheet(
       context: _overlayContext!,
       payment: payment,
       onDismiss: () {

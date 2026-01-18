@@ -385,7 +385,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       logger.i(
           "Payment received! TXID: ${payment.txid}, Amount: ${payment.amountSats} sats");
 
-      _showPaymentReceivedOverlay(payment);
+      _showPaymentReceivedBottomSheet(payment);
     } catch (e) {
       logger.e("Error waiting for payment: $e");
       if (!mounted) return;
@@ -416,7 +416,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     }
   }
 
-  void _showPaymentReceivedOverlay(PaymentReceived payment) {
+  void _showPaymentReceivedBottomSheet(PaymentReceived payment) {
     // Track receive transaction
     final transactionType = _receiveType == ReceiveType.lightning
         ? 'lightning'
@@ -429,7 +429,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       txId: payment.txid,
     );
 
-    PaymentOverlayService().showPaymentReceivedOverlay(
+    PaymentOverlayService().showPaymentReceivedBottomSheet(
       context: context,
       payment: payment,
       onDismiss: () {
@@ -881,63 +881,76 @@ class _ReceiveScreenState extends State<ReceiveScreen>
             _unfocusAll();
           }
         },
-        child: SingleChildScrollView(
-          child: SizedBox(
-            width: double.infinity,
-            child: Column(
-              children: [
-                const SizedBox(height: kToolbarHeight),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.cardPadding,
-                  ),
-                  child: _error != null
-                      ? Center(
-                          child: Column(
-                            children: [
-                              const Icon(Icons.error_outline,
-                                  color: AppTheme.errorColor, size: 48),
-                              const SizedBox(height: AppTheme.elementSpacing),
-                              Text(
-                                l10n.errorLoadingAddresses,
-                                style:
-                                    const TextStyle(color: AppTheme.errorColor),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              child: SizedBox(
+                width: double.infinity,
+                child: Column(
+                  children: [
+                    const SizedBox(height: kToolbarHeight),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.cardPadding,
+                      ),
+                      child: _error != null
+                          ? Center(
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.error_outline,
+                                      color: AppTheme.errorColor, size: 48),
+                                  const SizedBox(
+                                      height: AppTheme.elementSpacing),
+                                  Text(
+                                    l10n.errorLoadingAddresses,
+                                    style: const TextStyle(
+                                        color: AppTheme.errorColor),
+                                  ),
+                                  const SizedBox(
+                                      height: AppTheme.elementSpacing),
+                                  LongButtonWidget(
+                                    title: l10n.retry,
+                                    buttonType: ButtonType.primary,
+                                    onTap: _fetchAddresses,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: AppTheme.elementSpacing),
-                              LongButtonWidget(
-                                title: l10n.retry,
-                                buttonType: ButtonType.primary,
-                                onTap: _fetchAddresses,
-                              ),
-                            ],
-                          ),
-                        )
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: AppTheme.cardPadding),
-                            // QR Code
-                            _buildQrCode(isLight),
-                            const SizedBox(height: AppTheme.elementSpacing),
-                            // Type selector tabs
-                            _buildTypeSelector(),
-                            const SizedBox(height: AppTheme.cardPadding),
-                            // Address tile
-                            _buildAddressTile(),
-                            // Amount tile
-                            _buildAmountTile(l10n),
-                            const SizedBox(height: AppTheme.cardPadding * 2),
-                            // Share button
-                            _buildShareButton(),
-                            const SizedBox(height: AppTheme.cardPadding * 2),
-                          ],
-                        ),
+                            )
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const SizedBox(height: AppTheme.cardPadding),
+                                // QR Code
+                                _buildQrCode(isLight),
+                                const SizedBox(height: AppTheme.elementSpacing),
+                                // Type selector tabs
+                                _buildTypeSelector(),
+                                const SizedBox(height: AppTheme.cardPadding),
+                                // Address tile
+                                _buildAddressTile(),
+                                // Amount tile
+                                _buildAmountTile(l10n),
+                                // Space for floating button
+                                const SizedBox(
+                                    height: AppTheme.cardPadding * 5),
+                              ],
+                            ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+            // Floating share button at bottom
+            if (_error == null)
+              Positioned(
+                left: AppTheme.cardPadding,
+                right: AppTheme.cardPadding,
+                bottom: AppTheme.cardPadding,
+                child: _buildShareButton(),
+              ),
+          ],
         ),
       ),
     );
@@ -947,15 +960,15 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     final qrData = _getCurrentQrData();
     final isLoading = qrData.isEmpty;
 
-    return Center(
-      child: LongButtonWidget(
-        customHeight: AppTheme.cardPadding * 2,
-        customWidth: AppTheme.cardPadding * 5,
-        title: AppLocalizations.of(context)!.share,
-        leadingIcon: const Icon(Icons.share_rounded),
-        onTap: isLoading ? null : _shareAddress,
-        buttonType: ButtonType.transparent,
+    return LongButtonWidget(
+      customWidth: double.infinity,
+      title: AppLocalizations.of(context)!.share,
+      leadingIcon: Icon(
+        Icons.share_rounded,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
+      onTap: isLoading ? null : _shareAddress,
+      buttonType: ButtonType.transparent,
     );
   }
 
