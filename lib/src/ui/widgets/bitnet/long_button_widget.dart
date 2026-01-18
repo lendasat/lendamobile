@@ -191,9 +191,13 @@ class _LongButtonWidgetState extends State<LongButtonWidget>
               child: InkWell(
                 hoverColor: Colors.black.withValues(alpha: 0.1),
                 onHover: (value) => setState(() => _isHovered = value),
-                onTapDown: effectiveState == ButtonState.disabled ? null : _onTapDown,
-                onTapUp: effectiveState == ButtonState.disabled ? null : _onTapUp,
-                onTapCancel: effectiveState == ButtonState.disabled ? null : _onTapCancel,
+                onTapDown:
+                    effectiveState == ButtonState.disabled ? null : _onTapDown,
+                onTapUp:
+                    effectiveState == ButtonState.disabled ? null : _onTapUp,
+                onTapCancel: effectiveState == ButtonState.disabled
+                    ? null
+                    : _onTapCancel,
                 onTap: effectiveState == ButtonState.disabled
                     ? widget.onTapDisabled
                     : () {
@@ -215,7 +219,7 @@ class _LongButtonWidgetState extends State<LongButtonWidget>
                                   ? const Color(0xFF1A0A00)
                                   : theme.brightness == Brightness.light
                                       ? AppTheme.black70
-                                      : AppTheme.white90),
+                                      : Colors.white),
                         )
                       : Center(
                           child: Padding(
