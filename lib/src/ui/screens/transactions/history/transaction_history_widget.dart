@@ -1006,8 +1006,8 @@ class _TransactionItemWidgetState extends State<_TransactionItemWidget> {
                     children: [
                       hideAmounts
                           ? Text(
-                              '*****',
-                              style: Theme.of(context).textTheme.titleMedium,
+                              '****',
+                              style: Theme.of(context).textTheme.titleLarge,
                             )
                           : Row(
                               children: [
@@ -1019,10 +1019,9 @@ class _TransactionItemWidgetState extends State<_TransactionItemWidget> {
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context)
                                       .textTheme
-                                      .titleMedium
+                                      .titleLarge
                                       ?.copyWith(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 16,
                                       ),
                                 ),
                                 if (showBtcAsMain)
@@ -1175,7 +1174,7 @@ class _SwapItemWidget extends StatelessWidget {
                         Text(
                           'Expired',
                           style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
                                     color: isDark
                                         ? AppTheme.white60
                                         : AppTheme.black60,
@@ -1183,8 +1182,8 @@ class _SwapItemWidget extends StatelessWidget {
                         )
                       else if (hideAmounts)
                         Text(
-                          '*****',
-                          style: Theme.of(context).textTheme.titleMedium,
+                          '****',
+                          style: Theme.of(context).textTheme.titleLarge,
                         )
                       else
                         Row(
@@ -1194,7 +1193,7 @@ class _SwapItemWidget extends StatelessWidget {
                                   ? '${amountSats.isNegative ? "" : "+"}${amountSats.abs()}'
                                   : '${amountSats.isNegative ? "-" : "+"}\$${usdAmount.toStringAsFixed(2)}',
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleMedium,
+                              style: Theme.of(context).textTheme.titleLarge,
                             ),
                             if (showBtcAsMain)
                               Icon(

@@ -1,9 +1,10 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// A button with an icon/image and text below it
 /// Used for action buttons like Send, Receive, Buy, etc.
-class BitNetImageWithTextButton extends StatelessWidget {
+class BitNetImageWithTextButton extends StatefulWidget {
   final String title;
   final VoidCallback onTap;
   final String? image;
@@ -24,80 +25,129 @@ class BitNetImageWithTextButton extends StatelessWidget {
   });
 
   @override
+  State<BitNetImageWithTextButton> createState() =>
+      _BitNetImageWithTextButtonState();
+}
+
+class _BitNetImageWithTextButtonState extends State<BitNetImageWithTextButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _scaleController;
+  late Animation<double> _scaleAnimation;
+  bool _animating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    if (!_animating) {
+      _animating = true;
+      HapticFeedback.lightImpact();
+      _scaleController.forward().then((_) {
+        _scaleController.reverse().then((_) {
+          _animating = false;
+        });
+      });
+      widget.onTap();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
 
-    final buttonSize = width ?? 60.0;
-    final iconSize = fallbackIconSize ?? AppTheme.iconSize * 1.25;
+    final buttonSize = widget.width ?? 60.0;
+    final iconSize = widget.fallbackIconSize ?? AppTheme.iconSize * 1.25;
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: _handleTap,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: buttonSize,
-            height: height ?? buttonSize,
-            decoration: BoxDecoration(
-              color: isLight
-                  ? Colors.black.withValues(alpha: 0.04)
-                  : Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(buttonSize / 3),
-              border: isLight
-                  ? Border.all(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      width: 1,
-                    )
-                  : null,
-              boxShadow: isLight
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        offset: const Offset(0, 2),
-                        blurRadius: 8,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Center(
-              child: image != null
-                  ? Image.asset(
-                      image!,
-                      width: iconSize,
-                      height: iconSize,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          fallbackIcon ?? Icons.error,
-                          color: Theme.of(context).colorScheme.onSurface,
-                          size: iconSize,
-                        );
-                      },
-                    )
-                  : Icon(
-                      fallbackIcon ?? Icons.circle,
-                      color: Theme.of(context).colorScheme.onSurface,
-                      size: iconSize,
-                    ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: buttonSize * 1.2,
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) => Transform.scale(
+          scale: _scaleAnimation.value,
+          child: child,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: buttonSize,
+              height: widget.height ?? buttonSize,
+              decoration: BoxDecoration(
+                color: isLight
+                    ? Colors.black.withValues(alpha: 0.04)
+                    : Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(buttonSize / 3),
+                border: isLight
+                    ? Border.all(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        width: 1,
+                      )
+                    : null,
+                boxShadow: isLight
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          offset: const Offset(0, 2),
+                          blurRadius: 8,
+                        ),
+                      ]
+                    : null,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              child: Center(
+                child: widget.image != null
+                    ? Image.asset(
+                        widget.image!,
+                        width: iconSize,
+                        height: iconSize,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            widget.fallbackIcon ?? Icons.error,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            size: iconSize,
+                          );
+                        },
+                      )
+                    : Icon(
+                        widget.fallbackIcon ?? Icons.circle,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        size: iconSize,
+                      ),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            SizedBox(
+              width: buttonSize * 1.2,
+              child: Text(
+                widget.title,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
