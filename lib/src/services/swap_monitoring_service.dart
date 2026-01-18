@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:flutter/material.dart';
@@ -326,6 +327,14 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
       logger.i("[SwapMonitor] Successfully claimed swap ${swap.id} via Gelato");
       _claimedSwapIds.add(swap.id);
 
+      // Track swap transaction for analytics (BTC → EVM)
+      await AnalyticsService().trackSwapTransaction(
+        amountSats: swap.sourceAmountSats.toInt(),
+        fromAsset: swap.sourceToken,
+        toAsset: swap.targetToken,
+        swapId: swap.id,
+      );
+
       // Emit event
       _claimEventController.add(SwapClaimEvent(
         swapId: swap.id,
@@ -367,6 +376,14 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
       logger.i(
           "[SwapMonitor] Successfully claimed swap ${swap.id} via VHTLC, txid: $txid");
       _claimedSwapIds.add(swap.id);
+
+      // Track swap transaction for analytics (EVM → BTC)
+      await AnalyticsService().trackSwapTransaction(
+        amountSats: swap.sourceAmountSats.toInt(),
+        fromAsset: swap.sourceToken,
+        toAsset: swap.targetToken,
+        swapId: swap.id,
+      );
 
       // Emit event
       _claimEventController.add(SwapClaimEvent(

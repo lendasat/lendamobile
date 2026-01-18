@@ -4,6 +4,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
@@ -196,6 +197,15 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
       if (_swapInfo!.canClaimGelato) {
         logger.i('Claiming BTC→EVM swap via Gelato');
         await _swapService.claimGelato(widget.swapId);
+
+        // Track swap transaction for analytics
+        await AnalyticsService().trackSwapTransaction(
+          amountSats: _swapInfo!.sourceAmountSats.toInt(),
+          fromAsset: _swapInfo!.sourceToken,
+          toAsset: _swapInfo!.targetToken,
+          swapId: widget.swapId,
+        );
+
         if (mounted) {
           OverlayService()
               .showSuccess('Claim submitted! Funds will arrive shortly.');
@@ -203,6 +213,15 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
       } else if (_swapInfo!.canClaimVhtlc) {
         logger.i('Claiming EVM→BTC swap via VHTLC');
         final txid = await _swapService.claimVhtlc(widget.swapId);
+
+        // Track swap transaction for analytics
+        await AnalyticsService().trackSwapTransaction(
+          amountSats: _swapInfo!.sourceAmountSats.toInt(),
+          fromAsset: _swapInfo!.sourceToken,
+          toAsset: _swapInfo!.targetToken,
+          swapId: widget.swapId,
+        );
+
         if (mounted) {
           OverlayService().showSuccess('Claimed! TXID: ${_truncateId(txid)}');
         }

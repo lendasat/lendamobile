@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
@@ -722,6 +723,17 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
       // The service will detect Ethereum and use the appropriate method
       await _swapService.claimGelato(widget.swapId);
       logger.i('Ethereum claim submitted for swap ${widget.swapId}');
+
+      // Track swap transaction for analytics
+      if (_swapInfo != null) {
+        await AnalyticsService().trackSwapTransaction(
+          amountSats: _swapInfo!.sourceAmountSats.toInt(),
+          fromAsset: _swapInfo!.sourceToken,
+          toAsset: _swapInfo!.targetToken,
+          swapId: widget.swapId,
+        );
+      }
+
       setState(() {
         _showWalletConnectClaim = false;
       });
