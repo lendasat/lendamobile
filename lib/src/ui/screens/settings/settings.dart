@@ -8,6 +8,7 @@ import 'package:ark_flutter/src/ui/screens/settings/change_currency.dart';
 import 'package:ark_flutter/src/ui/screens/settings/recovery_key_view.dart';
 import 'package:ark_flutter/src/ui/screens/settings/feedback_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/emergency_recovery_view.dart';
+import 'package:ark_flutter/src/ui/screens/settings/preferences_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/claim_sats_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/chart_time_range_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/agbs_and_impressum_screen.dart';
@@ -58,6 +59,8 @@ class Settings extends StatelessWidget {
         return const FeedbackScreen();
       case 'emergency_recovery':
         return const EmergencyRecoveryView();
+      case 'preferences':
+        return const PreferencesScreen();
       case 'claim_sats':
         return const ClaimSatsScreen();
       case 'chart_time_range':
