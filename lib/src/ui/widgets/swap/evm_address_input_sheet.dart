@@ -2,6 +2,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
@@ -38,6 +39,7 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
   String? _errorText;
   bool _isValid = false;
   bool _addressFromWallet = false;
+  bool _isConnectingWallet = false;
 
   @override
   void initState() {
@@ -87,8 +89,24 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
     }
   }
 
-  Future<void> _connectWallet() async {
+  Future<void> _connectWallet({bool isChanging = false}) async {
+    if (_isConnectingWallet) return;
+
+    setState(() => _isConnectingWallet = true);
+
     try {
+      // If changing wallet, disconnect first
+      if (isChanging && _walletConnectService.isConnected) {
+        await _walletConnectService.disconnect();
+        if (mounted) {
+          setState(() {
+            _addressController.clear();
+            _addressFromWallet = false;
+            _isValid = false;
+          });
+        }
+      }
+
       if (!_walletConnectService.isInitialized) {
         await _walletConnectService.initialize(context);
       }
@@ -103,6 +121,10 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
     } catch (e) {
       logger.e('Error connecting wallet: $e');
       OverlayService().showError('Failed to connect wallet');
+    } finally {
+      if (mounted) {
+        setState(() => _isConnectingWallet = false);
+      }
     }
   }
 
@@ -192,9 +214,6 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
     final titleText = widget.isSourceAddress
         ? 'Send ${widget.tokenSymbol}'
         : 'Receive ${widget.tokenSymbol}';
-    final infoText = widget.isSourceAddress
-        ? 'Enter your ${widget.network} wallet address that you will send ${widget.tokenSymbol} from'
-        : 'Enter your ${widget.network} wallet address to receive ${widget.tokenSymbol}';
 
     return Padding(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
@@ -202,26 +221,15 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title
-          Text(
-            titleText,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-          // Info text with wallet connection indicator
+          // Title with wallet connection indicator
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  infoText,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                      ),
-                ),
+              Text(
+                titleText,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               if (_addressFromWallet)
                 Row(
@@ -246,40 +254,76 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
           ),
           const SizedBox(height: AppTheme.elementSpacing),
 
-          // Connect wallet button (if not connected and address is empty)
+          // Connect/Change wallet button
           if (!_walletConnectService.isConnected &&
-              _addressController.text.isEmpty) ...[
+                  _addressController.text.isEmpty ||
+              _addressFromWallet) ...[
             GestureDetector(
-              onTap: _connectWallet,
+              onTap: _isConnectingWallet
+                  ? null
+                  : () => _connectWallet(isChanging: _addressFromWallet),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.1),
+                  color: _addressFromWallet
+                      ? Colors.transparent
+                      : Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.2),
+                    color: _addressFromWallet
+                        ? (isDarkMode
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : Colors.black.withValues(alpha: 0.1))
+                        : Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.2),
                   ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.account_balance_wallet_outlined,
-                      size: 18,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                    if (_isConnectingWallet)
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: dotProgress(
+                          context,
+                          size: 8,
+                          color: _addressFromWallet
+                              ? (isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60)
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                      )
+                    else
+                      Icon(
+                        _addressFromWallet
+                            ? Icons.swap_horiz_rounded
+                            : Icons.account_balance_wallet_outlined,
+                        size: 18,
+                        color: _addressFromWallet
+                            ? (isDarkMode ? AppTheme.white60 : AppTheme.black60)
+                            : Theme.of(context).colorScheme.primary,
+                      ),
                     const SizedBox(width: 8),
                     Text(
-                      'Connect Wallet',
+                      _isConnectingWallet
+                          ? 'Connecting...'
+                          : (_addressFromWallet
+                              ? 'Change Wallet'
+                              : 'Connect Wallet'),
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
+                            color: _addressFromWallet
+                                ? (isDarkMode
+                                    ? AppTheme.white60
+                                    : AppTheme.black60)
+                                : Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w600,
                           ),
                     ),
@@ -287,37 +331,39 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            Row(
-              children: [
-                Expanded(
-                  child: Divider(
-                    color: isDarkMode
-                        ? Colors.white.withOpacity(0.2)
-                        : Colors.black.withOpacity(0.2),
+            if (!_addressFromWallet) ...[
+              const SizedBox(height: AppTheme.elementSpacing),
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.2)
+                          : Colors.black.withOpacity(0.2),
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.elementSpacing),
-                  child: Text(
-                    'or enter manually',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: isDarkMode
-                              ? Colors.white.withOpacity(0.4)
-                              : Colors.black.withOpacity(0.4),
-                        ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.elementSpacing),
+                    child: Text(
+                      'or enter manually',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: isDarkMode
+                                ? Colors.white.withOpacity(0.4)
+                                : Colors.black.withOpacity(0.4),
+                          ),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Divider(
-                    color: isDarkMode
-                        ? Colors.white.withOpacity(0.2)
-                        : Colors.black.withOpacity(0.2),
+                  Expanded(
+                    child: Divider(
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.2)
+                          : Colors.black.withOpacity(0.2),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
             const SizedBox(height: AppTheme.elementSpacing),
           ],
 
@@ -385,31 +431,16 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
               ),
             ),
           ),
-          const SizedBox(height: AppTheme.elementSpacing),
-          // Warning text
-          Row(
-            children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                size: 16,
-                color: Colors.orange,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Make sure this is a ${widget.network} address. Sending to wrong network may result in loss of funds.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.orange,
-                      ),
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: AppTheme.cardPadding),
-          // Confirm button
+          // Confirm button - shows validation error if address is invalid
           LongButtonWidget(
-            title: 'Continue',
+            title: _addressController.text.isEmpty
+                ? 'Continue'
+                : (_isValid
+                    ? 'Continue'
+                    : 'Not a valid ${widget.network} address'),
             customWidth: double.infinity,
+            buttonType: _isValid ? ButtonType.solid : ButtonType.transparent,
             state: _isValid ? ButtonState.idle : ButtonState.disabled,
             onTap: _isValid
                 ? () {

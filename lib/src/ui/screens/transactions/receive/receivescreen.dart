@@ -1114,129 +1114,121 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     const double containerPadding = 4;
     const double indicatorMargin = 2;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.elementSpacing),
-      child: Container(
-        height: 48,
-        padding: const EdgeInsets.all(containerPadding),
-        decoration: BoxDecoration(
-          color: isLight
-              ? Colors.black.withValues(alpha: 0.05)
-              : Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final tabWidth = constraints.maxWidth / 4;
-            final indicatorHeight = constraints.maxHeight;
-            return Stack(
-              children: [
-                // Animated sliding pill indicator
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 280),
-                  curve: Curves.easeOutExpo,
-                  left: selectedIndex * tabWidth + indicatorMargin,
-                  top: 0,
-                  height: indicatorHeight,
-                  width: tabWidth - (indicatorMargin * 2),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isLight
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: isLight ? 0.08 : 0.15),
-                          blurRadius: 6,
-                          spreadRadius: 0,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.all(containerPadding),
+      decoration: BoxDecoration(
+        color: isLight
+            ? Colors.black.withValues(alpha: 0.05)
+            : Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final tabWidth = constraints.maxWidth / 4;
+          final indicatorHeight = constraints.maxHeight;
+          return Stack(
+            children: [
+              // Animated sliding pill indicator
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutExpo,
+                left: selectedIndex * tabWidth + indicatorMargin,
+                top: 0,
+                height: indicatorHeight,
+                width: tabWidth - (indicatorMargin * 2),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isLight
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black
+                            .withValues(alpha: isLight ? 0.08 : 0.15),
+                        blurRadius: 6,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
                   ),
                 ),
-                // Tab items
-                Row(
-                  children: ReceiveType.values.map((type) {
-                    final isSelected = _receiveType == type;
-                    final icon = switch (type) {
-                      ReceiveType.combined => FontAwesomeIcons.qrcode,
-                      ReceiveType.ark => null, // Use SVG instead
-                      ReceiveType.onchain => FontAwesomeIcons.link,
-                      ReceiveType.lightning => FontAwesomeIcons.bolt,
-                    };
-                    final label = switch (type) {
-                      ReceiveType.combined => 'Unified',
-                      ReceiveType.ark => 'Arkade',
-                      ReceiveType.onchain => 'Onchain',
-                      ReceiveType.lightning => 'Lightning',
-                    };
-                    final iconColor = isSelected
-                        ? (isLight ? Colors.black87 : Colors.white)
-                        : (isLight ? Colors.black38 : Colors.white38);
+              ),
+              // Tab items
+              Row(
+                children: ReceiveType.values.map((type) {
+                  final isSelected = _receiveType == type;
+                  final icon = switch (type) {
+                    ReceiveType.combined => FontAwesomeIcons.qrcode,
+                    ReceiveType.ark => null, // Use SVG instead
+                    ReceiveType.onchain => FontAwesomeIcons.link,
+                    ReceiveType.lightning => FontAwesomeIcons.bolt,
+                  };
+                  final label = switch (type) {
+                    ReceiveType.combined => 'Unified',
+                    ReceiveType.ark => 'Arkade',
+                    ReceiveType.onchain => 'Onchain',
+                    ReceiveType.lightning => 'Lightning',
+                  };
+                  final iconColor = isSelected
+                      ? (isLight ? Colors.black87 : Colors.white)
+                      : (isLight ? Colors.black38 : Colors.white38);
 
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () => _onTypeSelected(type),
-                        behavior: HitTestBehavior.opaque,
-                        child: Container(
-                          height: double.infinity,
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: indicatorMargin),
-                          alignment: Alignment.center,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (type == ReceiveType.ark)
-                                  SvgPicture.asset(
-                                    'assets/images/tokens/arkade.svg',
-                                    width: 12,
-                                    height: 12,
-                                    colorFilter: ColorFilter.mode(
-                                      iconColor,
-                                      BlendMode.srcIn,
-                                    ),
-                                  )
-                                else
-                                  Icon(
-                                    icon,
-                                    size: 12,
-                                    color: iconColor,
-                                  ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  label,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.w500,
-                                    color: isSelected
-                                        ? (isLight
-                                            ? Colors.black87
-                                            : Colors.white)
-                                        : (isLight
-                                            ? Colors.black38
-                                            : Colors.white38),
-                                  ),
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => _onTypeSelected(type),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        height: double.infinity,
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: indicatorMargin),
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (type == ReceiveType.ark)
+                              SvgPicture.asset(
+                                'assets/images/tokens/arkade.svg',
+                                width: 14,
+                                height: 14,
+                                colorFilter: ColorFilter.mode(
+                                  iconColor,
+                                  BlendMode.srcIn,
                                 ),
-                              ],
+                              )
+                            else
+                              Icon(
+                                icon,
+                                size: 14,
+                                color: iconColor,
+                              ),
+                            const SizedBox(width: 5),
+                            Text(
+                              label,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? (isLight ? Colors.black87 : Colors.white)
+                                    : (isLight
+                                        ? Colors.black38
+                                        : Colors.white38),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            );
-          },
-        ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

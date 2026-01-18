@@ -887,13 +887,6 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
           style: const TextStyle(fontWeight: FontWeight.bold),
           decoration: InputDecoration(
             hintText: '0x...',
-            helperText: _addressFromWallet
-                ? null
-                : 'Enter your Polygon wallet address to receive USDC.',
-            helperStyle: TextStyle(
-              fontSize: 10,
-              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-            ),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             filled: true,

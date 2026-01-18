@@ -1595,12 +1595,13 @@ class SendScreenState extends State<SendScreen> {
 
     arkBottomSheet(
       context: sheetContext,
-      height: MediaQuery.of(context).size.height * 0.4,
+      height: MediaQuery.of(context).size.height * 0.9,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               l10n.note,
@@ -1612,7 +1613,7 @@ class SendScreenState extends State<SendScreen> {
             TextField(
               controller: tempController,
               autofocus: true,
-              maxLines: 3,
+              maxLines: 5,
               decoration: InputDecoration(
                 hintText: l10n.addNote,
                 border: OutlineInputBorder(
@@ -1629,7 +1630,7 @@ class SendScreenState extends State<SendScreen> {
                 ),
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: AppTheme.cardPadding),
             Row(
               children: [
                 Expanded(
@@ -1789,7 +1790,13 @@ class SendScreenState extends State<SendScreen> {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Flexible(
+                                          ConstrainedBox(
+                                            constraints: BoxConstraints(
+                                              maxWidth: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.4,
+                                            ),
                                             child: Text(
                                               _noteController.text.isEmpty
                                                   ? l10n.addNote
@@ -1808,6 +1815,7 @@ class SendScreenState extends State<SendScreen> {
                                                   ),
                                               overflow: TextOverflow.ellipsis,
                                               maxLines: 1,
+                                              textAlign: TextAlign.right,
                                             ),
                                           ),
                                           const SizedBox(
@@ -2134,7 +2142,10 @@ class SendScreenState extends State<SendScreen> {
         ),
         child: Center(
           child: _isLoading
-              ? dotProgress(context)
+              ? dotProgress(
+                  context,
+                  color: canSend ? const Color(0xFF1A0A00) : Colors.white,
+                )
               : Text(
                   buttonText,
                   style: TextStyle(
