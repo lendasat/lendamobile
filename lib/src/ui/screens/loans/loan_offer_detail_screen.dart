@@ -412,6 +412,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   Widget build(BuildContext context) {
     return ArkScaffold(
       context: context,
+      extendBodyBehindAppBar: true,
       appBar: BitNetAppBar(
         context: context,
         text: 'Loan Details',
@@ -424,7 +425,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             padding: EdgeInsets.only(
               left: AppTheme.cardPadding,
               right: AppTheme.cardPadding,
-              top: AppTheme.cardPadding,
+              top: AppTheme.cardPadding * 3.5,
               // Extra bottom padding for floating button
               bottom: AppTheme.cardPadding * 6,
             ),
