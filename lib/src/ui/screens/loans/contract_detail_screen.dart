@@ -707,24 +707,25 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
   /// Floating action buttons container at the bottom
   Widget _buildFloatingActions() {
-    return Container(
-      padding: EdgeInsets.only(
-        left: AppTheme.cardPadding,
-        right: AppTheme.cardPadding,
-        top: AppTheme.cardPadding,
-        bottom: MediaQuery.of(context).padding.bottom + AppTheme.cardPadding,
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.cardPadding,
+          vertical: AppTheme.elementSpacing,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: _buildActions(),
       ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: _buildActions(),
     );
   }
 

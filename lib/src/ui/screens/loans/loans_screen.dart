@@ -755,11 +755,8 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
     final l10n = AppLocalizations.of(context);
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
 
-    // Header height: top padding + title + spacing + search bar
-    const double headerHeight = AppTheme.cardPadding * 1.5 + // top padding
-        24.0 + // title
-        AppTheme.elementSpacing + // spacing
-        48.0; // search bar
+    // Match wallet screen pattern: 112 + cardPadding for search bar visible
+    const double headerHeight = 112.0 + AppTheme.cardPadding;
 
     return SliverAppBar(
       pinned: true,
@@ -789,7 +786,8 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: AppTheme.cardPadding),
+              // Match wallet screen top spacing
+              const SizedBox(height: AppTheme.cardPadding * 2),
               Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.cardPadding),
