@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:ark_flutter/theme.dart';
+import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
+import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
@@ -42,6 +44,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   late TextEditingController _addressController;
 
   bool _isCreating = false;
+  bool _isConnectingWallet = false;
   String _processingStep = 'Processing...';
   double _calculatedInterest = 0;
   double _originationFee = 0;
@@ -98,11 +101,28 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     }
   }
 
-  Future<void> _connectWallet() async {
+  Future<void> _connectWallet({bool isChanging = false}) async {
+    if (_isConnectingWallet) return;
+
+    setState(() => _isConnectingWallet = true);
+
     try {
       if (!_walletConnectService.isInitialized) {
         await _walletConnectService.initialize(context);
       }
+
+      // If changing wallet, disconnect first
+      if (isChanging && _walletConnectService.isConnected) {
+        await _walletConnectService.disconnect();
+        // Clear the address field
+        if (mounted) {
+          setState(() {
+            _addressController.clear();
+            _addressFromWallet = false;
+          });
+        }
+      }
+
       await _walletConnectService.openModal();
 
       // After connecting, switch to Polygon and get address
@@ -115,6 +135,10 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     } catch (e) {
       logger.e('Error connecting wallet: $e');
       OverlayService().showError('Failed to connect wallet');
+    } finally {
+      if (mounted) {
+        setState(() => _isConnectingWallet = false);
+      }
     }
   }
 
@@ -395,51 +419,49 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       ),
       body: Stack(
         children: [
-          Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.only(
-                    left: AppTheme.cardPadding,
-                    right: AppTheme.cardPadding,
-                    top: AppTheme.cardPadding,
-                    // Extra bottom padding for floating button
-                    bottom: AppTheme.cardPadding * 6,
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Lender info
-                        _buildLenderCard(),
-                        const SizedBox(height: AppTheme.cardPadding),
+          // Main scrollable content
+          SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: AppTheme.cardPadding,
+              right: AppTheme.cardPadding,
+              top: AppTheme.cardPadding,
+              // Extra bottom padding for floating button
+              bottom: AppTheme.cardPadding * 6,
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Lender info
+                  _buildLenderCard(),
+                  const SizedBox(height: AppTheme.cardPadding),
 
-                        // Offer details
-                        _buildOfferDetails(),
-                        const SizedBox(height: AppTheme.cardPadding),
+                  // Offer details
+                  _buildOfferDetails(),
+                  const SizedBox(height: AppTheme.cardPadding),
 
-                        // Loan configuration
-                        _buildLoanConfiguration(),
-                        const SizedBox(height: AppTheme.cardPadding),
+                  // Loan configuration
+                  _buildLoanConfiguration(),
+                  const SizedBox(height: AppTheme.cardPadding),
 
-                        // Calculated terms
-                        _buildCalculatedTerms(),
-                        const SizedBox(height: AppTheme.cardPadding),
+                  // Calculated terms
+                  _buildCalculatedTerms(),
+                  const SizedBox(height: AppTheme.cardPadding),
 
-                        // KYC warning if required
-                        if (widget.offer.requiresKyc) ...[
-                          _buildKycWarning(),
-                          const SizedBox(height: AppTheme.cardPadding),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
+                  // KYC warning if required
+                  if (widget.offer.requiresKyc) ...[
+                    _buildKycWarning(),
+                    const SizedBox(height: AppTheme.cardPadding),
+                  ],
+                ],
               ),
-              // Floating action button at bottom
-              _buildFloatingActionButton(),
-            ],
+            ),
+          ),
+          // Floating action button at bottom (overlays content with gradient)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: _buildFloatingActionButton(),
           ),
           // Processing overlay
           if (_isCreating)
@@ -610,6 +632,37 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                               letterSpacing: 0.5,
                             ),
                       ),
+                      const SizedBox(height: 8),
+                      // Bitcoin icon with lock badge
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Stack(
+                          children: [
+                            TokenIcon(
+                              token: SwapToken.bitcoin,
+                              size: 40,
+                            ),
+                            Positioned(
+                              right: -2,
+                              bottom: -2,
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(context).scaffoldBackgroundColor,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.lock_rounded,
+                                  size: 12,
+                                  color: AppTheme.colorBitcoin,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       Text(
                         'Bitcoin',
@@ -656,6 +709,12 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
                               fontSize: 9,
                               letterSpacing: 0.5,
                             ),
+                      ),
+                      const SizedBox(height: 8),
+                      // USDC Polygon icon
+                      TokenIcon(
+                        token: SwapToken.usdcPolygon,
+                        size: 40,
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -880,39 +939,73 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
           },
         ),
 
-        // Connect wallet button (only show if not connected and address is empty)
-        if (!isConnected && _addressController.text.isEmpty) ...[
+        // Connect/Change wallet button
+        if (!isConnected && _addressController.text.isEmpty ||
+            _addressFromWallet) ...[
           const SizedBox(height: 12),
           GestureDetector(
-            onTap: _connectWallet,
+            onTap: _isConnectingWallet
+                ? null
+                : () => _connectWallet(isChanging: _addressFromWallet),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.1),
+                color: _addressFromWallet
+                    ? Colors.transparent
+                    : Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.2),
+                  color: _addressFromWallet
+                      ? (isDarkMode
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : Colors.black.withValues(alpha: 0.1))
+                      : Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.2),
                 ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.account_balance_wallet_outlined,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                  if (_isConnectingWallet)
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: dotProgress(
+                        context,
+                        size: 8,
+                        color: _addressFromWallet
+                            ? (isDarkMode ? AppTheme.white60 : AppTheme.black60)
+                            : Theme.of(context).colorScheme.primary,
+                      ),
+                    )
+                  else
+                    Icon(
+                      _addressFromWallet
+                          ? Icons.swap_horiz_rounded
+                          : Icons.account_balance_wallet_outlined,
+                      size: 16,
+                      color: _addressFromWallet
+                          ? (isDarkMode ? AppTheme.white60 : AppTheme.black60)
+                          : Theme.of(context).colorScheme.primary,
+                    ),
                   const SizedBox(width: 8),
                   Text(
-                    'Connect Wallet',
+                    _isConnectingWallet
+                        ? 'Connecting...'
+                        : (_addressFromWallet
+                            ? 'Change Wallet'
+                            : 'Connect Wallet'),
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: _addressFromWallet
+                              ? (isDarkMode
+                                  ? AppTheme.white60
+                                  : AppTheme.black60)
+                              : Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w600,
                         ),
                   ),

@@ -884,6 +884,7 @@ class SendScreenState extends State<SendScreen> {
   void _copyAddress() {
     if (_addressController.text.isNotEmpty) {
       Clipboard.setData(ClipboardData(text: _addressController.text));
+      HapticFeedback.lightImpact();
       _showCopiedSnackBar();
     }
   }

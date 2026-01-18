@@ -24,7 +24,8 @@ class PreferencesScreen extends StatefulWidget {
 class _PreferencesScreenState extends State<PreferencesScreen> {
   bool _isBiometricLoading = false;
 
-  Future<void> _handleBiometricToggle(BiometricService biometricService, bool enable) async {
+  Future<void> _handleBiometricToggle(
+      BiometricService biometricService, bool enable) async {
     if (_isBiometricLoading) return;
 
     setState(() => _isBiometricLoading = true);
@@ -217,16 +218,26 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
               builder: (context, biometricService, _) {
                 final isAvailable = biometricService.isAvailable;
                 final biometricName = biometricService.getBiometricTypeName();
+                final canInteract = isAvailable && !_isBiometricLoading;
 
                 return ArkListTile(
-                  leading: RoundedButtonWidget(
-                    iconData: Icons.fingerprint_rounded,
-                    onTap: isAvailable
-                        ? () => biometricService.toggleEnabled()
-                        : null,
-                    size: AppTheme.iconSize * 1.5,
-                    buttonType: ButtonType.transparent,
-                  ),
+                  leading: _isBiometricLoading
+                      ? SizedBox(
+                          width: AppTheme.iconSize * 1.5,
+                          height: AppTheme.iconSize * 1.5,
+                          child: dotProgress(context, size: 16),
+                        )
+                      : RoundedButtonWidget(
+                          iconData: Icons.fingerprint_rounded,
+                          onTap: canInteract
+                              ? () => _handleBiometricToggle(
+                                    biometricService,
+                                    !biometricService.isEnabled,
+                                  )
+                              : null,
+                          size: AppTheme.iconSize * 1.5,
+                          buttonType: ButtonType.transparent,
+                        ),
                   text: biometricName,
                   subtitle: Text(
                     isAvailable
@@ -239,15 +250,29 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                           : AppTheme.errorColor.withValues(alpha: 0.7),
                     ),
                   ),
-                  trailing: Switch.adaptive(
-                    value: biometricService.isEnabled,
-                    onChanged: isAvailable
-                        ? (value) => biometricService.setEnabled(value)
-                        : null,
-                    activeColor: AppTheme.primaryColor,
-                  ),
-                  onTap: isAvailable
-                      ? () => biometricService.toggleEnabled()
+                  trailing: _isBiometricLoading
+                      ? SizedBox(
+                          width: 48,
+                          height: 24,
+                          child: Center(
+                            child: dotProgress(context, size: 12),
+                          ),
+                        )
+                      : Switch.adaptive(
+                          value: biometricService.isEnabled,
+                          onChanged: canInteract
+                              ? (value) => _handleBiometricToggle(
+                                    biometricService,
+                                    value,
+                                  )
+                              : null,
+                          activeColor: AppTheme.primaryColor,
+                        ),
+                  onTap: canInteract
+                      ? () => _handleBiometricToggle(
+                            biometricService,
+                            !biometricService.isEnabled,
+                          )
                       : null,
                 );
               },

@@ -128,11 +128,13 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
         } else {
           // For BTC → EVM swaps that don't require WalletConnect,
           // navigate back to wallet - monitoring service handles completion
-          if (widget.sourceToken.isBtc && !_swapMonitor.requiresWalletConnect(swap)) {
+          if (widget.sourceToken.isBtc &&
+              !_swapMonitor.requiresWalletConnect(swap)) {
             final isProcessing = swap.status == SwapStatusSimple.processing ||
                 swap.status == SwapStatusSimple.waitingForDeposit;
             if (isProcessing) {
-              logger.i('[SwapProcessing] BTC→EVM swap processing via Gelato - returning to wallet');
+              logger.i(
+                  '[SwapProcessing] BTC→EVM swap processing via Gelato - returning to wallet');
               _pollTimer?.cancel();
               _navigateBackToWallet();
               return;
@@ -176,7 +178,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   void _navigateBackToWallet() {
     if (!mounted) return;
 
-    OverlayService().showSuccess('Swap processing - you\'ll be notified when complete');
+    OverlayService()
+        .showSuccess('Swap processing - you\'ll be notified when complete');
 
     // Pop back to wallet (through all swap screens)
     Navigator.of(context).popUntil((route) => route.isFirst);
@@ -241,6 +244,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
 
   Future<void> _copyToClipboard(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
+    HapticFeedback.lightImpact();
     if (mounted) {
       OverlayService().showSuccess('Copied to clipboard');
     }
