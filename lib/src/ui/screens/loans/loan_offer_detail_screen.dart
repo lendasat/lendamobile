@@ -453,52 +453,53 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   }
 
   Widget _buildFloatingActionButton() {
-    return Container(
-      padding: EdgeInsets.only(
-        left: AppTheme.cardPadding,
-        right: AppTheme.cardPadding,
-        top: AppTheme.cardPadding,
-        bottom: MediaQuery.of(context).padding.bottom + AppTheme.cardPadding,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          LongButtonWidget(
-            title: _isCreating ? 'Processing...' : 'Create Loan Request',
-            customWidth: double.infinity,
-            buttonType: widget.offer.isAvailable &&
-                    !_isCreating &&
-                    _lendasatService.isAuthenticated
-                ? ButtonType.primary
-                : ButtonType.secondary,
-            onTap: widget.offer.isAvailable &&
-                    !_isCreating &&
-                    _lendasatService.isAuthenticated
-                ? _createContract
-                : null,
-          ),
-          if (!_lendasatService.isAuthenticated)
-            Padding(
-              padding: const EdgeInsets.only(top: AppTheme.elementSpacing),
-              child: Text(
-                'Please sign in to create a loan request',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.errorColor,
-                    ),
-                textAlign: TextAlign.center,
-              ),
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.cardPadding,
+          vertical: AppTheme.elementSpacing,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
             ),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LongButtonWidget(
+              title: _isCreating ? 'Processing...' : 'Create Loan Request',
+              customWidth: double.infinity,
+              buttonType: widget.offer.isAvailable &&
+                      !_isCreating &&
+                      _lendasatService.isAuthenticated
+                  ? ButtonType.primary
+                  : ButtonType.secondary,
+              onTap: widget.offer.isAvailable &&
+                      !_isCreating &&
+                      _lendasatService.isAuthenticated
+                  ? _createContract
+                  : null,
+            ),
+            if (!_lendasatService.isAuthenticated)
+              Padding(
+                padding: const EdgeInsets.only(top: AppTheme.elementSpacing),
+                child: Text(
+                  'Please sign in to create a loan request',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.errorColor,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -16,6 +16,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -497,7 +498,7 @@ class SettingsViewState extends State<SettingsView> {
               // Feedback / Report Bug
               ArkListTile(
                 leading: RoundedButtonWidget(
-                  iconData: Icons.feedback_rounded,
+                  iconData: FontAwesomeIcons.telegram,
                   onTap: _openFeedbackTelegram,
                   size: AppTheme.iconSize * 1.5,
                   buttonType: ButtonType.transparent,

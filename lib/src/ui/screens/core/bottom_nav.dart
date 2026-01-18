@@ -104,6 +104,8 @@ class _BottomNavState extends State<BottomNav> {
     if (index == _selectedIndex) {
       if (index == 0) {
         _walletKey.currentState?.scrollToTop();
+      } else if (index == 2) {
+        _loansKey.currentState?.scrollToTop();
       }
       return;
     }
