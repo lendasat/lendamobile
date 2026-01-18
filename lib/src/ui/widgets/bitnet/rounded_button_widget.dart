@@ -2,6 +2,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// A rounded/circular button widget with icon
 class RoundedButtonWidget extends StatefulWidget {
@@ -57,16 +58,24 @@ class _RoundedButtonWidgetState extends State<RoundedButtonWidget>
     super.dispose();
   }
 
-  bool _animating = false;
+  void _onTapDown(TapDownDetails details) {
+    if (widget.enabled && !widget.isLoading) {
+      _scaleController.forward();
+    }
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    // Ensure forward completes before reversing (for quick taps)
+    _scaleController.forward().then((_) => _scaleController.reverse());
+  }
+
+  void _onTapCancel() {
+    _scaleController.reverse();
+  }
 
   void _handleTap() {
-    if (widget.enabled && !widget.isLoading && !_animating) {
-      _animating = true;
-      _scaleController.forward().then((_) {
-        _scaleController.reverse().then((_) {
-          _animating = false;
-        });
-      });
+    if (widget.enabled && !widget.isLoading) {
+      HapticFeedback.lightImpact();
       widget.onTap?.call();
     }
   }
@@ -146,6 +155,9 @@ class _RoundedButtonWidgetState extends State<RoundedButtonWidget>
     );
 
     return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
       onTap: _handleTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedBuilder(

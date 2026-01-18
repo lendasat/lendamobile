@@ -8,8 +8,8 @@ import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bottom_action_buttons.dart';
 import 'package:ark_flutter/src/ui/screens/loans/contract_detail_screen.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
@@ -77,11 +77,19 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     }
   }
 
-  void _prefillFromConnectedWallet() {
+  Future<void> _prefillFromConnectedWallet() async {
     if (_walletConnectService.isConnected &&
         _walletConnectService.isEvmAddress) {
+      // Loans always use Polygon - ensure we're on the correct chain first
+      try {
+        await _walletConnectService.ensureCorrectChain(EvmChain.polygon);
+      } catch (e) {
+        logger.e('Failed to switch to Polygon: $e');
+      }
+
+      // Then get the Polygon address
       final address = _walletConnectService.connectedAddress;
-      if (address != null && address.startsWith('0x')) {
+      if (address != null && address.startsWith('0x') && mounted) {
         setState(() {
           _addressController.text = address;
           _addressFromWallet = true;
@@ -97,9 +105,12 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       }
       await _walletConnectService.openModal();
 
-      // After connecting, switch to Polygon if needed
+      // After connecting, switch to Polygon and get address
+      // Loans ALWAYS use Polygon for USDC payouts
       if (_walletConnectService.isConnected) {
         await _walletConnectService.ensureCorrectChain(EvmChain.polygon);
+        // Manually trigger prefill after chain switch
+        await _prefillFromConnectedWallet();
       }
     } catch (e) {
       logger.e('Error connecting wallet: $e');
@@ -458,54 +469,23 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
   }
 
   Widget _buildFloatingActionButton() {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.cardPadding,
-          vertical: AppTheme.elementSpacing,
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            LongButtonWidget(
-              title: _isCreating ? 'Processing...' : 'Create Loan Request',
-              customWidth: double.infinity,
-              buttonType: widget.offer.isAvailable &&
-                      !_isCreating &&
-                      _lendasatService.isAuthenticated
-                  ? ButtonType.primary
-                  : ButtonType.secondary,
-              onTap: widget.offer.isAvailable &&
-                      !_isCreating &&
-                      _lendasatService.isAuthenticated
-                  ? _createContract
-                  : null,
-            ),
-            if (!_lendasatService.isAuthenticated)
-              Padding(
-                padding: const EdgeInsets.only(top: AppTheme.elementSpacing),
-                child: Text(
-                  'Please sign in to create a loan request',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.errorColor,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-          ],
-        ),
-      ),
+    final isEnabled = widget.offer.isAvailable &&
+        !_isCreating &&
+        _lendasatService.isAuthenticated;
+
+    return BottomCenterButton(
+      title: _isCreating ? 'Processing...' : 'Create Loan Request',
+      buttonType: isEnabled ? ButtonType.primary : ButtonType.secondary,
+      onTap: isEnabled ? _createContract : null,
+      bottomWidget: !_lendasatService.isAuthenticated
+          ? Text(
+              'Please sign in to create a loan request',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.errorColor,
+                  ),
+              textAlign: TextAlign.center,
+            )
+          : null,
     );
   }
 

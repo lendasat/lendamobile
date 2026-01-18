@@ -33,8 +33,6 @@ class _BitNetImageWithTextButtonState extends State<BitNetImageWithTextButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
-  bool _animating = false;
-
   @override
   void initState() {
     super.initState();
@@ -53,17 +51,22 @@ class _BitNetImageWithTextButtonState extends State<BitNetImageWithTextButton>
     super.dispose();
   }
 
+  void _onTapDown(TapDownDetails details) {
+    _scaleController.forward();
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    // Ensure forward completes before reversing (for quick taps)
+    _scaleController.forward().then((_) => _scaleController.reverse());
+  }
+
+  void _onTapCancel() {
+    _scaleController.reverse();
+  }
+
   void _handleTap() {
-    if (!_animating) {
-      _animating = true;
-      HapticFeedback.lightImpact();
-      _scaleController.forward().then((_) {
-        _scaleController.reverse().then((_) {
-          _animating = false;
-        });
-      });
-      widget.onTap();
-    }
+    HapticFeedback.lightImpact();
+    widget.onTap();
   }
 
   @override
@@ -74,6 +77,9 @@ class _BitNetImageWithTextButtonState extends State<BitNetImageWithTextButton>
     final iconSize = widget.fallbackIconSize ?? AppTheme.iconSize * 1.25;
 
     return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
       onTap: _handleTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedBuilder(

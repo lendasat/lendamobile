@@ -1,7 +1,7 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bottom_action_buttons.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/filter_pill.dart';
 import 'package:flutter/material.dart';
 
@@ -137,22 +137,14 @@ class _LoanFilterScreenState extends State<LoanFilterScreen> {
               ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).padding.bottom + AppTheme.paddingS,
-              left: AppTheme.cardPadding,
-              right: AppTheme.cardPadding,
-            ),
-            child: LongButtonWidget(
-              title: l10n?.apply ?? 'Apply',
-              customWidth: double.infinity,
-              onTap: () {
-                widget.onApply(LoanFilterOptions(
-                  selectedStatuses: _selectedStatuses,
-                ));
-                Navigator.pop(context);
-              },
-            ),
+          BottomCenterButton(
+            title: l10n?.apply ?? 'Apply',
+            onTap: () {
+              widget.onApply(LoanFilterOptions(
+                selectedStatuses: _selectedStatuses,
+              ));
+              Navigator.pop(context);
+            },
           ),
         ],
       ),

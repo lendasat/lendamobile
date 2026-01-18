@@ -1,7 +1,7 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/transaction_filter_service.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bottom_action_buttons.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/filter_pill.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
@@ -231,19 +231,11 @@ class TransactionFilterScreen extends StatelessWidget {
               ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.only(
-              left: AppTheme.paddingM,
-              right: AppTheme.paddingM,
-              bottom: MediaQuery.of(context).padding.bottom + AppTheme.paddingS,
-            ),
-            child: LongButtonWidget(
-              title: AppLocalizations.of(context)!.apply,
-              customWidth: double.infinity,
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
+          BottomCenterButton(
+            title: AppLocalizations.of(context)!.apply,
+            onTap: () {
+              Navigator.pop(context);
+            },
           ),
         ],
       ),
