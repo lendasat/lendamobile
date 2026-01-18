@@ -109,10 +109,6 @@ class _LoanFilterScreenState extends State<LoanFilterScreen> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 0,
-                vertical: AppTheme.paddingM,
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -144,6 +140,8 @@ class _LoanFilterScreenState extends State<LoanFilterScreen> {
           Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).padding.bottom + AppTheme.paddingS,
+              left: AppTheme.cardPadding,
+              right: AppTheme.cardPadding,
             ),
             child: LongButtonWidget(
               title: l10n?.apply ?? 'Apply',

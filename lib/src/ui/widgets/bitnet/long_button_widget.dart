@@ -82,16 +82,17 @@ class _LongButtonWidgetState extends State<LongButtonWidget>
     super.dispose();
   }
 
-  void _handleTapDown(TapDownDetails details) {
-    _scaleController.forward();
-  }
+  bool _animating = false;
 
-  void _handleTapUp(TapUpDetails details) {
-    _scaleController.reverse();
-  }
-
-  void _handleTapCancel() {
-    _scaleController.reverse();
+  void _triggerAnimation() {
+    if (!_animating) {
+      _animating = true;
+      _scaleController.forward().then((_) {
+        _scaleController.reverse().then((_) {
+          _animating = false;
+        });
+      });
+    }
   }
 
   @override
@@ -110,170 +111,161 @@ class _LongButtonWidgetState extends State<LongButtonWidget>
     final borderRadius = BorderRadius.circular(20.0);
     const borderRadiusNum = 20.0;
 
-    return GestureDetector(
-      onTapDown: effectiveState != ButtonState.disabled ? _handleTapDown : null,
-      onTapUp: effectiveState != ButtonState.disabled ? _handleTapUp : null,
-      onTapCancel:
-          effectiveState != ButtonState.disabled ? _handleTapCancel : null,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) => Transform.scale(
-          scale: _scaleAnimation.value,
-          child: child,
-        ),
-        child: Stack(
-          children: [
-            // Background content
-            Container(
-              decoration: BoxDecoration(
-                boxShadow: widget.customShadow ??
-                    [
-                      if (widget.buttonType == ButtonType.solid ||
-                          widget.buttonType == ButtonType.primary)
-                        BoxShadow(
-                          color: AppTheme.colorBitcoin.withValues(alpha: 0.3),
-                          offset: const Offset(0, 4),
-                          blurRadius: 15,
-                          spreadRadius: -2,
-                        )
-                      else
-                        AppTheme.boxShadowProfile,
-                    ],
-                borderRadius: borderRadius,
-              ),
-              child: widget.buttonType == ButtonType.solid ||
-                      widget.buttonType == ButtonType.primary
-                  ? SolidContainer(
-                      gradientColors: effectiveState == ButtonState.disabled
-                          ? [Colors.grey, Colors.grey]
-                          : _isHovered
-                              ? [
-                                  darken(
-                                      theme.colorScheme.secondaryContainer, 10),
-                                  darken(
-                                      theme.colorScheme.tertiaryContainer, 10),
-                                ]
-                              : theme.colorScheme.primary ==
-                                      AppTheme.colorBitcoin
-                                  ? [
-                                      AppTheme.colorBitcoin,
-                                      AppTheme.colorBitcoin,
-                                    ]
-                                  : [
-                                      theme.colorScheme.primary,
-                                      theme.colorScheme.secondary,
-                                    ],
-                      gradientBegin: Alignment.topLeft,
-                      gradientEnd: Alignment.bottomRight,
-                      borderRadius: borderRadiusNum,
-                      width: widget.customWidth,
-                      height: widget.customHeight,
-                      normalPainter: widget.backgroundPainter,
-                      borderWidth: widget.backgroundPainter ? 1.5 : 1,
-                      child: Container(),
-                    )
-                  : GlassContainer(
-                      height: widget.customHeight,
-                      width: widget.customWidth,
-                      border:
-                          (effectiveState == ButtonState.disabled ? 0 : 0) == 0
-                              ? null
-                              : Border.all(
-                                  width: effectiveState == ButtonState.disabled
-                                      ? 0
-                                      : 0,
-                                  color: Theme.of(context).dividerColor,
-                                ),
-                      opacity: 0.1,
-                      borderRadius: borderRadius,
-                      child: Container(),
-                    ),
+    return AnimatedBuilder(
+      animation: _scaleAnimation,
+      builder: (context, child) => Transform.scale(
+        scale: _scaleAnimation.value,
+        child: child,
+      ),
+      child: Stack(
+        children: [
+          // Background content
+          Container(
+            decoration: BoxDecoration(
+              boxShadow: widget.customShadow ??
+                  [
+                    if (widget.buttonType == ButtonType.solid ||
+                        widget.buttonType == ButtonType.primary)
+                      BoxShadow(
+                        color: AppTheme.colorBitcoin.withValues(alpha: 0.3),
+                        offset: const Offset(0, 4),
+                        blurRadius: 15,
+                        spreadRadius: -2,
+                      )
+                    else
+                      AppTheme.boxShadowProfile,
+                  ],
+              borderRadius: borderRadius,
             ),
-            // The InkWell goes on top of the background
-            SizedBox(
-              width: widget.customWidth,
-              height: widget.customHeight,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  hoverColor: Colors.black.withValues(alpha: 0.1),
-                  onHover: (value) => setState(() => _isHovered = value),
-                  onTap: effectiveState == ButtonState.disabled
-                      ? widget.onTapDisabled
-                      : () {
-                          HapticFeedback.lightImpact();
-                          widget.onTap?.call();
-                        },
-                  borderRadius: borderRadius,
-                  child: Ink(
-                    decoration: BoxDecoration(
-                      borderRadius: borderRadius,
-                    ),
-                    child: effectiveState == ButtonState.loading
-                        ? dotProgress(
-                            context,
-                            size: 14,
-                            color: widget.textColor ??
-                                (widget.buttonType == ButtonType.solid ||
-                                        widget.buttonType == ButtonType.primary
-                                    ? const Color(0xFF1A0A00)
-                                    : theme.brightness == Brightness.light
-                                        ? AppTheme.black70
-                                        : AppTheme.white90),
-                          )
-                        : Center(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  if (widget.leadingIcon != null)
-                                    Padding(
-                                      padding:
-                                          const EdgeInsets.only(right: 8.0),
-                                      child: widget.leadingIcon,
-                                    ),
-                                  Flexible(
-                                    child: Text(
-                                      widget.title,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      textAlign: TextAlign.center,
-                                      style: widget.titleStyle ??
-                                          widget.textStyle ??
-                                          TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: widget.textColor ??
-                                                (widget.buttonType ==
-                                                            ButtonType.solid ||
-                                                        widget.buttonType ==
-                                                            ButtonType.primary
-                                                    ? const Color(0xFF1A0A00)
-                                                    : theme.brightness ==
-                                                            Brightness.light
-                                                        ? AppTheme.black70
-                                                        : AppTheme.white90),
-                                          ),
-                                    ),
+            child: widget.buttonType == ButtonType.solid ||
+                    widget.buttonType == ButtonType.primary
+                ? SolidContainer(
+                    gradientColors: effectiveState == ButtonState.disabled
+                        ? [Colors.grey, Colors.grey]
+                        : _isHovered
+                            ? [
+                                darken(
+                                    theme.colorScheme.secondaryContainer, 10),
+                                darken(theme.colorScheme.tertiaryContainer, 10),
+                              ]
+                            : theme.colorScheme.primary == AppTheme.colorBitcoin
+                                ? [
+                                    AppTheme.colorBitcoin,
+                                    AppTheme.colorBitcoin,
+                                  ]
+                                : [
+                                    theme.colorScheme.primary,
+                                    theme.colorScheme.secondary,
+                                  ],
+                    gradientBegin: Alignment.topLeft,
+                    gradientEnd: Alignment.bottomRight,
+                    borderRadius: borderRadiusNum,
+                    width: widget.customWidth,
+                    height: widget.customHeight,
+                    normalPainter: widget.backgroundPainter,
+                    borderWidth: widget.backgroundPainter ? 1.5 : 1,
+                    child: Container(),
+                  )
+                : GlassContainer(
+                    height: widget.customHeight,
+                    width: widget.customWidth,
+                    border: (effectiveState == ButtonState.disabled ? 0 : 0) ==
+                            0
+                        ? null
+                        : Border.all(
+                            width:
+                                effectiveState == ButtonState.disabled ? 0 : 0,
+                            color: Theme.of(context).dividerColor,
+                          ),
+                    opacity: 0.1,
+                    borderRadius: borderRadius,
+                    child: Container(),
+                  ),
+          ),
+          // The InkWell goes on top of the background
+          SizedBox(
+            width: widget.customWidth,
+            height: widget.customHeight,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                hoverColor: Colors.black.withValues(alpha: 0.1),
+                onHover: (value) => setState(() => _isHovered = value),
+                onTap: effectiveState == ButtonState.disabled
+                    ? widget.onTapDisabled
+                    : () {
+                        _triggerAnimation();
+                        HapticFeedback.lightImpact();
+                        widget.onTap?.call();
+                      },
+                borderRadius: borderRadius,
+                child: Ink(
+                  decoration: BoxDecoration(
+                    borderRadius: borderRadius,
+                  ),
+                  child: effectiveState == ButtonState.loading
+                      ? dotProgress(
+                          context,
+                          size: 14,
+                          color: widget.textColor ??
+                              (widget.buttonType == ButtonType.solid ||
+                                      widget.buttonType == ButtonType.primary
+                                  ? const Color(0xFF1A0A00)
+                                  : theme.brightness == Brightness.light
+                                      ? AppTheme.black70
+                                      : AppTheme.white90),
+                        )
+                      : Center(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (widget.leadingIcon != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: widget.leadingIcon,
                                   ),
-                                  if (widget.trailingIcon != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 8.0),
-                                      child: widget.trailingIcon,
-                                    ),
-                                ],
-                              ),
+                                Flexible(
+                                  child: Text(
+                                    widget.title,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    textAlign: TextAlign.center,
+                                    style: widget.titleStyle ??
+                                        widget.textStyle ??
+                                        TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: widget.textColor ??
+                                              (widget.buttonType ==
+                                                          ButtonType.solid ||
+                                                      widget.buttonType ==
+                                                          ButtonType.primary
+                                                  ? const Color(0xFF1A0A00)
+                                                  : theme.brightness ==
+                                                          Brightness.light
+                                                      ? AppTheme.black70
+                                                      : AppTheme.white90),
+                                        ),
+                                  ),
+                                ),
+                                if (widget.trailingIcon != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: widget.trailingIcon,
+                                  ),
+                              ],
                             ),
                           ),
-                  ),
+                        ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
