@@ -8,6 +8,7 @@ import 'package:ark_flutter/src/ui/screens/swap/swap_processing_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/wallet_connect_button.dart';
+import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -227,50 +228,97 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
       appBar: BitNetAppBar(
         context: context,
         text: 'Fund Swap',
+        transparent: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Swap summary
-            _buildSwapSummary(isDark),
-            const SizedBox(height: AppTheme.cardPadding),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(AppTheme.cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Swap summary
+                _buildSwapSummary(isDark),
+                const SizedBox(height: AppTheme.cardPadding),
 
-            // Steps progress
-            _buildStepsProgress(isDark),
-            const SizedBox(height: AppTheme.cardPadding),
+                // Steps progress
+                _buildStepsProgress(isDark),
+                const SizedBox(height: AppTheme.cardPadding),
 
-            // Error message
-            if (_error != null) ...[
-              Container(
-                padding: const EdgeInsets.all(AppTheme.cardPadding),
-                decoration: BoxDecoration(
-                  color: AppTheme.errorColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-                  border: Border.all(
-                      color: AppTheme.errorColor.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error_outline, color: AppTheme.errorColor),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _error!,
-                        style: const TextStyle(color: AppTheme.errorColor),
-                      ),
+                // Error message
+                if (_error != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(AppTheme.cardPadding),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorColor.withValues(alpha: 0.1),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadiusMid),
+                      border: Border.all(
+                          color: AppTheme.errorColor.withValues(alpha: 0.3)),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppTheme.cardPadding),
-            ],
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline,
+                            color: AppTheme.errorColor),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _error!,
+                            style: const TextStyle(color: AppTheme.errorColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.cardPadding),
+                ],
 
-            // Current step content
-            _buildCurrentStepContent(isDark),
-          ],
-        ),
+                // Current step content (non-button parts)
+                _buildCurrentStepContent(isDark),
+
+                // Extra space at bottom for floating button
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
+
+          // Floating buttons at bottom based on current step
+          if (_currentStep == FundingStep.connectWallet)
+            Positioned(
+              left: AppTheme.cardPadding,
+              right: AppTheme.cardPadding,
+              bottom: AppTheme.cardPadding,
+              child: WalletConnectButton(
+                chain: _evmChain,
+                onConnected: () {
+                  setState(() => _currentStep = FundingStep.createSwap);
+                },
+              ),
+            ),
+          if (_currentStep == FundingStep.createSwap)
+            Positioned(
+              left: AppTheme.cardPadding,
+              right: AppTheme.cardPadding,
+              bottom: AppTheme.cardPadding,
+              child: LongButtonWidget(
+                title: _isCreatingSwap ? 'Creating Swap...' : 'Create Swap',
+                customWidth: double.infinity,
+                state: _isCreatingSwap ? ButtonState.loading : ButtonState.idle,
+                onTap: _isCreatingSwap ? null : _createSwap,
+              ),
+            ),
+          if (_currentStep == FundingStep.fundSwap)
+            Positioned(
+              left: AppTheme.cardPadding,
+              right: AppTheme.cardPadding,
+              bottom: AppTheme.cardPadding,
+              child: LongButtonWidget(
+                title: 'Approve & Fund Swap',
+                customWidth: double.infinity,
+                onTap: _fundSwap,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -282,47 +330,102 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
         padding: const EdgeInsets.all(AppTheme.cardPadding),
         child: Column(
           children: [
+            // From - You send
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'You send',
-                      style: TextStyle(
-                        color: isDark ? AppTheme.white60 : AppTheme.black60,
-                        fontSize: 12,
+                TokenIcon(token: widget.sourceToken, size: 40),
+                const SizedBox(width: AppTheme.elementSpacing),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'You send',
+                        style: TextStyle(
+                          color: isDark ? AppTheme.white60 : AppTheme.black60,
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${widget.sourceAmount} ${widget.sourceToken.symbol}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                      Text(
+                        '${widget.sourceAmount} ${widget.sourceToken.symbol}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        widget.sourceToken.network,
+                        style: TextStyle(
+                          color: isDark ? AppTheme.white60 : AppTheme.black60,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const Icon(Icons.arrow_forward),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'You receive',
-                      style: TextStyle(
-                        color: isDark ? AppTheme.white60 : AppTheme.black60,
-                        fontSize: 12,
+              ],
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+            // Divider with arrow
+            Row(
+              children: [
+                Expanded(
+                  child: Divider(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.1),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Icon(
+                    Icons.arrow_downward_rounded,
+                    size: 20,
+                    color: isDark ? AppTheme.white60 : AppTheme.black60,
+                  ),
+                ),
+                Expanded(
+                  child: Divider(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.1),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+            // To - You receive
+            Row(
+              children: [
+                TokenIcon(token: widget.targetToken, size: 40),
+                const SizedBox(width: AppTheme.elementSpacing),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'You receive',
+                        style: TextStyle(
+                          color: isDark ? AppTheme.white60 : AppTheme.black60,
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${widget.targetAmount} ${widget.targetToken.symbol}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                      Text(
+                        '${widget.targetAmount} ${widget.targetToken.symbol}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        widget.targetToken.network,
+                        style: TextStyle(
+                          color: isDark ? AppTheme.white60 : AppTheme.black60,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -338,6 +441,7 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildStepRow(
               step: 1,
@@ -439,6 +543,8 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
   }
 
   Widget _buildStepDivider(bool isDark) {
+    // Circle is 28px wide, center is at 14px, line is 2px wide
+    // So margin-left should be 14 - 1 = 13 to center the line under the circles
     return Container(
       margin: const EdgeInsets.only(left: 13),
       height: 20,
@@ -452,23 +558,11 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
   Widget _buildCurrentStepContent(bool isDark) {
     switch (_currentStep) {
       case FundingStep.connectWallet:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Connect your ${_evmChain.name} wallet to fund the swap.',
-              style: TextStyle(
-                color: isDark ? AppTheme.white60 : AppTheme.black60,
-              ),
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-            WalletConnectButton(
-              chain: _evmChain,
-              onConnected: () {
-                setState(() => _currentStep = FundingStep.createSwap);
-              },
-            ),
-          ],
+        return Text(
+          'Connect your ${_evmChain.name} wallet to fund the swap.',
+          style: TextStyle(
+            color: isDark ? AppTheme.white60 : AppTheme.black60,
+          ),
         );
 
       case FundingStep.createSwap:
@@ -550,13 +644,6 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
                 color: isDark ? AppTheme.white60 : AppTheme.black60,
               ),
             ),
-            const SizedBox(height: AppTheme.cardPadding),
-            LongButtonWidget(
-              title: _isCreatingSwap ? 'Creating Swap...' : 'Create Swap',
-              customWidth: double.infinity,
-              state: _isCreatingSwap ? ButtonState.loading : ButtonState.idle,
-              onTap: _isCreatingSwap ? null : _createSwap,
-            ),
           ],
         );
 
@@ -616,12 +703,6 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
                   color: isDark ? AppTheme.white80 : AppTheme.black80,
                   fontSize: 13,
                 ),
-              ),
-              const SizedBox(height: AppTheme.cardPadding),
-              LongButtonWidget(
-                title: 'Approve & Fund Swap',
-                customWidth: double.infinity,
-                onTap: _fundSwap,
               ),
             ],
           ],

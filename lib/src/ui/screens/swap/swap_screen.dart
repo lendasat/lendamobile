@@ -589,7 +589,9 @@ class SwapScreenState extends State<SwapScreen> {
   bool get _isAmountTooSmall {
     final btc = double.tryParse(btcAmount) ?? 0;
     final sats = (btc * BitcoinConstants.satsPerBtc).round();
-    return sats > 0 && sats < _minSwapSats;
+    // Show "too small" if user has entered something (including 0) and it's below minimum
+    final hasInput = _sourceController.text.isNotEmpty;
+    return hasInput && sats < _minSwapSats;
   }
 
   /// Get total sats required including fees (from quote)
@@ -651,7 +653,15 @@ class SwapScreenState extends State<SwapScreen> {
 
     final availableSats = _availableBalanceSats.toInt();
     if (availableSats <= 0) {
-      logger.w("Max button early return - availableSats: $availableSats");
+      logger.w("Max button - balance is 0, setting amount to 0");
+      // Set amount to 0 so user sees feedback instead of nothing happening
+      setState(() {
+        satsAmount = '0';
+        btcAmount = '0';
+        usdAmount = '0';
+        _sourceController.text = '0';
+      });
+      _updateTargetAmount();
       return;
     }
 
@@ -733,12 +743,19 @@ class SwapScreenState extends State<SwapScreen> {
   }
 
   List<SwapToken> _getAvailableSourceTokens() {
-    // For first release, only Bitcoin is supported as source
-    return SwapToken.btcTokens;
+    // Bitcoin and Polygon stablecoins (USDC, USDT) are available as source
+    return [
+      ...SwapToken.btcTokens,
+      ...SwapToken.polygonTokens,
+    ];
   }
 
   List<SwapToken> _getAvailableTargetTokens() {
-    return SwapToken.getValidTargets(sourceToken);
+    // Show all available tokens as target options
+    return [
+      ...SwapToken.btcTokens,
+      ...SwapToken.polygonTokens,
+    ];
   }
 
   /// Get the conversion display text for source
@@ -1133,6 +1150,7 @@ class SwapScreenState extends State<SwapScreen> {
           text: "Swap",
           context: context,
           hasBackButton: false,
+          transparent: false,
         ),
         body: PopScope(
           canPop: true,
@@ -1201,40 +1219,42 @@ class SwapScreenState extends State<SwapScreen> {
                               ),
                             ],
                           ),
-                          // SWAP BUTTON - Hidden for first release as only one direction is supported
-                          /*
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: GestureDetector(
-                            onTap: _swapTokens,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? const Color(0xFF1B1B1B)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Theme.of(context).brightness == Brightness.dark
-                                      ? Colors.white.withValues(alpha: 0.1)
-                                      : Colors.black.withValues(alpha: 0.08),
-                                  width: 4,
+                          // SWAP BUTTON - Allows changing swap direction
+                          Positioned.fill(
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: GestureDetector(
+                                onTap: _swapTokens,
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? const Color(0xFF1B1B1B)
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white.withValues(alpha: 0.1)
+                                          : Colors.black
+                                              .withValues(alpha: 0.08),
+                                      width: 4,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_downward_rounded,
+                                    size: 20,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black,
+                                  ),
                                 ),
-                              ),
-                              child: Icon(
-                                Icons.arrow_downward_rounded,
-                                size: 20,
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                      */
                         ],
                       ),
                     ),
@@ -1255,9 +1275,13 @@ class SwapScreenState extends State<SwapScreen> {
                     title: _getButtonTitle(),
                     customWidth: MediaQuery.of(context).size.width -
                         AppTheme.cardPadding * 2,
-                    buttonType:
-                        _canSwap ? ButtonType.solid : ButtonType.transparent,
-                    state: isLoading
+                    // Don't change button type based on loading state to prevent flicker
+                    buttonType: (_isAmountValid &&
+                            !_isAmountTooSmall &&
+                            !_hasInsufficientFunds)
+                        ? ButtonType.solid
+                        : ButtonType.transparent,
+                    state: (isLoading || _isLoadingQuote)
                         ? ButtonState.loading
                         : ((_isAmountTooSmall || _hasInsufficientFunds)
                             ? ButtonState.disabled

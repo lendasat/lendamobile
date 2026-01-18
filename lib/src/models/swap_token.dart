@@ -66,11 +66,11 @@ enum SwapToken {
   /// Get valid target tokens for a given source token
   static List<SwapToken> getValidTargets(SwapToken source) {
     if (source.isBtc) {
-      // For first release, only support Polygon stablecoins (gasless claiming)
+      // BTC -> Stablecoins (Polygon for gasless claiming)
       return polygonTokens;
     } else {
-      // EVM -> BTC disabled for first release
-      return [];
+      // EVM -> BTC (reverse swaps)
+      return btcTokens;
     }
   }
 
