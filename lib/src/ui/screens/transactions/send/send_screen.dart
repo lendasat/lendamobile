@@ -8,6 +8,7 @@ import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/rust/api/mempool_api.dart' as mempool_api;
 import 'package:ark_flutter/src/rust/models/mempool.dart';
 import 'package:ark_flutter/src/services/amount_widget_service.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/lnurl_service.dart';
@@ -765,6 +766,13 @@ class SendScreenState extends State<SendScreen> {
         txid = result.txid;
         logger.i("Lightning payment successful! TXID: $txid");
       }
+
+      // Track Lightning send transaction
+      await AnalyticsService().trackSendTransaction(
+        amountSats: amountSats,
+        transactionType: 'offchain',
+        txId: txid,
+      );
 
       // Save recipient for future use
       // For LNURL, save the original address (reusable)

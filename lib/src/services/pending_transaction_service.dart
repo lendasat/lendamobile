@@ -3,8 +3,10 @@ import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
+import 'package:ark_flutter/src/services/recipient_storage_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/theme.dart';
@@ -79,6 +81,17 @@ class PendingTransactionService extends ChangeNotifier {
       final txid = await sendFunction();
 
       logger.i('PendingTransactionService: Send successful! txid=$txid');
+
+      // Track send transaction for analytics
+      final recipientType =
+          RecipientStorageService.determineType(pending.address);
+      final transactionType =
+          recipientType == RecipientType.onchain ? 'onchain' : 'offchain';
+      await AnalyticsService().trackSendTransaction(
+        amountSats: pending.amountSats,
+        transactionType: transactionType,
+        txId: txid,
+      );
 
       // Update pending status
       pending.status = PendingTransactionStatus.success;
