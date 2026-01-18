@@ -245,88 +245,85 @@ class _EmergencyRecoveryViewState extends State<EmergencyRecoveryView> {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Opacity(
-      opacity: isDisabled ? 0.5 : 1.0,
-      child: ArkListTile(
-        leading: Stack(
-          children: [
-            RoundedButtonWidget(
-              iconData: icon,
-              onTap: isDisabled ? () {} : onTap,
-              size: AppTheme.iconSize * 1.5,
-              buttonType: ButtonType.transparent,
-            ),
-            // Status indicator dot
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isDisabled
-                      ? (isDark
-                          ? Colors.white.withOpacity(0.3)
-                          : Colors.black.withOpacity(0.3))
-                      : (isSetUp ? AppTheme.successColor : AppTheme.errorColor),
-                  border: Border.all(
-                    color: isDark ? Colors.black : Colors.white,
-                    width: 1.5,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        text: title,
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 12,
-            color: isDark ? AppTheme.white60 : AppTheme.black60,
+    return ArkListTile(
+      leading: Stack(
+        children: [
+          RoundedButtonWidget(
+            iconData: icon,
+            onTap: isDisabled ? () {} : onTap,
+            size: AppTheme.iconSize * 1.5,
+            buttonType: ButtonType.transparent,
           ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          // Status indicator dot
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: 10,
+              height: 10,
               decoration: BoxDecoration(
+                shape: BoxShape.circle,
                 color: isDisabled
                     ? (isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : Colors.black.withOpacity(0.1))
-                    : (isSetUp
-                        ? AppTheme.successColor.withOpacity(0.15)
-                        : AppTheme.errorColor.withOpacity(0.15)),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                isDisabled
-                    ? AppLocalizations.of(context)!.comingSoon
-                    : (isSetUp
-                        ? AppLocalizations.of(context)!.enabled
-                        : AppLocalizations.of(context)!.notSetUp),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: isDisabled
-                      ? (isDark ? AppTheme.white60 : AppTheme.black60)
-                      : (isSetUp ? AppTheme.successColor : AppTheme.errorColor),
+                        ? Colors.white.withOpacity(0.3)
+                        : Colors.black.withOpacity(0.3))
+                    : (isSetUp ? AppTheme.successColor : AppTheme.errorColor),
+                border: Border.all(
+                  color: isDark ? Colors.black : Colors.white,
+                  width: 1.5,
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: AppTheme.iconSize * 0.75,
-              color: isDark ? AppTheme.white60 : AppTheme.black60,
-            ),
-          ],
-        ),
-        onTap: isDisabled ? null : onTap,
+          ),
+        ],
       ),
+      text: title,
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+          fontSize: 12,
+          color: isDark ? AppTheme.white60 : AppTheme.black60,
+        ),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isDisabled
+                  ? (isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.black.withOpacity(0.1))
+                  : (isSetUp
+                      ? AppTheme.successColor.withOpacity(0.15)
+                      : AppTheme.errorColor.withOpacity(0.15)),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              isDisabled
+                  ? AppLocalizations.of(context)!.comingSoon
+                  : (isSetUp
+                      ? AppLocalizations.of(context)!.enabled
+                      : AppLocalizations.of(context)!.notSetUp),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: isDisabled
+                    ? (isDark ? AppTheme.white60 : AppTheme.black60)
+                    : (isSetUp ? AppTheme.successColor : AppTheme.errorColor),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: AppTheme.iconSize * 0.75,
+            color: isDark ? AppTheme.white60 : AppTheme.black60,
+          ),
+        ],
+      ),
+      onTap: isDisabled ? null : onTap,
     );
   }
 }

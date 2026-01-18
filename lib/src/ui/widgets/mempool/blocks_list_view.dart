@@ -150,7 +150,6 @@ class BlocksListView extends StatelessWidget {
       height: 255,
       child: ListView.builder(
         primary: false,
-        shrinkWrap: true,
         reverse: true,
         physics: const NeverScrollableScrollPhysics(),
         scrollDirection: Axis.horizontal,
@@ -203,7 +202,6 @@ class BlocksListView extends StatelessWidget {
     return SizedBox(
       height: 255,
       child: ListView.builder(
-        shrinkWrap: true,
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         itemCount: confirmedBlocks.length,
@@ -247,18 +245,15 @@ class BlocksListView extends StatelessWidget {
       alignment: Alignment.bottomLeft,
       child: GestureDetector(
         onTap: onBackPressed,
-        child: Opacity(
-          opacity: 0.75,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: AppTheme.white60,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.arrow_back,
-              color: AppTheme.colorBackground,
-            ),
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: AppTheme.white60.withValues(alpha: 0.75),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.arrow_back,
+            color: AppTheme.colorBackground.withValues(alpha: 0.75),
           ),
         ),
       ),
