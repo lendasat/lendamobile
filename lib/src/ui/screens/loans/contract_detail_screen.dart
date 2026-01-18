@@ -1019,10 +1019,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
           ),
           if (_contract!.contractAddress != null)
             ArkListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.elementSpacing * 0.75,
-                vertical: AppTheme.elementSpacing * 0.5,
-              ),
+              contentPadding: EdgeInsets.zero,
               text: 'Contract Address',
               onTap: _copyContractAddress,
               trailing: SizedBox(
@@ -1105,10 +1102,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
             if (_contract!.btcLoanRepaymentAddress != null &&
                 _contract!.btcLoanRepaymentAddress!.isNotEmpty)
               ArkListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.elementSpacing * 0.75,
-                  vertical: AppTheme.elementSpacing * 0.5,
-                ),
+                contentPadding: EdgeInsets.zero,
                 leading: const Icon(
                   Icons.currency_bitcoin_rounded,
                   size: 20,
