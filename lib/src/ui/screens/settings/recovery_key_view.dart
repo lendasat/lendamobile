@@ -423,96 +423,108 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   }
 
   Widget _buildWarningView(bool isDark) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: AppTheme.cardPadding * 2),
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: AppTheme.cardPadding * 2),
 
-            // Warning icon
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppTheme.errorColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.warning_amber_rounded,
-                size: 48,
-                color: AppTheme.errorColor,
-              ),
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-
-            // Title
-            Text(
-              AppLocalizations.of(context)!.securityWarning,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                // Warning icon
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 48,
                     color: AppTheme.errorColor,
-                    fontWeight: FontWeight.bold,
                   ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-
-            // Warning content
-            Container(
-              padding: const EdgeInsets.all(AppTheme.cardPadding),
-              decoration: BoxDecoration(
-                color: AppTheme.errorColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-                border: Border.all(
-                  color: AppTheme.errorColor.withValues(alpha: 0.3),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!
-                        .neverShareYourRecoveryKeyWithAnyone,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                const SizedBox(height: AppTheme.cardPadding),
+
+                // Title
+                Text(
+                  AppLocalizations.of(context)!.securityWarning,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppTheme.errorColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppTheme.cardPadding),
+
+                // Warning content
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.cardPadding),
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorColor.withValues(alpha: 0.1),
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.borderRadiusMid),
+                    border: Border.all(
+                      color: AppTheme.errorColor.withValues(alpha: 0.3),
+                    ),
                   ),
-                  const SizedBox(height: AppTheme.elementSpacing),
-                  Text(
-                    AppLocalizations.of(context)!.anyoneWithThisKeyCan,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: isDark ? AppTheme.white70 : AppTheme.black70,
-                        ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!
+                            .neverShareYourRecoveryKeyWithAnyone,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: AppTheme.elementSpacing),
+                      Text(
+                        AppLocalizations.of(context)!.anyoneWithThisKeyCan,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color:
+                                  isDark ? AppTheme.white70 : AppTheme.black70,
+                            ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: AppTheme.cardPadding),
+
+                // Instructions
+                _buildWarningPoint(
+                    context, Icons.person_off, 'Never share with anyone'),
+                _buildWarningPoint(context, Icons.cloud_off,
+                    'Never store digitally or online'),
+                _buildWarningPoint(context, Icons.edit_note,
+                    'Write it down on paper and store safely'),
+
+                // Space for floating button
+                const SizedBox(height: AppTheme.cardPadding * 4),
+              ],
             ),
-            const SizedBox(height: AppTheme.cardPadding),
-
-            // Instructions
-            _buildWarningPoint(
-                context, Icons.person_off, 'Never share with anyone'),
-            _buildWarningPoint(
-                context, Icons.cloud_off, 'Never store digitally or online'),
-            _buildWarningPoint(context, Icons.edit_note,
-                'Write it down on paper and store safely'),
-
-            const SizedBox(height: AppTheme.cardPadding),
-
-            // Continue button
-            LongButtonWidget(
-              title: AppLocalizations.of(context)!.iUnderstand,
-              customWidth: double.infinity,
-              customHeight: 56,
-              onTap: () {
-                logger.i("Button pressed! Current step: $_currentStep");
-                _proceedToShowMnemonic();
-              },
-            ),
-          ],
+          ),
         ),
-      ),
+        // Floating button at bottom
+        Positioned(
+          left: AppTheme.cardPadding,
+          right: AppTheme.cardPadding,
+          bottom: AppTheme.cardPadding,
+          child: LongButtonWidget(
+            title: AppLocalizations.of(context)!.iUnderstand,
+            customWidth: double.infinity,
+            customHeight: 56,
+            onTap: () {
+              logger.i("Button pressed! Current step: $_currentStep");
+              _proceedToShowMnemonic();
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -540,119 +552,132 @@ class _RecoveryKeyViewState extends State<RecoveryKeyView> {
   }
 
   Widget _buildShowMnemonicView(bool isDark) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppTheme.cardPadding * 2),
-            // Recovery phrase section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  AppLocalizations.of(context)!.yourRecoveryPhrase,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
+                const SizedBox(height: AppTheme.cardPadding * 2),
+                // Recovery phrase section
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(
-                      Icons.key,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 4),
                     Text(
-                      '12 Words',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
+                      AppLocalizations.of(context)!.yourRecoveryPhrase,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.key,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '12 Words',
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.elementSpacing),
+                const SizedBox(height: AppTheme.elementSpacing),
 
-            // Recovery phrase display - masked for PostHog session replay
-            PostHogMaskWidget(
-              child: Container(
-                padding: const EdgeInsets.all(AppTheme.cardPadding),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.black.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.black.withValues(alpha: 0.1),
+                // Recovery phrase display - masked for PostHog session replay
+                PostHogMaskWidget(
+                  child: Container(
+                    padding: const EdgeInsets.all(AppTheme.cardPadding),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.black.withValues(alpha: 0.03),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadiusMid),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : Colors.black.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        if (_mnemonic != null) _buildMnemonicGrid(_mnemonic!),
+
+                        const SizedBox(height: AppTheme.cardPadding),
+
+                        // Copy button
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _copyToClipboard,
+                            icon: Icon(
+                              _showCopied ? Icons.check : Icons.copy,
+                              color: _showCopied
+                                  ? AppTheme.successColor
+                                  : AppTheme.colorBitcoin,
+                            ),
+                            label: Text(
+                              _showCopied
+                                  ? AppLocalizations.of(context)!.copied
+                                  : AppLocalizations.of(context)!
+                                      .copyToClipboard,
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: _showCopied
+                                  ? AppTheme.successColor
+                                  : AppTheme.colorBitcoin,
+                              side: BorderSide(
+                                color: _showCopied
+                                    ? AppTheme.successColor
+                                    : AppTheme.colorBitcoin,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                child: Column(
-                  children: [
-                    if (_mnemonic != null) _buildMnemonicGrid(_mnemonic!),
 
-                    const SizedBox(height: AppTheme.cardPadding),
-
-                    // Copy button
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: _copyToClipboard,
-                        icon: Icon(
-                          _showCopied ? Icons.check : Icons.copy,
-                          color: _showCopied
-                              ? AppTheme.successColor
-                              : AppTheme.colorBitcoin,
-                        ),
-                        label: Text(
-                          _showCopied
-                              ? AppLocalizations.of(context)!.copied
-                              : AppLocalizations.of(context)!.copyToClipboard,
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _showCopied
-                              ? AppTheme.successColor
-                              : AppTheme.colorBitcoin,
-                          side: BorderSide(
-                            color: _showCopied
-                                ? AppTheme.successColor
-                                : AppTheme.colorBitcoin,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                // Space for floating button
+                const SizedBox(height: AppTheme.cardPadding * 4),
+              ],
             ),
-            const SizedBox(height: AppTheme.cardPadding * 2),
-
-            // Continue to verify button
-            LongButtonWidget(
-              title: AppLocalizations.of(context)!.continueToVerify,
-              customWidth: double.infinity,
-              customHeight: 56,
-              onTap: () {
-                _clearWordControllers();
-                setState(() {
-                  _currentStep = 2;
-                });
-              },
-            ),
-
-            const SizedBox(height: AppTheme.cardPadding * 2),
-          ],
+          ),
         ),
-      ),
+        // Floating button at bottom
+        Positioned(
+          left: AppTheme.cardPadding,
+          right: AppTheme.cardPadding,
+          bottom: AppTheme.cardPadding,
+          child: LongButtonWidget(
+            title: AppLocalizations.of(context)!.continueToVerify,
+            customWidth: double.infinity,
+            customHeight: 56,
+            onTap: () {
+              _clearWordControllers();
+              setState(() {
+                _currentStep = 2;
+              });
+            },
+          ),
+        ),
+      ],
     );
   }
 

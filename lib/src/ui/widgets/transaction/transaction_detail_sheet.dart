@@ -247,6 +247,50 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     return amountSats < 0;
   }
 
+  /// Build status pill - shows "Incoming" (orange) if pending, otherwise Sent/Received
+  Widget _buildStatusPill(BuildContext context, AppLocalizations l10n,
+      bool isSent, bool isConfirmed) {
+    final isPending = !isConfirmed && widget.networkType != 'Arkade';
+
+    final Color pillColor = isPending
+        ? AppTheme.colorBitcoin
+        : (isSent ? AppTheme.errorColor : AppTheme.successColor);
+    final IconData pillIcon = isPending
+        ? Icons.schedule_rounded
+        : (isSent ? Icons.north_east_rounded : Icons.south_west_rounded);
+    final String pillText =
+        isPending ? l10n.pending : (isSent ? l10n.sent : l10n.received);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.cardPadding * 0.75,
+        vertical: AppTheme.elementSpacing * 0.4,
+      ),
+      decoration: BoxDecoration(
+        color: pillColor.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            pillIcon,
+            size: 14,
+            color: pillColor,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            pillText,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: pillColor,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -359,46 +403,14 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                             ),
                             child: Column(
                               children: [
-                                // Status pill
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppTheme.cardPadding * 0.75,
-                                    vertical: AppTheme.elementSpacing * 0.4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: (isSent
-                                            ? AppTheme.errorColor
-                                            : AppTheme.successColor)
-                                        .withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        isSent
-                                            ? Icons.north_east_rounded
-                                            : Icons.south_west_rounded,
-                                        size: 14,
-                                        color: isSent
-                                            ? AppTheme.errorColor
-                                            : AppTheme.successColor,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        isSent ? l10n.sent : l10n.received,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium
-                                            ?.copyWith(
-                                              color: isSent
-                                                  ? AppTheme.errorColor
-                                                  : AppTheme.successColor,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
+                                // Status pill - Incoming (orange) if pending
+                                _buildStatusPill(
+                                  context,
+                                  l10n,
+                                  isSent,
+                                  transactionModel?.status.confirmed ??
+                                      widget.isConfirmed ??
+                                      false,
                                 ),
                                 const SizedBox(height: AppTheme.cardPadding),
                                 // Large amount - toggles between sats/BTC and fiat
@@ -980,46 +992,14 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
                             ),
                             child: Column(
                               children: [
-                                // Status pill
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppTheme.cardPadding * 0.75,
-                                    vertical: AppTheme.elementSpacing * 0.4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: (isSent
-                                            ? AppTheme.errorColor
-                                            : AppTheme.successColor)
-                                        .withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        isSent
-                                            ? Icons.north_east_rounded
-                                            : Icons.south_west_rounded,
-                                        size: 14,
-                                        color: isSent
-                                            ? AppTheme.errorColor
-                                            : AppTheme.successColor,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        isSent ? l10n.sent : l10n.received,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium
-                                            ?.copyWith(
-                                              color: isSent
-                                                  ? AppTheme.errorColor
-                                                  : AppTheme.successColor,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
+                                // Status pill - Incoming (orange) if pending
+                                _buildStatusPill(
+                                  context,
+                                  l10n,
+                                  isSent,
+                                  transactionModel?.status.confirmed ??
+                                      widget.isConfirmed ??
+                                      false,
                                 ),
                                 const SizedBox(height: AppTheme.cardPadding),
                                 // Large amount - toggles between sats/BTC and fiat

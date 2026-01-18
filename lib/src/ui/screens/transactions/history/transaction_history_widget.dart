@@ -540,7 +540,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               },
               suffixIcon: IconButton(
                 icon: Icon(
-                  Icons.filter_list,
+                  Icons.tune,
                   color: isDark ? AppTheme.white60 : AppTheme.black60,
                   size: AppTheme.cardPadding * 0.75,
                 ),
@@ -931,20 +931,18 @@ class _TransactionItemWidgetState extends State<_TransactionItemWidget> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(
-                            width: AppTheme.cardPadding * 6.5,
-                            child: Text(
-                              txid,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall!
-                                  .copyWith(
-                                    color: isDark
-                                        ? AppTheme.white90
-                                        : AppTheme.black90,
-                                  ),
-                            ),
+                          Text(
+                            amountSats >= 0
+                                ? AppLocalizations.of(context)!.received
+                                : AppLocalizations.of(context)!.sent,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(
+                                  color: isDark
+                                      ? AppTheme.white90
+                                      : AppTheme.black90,
+                                ),
                           ),
                           const SizedBox(height: AppTheme.elementSpacing / 2),
                           Row(
@@ -1002,7 +1000,7 @@ class _TransactionItemWidgetState extends State<_TransactionItemWidget> {
                       ),
                     ],
                   ),
-                  // RIGHT SIDE
+                  // RIGHT SIDE - Amount (bigger/bolder)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -1019,12 +1017,18 @@ class _TransactionItemWidgetState extends State<_TransactionItemWidget> {
                                           showSign: true)
                                       : '${amountSats.isNegative ? "-" : "+"}${currencyService.formatAmount(fiatAmount.abs())}',
                                   overflow: TextOverflow.ellipsis,
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
                                 ),
                                 if (showBtcAsMain)
                                   Icon(
                                     AppTheme.satoshiIcon,
+                                    size: 18,
                                   ),
                               ],
                             ),

@@ -1,6 +1,13 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 
+/// Shows a bottom sheet with optimized animations for a snappy feel.
+///
+/// Performance optimizations:
+/// - Uses `useSafeArea` to reduce layout calculations
+/// - Subtle barrier color for smoother appearance
+/// - `RepaintBoundary` on child content
+/// - Cached theme lookups
 Future<T?> arkBottomSheet<T>({
   required BuildContext context,
   double borderRadius = 20.0,
@@ -10,10 +17,10 @@ Future<T?> arkBottomSheet<T>({
   Color backgroundColor = Colors.transparent,
   bool isDismissible = true,
   bool isScrollControlled = true,
+  bool enableDrag = true,
 }) {
   // Performance: Use MediaQuery.sizeOf instead of MediaQuery.of to only
   // subscribe to size changes, not viewInsets (keyboard) changes.
-  // This prevents rebuilds when keyboard opens/closes.
   final screenSize = MediaQuery.sizeOf(context);
 
   return showModalBottomSheet(
@@ -22,6 +29,10 @@ Future<T?> arkBottomSheet<T>({
     backgroundColor: Colors.transparent,
     isDismissible: isDismissible,
     isScrollControlled: isScrollControlled,
+    enableDrag: enableDrag,
+    useSafeArea: true,
+    // Subtle barrier - less jarring appearance/disappearance
+    barrierColor: Colors.black54,
     constraints: BoxConstraints(
       maxHeight: height ?? screenSize.height * 0.9,
       maxWidth: width ?? screenSize.width,

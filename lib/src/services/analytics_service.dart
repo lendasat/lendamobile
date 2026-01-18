@@ -2,6 +2,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark;
+import 'package:ark_flutter/src/services/user_preferences_service.dart';
 
 /// Centralized analytics service for tracking user events.
 /// Tracks transaction events for monthly active user (MAU) calculation.
@@ -23,6 +24,11 @@ class AnalyticsService {
 
   String? _userPubkey;
 
+  /// Check if analytics is allowed by user preferences
+  Future<bool> _isAnalyticsAllowed() async {
+    return await UserPreferencesService.getAllowAnalytics();
+  }
+
   /// Identify the user by their Nostr public key (npub).
   ///
   /// The Nostr pubkey is the CANONICAL USER IDENTIFIER across all services.
@@ -33,6 +39,8 @@ class AnalyticsService {
   ///
   /// Should be called after wallet is created/restored.
   Future<void> identifyUser() async {
+    if (!await _isAnalyticsAllowed()) return;
+
     try {
       // Get data directory for Rust API call
       final dataDir = await getApplicationSupportDirectory();
@@ -65,6 +73,8 @@ class AnalyticsService {
     String category,
     Map<String, dynamic> properties,
   ) async {
+    if (!await _isAnalyticsAllowed()) return;
+
     await Posthog().capture(
       eventName: 'app_transaction',
       properties: {
@@ -80,6 +90,8 @@ class AnalyticsService {
     required String transactionType, // 'onchain' or 'offchain'
     String? txId,
   }) async {
+    if (!await _isAnalyticsAllowed()) return;
+
     final properties = {
       'amount_sats': amountSats,
       'transaction_type': transactionType,
@@ -105,6 +117,8 @@ class AnalyticsService {
     required String transactionType, // 'onchain' or 'offchain'
     String? txId,
   }) async {
+    if (!await _isAnalyticsAllowed()) return;
+
     final properties = {
       'amount_sats': amountSats,
       'transaction_type': transactionType,
@@ -131,6 +145,8 @@ class AnalyticsService {
     required String toAsset,
     String? swapId,
   }) async {
+    if (!await _isAnalyticsAllowed()) return;
+
     final properties = {
       'amount_sats': amountSats,
       'from_asset': fromAsset,
@@ -158,6 +174,8 @@ class AnalyticsService {
     double? fiatAmount,
     String? provider,
   }) async {
+    if (!await _isAnalyticsAllowed()) return;
+
     final properties = {
       'amount_sats': amountSats,
       'fiat_currency': fiatCurrency,
@@ -184,6 +202,8 @@ class AnalyticsService {
     double? fiatAmount,
     String? provider,
   }) async {
+    if (!await _isAnalyticsAllowed()) return;
+
     final properties = {
       'amount_sats': amountSats,
       'fiat_currency': fiatCurrency,
@@ -211,6 +231,8 @@ class AnalyticsService {
     double? interestRate,
     int? durationDays,
   }) async {
+    if (!await _isAnalyticsAllowed()) return;
+
     final properties = {
       'amount_sats': amountSats,
       'type': type,
@@ -233,6 +255,8 @@ class AnalyticsService {
 
   /// Track wallet creation
   Future<void> trackWalletCreated({bool isRestore = false}) async {
+    if (!await _isAnalyticsAllowed()) return;
+
     try {
       await Posthog().capture(
         eventName: 'wallet_created',

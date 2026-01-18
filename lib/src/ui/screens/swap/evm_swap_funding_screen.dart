@@ -541,7 +541,7 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
             ),
           ),
         ),
-        if (isActive && _isFunding) dotProgressSmall(context),
+        if (isActive && _isFunding) dotProgress(context, size: 14),
       ],
     );
   }
@@ -844,7 +844,7 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          dotProgressSmall(context),
+          dotProgress(context, size: 14),
           const SizedBox(width: 12),
           Text(
             message,

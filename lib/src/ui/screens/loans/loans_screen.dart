@@ -16,6 +16,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/screens/loans/loan_offer_detail_screen.dart';
 import 'package:ark_flutter/src/ui/screens/loans/contract_detail_screen.dart';
+import 'package:ark_flutter/src/ui/screens/loans/loan_filter_screen.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -33,6 +34,7 @@ class LoansScreen extends StatefulWidget {
 class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   final LendasatService _lendasatService = LendasatService();
   final SettingsService _settingsService = SettingsService();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
   final FocusNode _searchFocusNode = FocusNode();
   bool _wasKeyboardVisible = false;
@@ -42,6 +44,9 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   bool _isRegistering = false;
   String? _errorMessage;
   Timer? _autoRefreshTimer;
+
+  // Filter state
+  LoanFilterOptions _filterOptions = const LoanFilterOptions();
 
   // Debug info
   String? _debugPubkey;
@@ -65,6 +70,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _scrollController.dispose();
     _autoRefreshTimer?.cancel();
     _keyboardDebounceTimer?.cancel();
     _searchFocusNode.dispose();
@@ -74,6 +80,16 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   /// Unfocus search field - can be called from parent (e.g., bottom nav)
   void unfocusAll() {
     _searchFocusNode.unfocus();
+  }
+
+  /// Scrolls to the top of the loans screen with a smooth animation
+  /// Called when user taps the loans tab while already on the loans screen
+  void scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
@@ -457,6 +473,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                 : RefreshIndicator(
                     onRefresh: _refresh,
                     child: CustomScrollView(
+                      controller: _scrollController,
                       slivers: [
                         // Top padding
                         const SliverToBoxAdapter(
@@ -738,12 +755,11 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
     final l10n = AppLocalizations.of(context);
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
 
-    // Header height: top padding + title + spacing + search bar + small fade area
-    const double headerHeight = AppTheme.cardPadding + // top padding
+    // Header height: top padding + title + spacing + search bar
+    const double headerHeight = AppTheme.cardPadding * 1.5 + // top padding
         24.0 + // title
         AppTheme.elementSpacing + // spacing
-        48.0 + // search bar
-        AppTheme.elementSpacing; // bottom for fade
+        48.0; // search bar
 
     return SliverAppBar(
       pinned: true,
@@ -802,6 +818,32 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                       _searchQuery = value.toLowerCase();
                     });
                   },
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      Icons.tune,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppTheme.white60
+                          : AppTheme.black60,
+                      size: AppTheme.cardPadding * 0.75,
+                    ),
+                    onPressed: () async {
+                      _searchFocusNode.unfocus();
+                      await arkBottomSheet(
+                        context: context,
+                        height: MediaQuery.of(context).size.height * 0.6,
+                        backgroundColor:
+                            Theme.of(context).scaffoldBackgroundColor,
+                        child: LoanFilterScreen(
+                          initialFilters: _filterOptions,
+                          onApply: (filters) {
+                            setState(() {
+                              _filterOptions = filters;
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
@@ -848,7 +890,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
       );
     }
 
-    // Filter contracts by search query
+    // Filter contracts by search query and status filter
     var contracts = _lendasatService.contracts;
     if (_searchQuery.isNotEmpty) {
       contracts = contracts.where((contract) {
@@ -861,6 +903,49 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
       }).toList();
     }
 
+    // Apply status filter
+    if (_filterOptions.hasFilter) {
+      contracts = contracts.where((contract) {
+        final status = contract.status;
+        final expiryDate = DateTime.parse(contract.expiry);
+        final isOverdue = DateTime.now().isAfter(expiryDate) &&
+            status != ContractStatus.repaymentConfirmed &&
+            status != ContractStatus.closed &&
+            status != ContractStatus.closing &&
+            status != ContractStatus.closingByClaim;
+
+        for (final filter in _filterOptions.selectedStatuses) {
+          switch (filter) {
+            case 'Active':
+              if (status == ContractStatus.principalGiven ||
+                  status == ContractStatus.extended) return true;
+              break;
+            case 'Pending':
+              if (status == ContractStatus.requested ||
+                  status == ContractStatus.approved ||
+                  status == ContractStatus.collateralSeen ||
+                  status == ContractStatus.collateralConfirmed) return true;
+              break;
+            case 'Repayment Confirmed':
+              if (status == ContractStatus.repaymentConfirmed) return true;
+              break;
+            case 'Closed':
+              if (status == ContractStatus.closed ||
+                  status == ContractStatus.closing ||
+                  status == ContractStatus.closingByClaim) return true;
+              break;
+            case 'Overdue':
+              if (isOverdue) return true;
+              break;
+          }
+        }
+        return false;
+      }).toList();
+    }
+
+    final hasActiveFilters =
+        _searchQuery.isNotEmpty || _filterOptions.hasFilter;
+
     if (contracts.isEmpty) {
       return SliverToBoxAdapter(
         child: Padding(
@@ -872,7 +957,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
           child: Row(
             children: [
               Icon(
-                _searchQuery.isNotEmpty
+                hasActiveFilters
                     ? Icons.search_off
                     : Icons.receipt_long_outlined,
                 size: 32,
@@ -884,9 +969,9 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
               const SizedBox(width: AppTheme.elementSpacing),
               Expanded(
                 child: Text(
-                  _searchQuery.isNotEmpty
+                  hasActiveFilters
                       ? (AppLocalizations.of(context)?.noContractsMatchSearch ??
-                          'No contracts match your search')
+                          'No contracts match your filters')
                       : (AppLocalizations.of(context)?.noContractsYet ??
                           'No contracts yet. Take an offer to get started!'),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -1330,9 +1415,23 @@ class _ContractCard extends StatelessWidget {
     String timeText;
     Color timeColor;
 
-    if (remaining.isNegative) {
+    // Check if contract is in a completed/closed state - not overdue anymore
+    final isRepaymentConfirmed =
+        contract.status == ContractStatus.repaymentConfirmed;
+    final isClosed = contract.status == ContractStatus.closed ||
+        contract.status == ContractStatus.closing ||
+        contract.status == ContractStatus.closingByClaim;
+    final isCompleted = isRepaymentConfirmed || isClosed;
+
+    if (remaining.isNegative && !isCompleted) {
       timeText = AppLocalizations.of(context)?.overdue ?? 'Overdue';
       timeColor = AppTheme.errorColor;
+    } else if (isRepaymentConfirmed) {
+      timeText = 'Claim Collateral';
+      timeColor = AppTheme.colorBitcoin;
+    } else if (isClosed) {
+      timeText = 'Completed';
+      timeColor = AppTheme.successColor;
     } else if (remaining.inDays > 0) {
       timeText =
           '${remaining.inDays} day${remaining.inDays == 1 ? '' : 's'} left';
@@ -1375,10 +1474,10 @@ class _ContractCard extends StatelessWidget {
         return AppTheme.successColor;
       case ContractStatus.requested:
       case ContractStatus.approved:
-        return Colors.blue;
+        return Colors.orange;
       case ContractStatus.collateralSeen:
       case ContractStatus.collateralConfirmed:
-        return Colors.blue;
+        return Colors.orange;
       case ContractStatus.closed:
       case ContractStatus.closedByLiquidation:
       case ContractStatus.closedByDefaulting:

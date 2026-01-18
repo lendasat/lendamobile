@@ -8,14 +8,17 @@ class UserPreferencesService extends ChangeNotifier {
   static const String _balancesVisibleKey = 'balances_visible';
   static const String _chartTimeRangeKey = 'chart_time_range';
   static const String _autoReadClipboardKey = 'auto_read_clipboard';
+  static const String _allowAnalyticsKey = 'allow_analytics';
 
   bool _balancesVisible = true;
   ChartTimeRange _chartTimeRange = ChartTimeRange.day;
   bool _autoReadClipboard = false; // Default OFF
+  bool _allowAnalytics = true; // Default ON
 
   bool get balancesVisible => _balancesVisible;
   ChartTimeRange get chartTimeRange => _chartTimeRange;
   bool get autoReadClipboard => _autoReadClipboard;
+  bool get allowAnalytics => _allowAnalytics;
 
   Future<void> loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
@@ -24,6 +27,7 @@ class UserPreferencesService extends ChangeNotifier {
     _chartTimeRange = ChartTimeRange
         .values[rangeIndex.clamp(0, ChartTimeRange.values.length - 1)];
     _autoReadClipboard = prefs.getBool(_autoReadClipboardKey) ?? false;
+    _allowAnalytics = prefs.getBool(_allowAnalyticsKey) ?? true;
     notifyListeners();
   }
 
@@ -67,6 +71,19 @@ class UserPreferencesService extends ChangeNotifier {
     await setAutoReadClipboard(!_autoReadClipboard);
   }
 
+  Future<void> setAllowAnalytics(bool value) async {
+    _allowAnalytics = value;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_allowAnalyticsKey, value);
+
+    notifyListeners();
+  }
+
+  Future<void> toggleAllowAnalytics() async {
+    await setAllowAnalytics(!_allowAnalytics);
+  }
+
   String getChartTimeRangeLabel() {
     switch (_chartTimeRange) {
       case ChartTimeRange.day:
@@ -91,5 +108,10 @@ class UserPreferencesService extends ChangeNotifier {
   static Future<bool> getBalancesVisible() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_balancesVisibleKey) ?? true;
+  }
+
+  static Future<bool> getAllowAnalytics() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_allowAnalyticsKey) ?? true;
   }
 }
