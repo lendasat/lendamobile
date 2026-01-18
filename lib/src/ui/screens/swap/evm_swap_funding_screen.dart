@@ -288,12 +288,20 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
               left: AppTheme.cardPadding,
               right: AppTheme.cardPadding,
               bottom: AppTheme.cardPadding,
-              child: WalletConnectButton(
-                chain: _evmChain,
-                onConnected: () {
-                  setState(() => _currentStep = FundingStep.createSwap);
-                },
-              ),
+              child: _walletService.isConnected
+                  ? LongButtonWidget(
+                      title: 'Continue with ${_walletService.shortAddress}',
+                      customWidth: double.infinity,
+                      onTap: () {
+                        setState(() => _currentStep = FundingStep.createSwap);
+                      },
+                    )
+                  : WalletConnectButton(
+                      chain: _evmChain,
+                      onConnected: () {
+                        setState(() => _currentStep = FundingStep.createSwap);
+                      },
+                    ),
             ),
           if (_currentStep == FundingStep.createSwap)
             Positioned(
@@ -558,6 +566,81 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
   Widget _buildCurrentStepContent(bool isDark) {
     switch (_currentStep) {
       case FundingStep.connectWallet:
+        if (_walletService.isConnected) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GlassContainer(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.cardPadding),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.account_balance_wallet,
+                          color: Colors.green,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Wallet Connected',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              _walletService.shortAddress ?? '',
+                              style: TextStyle(
+                                color: isDark
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                                fontFamily: 'monospace',
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          await _walletService.disconnect();
+                          setState(() {});
+                        },
+                        child: Text(
+                          'Switch',
+                          style: TextStyle(
+                            color: isDark ? AppTheme.white60 : AppTheme.black60,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppTheme.cardPadding),
+              Text(
+                'Continue with your connected wallet or switch to a different one.',
+                style: TextStyle(
+                  color: isDark ? AppTheme.white60 : AppTheme.black60,
+                ),
+              ),
+            ],
+          );
+        }
         return Text(
           'Connect your ${_evmChain.name} wallet to fund the swap.',
           style: TextStyle(
