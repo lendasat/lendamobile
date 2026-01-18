@@ -56,6 +56,9 @@ class Avatar extends StatelessWidget {
           width: avatarSize,
           height: avatarSize,
           fit: BoxFit.cover,
+          // Resize image in memory to reduce memory usage
+          cacheWidth: (avatarSize * 2).toInt(),
+          cacheHeight: (avatarSize * 2).toInt(),
           errorBuilder: (context, error, stackTrace) {
             return _buildFallbackAvatar(context, avatarSize, isLight);
           },
