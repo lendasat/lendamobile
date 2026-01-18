@@ -324,27 +324,46 @@ class _AmountWidgetState extends State<AmountWidget>
                 ),
                 inputFormatters: _getInputFormatters(bitcoinPrice),
                 decoration: InputDecoration(
-                  suffixIcon: _service.swapped
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              currencyService.symbol,
-                              style: TextStyle(
-                                fontSize: 24,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withValues(alpha: 0.7),
+                  suffixIcon: GestureDetector(
+                    onTap: () {
+                      final fiatRate = _getFiatRate(currencyService);
+                      _service.toggleSwapped(bitcoinPrice, fiatRate);
+                      widget.focusNode.unfocus();
+
+                      // Update display values after swap
+                      _displayFiat = _service.cachedFiatDisplay;
+                      _displayBtc = _service.cachedBtcDisplay;
+
+                      if (widget.onAmountChange != null) {
+                        widget.onAmountChange!(
+                          _service.currentUnit.name,
+                          widget.btcController.text,
+                        );
+                      }
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: _service.swapped
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                currencyService.symbol,
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.7),
+                                ),
                               ),
-                            ),
-                          ],
-                        )
-                      : _getCurrencyIcon(
-                          context,
-                          _service.currentUnit,
-                          size: 24.0,
-                        ),
+                            ],
+                          )
+                        : _getCurrencyIcon(
+                            context,
+                            _service.currentUnit,
+                            size: 32.0,
+                          ),
+                  ),
                   border: InputBorder.none,
                   counterText: "",
                   hintText: "0",
@@ -460,7 +479,11 @@ class _AmountWidgetState extends State<AmountWidget>
           size: size,
         );
       case CurrencyType.sats:
-        return Text("sat", style: TextStyle(fontSize: size, color: color));
+        return Icon(
+          AppTheme.satoshiIcon,
+          color: color,
+          size: size,
+        );
       case CurrencyType.usd:
         return Icon(Icons.attach_money, color: color, size: size);
     }
