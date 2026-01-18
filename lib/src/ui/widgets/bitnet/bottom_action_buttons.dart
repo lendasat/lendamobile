@@ -1,52 +1,54 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/bottom_nav_gradient.dart';
 import 'package:flutter/material.dart';
 
 /// Container for floating action buttons at the bottom of a screen.
 ///
 /// Provides consistent styling with:
+/// - Gradient fade at top (like bitnetgithub)
+/// - Background color matching theme
 /// - SafeArea padding
-/// - Background color matching scaffold
-/// - Subtle top shadow
 /// - Proper padding
 ///
 /// Use this to wrap any bottom action content (buttons, text, etc.)
 class BottomActionContainer extends StatelessWidget {
   final Widget child;
 
-  /// Whether to show the top shadow. Defaults to true.
-  final bool showShadow;
+  /// Whether to show the top gradient. Defaults to true.
+  final bool showGradient;
 
   const BottomActionContainer({
     super.key,
     required this.child,
-    this.showShadow = true,
+    this.showGradient = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.cardPadding,
-          vertical: AppTheme.elementSpacing,
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final backgroundColor = isLight ? Colors.grey.shade200 : Colors.black;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showGradient) const BottomNavGradient(),
+        Container(
+          color: backgroundColor,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: AppTheme.cardPadding,
+                right: AppTheme.cardPadding,
+                bottom: AppTheme.elementSpacing,
+              ),
+              child: child,
+            ),
+          ),
         ),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          boxShadow: showShadow
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ]
-              : null,
-        ),
-        child: child,
-      ),
+      ],
     );
   }
 }
