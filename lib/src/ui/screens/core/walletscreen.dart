@@ -8,6 +8,7 @@ import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/boarding_tracking_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
@@ -109,6 +110,9 @@ class WalletScreenState extends State<WalletScreen>
   // Balance chart calculator for performance
   BalanceChartCalculator? _chartCalculator;
 
+  // Payment stream subscription for auto-refresh
+  StreamSubscription<PaymentReceived>? _paymentSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -126,6 +130,16 @@ class WalletScreenState extends State<WalletScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CurrencyPreferenceService>().fetchExchangeRates();
       _checkAndShowAlphaWarning();
+
+      // Subscribe to payment stream for auto-refresh when payment received
+      final paymentService = context.read<PaymentMonitoringService>();
+      _paymentSubscription = paymentService.paymentStream.listen((payment) {
+        logger.i(
+            "WalletScreen received payment notification: ${payment.amountSats} sats");
+        if (mounted) {
+          fetchWalletData();
+        }
+      });
     });
   }
 
@@ -257,6 +271,7 @@ class WalletScreenState extends State<WalletScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _swapService.removeListener(_onSwapsChanged);
+    _paymentSubscription?.cancel();
     _keyboardDebounceTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
@@ -837,8 +852,13 @@ class WalletScreenState extends State<WalletScreen>
   }
 
   Widget _buildTransactionList() {
-    final userPrefs = context.watch<UserPreferencesService>();
-    final currencyService = context.watch<CurrencyPreferenceService>();
+    // Use .select() to only rebuild when specific values change
+    final balancesVisible = context.select<UserPreferencesService, bool>(
+      (service) => service.balancesVisible,
+    );
+    final showCoinBalance = context.select<CurrencyPreferenceService, bool>(
+      (service) => service.showCoinBalance,
+    );
 
     return TransactionHistoryWidget(
       key: _transactionHistoryKey,
@@ -846,8 +866,8 @@ class WalletScreenState extends State<WalletScreen>
       transactions: _transactions,
       swaps: _swaps,
       loading: _isTransactionFetching,
-      hideAmounts: !userPrefs.balancesVisible,
-      showBtcAsMain: currencyService.showCoinBalance,
+      hideAmounts: !balancesVisible,
+      showBtcAsMain: showCoinBalance,
       bitcoinPrice: _getCurrentBtcPrice(),
       showHeader: false,
     );
