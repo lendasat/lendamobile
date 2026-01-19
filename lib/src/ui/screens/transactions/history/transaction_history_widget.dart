@@ -499,7 +499,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   }
 
   /// Get a flat list of display items for lazy building
-  /// Each item is either a header (String) or an activity group (List<WalletActivityItem>)
+  /// Each item is either a header or an individual activity item
   List<_SliverDisplayItem> _getSliverDisplayItems() {
     if (_filteredActivity.isEmpty) return [];
 
@@ -517,10 +517,22 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       }
     }
 
+    // Helper to add a group of items with first/last markers
+    void addGroup(String groupKey, List<WalletActivityItem> groupItems) {
+      items.add(_SliverDisplayItem.header(groupKey));
+      for (int i = 0; i < groupItems.length; i++) {
+        items.add(_SliverDisplayItem.item(
+          groupItems[i],
+          groupKey: groupKey,
+          isFirst: i == 0,
+          isLast: i == groupItems.length - 1,
+        ));
+      }
+    }
+
     // Add pending section
     if (pendingItems.isNotEmpty) {
-      items.add(_SliverDisplayItem.header('Pending'));
-      items.add(_SliverDisplayItem.group(pendingItems, 'Pending'));
+      addGroup('Pending', pendingItems);
     }
 
     // Categorize confirmed items by time
@@ -548,10 +560,9 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     }
 
     // Add categorized items
-    categorizedActivity.forEach((category, activityItems) {
-      if (activityItems.isNotEmpty) {
-        items.add(_SliverDisplayItem.header(category));
-        items.add(_SliverDisplayItem.group(activityItems, category));
+    categorizedActivity.forEach((category, groupItems) {
+      if (groupItems.isNotEmpty) {
+        addGroup(category, groupItems);
       }
     });
 
@@ -650,7 +661,7 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       );
     }
 
-    // Build lazy sliver list
+    // Build lazy sliver list - each item is built individually on demand
     final displayItems = _getSliverDisplayItems();
 
     return SliverList.builder(
@@ -670,16 +681,19 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
           );
-        } else {
-          return _ActivityContainer(
-            key: ValueKey('container_${item.groupKey}'),
-            activityItems: item.activityItems!,
+        } else if (item.isActivityItem) {
+          return _LazyActivityItemWrapper(
+            key: ValueKey('item_${item.groupKey}_$index'),
+            activityItem: item.activityItem!,
             aspId: widget.aspId,
             hideAmounts: widget.hideAmounts,
             showBtcAsMain: widget.showBtcAsMain,
             bitcoinPrice: widget.bitcoinPrice,
+            isFirst: item.isGroupStart,
+            isLast: item.isGroupEnd,
           );
         }
+        return const SizedBox.shrink();
       },
     );
   }
@@ -901,6 +915,90 @@ class _ActivityContainer extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.cardPadding * 0.5),
         ],
+      ),
+    );
+  }
+}
+
+/// Wrapper for individual activity items in lazy sliver list
+/// Applies GlassContainer decoration with proper border radius for grouping
+class _LazyActivityItemWrapper extends StatelessWidget {
+  final WalletActivityItem activityItem;
+  final String aspId;
+  final bool hideAmounts;
+  final bool showBtcAsMain;
+  final double? bitcoinPrice;
+  final bool isFirst;
+  final bool isLast;
+
+  const _LazyActivityItemWrapper({
+    super.key,
+    required this.activityItem,
+    required this.aspId,
+    required this.hideAmounts,
+    required this.showBtcAsMain,
+    this.bitcoinPrice,
+    required this.isFirst,
+    required this.isLast,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Build the activity item widget
+    Widget itemWidget;
+    if (activityItem is PendingActivityItem) {
+      itemWidget = _PendingTransactionItemWidget(
+        pendingItem: activityItem as PendingActivityItem,
+        hideAmounts: hideAmounts,
+        showBtcAsMain: showBtcAsMain,
+        bitcoinPrice: bitcoinPrice,
+      );
+    } else if (activityItem is TransactionActivityItem) {
+      itemWidget = _TransactionItemWidget(
+        transaction: (activityItem as TransactionActivityItem).transaction,
+        aspId: aspId,
+        hideAmounts: hideAmounts,
+        showBtcAsMain: showBtcAsMain,
+        bitcoinPrice: bitcoinPrice,
+      );
+    } else if (activityItem is SwapActivityItem) {
+      itemWidget = _SwapItemWidget(
+        swapItem: activityItem as SwapActivityItem,
+        hideAmounts: hideAmounts,
+        showBtcAsMain: showBtcAsMain,
+        bitcoinPrice: bitcoinPrice,
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
+
+    // Calculate border radius based on position in group (matching GlassContainer default)
+    final defaultRadius = AppTheme.cardPadding * 2.5 / 3;
+    final topRadius = isFirst ? defaultRadius : 0.0;
+    final bottomRadius = isLast ? defaultRadius : 0.0;
+
+    // Match GlassContainer colors
+    final bgColor = isDark
+        ? const Color(0xFF2A2A2A).withValues(alpha: 0.7)
+        : Colors.white.withValues(alpha: 0.9);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppTheme.cardPadding,
+        right: AppTheme.cardPadding,
+        bottom: isLast ? AppTheme.cardPadding * 0.5 : 0,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(topRadius),
+            bottom: Radius.circular(bottomRadius),
+          ),
+        ),
+        child: itemWidget,
       ),
     );
   }
@@ -1548,21 +1646,41 @@ class _PendingTransactionItemWidget extends StatelessWidget {
   }
 }
 
-/// Helper class for sliver display items (either a header or a group of activities)
+/// Helper class for sliver display items
+/// Can be: header, single activity item, group start marker, or group end marker
 class _SliverDisplayItem {
   final String? headerText;
-  final List<WalletActivityItem>? activityItems;
+  final WalletActivityItem? activityItem;
+  final bool isGroupStart;
+  final bool isGroupEnd;
   final String? groupKey;
 
-  _SliverDisplayItem._({this.headerText, this.activityItems, this.groupKey});
+  _SliverDisplayItem._({
+    this.headerText,
+    this.activityItem,
+    this.isGroupStart = false,
+    this.isGroupEnd = false,
+    this.groupKey,
+  });
 
   factory _SliverDisplayItem.header(String text) {
     return _SliverDisplayItem._(headerText: text);
   }
 
-  factory _SliverDisplayItem.group(List<WalletActivityItem> items, String key) {
-    return _SliverDisplayItem._(activityItems: items, groupKey: key);
+  factory _SliverDisplayItem.item(
+    WalletActivityItem item, {
+    required String groupKey,
+    bool isFirst = false,
+    bool isLast = false,
+  }) {
+    return _SliverDisplayItem._(
+      activityItem: item,
+      groupKey: groupKey,
+      isGroupStart: isFirst,
+      isGroupEnd: isLast,
+    );
   }
 
   bool get isHeader => headerText != null;
+  bool get isActivityItem => activityItem != null;
 }

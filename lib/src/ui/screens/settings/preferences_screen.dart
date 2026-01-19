@@ -156,24 +156,26 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
               ),
             ),
 
-            // Allow Analytics
-            Consumer<UserPreferencesService>(
-              builder: (context, userPrefs, _) => ArkListTile(
-                leading: RoundedButtonWidget(
-                  iconData: Icons.analytics_outlined,
-                  onTap: () => userPrefs.toggleAllowAnalytics(),
-                  size: AppTheme.iconSize * 1.5,
-                  buttonType: ButtonType.transparent,
-                ),
-                text: 'Allow Analytics',
-                trailing: Switch.adaptive(
-                  value: userPrefs.allowAnalytics,
-                  onChanged: (value) => userPrefs.setAllowAnalytics(value),
-                  activeColor: AppTheme.primaryColor,
-                ),
-                onTap: () => userPrefs.toggleAllowAnalytics(),
-              ),
-            ),
+            // TODO: Re-enable after alpha - Analytics toggle hidden during alpha phase
+            // Analytics is always enabled during alpha for debugging purposes
+            // // Allow Analytics
+            // Consumer<UserPreferencesService>(
+            //   builder: (context, userPrefs, _) => ArkListTile(
+            //     leading: RoundedButtonWidget(
+            //       iconData: Icons.analytics_outlined,
+            //       onTap: () => userPrefs.toggleAllowAnalytics(),
+            //       size: AppTheme.iconSize * 1.5,
+            //       buttonType: ButtonType.transparent,
+            //     ),
+            //     text: 'Allow Analytics',
+            //     trailing: Switch.adaptive(
+            //       value: userPrefs.allowAnalytics,
+            //       onChanged: (value) => userPrefs.setAllowAnalytics(value),
+            //       activeColor: AppTheme.primaryColor,
+            //     ),
+            //     onTap: () => userPrefs.toggleAllowAnalytics(),
+            //   ),
+            // ),
 
             const SizedBox(height: AppTheme.cardPadding),
 

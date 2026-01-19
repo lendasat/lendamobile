@@ -120,6 +120,11 @@ class SendScreenState extends State<SendScreen> {
   // Debounce timer for address changes (prevents heavy processing on every keystroke)
   Timer? _addressChangeTimer;
 
+  // User's own addresses (to prevent sending to self)
+  String? _ownArkAddress;
+  String? _ownBoardingAddress;
+  bool _isSelfSendAttempt = false;
+
   @override
   void initState() {
     super.initState();
@@ -157,6 +162,70 @@ class SendScreenState extends State<SendScreen> {
 
     // Fetch fresh bitcoin price in background (updates if different from cached)
     _fetchBitcoinPrice();
+
+    // Fetch user's own addresses to prevent sending to self
+    _fetchOwnAddresses();
+  }
+
+  /// Fetch user's own addresses to prevent sending to self
+  Future<void> _fetchOwnAddresses() async {
+    try {
+      final addresses = await address();
+      if (mounted) {
+        _ownArkAddress = addresses.offchain;
+        _ownBoardingAddress = addresses.boarding;
+        logger.d('Loaded own addresses for self-send prevention');
+      }
+    } catch (e) {
+      logger.e('Error fetching own addresses: $e');
+    }
+  }
+
+  /// Extract the core address from various formats for comparison
+  /// Handles BIP21 URIs, Arkade addresses with query params, etc.
+  String _extractAddressForComparison(String input) {
+    final lower = input.toLowerCase().trim();
+
+    // Handle BIP21 URI (bitcoin:address?params)
+    if (lower.startsWith('bitcoin:')) {
+      final uri = Uri.tryParse(input);
+      if (uri != null) {
+        // Check ark/arkade param first (we prefer that)
+        final arkAddress =
+            uri.queryParameters['ark'] ?? uri.queryParameters['arkade'];
+        if (arkAddress != null) return arkAddress;
+        // Otherwise return the bitcoin address
+        return uri.path;
+      }
+    }
+
+    // Handle Arkade address with query params (ark1...?amount=X)
+    if ((lower.startsWith('ark1') || lower.startsWith('tark1')) &&
+        input.contains('?')) {
+      return input.split('?').first;
+    }
+
+    return input;
+  }
+
+  /// Check if the address matches user's own addresses
+  bool _isOwnAddress(String addressToCheck) {
+    if (addressToCheck.isEmpty) return false;
+
+    final lower = addressToCheck.toLowerCase();
+
+    // Check against own Ark address
+    if (_ownArkAddress != null && lower == _ownArkAddress!.toLowerCase()) {
+      return true;
+    }
+
+    // Check against own boarding (onchain) address
+    if (_ownBoardingAddress != null &&
+        lower == _ownBoardingAddress!.toLowerCase()) {
+      return true;
+    }
+
+    return false;
   }
 
   @override
@@ -300,6 +369,17 @@ class SendScreenState extends State<SendScreen> {
     final validationResult = AddressValidator.validate(text);
     final isValid = validationResult.isValid;
 
+    // Check if user is trying to send to their own address
+    bool isSelfSend = false;
+    if (isValid && text.isNotEmpty) {
+      final addressToCheck = _extractAddressForComparison(text);
+      if (_isOwnAddress(addressToCheck)) {
+        isSelfSend = true;
+        // Don't set isValid = false or show error in address field
+        // The button will show "Can't send to yourself" instead
+      }
+    }
+
     // If it looks like a complete invoice/URI with an amount, parse it
     // Only parse if the amount field is empty/zero to avoid overwriting user input
     // Check for URI patterns, Lightning invoices, or Arkade addresses with query params
@@ -337,6 +417,7 @@ class SendScreenState extends State<SendScreen> {
     setState(() {
       _hasValidAddress = isValid;
       _isOnChainAddress = isOnChain;
+      _isSelfSendAttempt = isSelfSend;
       _addressError = text.isNotEmpty ? validationResult.error : null;
       // Clear fees if not on-chain
       if (!isOnChain) {
@@ -2079,7 +2160,8 @@ class SendScreenState extends State<SendScreen> {
                 canSend,
                 hasInsufficientFunds,
                 isBelowLightningMinimum,
-                _isZeroAmountLightningInvoice),
+                _isZeroAmountLightningInvoice,
+                _isSelfSendAttempt),
           ),
         ],
       ),
@@ -2093,10 +2175,13 @@ class SendScreenState extends State<SendScreen> {
     bool hasInsufficientFunds,
     bool isBelowLightningMinimum,
     bool isZeroAmountInvoice,
+    bool isSelfSend,
   ) {
     // Determine button text based on state
     String buttonText;
-    if (hasInsufficientFunds) {
+    if (isSelfSend) {
+      buttonText = "Can't send to yourself";
+    } else if (hasInsufficientFunds) {
       buttonText = l10n.notEnoughFunds;
     } else if (isBelowLightningMinimum) {
       buttonText = 'Minimum $_minLightningSats sats required';
@@ -2106,8 +2191,10 @@ class SendScreenState extends State<SendScreen> {
       buttonText = l10n.sendNow;
     }
 
-    final isDisabledState =
-        hasInsufficientFunds || isBelowLightningMinimum || isZeroAmountInvoice;
+    final isDisabledState = hasInsufficientFunds ||
+        isBelowLightningMinimum ||
+        isZeroAmountInvoice ||
+        isSelfSend;
 
     return GestureDetector(
       onTap: canSend ? _showConfirmationSheet : null,
