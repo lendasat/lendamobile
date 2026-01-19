@@ -514,6 +514,31 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             alignment: Alignment.bottomCenter,
             child: _buildFloatingActionButton(),
           ),
+          // Processing overlay
+          if (_isCreating)
+            Container(
+              color: Colors.black.withValues(alpha: 0.7),
+              child: Center(
+                child: GlassContainer(
+                  padding: const EdgeInsets.all(AppTheme.cardPadding * 2),
+                  child: ValueListenableBuilder<String>(
+                    valueListenable: _processingStepNotifier,
+                    builder: (context, processingStep, _) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        dotProgress(context),
+                        const SizedBox(height: AppTheme.cardPadding),
+                        Text(
+                          processingStep,
+                          style: Theme.of(context).textTheme.titleMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
