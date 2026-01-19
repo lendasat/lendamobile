@@ -117,9 +117,9 @@ class _DeveloperOptionsScreenState extends State<DeveloperOptionsScreen> {
     final totalRecoverable = _recoverableSats + _expiredSats;
     if (totalRecoverable <= BigInt.zero) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No recoverable sats found'),
-          backgroundColor: AppTheme.warningColor,
+        SnackBar(
+          content: const Text('No recoverable sats found'),
+          backgroundColor: AppTheme.colorBitcoin,
         ),
       );
       return;
@@ -143,10 +143,26 @@ class _DeveloperOptionsScreenState extends State<DeveloperOptionsScreen> {
     } catch (e) {
       debugPrint('Error during recovery: $e');
       if (mounted) {
+        final errorStr = e.toString();
+        String userMessage;
+
+        // Handle specific known errors
+        if (errorStr.contains('INVALID_PSBT_INPUT') &&
+            errorStr.contains('expires after')) {
+          userMessage =
+              'VTXOs not ready for recovery yet. They need to be closer to expiration.';
+        } else if (errorStr.contains('minExpiryGap')) {
+          userMessage =
+              'VTXOs expire too far in the future. Wait until closer to expiration.';
+        } else {
+          userMessage = 'Recovery failed: $errorStr';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Recovery failed: $e'),
+            content: Text(userMessage),
             backgroundColor: AppTheme.errorColor,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -448,8 +464,8 @@ class _DeveloperOptionsScreenState extends State<DeveloperOptionsScreen> {
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.borderRadiusSmall),
+                            borderRadius: BorderRadius.circular(
+                                AppTheme.borderRadiusSmall),
                           ),
                         ),
                       ),
