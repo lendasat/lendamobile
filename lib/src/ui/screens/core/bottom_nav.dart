@@ -50,6 +50,17 @@ class _BottomNavState extends State<BottomNav> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Update the payment monitoring context when dependencies change
+    // This ensures the context is fresh after app resume
+    final paymentService = context.read<PaymentMonitoringService>();
+    if (paymentService.isInitialized) {
+      paymentService.updateContext(context);
+    }
+  }
+
   void _initPaymentMonitoring() {
     final paymentService = context.read<PaymentMonitoringService>();
 

@@ -8,12 +8,12 @@ import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/recipient_storage_service.dart';
-import 'package:ark_flutter/src/services/user_preferences_service.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_screen.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/send/send_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/avatar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -23,6 +23,8 @@ import 'package:ark_flutter/theme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
@@ -52,6 +54,10 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
   MobileScannerController? _scannerController;
   bool _clipboardChecked = false;
 
+  // Clipboard address (if valid)
+  String? _clipboardAddress;
+  PaymentAddressType? _clipboardAddressType;
+
   // Debounce timer for search (prevents validation on every keystroke)
   Timer? _searchTimer;
 
@@ -74,26 +80,23 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
     _checkClipboard();
   }
 
-  /// Check clipboard for a valid Bitcoin/Lightning address and auto-paste
-  /// Only runs if autoReadClipboard preference is enabled
+  /// Check clipboard for a valid Bitcoin/Lightning address
+  /// If valid, stores it to show as a selectable option
   Future<void> _checkClipboard() async {
     if (_clipboardChecked) return;
     _clipboardChecked = true;
-
-    // Check if auto-read clipboard is enabled in preferences
-    final userPrefs = context.read<UserPreferencesService>();
-    if (!userPrefs.autoReadClipboard) {
-      return;
-    }
 
     try {
       final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
       if (clipboardData?.text != null && clipboardData!.text!.isNotEmpty) {
         final text = clipboardData.text!.trim();
         final result = AddressValidator.validate(text);
-        if (result.isValid) {
-          // Valid address in clipboard - navigate directly
-          _navigateToSendScreen(text, fromClipboard: true);
+        if (result.isValid && mounted) {
+          // Valid address in clipboard - store it to show as option
+          setState(() {
+            _clipboardAddress = text;
+            _clipboardAddressType = result.type;
+          });
         }
       }
     } catch (e) {
@@ -316,6 +319,27 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
                 ),
                 const SizedBox(height: AppTheme.cardPadding * 1.5),
 
+                // From Clipboard section
+                if (_clipboardAddress != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.cardPadding,
+                    ),
+                    child: Text(
+                      l10n.fromClipboard,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.elementSpacing),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.cardPadding,
+                    ),
+                    child: _buildClipboardItem(),
+                  ),
+                  const SizedBox(height: AppTheme.cardPadding * 1.5),
+                ],
+
                 // Recent recipients section
                 if (_isLoading) ...[
                   Padding(
@@ -367,6 +391,183 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
           // Bottom action buttons
           _buildBottomButtons(context),
         ],
+      ),
+    );
+  }
+
+  Widget _buildClipboardItem() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark ? AppTheme.white60 : AppTheme.black60;
+
+    // Get address type label and icon widget
+    String typeLabel;
+    Widget typeIconWidget;
+    const double iconSize = 12.0;
+
+    // Check if BIP21 contains ark/arkade parameter
+    bool bip21HasArk = false;
+    if (_clipboardAddressType == PaymentAddressType.bip21 &&
+        _clipboardAddress != null) {
+      final lower = _clipboardAddress!.toLowerCase();
+      bip21HasArk = lower.contains('ark=') || lower.contains('arkade=');
+    }
+
+    switch (_clipboardAddressType) {
+      case PaymentAddressType.lightningInvoice:
+      case PaymentAddressType.lnurl:
+      case PaymentAddressType.lightningAddress:
+        typeLabel = 'Lightning';
+        typeIconWidget = FaIcon(
+          FontAwesomeIcons.bolt,
+          size: iconSize,
+          color: iconColor,
+        );
+        break;
+      case PaymentAddressType.ark:
+      case PaymentAddressType.arkTestnet:
+        typeLabel = 'Arkade';
+        typeIconWidget = SvgPicture.asset(
+          'assets/images/tokens/arkade.svg',
+          width: iconSize,
+          height: iconSize,
+          colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+        );
+        break;
+      case PaymentAddressType.bip21WithLightning:
+        typeLabel = 'Lightning & Bitcoin';
+        typeIconWidget = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FaIcon(
+              FontAwesomeIcons.bolt,
+              size: iconSize,
+              color: iconColor,
+            ),
+            const SizedBox(width: 4),
+            FaIcon(
+              FontAwesomeIcons.link,
+              size: iconSize,
+              color: iconColor,
+            ),
+          ],
+        );
+        break;
+      case PaymentAddressType.bip21:
+        if (bip21HasArk) {
+          typeLabel = 'Arkade & Bitcoin';
+          typeIconWidget = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SvgPicture.asset(
+                'assets/images/tokens/arkade.svg',
+                width: iconSize,
+                height: iconSize,
+                colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+              ),
+              const SizedBox(width: 4),
+              FaIcon(
+                FontAwesomeIcons.link,
+                size: iconSize,
+                color: iconColor,
+              ),
+            ],
+          );
+        } else {
+          typeLabel = 'Bitcoin';
+          typeIconWidget = FaIcon(
+            FontAwesomeIcons.link,
+            size: iconSize,
+            color: iconColor,
+          );
+        }
+        break;
+      default:
+        typeLabel = 'Bitcoin';
+        typeIconWidget = FaIcon(
+          FontAwesomeIcons.link,
+          size: iconSize,
+          color: iconColor,
+        );
+    }
+
+    const radius = BorderRadius.all(Radius.circular(24));
+
+    return GlassContainer(
+      opacity: 0.05,
+      borderRadius: radius,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: radius,
+          onTap: () =>
+              _navigateToSendScreen(_clipboardAddress!, fromClipboard: true),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.elementSpacing * 1.25,
+              vertical: AppTheme.elementSpacing * 0.85,
+            ),
+            child: Row(
+              children: [
+                // Clipboard icon in circle
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.04),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    CupertinoIcons.doc_on_clipboard_fill,
+                    size: 16,
+                    color: isDark ? AppTheme.white70 : AppTheme.black70,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.elementSpacing),
+                // Address and type stacked
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _truncateAddress(_clipboardAddress!),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color:
+                                  isDark ? AppTheme.white90 : AppTheme.black90,
+                              fontWeight: FontWeight.w500,
+                            ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          typeIconWidget,
+                          const SizedBox(width: 4),
+                          Text(
+                            typeLabel,
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: iconColor,
+                                      fontSize: 11,
+                                    ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Arrow
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: iconColor,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -538,10 +739,7 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
   }
 
   Widget _buildBottomButtons(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconColor = isDark ? AppTheme.white90 : AppTheme.black90;
-    const buttonSize = 48.0;
-    const hitboxPadding = 8.0;
+    final l10n = AppLocalizations.of(context)!;
 
     return Positioned(
       left: 0,
@@ -575,72 +773,22 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
               bottom: AppTheme.cardPadding,
             ),
             child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.elementSpacing,
-                  vertical: AppTheme.elementSpacing,
+              child: LongButtonWidget(
+                title: l10n.scanQrCode,
+                buttonType: ButtonType.transparent,
+                leadingIcon: Icon(
+                  CupertinoIcons.qrcode_viewfinder,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.white90
+                      : AppTheme.black90,
+                  size: 20,
                 ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: AppTheme.cardRadiusBig,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildActionButton(
-                      icon: CupertinoIcons.photo_fill,
-                      onTap: _pickImageAndScan,
-                      iconColor: iconColor,
-                      size: buttonSize,
-                      hitboxPadding: hitboxPadding,
-                    ),
-                    _buildActionButton(
-                      icon: CupertinoIcons.qrcode_viewfinder,
-                      onTap: _handleQRScan,
-                      iconColor: iconColor,
-                      size: buttonSize,
-                      hitboxPadding: hitboxPadding,
-                    ),
-                    _buildActionButton(
-                      icon: CupertinoIcons.doc_on_clipboard_fill,
-                      onTap: _pasteFromClipboard,
-                      iconColor: iconColor,
-                      size: buttonSize,
-                      hitboxPadding: hitboxPadding,
-                    ),
-                  ],
-                ),
+                onTap: _handleQRScan,
+                customWidth: double.infinity,
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required VoidCallback onTap,
-    required Color iconColor,
-    required double size,
-    double hitboxPadding = 0,
-  }) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.all(hitboxPadding),
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: Center(
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 24,
-            ),
-          ),
-        ),
       ),
     );
   }

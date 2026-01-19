@@ -156,25 +156,6 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
               ),
             ),
 
-            // Auto-read clipboard
-            Consumer<UserPreferencesService>(
-              builder: (context, userPrefs, _) => ArkListTile(
-                leading: RoundedButtonWidget(
-                  iconData: Icons.content_paste_rounded,
-                  onTap: () => userPrefs.toggleAutoReadClipboard(),
-                  size: AppTheme.iconSize * 1.5,
-                  buttonType: ButtonType.transparent,
-                ),
-                text: l10n.autoReadClipboard,
-                trailing: Switch.adaptive(
-                  value: userPrefs.autoReadClipboard,
-                  onChanged: (value) => userPrefs.setAutoReadClipboard(value),
-                  activeColor: AppTheme.primaryColor,
-                ),
-                onTap: () => userPrefs.toggleAutoReadClipboard(),
-              ),
-            ),
-
             // Allow Analytics
             Consumer<UserPreferencesService>(
               builder: (context, userPrefs, _) => ArkListTile(
