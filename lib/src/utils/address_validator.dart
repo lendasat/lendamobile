@@ -280,4 +280,61 @@ class AddressValidator {
         (result.type == PaymentAddressType.ark ||
             result.type == PaymentAddressType.arkTestnet);
   }
+
+  /// Check if the given address matches any of the user's own addresses.
+  /// Pass the user's Ark address and/or boarding (onchain) address.
+  /// Handles BIP21 URIs and addresses with query params.
+  static bool isSelfSend({
+    required String address,
+    String? ownArkAddress,
+    String? ownBoardingAddress,
+  }) {
+    if (address.isEmpty) return false;
+    if (ownArkAddress == null && ownBoardingAddress == null) return false;
+
+    final addressToCheck = _extractCoreAddress(address).toLowerCase();
+    if (addressToCheck.isEmpty) return false;
+
+    // Check against own Ark address
+    if (ownArkAddress != null &&
+        addressToCheck == ownArkAddress.toLowerCase()) {
+      return true;
+    }
+
+    // Check against own boarding (onchain) address
+    if (ownBoardingAddress != null &&
+        addressToCheck == ownBoardingAddress.toLowerCase()) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Extract the core address from various formats for comparison.
+  /// Handles BIP21 URIs, Arkade addresses with query params, etc.
+  static String _extractCoreAddress(String input) {
+    final trimmed = input.trim();
+    final lower = trimmed.toLowerCase();
+
+    // Handle BIP21 URI (bitcoin:address?params)
+    if (lower.startsWith('bitcoin:')) {
+      final uri = Uri.tryParse(trimmed);
+      if (uri != null) {
+        // Check ark/arkade param first (we prefer that)
+        final arkAddress =
+            uri.queryParameters['ark'] ?? uri.queryParameters['arkade'];
+        if (arkAddress != null) return arkAddress;
+        // Otherwise return the bitcoin address
+        return uri.path;
+      }
+    }
+
+    // Handle Arkade address with query params (ark1...?amount=X)
+    if ((lower.startsWith('ark1') || lower.startsWith('tark1')) &&
+        trimmed.contains('?')) {
+      return trimmed.split('?').first;
+    }
+
+    return trimmed;
+  }
 }

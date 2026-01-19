@@ -978,6 +978,10 @@ class _LazyActivityItemWrapper extends StatelessWidget {
     final defaultRadius = AppTheme.cardPadding * 2.5 / 3;
     final topRadius = isFirst ? defaultRadius : 0.0;
     final bottomRadius = isLast ? defaultRadius : 0.0;
+    final borderRadius = BorderRadius.vertical(
+      top: Radius.circular(topRadius),
+      bottom: Radius.circular(bottomRadius),
+    );
 
     // Match GlassContainer colors
     final bgColor = isDark
@@ -990,15 +994,16 @@ class _LazyActivityItemWrapper extends StatelessWidget {
         right: AppTheme.cardPadding,
         bottom: isLast ? AppTheme.cardPadding * 0.5 : 0,
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(topRadius),
-            bottom: Radius.circular(bottomRadius),
+      // ClipRRect ensures InkWell ripples are clipped to rounded corners
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: Container(
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: borderRadius,
           ),
+          child: itemWidget,
         ),
-        child: itemWidget,
       ),
     );
   }

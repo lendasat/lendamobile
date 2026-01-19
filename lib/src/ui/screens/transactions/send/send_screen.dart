@@ -181,52 +181,6 @@ class SendScreenState extends State<SendScreen> {
     }
   }
 
-  /// Extract the core address from various formats for comparison
-  /// Handles BIP21 URIs, Arkade addresses with query params, etc.
-  String _extractAddressForComparison(String input) {
-    final lower = input.toLowerCase().trim();
-
-    // Handle BIP21 URI (bitcoin:address?params)
-    if (lower.startsWith('bitcoin:')) {
-      final uri = Uri.tryParse(input);
-      if (uri != null) {
-        // Check ark/arkade param first (we prefer that)
-        final arkAddress =
-            uri.queryParameters['ark'] ?? uri.queryParameters['arkade'];
-        if (arkAddress != null) return arkAddress;
-        // Otherwise return the bitcoin address
-        return uri.path;
-      }
-    }
-
-    // Handle Arkade address with query params (ark1...?amount=X)
-    if ((lower.startsWith('ark1') || lower.startsWith('tark1')) &&
-        input.contains('?')) {
-      return input.split('?').first;
-    }
-
-    return input;
-  }
-
-  /// Check if the address matches user's own addresses
-  bool _isOwnAddress(String addressToCheck) {
-    if (addressToCheck.isEmpty) return false;
-
-    final lower = addressToCheck.toLowerCase();
-
-    // Check against own Ark address
-    if (_ownArkAddress != null && lower == _ownArkAddress!.toLowerCase()) {
-      return true;
-    }
-
-    // Check against own boarding (onchain) address
-    if (_ownBoardingAddress != null &&
-        lower == _ownBoardingAddress!.toLowerCase()) {
-      return true;
-    }
-
-    return false;
-  }
 
   @override
   void dispose() {
@@ -370,15 +324,13 @@ class SendScreenState extends State<SendScreen> {
     final isValid = validationResult.isValid;
 
     // Check if user is trying to send to their own address
-    bool isSelfSend = false;
-    if (isValid && text.isNotEmpty) {
-      final addressToCheck = _extractAddressForComparison(text);
-      if (_isOwnAddress(addressToCheck)) {
-        isSelfSend = true;
-        // Don't set isValid = false or show error in address field
-        // The button will show "Can't send to yourself" instead
-      }
-    }
+    final isSelfSend = isValid &&
+        text.isNotEmpty &&
+        AddressValidator.isSelfSend(
+          address: text,
+          ownArkAddress: _ownArkAddress,
+          ownBoardingAddress: _ownBoardingAddress,
+        );
 
     // If it looks like a complete invoice/URI with an amount, parse it
     // Only parse if the amount field is empty/zero to avoid overwriting user input
