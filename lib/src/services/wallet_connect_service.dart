@@ -225,38 +225,46 @@ class WalletConnectService extends ChangeNotifier {
 
   /// Open the wallet connection modal
   /// This shows the same UI as lendaswap website (all wallets, social login, etc.)
-  Future<void> openModal() async {
+  Future<void> openModal({int retryCount = 0}) async {
     if (_appKitModal == null) {
       throw Exception(
           'AppKit not initialized. Call initialize(context) first.');
     }
 
+    logger.i('Opening wallet connect modal (attempt ${retryCount + 1})...');
+
     try {
       await _appKitModal!.openModalView();
+      logger.i('Modal opened successfully');
     } catch (e) {
+      final errorStr = e.toString();
+      logger.e('Modal open error: $errorStr');
+
       // Handle "Bad state: No element" bug in reown_appkit after disconnect
       // The modal's internal widget stack is empty after disconnect
-      if (e.toString().contains('No element') ||
-          e.toString().contains('Bad state')) {
-        logger.w('Modal widget stack error, reinitializing...');
+      final needsReinit = errorStr.contains('No element') ||
+          errorStr.contains('Bad state') ||
+          errorStr.contains('disposed');
+
+      if (needsReinit && _context != null && retryCount < 2) {
+        logger.w('Modal needs reinit, attempting recovery...');
+
         // Reset and reinitialize the modal
-        if (_context != null) {
-          _isInitialized = false;
-          _appKitModal?.removeListener(_onModalStateChanged);
+        _isInitialized = false;
+        _appKitModal?.removeListener(_onModalStateChanged);
+        try {
           _appKitModal?.dispose();
-          _appKitModal = null;
+        } catch (_) {}
+        _appKitModal = null;
 
-          // Small delay to let cleanup finish
-          await Future.delayed(const Duration(milliseconds: 100));
+        // Small delay to let cleanup finish
+        await Future.delayed(const Duration(milliseconds: 300));
 
-          await initialize(_context!);
-          // Try opening again after reinit
-          await _appKitModal!.openModalView();
-        } else {
-          rethrow;
-        }
+        await initialize(_context!, force: true);
+
+        // Try opening again after reinit
+        await openModal(retryCount: retryCount + 1);
       } else {
-        logger.e('Failed to open modal: $e');
         rethrow;
       }
     }
