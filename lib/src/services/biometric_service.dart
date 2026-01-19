@@ -7,12 +7,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 class BiometricService extends ChangeNotifier {
   static const String _biometricEnabledKey = 'biometric_enabled';
 
+  /// Grace period before requiring re-authentication after backgrounding
+  /// User can switch apps briefly without needing to re-authenticate
+  static const Duration _backgroundGracePeriod = Duration(seconds: 30);
+
   final LocalAuthentication _auth = LocalAuthentication();
 
   bool _isEnabled = false;
   bool _isAvailable = false;
   bool _isAuthenticated = false;
   List<BiometricType> _availableBiometrics = [];
+
+  /// Timestamp when app went to background
+  DateTime? _backgroundedAt;
 
   // Getters
   bool get isEnabled => _isEnabled;
@@ -148,15 +155,49 @@ class BiometricService extends ChangeNotifier {
     }
   }
 
-  /// Reset authenticated state (e.g., when app goes to background)
+  /// Called when app goes to background - records timestamp
+  void onAppBackgrounded() {
+    _backgroundedAt = DateTime.now();
+  }
+
+  /// Called when app comes to foreground - checks if grace period expired
+  /// Returns true if re-authentication is required
+  bool onAppResumed() {
+    if (!_isAuthenticated) {
+      // Already unauthenticated, needs auth
+      return _isEnabled && _isAvailable;
+    }
+
+    if (_backgroundedAt == null) {
+      // Wasn't backgrounded, no auth needed
+      return false;
+    }
+
+    final backgroundDuration = DateTime.now().difference(_backgroundedAt!);
+    _backgroundedAt = null;
+
+    if (backgroundDuration > _backgroundGracePeriod) {
+      // Grace period expired, reset authentication
+      _isAuthenticated = false;
+      notifyListeners();
+      return _isEnabled && _isAvailable;
+    }
+
+    // Within grace period, no auth needed
+    return false;
+  }
+
+  /// Reset authenticated state immediately (e.g., manual lock)
   void resetAuthentication() {
     _isAuthenticated = false;
+    _backgroundedAt = null;
     notifyListeners();
   }
 
   /// Mark as authenticated (for cases where we want to skip lock screen)
   void markAuthenticated() {
     _isAuthenticated = true;
+    _backgroundedAt = null;
     notifyListeners();
   }
 
