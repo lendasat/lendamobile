@@ -163,8 +163,6 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
   @override
   void dispose() {
-    // Stop suppressing global payment notifications when leaving screen
-    PaymentOverlayService().stopSuppression();
     WidgetsBinding.instance.removeObserver(this);
     _invoiceTimer?.cancel();
     _keyboardDebounceTimer?.cancel();
@@ -383,10 +381,6 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       _waitingForPayment = true;
     });
 
-    // Suppress global payment notifications while we're actively monitoring
-    // The receive screen handles showing its own payment received bottom sheet
-    PaymentOverlayService().startSuppression();
-
     try {
       logger.i("Started waiting for payment...");
 
@@ -434,9 +428,6 @@ class _ReceiveScreenState extends State<ReceiveScreen>
           AppLocalizations.of(context)!.paymentMonitoringError(e.toString()),
         );
       }
-
-      // Re-enable global payment notifications on error
-      PaymentOverlayService().stopSuppression();
     }
   }
 
@@ -458,8 +449,6 @@ class _ReceiveScreenState extends State<ReceiveScreen>
       payment: payment,
       bitcoinPrice: _bitcoinPrice,
       onDismiss: () {
-        // Re-enable global payment notifications after bottom sheet is dismissed
-        PaymentOverlayService().stopSuppression();
         if (mounted) {
           _unfocusAll();
           Navigator.of(context).popUntil((route) => route.isFirst);
