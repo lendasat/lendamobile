@@ -191,6 +191,51 @@ class RecipientStorageService {
     }
   }
 
+  /// Save an onchain receive (boarding transaction) with its txid.
+  /// This allows us to track that a transaction originated from onchain.
+  static Future<void> saveOnchainReceive({
+    required String txid,
+    required int amountSats,
+    String? label,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final recipients = await _loadRecipients(prefs);
+
+      // Check if we already have this txid stored
+      final existingIndex = recipients.indexWhere((r) => r.txid == txid);
+      if (existingIndex != -1) {
+        logger.d(
+            'Onchain receive already stored for txid: ${_truncateAddress(txid)}');
+        return;
+      }
+
+      final newRecipient = StoredRecipient(
+        address:
+            'onchain-receive', // Placeholder since we don't have the sender's address
+        type: RecipientType.onchain,
+        amountSats: amountSats,
+        timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        txid: txid,
+        isReceive: true,
+        label: label,
+      );
+
+      recipients.insert(0, newRecipient);
+
+      // Trim to max size
+      if (recipients.length > _maxRecipients) {
+        recipients.removeRange(_maxRecipients, recipients.length);
+      }
+
+      await _saveRecipients(prefs, recipients);
+      logger.i(
+          'Saved onchain receive: ${_truncateAddress(txid)}, $amountSats sats');
+    } catch (e) {
+      logger.e('Error saving onchain receive: $e');
+    }
+  }
+
   /// Link a receive request to a transaction by matching amount
   /// Used when a Lightning payment arrives and we need to correlate it
   static Future<void> linkReceiveToTransaction({

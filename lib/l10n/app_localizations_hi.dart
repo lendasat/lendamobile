@@ -15,7 +15,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settings => 'सेटिंग्स';
 
   @override
-  String get cancel => 'Cancel';
+  String get cancel => 'रद्द करें';
 
   @override
   String get save => 'सहेजें';
@@ -27,7 +27,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get addNote => 'Add a note';
 
   @override
-  String get apply => 'Apply';
+  String get apply => 'लागू करें';
 
   @override
   String get done => 'पूर्ण';
@@ -36,7 +36,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get select => 'चुनें';
 
   @override
-  String get search => 'Search';
+  String get search => 'खोजें';
 
   @override
   String get enterAmount => 'राशि दर्ज करें';
@@ -48,7 +48,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get amountTooHigh => 'Amount Too High';
 
   @override
-  String get amount => 'Amount';
+  String get amount => 'राशि';
 
   @override
   String get skipAnyAmount => 'छोड़ें (कोई भी राशि)';
@@ -129,7 +129,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get retry => 'Retry';
+  String get retry => 'पुनः प्रयास करें';
 
   @override
   String get pendingBalance => 'लंबित बैलेंस';
@@ -202,13 +202,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get paymentReceived => 'भुगतान प्राप्त हुआ!';
 
   @override
-  String get addressCopiedToClipboard => 'Address copied to clipboard';
+  String get addressCopiedToClipboard => 'पता क्लिपबोर्ड पर कॉपी किया गया';
 
   @override
   String get shareWhichAddress => 'कौन सा पता साझा करें?';
 
   @override
-  String get address => 'Address';
+  String get address => 'पता';
 
   @override
   String get lightningInvoice => 'लाइटनिंग इनवॉइस';
@@ -226,17 +226,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get requesting => 'अनुरोध कर रहे हैं: ';
 
   @override
-  String get monitoringForIncomingPayment =>
-      'Monitoring for incoming payment...';
+  String get monitoringForIncomingPayment => 'आने वाले भुगतान की निगरानी...';
 
   @override
   String get copyAddress => 'पता कॉपी करें';
 
   @override
-  String get errorLoadingAddresses => 'Error loading addresses';
+  String get errorLoadingAddresses => 'पते लोड करने में त्रुटि';
 
   @override
-  String get share => 'Share';
+  String get share => 'साझा करें';
 
   @override
   String get pleaseEnterBothAddressAndAmount =>
@@ -261,7 +260,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bitcoinOrArkAddress => 'बिटकॉइन या Ark पता';
 
   @override
-  String get available => 'available';
+  String get available => 'उपलब्ध';
 
   @override
   String get esploraUrlSavedWillOnlyTakeEffectAfterARestart =>
@@ -364,7 +363,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chooseYourPreferredTimezone => 'अपना पसंदीदा समय क्षेत्र चुनें';
 
   @override
-  String get currency => 'Currency';
+  String get currency => 'मुद्रा';
 
   @override
   String get chooseYourPreferredCurrency => 'अपनी पसंदीदा मुद्रा चुनें';
@@ -441,22 +440,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String get failedToSettleTransaction => 'लेनदेन पूरा करने में विफल:';
 
   @override
-  String get pendingConfirmation => 'Pending Confirmation';
+  String get pendingConfirmation => 'पुष्टि लंबित';
 
   @override
-  String get transactionId => 'Transaction ID';
+  String get transactionId => 'लेनदेन आईडी';
 
   @override
-  String get status => 'Status';
+  String get status => 'स्थिति';
 
   @override
-  String get confirmed => 'Confirmed';
+  String get confirmed => 'पुष्टि हुई';
 
   @override
-  String get pending => 'Pending';
+  String get pending => 'लंबित';
 
   @override
-  String get spendable => 'Spendable';
+  String get spendable => 'खर्च योग्य';
 
   @override
   String get date => 'तारीख';
@@ -481,7 +480,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get transactionHistory => 'लेनदेन इतिहास';
 
   @override
-  String get errorLoadingTransactions => 'Error loading transactions';
+  String get errorLoadingTransactions => 'लेनदेन लोड करने में त्रुटि';
 
   @override
   String get noTransactionHistoryYet => 'अभी तक कोई लेनदेन इतिहास नहीं';
@@ -518,271 +517,272 @@ class AppLocalizationsHi extends AppLocalizations {
   String get backToWallet => 'वॉलेट पर वापस जाएँ';
 
   @override
-  String get transactionFees => 'Transaction Fees';
+  String get transactionFees => 'लेनदेन शुल्क';
 
   @override
-  String get fastest10Min => 'Fastest (~10 min)';
+  String get fastest10Min => 'सबसे तेज (~10 मिनट)';
 
   @override
-  String get halfHour => 'Half Hour';
+  String get halfHour => 'आधा घंटा';
 
   @override
-  String get oneHour => 'One Hour';
+  String get oneHour => 'एक घंटा';
 
   @override
-  String get economy => 'Economy';
+  String get economy => 'किफायती';
 
   @override
-  String get minutesAgo => 'minutes ago';
+  String get minutesAgo => 'मिनट पहले';
 
   @override
-  String get hoursAgo => 'hours ago';
+  String get hoursAgo => 'घंटे पहले';
 
   @override
   String get oneDayAgo => '1 day ago';
 
   @override
-  String get daysAgo => 'days ago';
+  String get daysAgo => 'दिन पहले';
 
   @override
-  String get miningInformation => 'Mining Information';
+  String get miningInformation => 'माइनिंग जानकारी';
 
   @override
-  String get miningPool => 'Mining Pool';
+  String get miningPool => 'माइनिंग पूल';
 
   @override
-  String get mined => 'Mined';
+  String get mined => 'माइन किया गया';
 
   @override
-  String get blockReward => 'Block Reward';
+  String get blockReward => 'ब्लॉक पुरस्कार';
 
   @override
-  String get totalFees => 'Total Fees';
+  String get totalFees => 'कुल शुल्क';
 
   @override
-  String get min => 'Min';
+  String get min => 'न्यूनतम';
 
   @override
-  String get networkHashrate => 'Network Hashrate';
+  String get networkHashrate => 'नेटवर्क हैशरेट';
 
   @override
-  String get currentNetworkHashrate => 'Current Network Hashrate';
+  String get currentNetworkHashrate => 'वर्तमान नेटवर्क हैशरेट';
 
   @override
-  String get noDataAvailable => 'No data available';
+  String get noDataAvailable => 'कोई डेटा उपलब्ध नहीं';
 
   @override
-  String get difficulty => 'Difficulty';
+  String get difficulty => 'कठिनाई';
 
   @override
-  String get dataPoints => 'Data Points';
+  String get dataPoints => 'डेटा पॉइंट्स';
 
   @override
-  String get days => 'days';
+  String get days => 'दिन';
 
   @override
-  String get hours => 'hours';
+  String get hours => 'घंटे';
 
   @override
-  String get minutes => 'minutes';
+  String get minutes => 'मिनट';
 
   @override
-  String get difficultyAdjustment => 'Difficulty Adjustment';
+  String get difficultyAdjustment => 'कठिनाई समायोजन';
 
   @override
-  String get complete => 'complete';
+  String get complete => 'पूर्ण';
 
   @override
-  String get remainingBlocks => 'Remaining Blocks';
+  String get remainingBlocks => 'शेष ब्लॉक';
 
   @override
-  String get estTime => 'Est. Time';
+  String get estTime => 'अनुमानित समय';
 
   @override
-  String get estDate => 'Est. Date';
+  String get estDate => 'अनुमानित तारीख';
 
   @override
-  String get mAgo => 'm ago';
+  String get mAgo => 'मिनट पहले';
 
   @override
-  String get hAgo => 'h ago';
+  String get hAgo => 'घंटे पहले';
 
   @override
-  String get dAgo => 'd ago';
+  String get dAgo => 'दिन पहले';
 
   @override
-  String get blockSize => 'Block Size';
+  String get blockSize => 'ब्लॉक का आकार';
 
   @override
-  String get weight => 'Weight';
+  String get weight => 'वजन';
 
   @override
-  String get transactions => 'Transactions';
+  String get transactions => 'लेनदेन';
 
   @override
-  String get avgSize => 'Avg Size';
+  String get avgSize => 'औसत आकार';
 
   @override
-  String get healthy => 'Healthy';
+  String get healthy => 'स्वस्थ';
 
   @override
-  String get fair => 'Fair';
+  String get fair => 'सामान्य';
 
   @override
-  String get low => 'Low';
+  String get low => 'कम';
 
   @override
-  String get blockHealth => 'Block Health';
+  String get blockHealth => 'ब्लॉक स्वास्थ्य';
 
   @override
-  String get full => 'Full';
+  String get full => 'पूर्ण';
 
   @override
-  String get actual => 'Actual';
+  String get actual => 'वास्तविक';
 
   @override
-  String get expected => 'Expected';
+  String get expected => 'अपेक्षित';
 
   @override
-  String get difference => 'Difference';
+  String get difference => 'अंतर';
 
   @override
-  String get setAmount => 'Set Amount';
+  String get setAmount => 'राशि सेट करें';
 
   @override
-  String get clear => 'Clear';
+  String get clear => 'साफ करें';
 
   @override
-  String get errorSharingQrCode => 'Error sharing QR code:';
+  String get errorSharingQrCode => 'QR कोड साझा करने में त्रुटि:';
 
   @override
   String get qr => 'QR';
 
   @override
-  String get type => 'Type';
+  String get type => 'प्रकार';
 
   @override
-  String get sellBitcoin => 'Sell Bitcoin';
+  String get sellBitcoin => 'बिटकॉइन बेचें';
 
   @override
-  String get errorLoadingSellScreen => 'Error loading sell screen';
+  String get errorLoadingSellScreen => 'बिक्री स्क्रीन लोड करने में त्रुटि';
 
   @override
-  String get availableBalance => 'Available Balance';
+  String get availableBalance => 'उपलब्ध बैलेंस';
 
   @override
-  String get amountToSell => 'Amount to Sell';
+  String get amountToSell => 'बेचने की राशि';
 
   @override
-  String get sellLimits => 'Sell Limits';
+  String get sellLimits => 'बिक्री सीमा';
 
   @override
-  String get insufficientBalance => 'Insufficient balance';
+  String get insufficientBalance => 'अपर्याप्त बैलेंस';
 
   @override
-  String get max => 'Max';
+  String get max => 'अधिकतम';
 
   @override
-  String get payoutMethods => 'Payout Methods';
+  String get payoutMethods => 'भुगतान विधियाँ';
 
   @override
-  String get pendingBlock => 'Pending Block';
+  String get pendingBlock => 'लंबित ब्लॉक';
 
   @override
-  String get nextBlock => 'Next Block';
+  String get nextBlock => 'अगला ब्लॉक';
 
   @override
-  String get medianFee => 'Median Fee';
+  String get medianFee => 'मध्य शुल्क';
 
   @override
-  String get estimatedTime => 'Estimated Time';
+  String get estimatedTime => 'अनुमानित समय';
 
   @override
-  String get feeDistribution => 'Fee Distribution';
+  String get feeDistribution => 'शुल्क वितरण';
 
   @override
-  String get noTransactionsYet => 'No transactions yet';
+  String get noTransactionsYet => 'अभी तक कोई लेनदेन नहीं';
 
   @override
-  String get loadingMoreTransactions => 'Loading more transactions...';
+  String get loadingMoreTransactions => 'और लेनदेन लोड हो रहे हैं...';
 
   @override
-  String get scrollDownToLoadMore => 'Scroll down to load more';
+  String get scrollDownToLoadMore => 'और लोड करने के लिए नीचे स्क्रॉल करें';
 
   @override
   String get med => ', \"Med\", ';
 
   @override
-  String get feeRate => 'Fee Rate';
+  String get feeRate => 'शुल्क दर';
 
   @override
-  String get size => 'Size';
+  String get size => 'आकार';
 
   @override
-  String get value => 'Value';
+  String get value => 'मूल्य';
 
   @override
-  String get copiedToClipboard => 'Copied to clipboard';
+  String get copiedToClipboard => 'क्लिपबोर्ड पर कॉपी किया गया';
 
   @override
-  String get transactionDetails => 'Transaction Details';
+  String get transactionDetails => 'लेनदेन विवरण';
 
   @override
-  String get errorLoadingTransaction => 'Error loading transaction';
+  String get errorLoadingTransaction => 'लेनदेन लोड करने में त्रुटि';
 
   @override
-  String get blockHeight => 'Block Height';
+  String get blockHeight => 'ब्लॉक ऊंचाई';
 
   @override
-  String get blockTime => 'Block Time';
+  String get blockTime => 'ब्लॉक समय';
 
   @override
-  String get details => 'Details';
+  String get details => 'विवरण';
 
   @override
-  String get fee => 'Fee';
+  String get fee => 'शुल्क';
 
   @override
-  String get version => 'Version';
+  String get version => 'संस्करण';
 
   @override
-  String get locktime => 'Locktime';
+  String get locktime => 'लॉकटाइम';
 
   @override
-  String get inputs => 'Inputs';
+  String get inputs => 'इनपुट्स';
 
   @override
-  String get outputs => 'Outputs';
+  String get outputs => 'आउटपुट्स';
 
   @override
-  String get searchBlockchain => 'Search Blockchain';
+  String get searchBlockchain => 'ब्लॉकचेन खोजें';
 
   @override
-  String get transaction => 'Transaction';
+  String get transaction => 'लेनदेन';
 
   @override
-  String get enterBlockHeightOrBlockHash => 'Enter block height or block hash';
+  String get enterBlockHeightOrBlockHash =>
+      'ब्लॉक ऊंचाई या ब्लॉक हैश दर्ज करें';
 
   @override
-  String get enterTransactionIdTxid => 'Enter transaction ID (TXID)';
+  String get enterTransactionIdTxid => 'लेनदेन आईडी (TXID) दर्ज करें';
 
   @override
-  String get blockchain => 'Blockchain';
+  String get blockchain => 'ब्लॉकचेन';
 
   @override
-  String get errorLoadingData => 'Error loading data';
+  String get errorLoadingData => 'डेटा लोड करने में त्रुटि';
 
   @override
-  String get recentTransactions => 'Recent Transactions';
+  String get recentTransactions => 'हाल के लेनदेन';
 
   @override
-  String get block => 'Block';
+  String get block => 'ब्लॉक';
 
   @override
-  String get yourTx => 'Your TX';
+  String get yourTx => 'आपका TX';
 
   @override
-  String get paymentMethods => 'Payment Methods';
+  String get paymentMethods => 'भुगतान विधियाँ';
 
   @override
   String get paymentProvider => 'Payment Provider';
@@ -791,19 +791,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chooseProvider => 'Choose Provider';
 
   @override
-  String get buyLimits => 'Buy Limits';
+  String get buyLimits => 'खरीद सीमा';
 
   @override
-  String get errorLoadingBuyScreen => 'Error loading buy screen';
+  String get errorLoadingBuyScreen => 'खरीद स्क्रीन लोड करने में त्रुटि';
 
   @override
-  String get buyBitcoin => 'Buy Bitcoin';
+  String get buyBitcoin => 'बिटकॉइन खरीदें';
 
   @override
-  String get failedToLaunchMoonpay => 'Failed to launch MoonPay';
+  String get failedToLaunchMoonpay => 'MoonPay लॉन्च करने में विफल';
 
   @override
-  String get bitcoinPriceChart => 'Bitcoin Price Chart';
+  String get bitcoinPriceChart => 'बिटकॉइन मूल्य चार्ट';
 
   @override
   String get aboutBitcoin => 'About Bitcoin';
@@ -813,23 +813,23 @@ class AppLocalizationsHi extends AppLocalizations {
       'Bitcoin is the world\'s first decentralized digital currency. It was created in 2009 by an unknown person or group of people using the name Satoshi Nakamoto. Bitcoin is a distributed, peer-to-peer network that keeps a record of all transactions in a public ledger called the blockchain.';
 
   @override
-  String get aboutBitcoinPriceData => 'About Bitcoin Price Data';
+  String get aboutBitcoinPriceData => 'बिटकॉइन मूल्य डेटा के बारे में';
 
   @override
   String get thePriceDataShown =>
       'The price data shown is sourced from our backend service and updated in real-time. Select different time ranges to view historical price trends.';
 
   @override
-  String get dataSource => 'Data Source';
+  String get dataSource => 'डेटा स्रोत';
 
   @override
-  String get liveBitcoinMarketData => 'Live Bitcoin Market Data';
+  String get liveBitcoinMarketData => 'लाइव बिटकॉइन बाजार डेटा';
 
   @override
-  String get updateFrequency => 'Update Frequency';
+  String get updateFrequency => 'अपडेट आवृत्ति';
 
   @override
-  String get realTime => 'Real-time';
+  String get realTime => 'रीयल-टाइम';
 
   @override
   String get sendBitcoin => 'Send Bitcoin';

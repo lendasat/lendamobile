@@ -58,13 +58,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeLendasat();
-
-    // Auto-refresh every 30 seconds when there are active contracts
-    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted && _lendasatService.activeContracts.isNotEmpty) {
-        _refresh();
-      }
-    });
+    _startAutoRefreshTimer();
   }
 
   @override
@@ -95,10 +89,32 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    // Refresh data when app comes back to foreground
-    if (state == AppLifecycleState.resumed && mounted && !_isLoading) {
-      _refresh();
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // Restart auto-refresh timer and refresh data
+        _startAutoRefreshTimer();
+        if (mounted && !_isLoading) {
+          _refresh();
+        }
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        // Stop auto-refresh timer to save battery
+        _autoRefreshTimer?.cancel();
+        _autoRefreshTimer = null;
+        break;
+      default:
+        break;
     }
+  }
+
+  void _startAutoRefreshTimer() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted && _lendasatService.activeContracts.isNotEmpty) {
+        _refresh();
+      }
+    });
   }
 
   @override
