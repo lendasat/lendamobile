@@ -896,58 +896,69 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
       );
     }
 
-    // Filter contracts by search query and status filter
-    var contracts = _lendasatService.contracts;
-    if (_searchQuery.isNotEmpty) {
-      contracts = contracts.where((contract) {
-        final lenderName = contract.lender.name.toLowerCase();
-        final amount = contract.loanAmount.toStringAsFixed(2);
-        final status = contract.statusText.toLowerCase();
-        return lenderName.contains(_searchQuery) ||
-            amount.contains(_searchQuery) ||
-            status.contains(_searchQuery);
-      }).toList();
-    }
+    // Filter contracts by search query and status filter in a single pass
+    final hasSearchFilter = _searchQuery.isNotEmpty;
+    final hasStatusFilter = _filterOptions.hasFilter;
 
-    // Apply status filter
-    if (_filterOptions.hasFilter) {
-      contracts = contracts.where((contract) {
-        final status = contract.status;
-        final expiryDate = DateTime.parse(contract.expiry);
-        final isOverdue = DateTime.now().isAfter(expiryDate) &&
-            status != ContractStatus.repaymentConfirmed &&
-            status != ContractStatus.closed &&
-            status != ContractStatus.closing &&
-            status != ContractStatus.closingByClaim;
+    final contracts = (!hasSearchFilter && !hasStatusFilter)
+        ? _lendasatService.contracts
+        : _lendasatService.contracts.where((contract) {
+            // Apply search filter
+            if (hasSearchFilter) {
+              final lenderName = contract.lender.name.toLowerCase();
+              final amount = contract.loanAmount.toStringAsFixed(2);
+              final statusText = contract.statusText.toLowerCase();
+              final matchesSearch = lenderName.contains(_searchQuery) ||
+                  amount.contains(_searchQuery) ||
+                  statusText.contains(_searchQuery);
+              if (!matchesSearch) return false;
+            }
 
-        for (final filter in _filterOptions.selectedStatuses) {
-          switch (filter) {
-            case 'Active':
-              if (status == ContractStatus.principalGiven ||
-                  status == ContractStatus.extended) return true;
-              break;
-            case 'Pending':
-              if (status == ContractStatus.requested ||
-                  status == ContractStatus.approved ||
-                  status == ContractStatus.collateralSeen ||
-                  status == ContractStatus.collateralConfirmed) return true;
-              break;
-            case 'Repayment Confirmed':
-              if (status == ContractStatus.repaymentConfirmed) return true;
-              break;
-            case 'Closed':
-              if (status == ContractStatus.closed ||
-                  status == ContractStatus.closing ||
-                  status == ContractStatus.closingByClaim) return true;
-              break;
-            case 'Overdue':
-              if (isOverdue) return true;
-              break;
-          }
-        }
-        return false;
-      }).toList();
-    }
+            // Apply status filter
+            if (hasStatusFilter) {
+              final status = contract.status;
+              final expiryDate = DateTime.parse(contract.expiry);
+              final isOverdue = DateTime.now().isAfter(expiryDate) &&
+                  status != ContractStatus.repaymentConfirmed &&
+                  status != ContractStatus.closed &&
+                  status != ContractStatus.closing &&
+                  status != ContractStatus.closingByClaim;
+
+              bool matchesStatus = false;
+              for (final filter in _filterOptions.selectedStatuses) {
+                switch (filter) {
+                  case 'Active':
+                    if (status == ContractStatus.principalGiven ||
+                        status == ContractStatus.extended) matchesStatus = true;
+                    break;
+                  case 'Pending':
+                    if (status == ContractStatus.requested ||
+                        status == ContractStatus.approved ||
+                        status == ContractStatus.collateralSeen ||
+                        status == ContractStatus.collateralConfirmed)
+                      matchesStatus = true;
+                    break;
+                  case 'Repayment Confirmed':
+                    if (status == ContractStatus.repaymentConfirmed)
+                      matchesStatus = true;
+                    break;
+                  case 'Closed':
+                    if (status == ContractStatus.closed ||
+                        status == ContractStatus.closing ||
+                        status == ContractStatus.closingByClaim)
+                      matchesStatus = true;
+                    break;
+                  case 'Overdue':
+                    if (isOverdue) matchesStatus = true;
+                    break;
+                }
+                if (matchesStatus) break;
+              }
+              if (!matchesStatus) return false;
+            }
+
+            return true;
+          }).toList();
 
     final hasActiveFilters =
         _searchQuery.isNotEmpty || _filterOptions.hasFilter;
