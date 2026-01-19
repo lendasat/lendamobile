@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/theme.dart';
 
@@ -18,6 +19,7 @@ class GlassContainer extends StatelessWidget {
   final double blurY;
   final Border? border;
   final List<BoxShadow>? boxShadow;
+  final bool useBlur;
 
   const GlassContainer({
     super.key,
@@ -32,10 +34,11 @@ class GlassContainer extends StatelessWidget {
     this.customColor,
     this.margin,
     this.padding,
-    this.blurX = 5,
-    this.blurY = 5,
+    this.blurX = 10,
+    this.blurY = 10,
     this.border,
     this.boxShadow,
+    this.useBlur = false,
   });
 
   @override
@@ -62,34 +65,44 @@ class GlassContainer extends StatelessWidget {
     return RepaintBoundary(
       child: ClipRRect(
         borderRadius: radius,
-        child: Container(
-          margin: margin,
-          height: height,
-          width: width,
-          padding: padding,
-          decoration: BoxDecoration(
-            // Semi-transparent colors - nested containers will appear darker
-            color: customColor ??
-                (Theme.of(context).brightness == Brightness.light
-                    ? Colors.white.withValues(alpha: 0.9)
-                    : const Color(0xFF2A2A2A).withValues(
-                        alpha:
-                            0.7)), // Semi-transparent dark grey - nested containers get darker
-            borderRadius: radius,
-            // Performance optimization: only apply shadows when needed
-            boxShadow: customShadow != null
-                ? customShadow!
-                : boxShadow != null
-                    ? boxShadow!
-                    : Theme.of(context).brightness == Brightness.light
-                        ? [] // No shadows in light mode
-                        : [
-                            AppTheme.boxShadowSuperSmall
-                          ], // Minimal shadow in dark mode
-          ),
-          child: child,
-        ),
+        child: useBlur
+            ? BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: blurX, sigmaY: blurY),
+                child: _buildContainer(context, radius),
+              )
+            : _buildContainer(context, radius),
       ),
+    );
+  }
+
+  Widget _buildContainer(BuildContext context, BorderRadius radius) {
+    return Container(
+      margin: margin,
+      height: height,
+      width: width,
+      padding: padding,
+      decoration: BoxDecoration(
+        // Semi-transparent colors - nested containers will appear darker
+        color: customColor ??
+            (Theme.of(context).brightness == Brightness.light
+                ? Colors.white.withValues(alpha: useBlur ? 0.6 : 0.9)
+                : const Color(0xFF2A2A2A).withValues(
+                    alpha: useBlur
+                        ? 0.5
+                        : 0.7)), // Semi-transparent dark grey - nested containers get darker
+        borderRadius: radius,
+        // Performance optimization: only apply shadows when needed
+        boxShadow: customShadow != null
+            ? customShadow!
+            : boxShadow != null
+                ? boxShadow!
+                : Theme.of(context).brightness == Brightness.light
+                    ? [] // No shadows in light mode
+                    : [
+                        AppTheme.boxShadowSuperSmall
+                      ], // Minimal shadow in dark mode
+      ),
+      child: child,
     );
   }
 }

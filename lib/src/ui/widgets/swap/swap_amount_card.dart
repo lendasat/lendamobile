@@ -104,7 +104,10 @@ class SwapAmountCard extends StatelessWidget {
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.all(AppTheme.cardPadding),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.cardPadding,
+              vertical: AppTheme.cardPadding * 0.75,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -338,9 +341,8 @@ class SwapAmountCard extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? const Color(0xFF3D3D3D)
-                          : Colors.white,
+                      color:
+                          isDarkMode ? const Color(0xFF3D3D3D) : Colors.white,
                       borderRadius:
                           BorderRadius.circular(AppTheme.borderRadiusMid),
                       border: Border.all(

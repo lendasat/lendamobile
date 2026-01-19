@@ -537,7 +537,9 @@ class SwapScreenState extends State<SwapScreen>
 
   void _onSwapButtonTapUp(TapUpDetails details) {
     // Ensure forward completes before reversing (for quick taps)
-    _swapButtonController.forward().then((_) => _swapButtonController.reverse());
+    _swapButtonController
+        .forward()
+        .then((_) => _swapButtonController.reverse());
   }
 
   void _onSwapButtonTapCancel() {
@@ -1262,18 +1264,20 @@ class SwapScreenState extends State<SwapScreen>
                                     child: child,
                                   ),
                                   child: Container(
-                                    width: 40,
-                                    height: 40,
+                                    width: 44,
+                                    height: 44,
                                     decoration: BoxDecoration(
                                       color: Theme.of(context).brightness ==
                                               Brightness.dark
                                           ? const Color(0xFF1B1B1B)
                                           : Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius:
+                                          BorderRadius.circular(44 / 3),
                                       border: Border.all(
                                         color: Theme.of(context).brightness ==
                                                 Brightness.dark
-                                            ? Colors.white.withValues(alpha: 0.1)
+                                            ? Colors.white
+                                                .withValues(alpha: 0.1)
                                             : Colors.black
                                                 .withValues(alpha: 0.08),
                                         width: 4,

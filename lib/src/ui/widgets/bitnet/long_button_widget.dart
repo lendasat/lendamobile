@@ -179,6 +179,7 @@ class _LongButtonWidgetState extends State<LongButtonWidget>
                           ),
                     opacity: 0.1,
                     borderRadius: borderRadius,
+                    useBlur: true,
                     child: Container(),
                   ),
           ),
