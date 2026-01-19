@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart' as ark_api;
+import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:flutter/material.dart';
 
 /// Service responsible for monitoring pending onchain transactions and
@@ -36,8 +39,9 @@ class OnchainMonitoringService extends ChangeNotifier
   // Poll interval - 10 seconds (onchain is slower than swaps)
   static const int _pollIntervalSeconds = 10;
 
-  // Track pending transaction IDs to detect when they confirm
-  final Set<String> _pendingTxIds = {};
+  // Track pending transactions with their amounts to detect when they confirm
+  // Key: txid, Value: amount in sats
+  final Map<String, BigInt> _pendingTransactions = {};
 
   /// Whether the service is currently monitoring
   bool get isMonitoring => _isMonitoring;
@@ -97,14 +101,17 @@ class OnchainMonitoringService extends ChangeNotifier
     try {
       final transactions = await ark_api.txHistory();
 
-      // Find all pending transactions (no confirmedAt)
-      final Set<String> currentPendingIds = {};
+      // Find all pending boarding transactions (incoming onchain payments)
+      // We track boarding separately because we want to show bottom sheet for incoming
+      final Map<String, BigInt> currentPendingBoarding = {};
+      final Set<String> currentPendingOffboard = {};
 
       for (final tx in transactions) {
         tx.map(
           boarding: (boarding) {
             if (boarding.confirmedAt == null && boarding.txid != null) {
-              currentPendingIds.add(boarding.txid!);
+              // Track pending boarding with amount
+              currentPendingBoarding[boarding.txid!] = boarding.amountSats;
             }
           },
           round: (_) {
@@ -115,30 +122,44 @@ class OnchainMonitoringService extends ChangeNotifier
           },
           offboard: (offboard) {
             if (offboard.confirmedAt == null && offboard.txid != null) {
-              currentPendingIds.add(offboard.txid!);
+              currentPendingOffboard.add(offboard.txid!);
             }
           },
         );
       }
 
-      // Check if any previously pending transactions are now confirmed
-      final confirmedIds = _pendingTxIds.difference(currentPendingIds);
-      if (confirmedIds.isNotEmpty) {
+      // Check if any previously pending BOARDING transactions are now confirmed
+      // These are incoming payments - show bottom sheet!
+      final confirmedBoardingIds = _pendingTransactions.keys
+          .where((txid) => !currentPendingBoarding.containsKey(txid))
+          .toList();
+
+      if (confirmedBoardingIds.isNotEmpty) {
         logger.i(
-            "[OnchainMonitor] ${confirmedIds.length} transaction(s) confirmed: $confirmedIds");
+            "[OnchainMonitor] ${confirmedBoardingIds.length} boarding transaction(s) confirmed: $confirmedBoardingIds");
+
+        // Show bottom sheet for each confirmed boarding transaction
+        for (final txid in confirmedBoardingIds) {
+          final amountSats = _pendingTransactions[txid];
+          if (amountSats != null && amountSats > BigInt.zero) {
+            _showPaymentReceivedBottomSheet(txid, amountSats);
+          }
+        }
 
         // Trigger wallet refresh to update UI
         onWalletRefreshNeeded?.call();
       }
 
-      // Update our tracking set
-      _pendingTxIds.clear();
-      _pendingTxIds.addAll(currentPendingIds);
+      // Update our tracking map for boarding transactions
+      _pendingTransactions.clear();
+      _pendingTransactions.addAll(currentPendingBoarding);
 
       // Start or stop monitoring based on whether we have pending transactions
-      if (currentPendingIds.isNotEmpty) {
+      final hasPending =
+          currentPendingBoarding.isNotEmpty || currentPendingOffboard.isNotEmpty;
+      if (hasPending) {
         logger.d(
-            "[OnchainMonitor] ${currentPendingIds.length} pending transaction(s), starting monitoring");
+            "[OnchainMonitor] ${currentPendingBoarding.length} pending boarding, ${currentPendingOffboard.length} pending offboard, monitoring");
         _startMonitoring();
       } else {
         logger
@@ -148,6 +169,56 @@ class OnchainMonitoringService extends ChangeNotifier
     } catch (e) {
       logger.w("[OnchainMonitor] Error checking transactions: $e");
     }
+  }
+
+  /// Show payment received bottom sheet for confirmed onchain payment
+  void _showPaymentReceivedBottomSheet(String txid, BigInt amountSats) {
+    final overlayService = PaymentOverlayService();
+
+    // Check if notifications are suppressed (e.g., during swap)
+    if (overlayService.suppressPaymentNotifications) {
+      logger.i(
+          "[OnchainMonitor] Payment notification suppressed for $txid");
+      return;
+    }
+
+    // Use global navigator key to get context - works from any screen
+    final context = OverlayService.navigatorKey.currentContext;
+    if (context == null || !context.mounted) {
+      logger.w("[OnchainMonitor] Cannot show payment overlay - no valid context");
+      return;
+    }
+
+    // Create a PaymentReceived object for the overlay service
+    final payment = ark_api.PaymentReceived(
+      txid: txid,
+      amountSats: amountSats,
+    );
+
+    logger.i(
+        "[OnchainMonitor] Showing payment received bottom sheet for $amountSats sats (txid: $txid)");
+
+    // Use post frame callback to ensure UI is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = OverlayService.navigatorKey.currentContext;
+      if (ctx == null || !ctx.mounted) {
+        logger.w("[OnchainMonitor] Context became invalid before showing overlay");
+        return;
+      }
+
+      try {
+        overlayService.showPaymentReceivedBottomSheet(
+          context: ctx,
+          payment: payment,
+          bitcoinPrice: BitcoinPriceCache.currentPrice,
+          onDismiss: () {
+            onWalletRefreshNeeded?.call();
+          },
+        );
+      } catch (e) {
+        logger.e("[OnchainMonitor] Error showing payment overlay: $e");
+      }
+    });
   }
 
   /// Start polling for transaction updates.
