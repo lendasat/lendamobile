@@ -25,6 +25,7 @@ class _DeveloperOptionsScreenState extends State<DeveloperOptionsScreen> {
   bool _isExportingLogs = false;
   bool _isLoadingVtxoBalance = false;
   bool _isSettling = false;
+  bool _isRecovering = false;
 
   // Environment info
   String _esploraUrl = '';
@@ -106,6 +107,52 @@ class _DeveloperOptionsScreenState extends State<DeveloperOptionsScreen> {
     } finally {
       if (mounted) {
         setState(() => _isSettling = false);
+      }
+    }
+  }
+
+  Future<void> _recoverSats() async {
+    if (_isRecovering) return;
+
+    final totalRecoverable = _recoverableSats + _expiredSats;
+    if (totalRecoverable <= BigInt.zero) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No recoverable sats found'),
+          backgroundColor: AppTheme.warningColor,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isRecovering = true);
+    try {
+      debugPrint('Recovering $totalRecoverable sats...');
+      await settle();
+      debugPrint('Recovery completed!');
+      // Refresh balance after recovery
+      await _loadVtxoBalance();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully recovered $totalRecoverable sats!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error during recovery: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Recovery failed: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isRecovering = false);
       }
     }
   }
@@ -383,6 +430,32 @@ class _DeveloperOptionsScreenState extends State<DeveloperOptionsScreen> {
                     ),
                   ],
                   const SizedBox(height: AppTheme.elementSpacing),
+                  // Recover Sats Button (only show when there are recoverable sats)
+                  if (_recoverableSats > BigInt.zero ||
+                      _expiredSats > BigInt.zero) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isRecovering ? null : _recoverSats,
+                        icon: _isRecovering
+                            ? dotProgress(context, size: 14)
+                            : const Icon(Icons.restore_rounded, size: 18),
+                        label: Text(_isRecovering
+                            ? 'Recovering...'
+                            : 'Recover ${_recoverableSats + _expiredSats} sats'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.successColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.borderRadiusSmall),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.elementSpacing * 0.5),
+                  ],
                   // Settle Button
                   SizedBox(
                     width: double.infinity,
