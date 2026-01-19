@@ -83,6 +83,7 @@ class SwapScreenState extends State<SwapScreen>
 
   // Balance state (for insufficient funds checking)
   BigInt _availableBalanceSats = BigInt.zero;
+  BigInt _spendableBalanceSats = BigInt.zero; // Confirmed + pending for max button
   bool _isLoadingBalance = true;
 
   // Swap service
@@ -117,9 +118,12 @@ class SwapScreenState extends State<SwapScreen>
       if (mounted) {
         setState(() {
           _availableBalanceSats = balance.offchain.totalSats;
+          _spendableBalanceSats =
+              balance.offchain.confirmedSats + balance.offchain.pendingSats;
           _isLoadingBalance = false;
         });
-        logger.d("Swap screen balance loaded: $_availableBalanceSats sats");
+        logger.d(
+            "Swap screen balance loaded: $_availableBalanceSats sats (spendable: $_spendableBalanceSats)");
       }
     } catch (e) {
       if (mounted) {
@@ -673,7 +677,7 @@ class SwapScreenState extends State<SwapScreen>
   /// Set the maximum swappable amount (balance minus fees from quote)
   void _setMaxAmount() async {
     logger.i(
-        "Max tapped - isBtc: ${sourceToken.isBtc}, isLoadingBalance: $_isLoadingBalance, balance: $_availableBalanceSats");
+        "Max tapped - isBtc: ${sourceToken.isBtc}, isLoadingBalance: $_isLoadingBalance, spendable: $_spendableBalanceSats");
 
     if (!sourceToken.isBtc || _isLoadingBalance) {
       logger.w(
@@ -681,7 +685,8 @@ class SwapScreenState extends State<SwapScreen>
       return;
     }
 
-    final availableSats = _availableBalanceSats.toInt();
+    // Use spendable balance (confirmed + pending) for max calculation
+    final availableSats = _spendableBalanceSats.toInt();
     if (availableSats <= 0) {
       logger.w("Max button - balance is 0, setting amount to 0");
       // Set amount to 0 so user sees feedback instead of nothing happening
