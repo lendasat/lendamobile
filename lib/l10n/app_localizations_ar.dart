@@ -15,7 +15,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings => 'الإعدادات';
 
   @override
-  String get cancel => 'Cancel';
+  String get cancel => 'إلغاء';
 
   @override
   String get save => 'حفظ';
@@ -27,7 +27,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addNote => 'Add a note';
 
   @override
-  String get apply => 'Apply';
+  String get apply => 'تطبيق';
 
   @override
   String get done => 'تم';
@@ -36,7 +36,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get select => 'اختيار';
 
   @override
-  String get search => 'Search';
+  String get search => 'بحث';
 
   @override
   String get enterAmount => 'أدخل المبلغ';
@@ -48,7 +48,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get amountTooHigh => 'Amount Too High';
 
   @override
-  String get amount => 'Amount';
+  String get amount => 'المبلغ';
 
   @override
   String get skipAnyAmount => 'تخطي (أي مبلغ)';
@@ -128,7 +128,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get retry => 'Retry';
+  String get retry => 'إعادة المحاولة';
 
   @override
   String get pendingBalance => 'الرصيد المعلق';
@@ -201,13 +201,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get paymentReceived => 'تم استلام الدفعة!';
 
   @override
-  String get addressCopiedToClipboard => 'Address copied to clipboard';
+  String get addressCopiedToClipboard => 'تم نسخ العنوان إلى الحافظة';
 
   @override
   String get shareWhichAddress => 'أي عنوان ترغب بمشاركته؟';
 
   @override
-  String get address => 'Address';
+  String get address => 'العنوان';
 
   @override
   String get lightningInvoice => 'فاتورة Lightning';
@@ -225,17 +225,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get requesting => 'جاري الطلب: ';
 
   @override
-  String get monitoringForIncomingPayment =>
-      'Monitoring for incoming payment...';
+  String get monitoringForIncomingPayment => 'مراقبة المدفوعات الواردة...';
 
   @override
   String get copyAddress => 'نسخ العنوان';
 
   @override
-  String get errorLoadingAddresses => 'Error loading addresses';
+  String get errorLoadingAddresses => 'خطأ في تحميل العناوين';
 
   @override
-  String get share => 'Share';
+  String get share => 'مشاركة';
 
   @override
   String get pleaseEnterBothAddressAndAmount =>
@@ -260,7 +259,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bitcoinOrArkAddress => 'عنوان بيتكوين أو آرك';
 
   @override
-  String get available => 'available';
+  String get available => 'متاح';
 
   @override
   String get esploraUrlSavedWillOnlyTakeEffectAfterARestart =>
@@ -363,7 +362,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chooseYourPreferredTimezone => 'اختر منطقتك الزمنية المفضلة';
 
   @override
-  String get currency => 'Currency';
+  String get currency => 'العملة';
 
   @override
   String get chooseYourPreferredCurrency => 'اختر عملتك المفضلة';
@@ -440,22 +439,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get failedToSettleTransaction => 'فشل في تسوية المعاملة:';
 
   @override
-  String get pendingConfirmation => 'Pending Confirmation';
+  String get pendingConfirmation => 'في انتظار التأكيد';
 
   @override
-  String get transactionId => 'Transaction ID';
+  String get transactionId => 'معرف المعاملة';
 
   @override
-  String get status => 'Status';
+  String get status => 'الحالة';
 
   @override
-  String get confirmed => 'Confirmed';
+  String get confirmed => 'مؤكد';
 
   @override
-  String get pending => 'Pending';
+  String get pending => 'قيد الانتظار';
 
   @override
-  String get spendable => 'Spendable';
+  String get spendable => 'قابل للإنفاق';
 
   @override
   String get date => 'التاريخ';
@@ -480,7 +479,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transactionHistory => 'سجل المعاملات';
 
   @override
-  String get errorLoadingTransactions => 'Error loading transactions';
+  String get errorLoadingTransactions => 'خطأ في تحميل المعاملات';
 
   @override
   String get noTransactionHistoryYet => 'لا يوجد سجل معاملات بعد';
@@ -517,190 +516,190 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backToWallet => 'العودة إلى المحفظة';
 
   @override
-  String get transactionFees => 'Transaction Fees';
+  String get transactionFees => 'رسوم المعاملات';
 
   @override
-  String get fastest10Min => 'Fastest (~10 min)';
+  String get fastest10Min => 'الأسرع (~10 دقائق)';
 
   @override
-  String get halfHour => 'Half Hour';
+  String get halfHour => 'نصف ساعة';
 
   @override
-  String get oneHour => 'One Hour';
+  String get oneHour => 'ساعة واحدة';
 
   @override
-  String get economy => 'Economy';
+  String get economy => 'اقتصادي';
 
   @override
-  String get minutesAgo => 'minutes ago';
+  String get minutesAgo => 'دقائق مضت';
 
   @override
-  String get hoursAgo => 'hours ago';
+  String get hoursAgo => 'ساعات مضت';
 
   @override
   String get oneDayAgo => '1 day ago';
 
   @override
-  String get daysAgo => 'days ago';
+  String get daysAgo => 'أيام مضت';
 
   @override
-  String get miningInformation => 'Mining Information';
+  String get miningInformation => 'معلومات التعدين';
 
   @override
-  String get miningPool => 'Mining Pool';
+  String get miningPool => 'مجمع التعدين';
 
   @override
-  String get mined => 'Mined';
+  String get mined => 'تم التعدين';
 
   @override
-  String get blockReward => 'Block Reward';
+  String get blockReward => 'مكافأة الكتلة';
 
   @override
-  String get totalFees => 'Total Fees';
+  String get totalFees => 'إجمالي الرسوم';
 
   @override
-  String get min => 'Min';
+  String get min => 'الحد الأدنى';
 
   @override
-  String get networkHashrate => 'Network Hashrate';
+  String get networkHashrate => 'قوة الهاش للشبكة';
 
   @override
-  String get currentNetworkHashrate => 'Current Network Hashrate';
+  String get currentNetworkHashrate => 'قوة الهاش الحالية للشبكة';
 
   @override
-  String get noDataAvailable => 'No data available';
+  String get noDataAvailable => 'لا توجد بيانات';
 
   @override
-  String get difficulty => 'Difficulty';
+  String get difficulty => 'الصعوبة';
 
   @override
-  String get dataPoints => 'Data Points';
+  String get dataPoints => 'نقاط البيانات';
 
   @override
-  String get days => 'days';
+  String get days => 'أيام';
 
   @override
-  String get hours => 'hours';
+  String get hours => 'ساعات';
 
   @override
-  String get minutes => 'minutes';
+  String get minutes => 'دقائق';
 
   @override
-  String get difficultyAdjustment => 'Difficulty Adjustment';
+  String get difficultyAdjustment => 'تعديل الصعوبة';
 
   @override
-  String get complete => 'complete';
+  String get complete => 'مكتمل';
 
   @override
-  String get remainingBlocks => 'Remaining Blocks';
+  String get remainingBlocks => 'الكتل المتبقية';
 
   @override
-  String get estTime => 'Est. Time';
+  String get estTime => 'الوقت المقدر';
 
   @override
-  String get estDate => 'Est. Date';
+  String get estDate => 'التاريخ المقدر';
 
   @override
-  String get mAgo => 'm ago';
+  String get mAgo => 'د مضت';
 
   @override
-  String get hAgo => 'h ago';
+  String get hAgo => 'س مضت';
 
   @override
-  String get dAgo => 'd ago';
+  String get dAgo => 'ي مضت';
 
   @override
-  String get blockSize => 'Block Size';
+  String get blockSize => 'حجم الكتلة';
 
   @override
-  String get weight => 'Weight';
+  String get weight => 'الوزن';
 
   @override
-  String get transactions => 'Transactions';
+  String get transactions => 'المعاملات';
 
   @override
-  String get avgSize => 'Avg Size';
+  String get avgSize => 'متوسط الحجم';
 
   @override
-  String get healthy => 'Healthy';
+  String get healthy => 'صحي';
 
   @override
-  String get fair => 'Fair';
+  String get fair => 'معتدل';
 
   @override
-  String get low => 'Low';
+  String get low => 'منخفض';
 
   @override
-  String get blockHealth => 'Block Health';
+  String get blockHealth => 'صحة الكتلة';
 
   @override
-  String get full => 'Full';
+  String get full => 'ممتلئ';
 
   @override
-  String get actual => 'Actual';
+  String get actual => 'الفعلي';
 
   @override
-  String get expected => 'Expected';
+  String get expected => 'المتوقع';
 
   @override
-  String get difference => 'Difference';
+  String get difference => 'الفرق';
 
   @override
-  String get setAmount => 'Set Amount';
+  String get setAmount => 'تحديد المبلغ';
 
   @override
-  String get clear => 'Clear';
+  String get clear => 'مسح';
 
   @override
-  String get errorSharingQrCode => 'Error sharing QR code:';
+  String get errorSharingQrCode => 'خطأ في مشاركة رمز QR:';
 
   @override
   String get qr => 'QR';
 
   @override
-  String get type => 'Type';
+  String get type => 'النوع';
 
   @override
-  String get sellBitcoin => 'Sell Bitcoin';
+  String get sellBitcoin => 'بيع بيتكوين';
 
   @override
-  String get errorLoadingSellScreen => 'Error loading sell screen';
+  String get errorLoadingSellScreen => 'خطأ في تحميل شاشة البيع';
 
   @override
-  String get availableBalance => 'Available Balance';
+  String get availableBalance => 'الرصيد المتاح';
 
   @override
-  String get amountToSell => 'Amount to Sell';
+  String get amountToSell => 'المبلغ للبيع';
 
   @override
-  String get sellLimits => 'Sell Limits';
+  String get sellLimits => 'حدود البيع';
 
   @override
-  String get insufficientBalance => 'Insufficient balance';
+  String get insufficientBalance => 'رصيد غير كافٍ';
 
   @override
-  String get max => 'Max';
+  String get max => 'الحد الأقصى';
 
   @override
-  String get payoutMethods => 'Payout Methods';
+  String get payoutMethods => 'طرق الدفع';
 
   @override
-  String get pendingBlock => 'Pending Block';
+  String get pendingBlock => 'كتلة معلقة';
 
   @override
-  String get nextBlock => 'Next Block';
+  String get nextBlock => 'الكتلة التالية';
 
   @override
-  String get medianFee => 'Median Fee';
+  String get medianFee => 'متوسط الرسوم';
 
   @override
-  String get estimatedTime => 'Estimated Time';
+  String get estimatedTime => 'الوقت المقدر';
 
   @override
-  String get feeDistribution => 'Fee Distribution';
+  String get feeDistribution => 'توزيع الرسوم';
 
   @override
-  String get noTransactionsYet => 'No transactions yet';
+  String get noTransactionsYet => 'لا توجد معاملات بعد';
 
   @override
   String get loadingMoreTransactions => 'Loading more transactions...';
@@ -721,10 +720,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get value => 'Value';
 
   @override
-  String get copiedToClipboard => 'Copied to clipboard';
+  String get copiedToClipboard => 'تم النسخ إلى الحافظة';
 
   @override
-  String get transactionDetails => 'Transaction Details';
+  String get transactionDetails => 'تفاصيل المعاملة';
 
   @override
   String get errorLoadingTransaction => 'Error loading transaction';
@@ -769,10 +768,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get blockchain => 'Blockchain';
 
   @override
-  String get errorLoadingData => 'Error loading data';
+  String get errorLoadingData => 'خطأ في تحميل البيانات';
 
   @override
-  String get recentTransactions => 'Recent Transactions';
+  String get recentTransactions => 'المعاملات الأخيرة';
 
   @override
   String get block => 'Block';
@@ -796,7 +795,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errorLoadingBuyScreen => 'Error loading buy screen';
 
   @override
-  String get buyBitcoin => 'Buy Bitcoin';
+  String get buyBitcoin => 'شراء بيتكوين';
 
   @override
   String get failedToLaunchMoonpay => 'Failed to launch MoonPay';

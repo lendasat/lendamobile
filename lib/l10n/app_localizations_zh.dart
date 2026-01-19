@@ -15,7 +15,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings => '设置';
 
   @override
-  String get cancel => 'Cancel';
+  String get cancel => '取消';
 
   @override
   String get save => '保存';
@@ -27,7 +27,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addNote => 'Add a note';
 
   @override
-  String get apply => 'Apply';
+  String get apply => '应用';
 
   @override
   String get done => '完成';
@@ -36,7 +36,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get select => '选择';
 
   @override
-  String get search => 'Search';
+  String get search => '搜索';
 
   @override
   String get enterAmount => '输入金额';
@@ -48,7 +48,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get amountTooHigh => 'Amount Too High';
 
   @override
-  String get amount => 'Amount';
+  String get amount => '金额';
 
   @override
   String get skipAnyAmount => '跳过（任意金额）';
@@ -128,7 +128,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get retry => 'Retry';
+  String get retry => '重试';
 
   @override
   String get pendingBalance => '待处理余额';
@@ -200,13 +200,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get paymentReceived => '收到付款！';
 
   @override
-  String get addressCopiedToClipboard => 'Address copied to clipboard';
+  String get addressCopiedToClipboard => '地址已复制到剪贴板';
 
   @override
   String get shareWhichAddress => '要分享哪个地址？';
 
   @override
-  String get address => 'Address';
+  String get address => '地址';
 
   @override
   String get lightningInvoice => '闪电发票';
@@ -224,17 +224,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get requesting => '请求中：';
 
   @override
-  String get monitoringForIncomingPayment =>
-      'Monitoring for incoming payment...';
+  String get monitoringForIncomingPayment => '正在监控收款...';
 
   @override
   String get copyAddress => '复制地址';
 
   @override
-  String get errorLoadingAddresses => 'Error loading addresses';
+  String get errorLoadingAddresses => '加载地址时出错';
 
   @override
-  String get share => 'Share';
+  String get share => '分享';
 
   @override
   String get pleaseEnterBothAddressAndAmount => '请输入地址和金额';
@@ -258,7 +257,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bitcoinOrArkAddress => '比特币或 Ark 地址';
 
   @override
-  String get available => 'available';
+  String get available => '可用';
 
   @override
   String get esploraUrlSavedWillOnlyTakeEffectAfterARestart =>
@@ -355,7 +354,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chooseYourPreferredTimezone => '选择您偏好的时区';
 
   @override
-  String get currency => 'Currency';
+  String get currency => '货币';
 
   @override
   String get chooseYourPreferredCurrency => '选择您偏好的货币';
@@ -431,22 +430,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get failedToSettleTransaction => '结算交易失败：';
 
   @override
-  String get pendingConfirmation => 'Pending Confirmation';
+  String get pendingConfirmation => '等待确认';
 
   @override
-  String get transactionId => 'Transaction ID';
+  String get transactionId => '交易ID';
 
   @override
-  String get status => 'Status';
+  String get status => '状态';
 
   @override
-  String get confirmed => 'Confirmed';
+  String get confirmed => '已确认';
 
   @override
-  String get pending => 'Pending';
+  String get pending => '待处理';
 
   @override
-  String get spendable => 'Spendable';
+  String get spendable => '可用';
 
   @override
   String get date => '日期';
@@ -471,7 +470,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transactionHistory => '交易记录';
 
   @override
-  String get errorLoadingTransactions => 'Error loading transactions';
+  String get errorLoadingTransactions => '加载交易时出错';
 
   @override
   String get noTransactionHistoryYet => '暂无交易记录';
@@ -507,271 +506,271 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backToWallet => '返回钱包';
 
   @override
-  String get transactionFees => 'Transaction Fees';
+  String get transactionFees => '交易费用';
 
   @override
-  String get fastest10Min => 'Fastest (~10 min)';
+  String get fastest10Min => '最快（约10分钟）';
 
   @override
-  String get halfHour => 'Half Hour';
+  String get halfHour => '半小时';
 
   @override
-  String get oneHour => 'One Hour';
+  String get oneHour => '一小时';
 
   @override
-  String get economy => 'Economy';
+  String get economy => '经济';
 
   @override
-  String get minutesAgo => 'minutes ago';
+  String get minutesAgo => '分钟前';
 
   @override
-  String get hoursAgo => 'hours ago';
+  String get hoursAgo => '小时前';
 
   @override
   String get oneDayAgo => '1 day ago';
 
   @override
-  String get daysAgo => 'days ago';
+  String get daysAgo => '天前';
 
   @override
-  String get miningInformation => 'Mining Information';
+  String get miningInformation => '挖矿信息';
 
   @override
-  String get miningPool => 'Mining Pool';
+  String get miningPool => '矿池';
 
   @override
-  String get mined => 'Mined';
+  String get mined => '已挖出';
 
   @override
-  String get blockReward => 'Block Reward';
+  String get blockReward => '区块奖励';
 
   @override
-  String get totalFees => 'Total Fees';
+  String get totalFees => '总费用';
 
   @override
-  String get min => 'Min';
+  String get min => '最小';
 
   @override
-  String get networkHashrate => 'Network Hashrate';
+  String get networkHashrate => '全网算力';
 
   @override
-  String get currentNetworkHashrate => 'Current Network Hashrate';
+  String get currentNetworkHashrate => '当前全网算力';
 
   @override
-  String get noDataAvailable => 'No data available';
+  String get noDataAvailable => '暂无数据';
 
   @override
-  String get difficulty => 'Difficulty';
+  String get difficulty => '难度';
 
   @override
-  String get dataPoints => 'Data Points';
+  String get dataPoints => '数据点';
 
   @override
-  String get days => 'days';
+  String get days => '天';
 
   @override
-  String get hours => 'hours';
+  String get hours => '小时';
 
   @override
-  String get minutes => 'minutes';
+  String get minutes => '分钟';
 
   @override
-  String get difficultyAdjustment => 'Difficulty Adjustment';
+  String get difficultyAdjustment => '难度调整';
 
   @override
-  String get complete => 'complete';
+  String get complete => '完成';
 
   @override
-  String get remainingBlocks => 'Remaining Blocks';
+  String get remainingBlocks => '剩余区块';
 
   @override
-  String get estTime => 'Est. Time';
+  String get estTime => '预计时间';
 
   @override
-  String get estDate => 'Est. Date';
+  String get estDate => '预计日期';
 
   @override
-  String get mAgo => 'm ago';
+  String get mAgo => '分钟前';
 
   @override
-  String get hAgo => 'h ago';
+  String get hAgo => '小时前';
 
   @override
-  String get dAgo => 'd ago';
+  String get dAgo => '天前';
 
   @override
-  String get blockSize => 'Block Size';
+  String get blockSize => '区块大小';
 
   @override
-  String get weight => 'Weight';
+  String get weight => '权重';
 
   @override
-  String get transactions => 'Transactions';
+  String get transactions => '交易';
 
   @override
-  String get avgSize => 'Avg Size';
+  String get avgSize => '平均大小';
 
   @override
-  String get healthy => 'Healthy';
+  String get healthy => '健康';
 
   @override
-  String get fair => 'Fair';
+  String get fair => '一般';
 
   @override
-  String get low => 'Low';
+  String get low => '低';
 
   @override
-  String get blockHealth => 'Block Health';
+  String get blockHealth => '区块健康度';
 
   @override
-  String get full => 'Full';
+  String get full => '已满';
 
   @override
-  String get actual => 'Actual';
+  String get actual => '实际';
 
   @override
-  String get expected => 'Expected';
+  String get expected => '预期';
 
   @override
-  String get difference => 'Difference';
+  String get difference => '差异';
 
   @override
-  String get setAmount => 'Set Amount';
+  String get setAmount => '设置金额';
 
   @override
-  String get clear => 'Clear';
+  String get clear => '清除';
 
   @override
-  String get errorSharingQrCode => 'Error sharing QR code:';
+  String get errorSharingQrCode => '分享二维码时出错：';
 
   @override
-  String get qr => 'QR';
+  String get qr => '二维码';
 
   @override
-  String get type => 'Type';
+  String get type => '类型';
 
   @override
-  String get sellBitcoin => 'Sell Bitcoin';
+  String get sellBitcoin => '出售比特币';
 
   @override
-  String get errorLoadingSellScreen => 'Error loading sell screen';
+  String get errorLoadingSellScreen => '加载出售页面时出错';
 
   @override
-  String get availableBalance => 'Available Balance';
+  String get availableBalance => '可用余额';
 
   @override
-  String get amountToSell => 'Amount to Sell';
+  String get amountToSell => '出售金额';
 
   @override
-  String get sellLimits => 'Sell Limits';
+  String get sellLimits => '出售限额';
 
   @override
-  String get insufficientBalance => 'Insufficient balance';
+  String get insufficientBalance => '余额不足';
 
   @override
-  String get max => 'Max';
+  String get max => '最大';
 
   @override
-  String get payoutMethods => 'Payout Methods';
+  String get payoutMethods => '收款方式';
 
   @override
-  String get pendingBlock => 'Pending Block';
+  String get pendingBlock => '待处理区块';
 
   @override
-  String get nextBlock => 'Next Block';
+  String get nextBlock => '下一区块';
 
   @override
-  String get medianFee => 'Median Fee';
+  String get medianFee => '中位费用';
 
   @override
-  String get estimatedTime => 'Estimated Time';
+  String get estimatedTime => '预计时间';
 
   @override
-  String get feeDistribution => 'Fee Distribution';
+  String get feeDistribution => '费用分布';
 
   @override
-  String get noTransactionsYet => 'No transactions yet';
+  String get noTransactionsYet => '暂无交易';
 
   @override
-  String get loadingMoreTransactions => 'Loading more transactions...';
+  String get loadingMoreTransactions => '正在加载更多交易...';
 
   @override
-  String get scrollDownToLoadMore => 'Scroll down to load more';
+  String get scrollDownToLoadMore => '下滑加载更多';
 
   @override
-  String get med => ', \"Med\", ';
+  String get med => '中';
 
   @override
-  String get feeRate => 'Fee Rate';
+  String get feeRate => '费率';
 
   @override
-  String get size => 'Size';
+  String get size => '大小';
 
   @override
-  String get value => 'Value';
+  String get value => '价值';
 
   @override
-  String get copiedToClipboard => 'Copied to clipboard';
+  String get copiedToClipboard => '已复制到剪贴板';
 
   @override
-  String get transactionDetails => 'Transaction Details';
+  String get transactionDetails => '交易详情';
 
   @override
-  String get errorLoadingTransaction => 'Error loading transaction';
+  String get errorLoadingTransaction => '加载交易时出错';
 
   @override
-  String get blockHeight => 'Block Height';
+  String get blockHeight => '区块高度';
 
   @override
-  String get blockTime => 'Block Time';
+  String get blockTime => '区块时间';
 
   @override
-  String get details => 'Details';
+  String get details => '详情';
 
   @override
-  String get fee => 'Fee';
+  String get fee => '费用';
 
   @override
-  String get version => 'Version';
+  String get version => '版本';
 
   @override
-  String get locktime => 'Locktime';
+  String get locktime => '锁定时间';
 
   @override
-  String get inputs => 'Inputs';
+  String get inputs => '输入';
 
   @override
-  String get outputs => 'Outputs';
+  String get outputs => '输出';
 
   @override
-  String get searchBlockchain => 'Search Blockchain';
+  String get searchBlockchain => '搜索区块链';
 
   @override
-  String get transaction => 'Transaction';
+  String get transaction => '交易';
 
   @override
-  String get enterBlockHeightOrBlockHash => 'Enter block height or block hash';
+  String get enterBlockHeightOrBlockHash => '输入区块高度或区块哈希';
 
   @override
-  String get enterTransactionIdTxid => 'Enter transaction ID (TXID)';
+  String get enterTransactionIdTxid => '输入交易ID（TXID）';
 
   @override
-  String get blockchain => 'Blockchain';
+  String get blockchain => '区块链';
 
   @override
-  String get errorLoadingData => 'Error loading data';
+  String get errorLoadingData => '加载数据时出错';
 
   @override
-  String get recentTransactions => 'Recent Transactions';
+  String get recentTransactions => '最近交易';
 
   @override
-  String get block => 'Block';
+  String get block => '区块';
 
   @override
-  String get yourTx => 'Your TX';
+  String get yourTx => '您的交易';
 
   @override
-  String get paymentMethods => 'Payment Methods';
+  String get paymentMethods => '支付方式';
 
   @override
   String get paymentProvider => 'Payment Provider';
@@ -780,19 +779,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chooseProvider => 'Choose Provider';
 
   @override
-  String get buyLimits => 'Buy Limits';
+  String get buyLimits => '购买限额';
 
   @override
-  String get errorLoadingBuyScreen => 'Error loading buy screen';
+  String get errorLoadingBuyScreen => '加载购买页面时出错';
 
   @override
-  String get buyBitcoin => 'Buy Bitcoin';
+  String get buyBitcoin => '购买比特币';
 
   @override
-  String get failedToLaunchMoonpay => 'Failed to launch MoonPay';
+  String get failedToLaunchMoonpay => '启动 MoonPay 失败';
 
   @override
-  String get bitcoinPriceChart => 'Bitcoin Price Chart';
+  String get bitcoinPriceChart => '比特币价格图表';
 
   @override
   String get aboutBitcoin => 'About Bitcoin';
@@ -802,23 +801,23 @@ class AppLocalizationsZh extends AppLocalizations {
       'Bitcoin is the world\'s first decentralized digital currency. It was created in 2009 by an unknown person or group of people using the name Satoshi Nakamoto. Bitcoin is a distributed, peer-to-peer network that keeps a record of all transactions in a public ledger called the blockchain.';
 
   @override
-  String get aboutBitcoinPriceData => 'About Bitcoin Price Data';
+  String get aboutBitcoinPriceData => '关于比特币价格数据';
 
   @override
   String get thePriceDataShown =>
       'The price data shown is sourced from our backend service and updated in real-time. Select different time ranges to view historical price trends.';
 
   @override
-  String get dataSource => 'Data Source';
+  String get dataSource => '数据来源';
 
   @override
-  String get liveBitcoinMarketData => 'Live Bitcoin Market Data';
+  String get liveBitcoinMarketData => '实时比特币市场数据';
 
   @override
-  String get updateFrequency => 'Update Frequency';
+  String get updateFrequency => '更新频率';
 
   @override
-  String get realTime => 'Real-time';
+  String get realTime => '实时';
 
   @override
   String get sendBitcoin => 'Send Bitcoin';
