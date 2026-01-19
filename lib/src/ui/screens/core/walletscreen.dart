@@ -656,6 +656,8 @@ class WalletScreenState extends State<WalletScreen>
         builder: (context) => RecipientSearchScreen(
           aspId: widget.aspId,
           availableSats: _totalBalance * BitcoinConstants.satsPerBtc,
+          spendableSats:
+              (_confirmedBalance + _pendingBalance) * BitcoinConstants.satsPerBtc,
           bitcoinPrice: _getCurrentBtcPrice(),
         ),
       ),
@@ -695,6 +697,8 @@ class WalletScreenState extends State<WalletScreen>
           builder: (context) => SendScreen(
             aspId: widget.aspId,
             availableSats: _totalBalance * BitcoinConstants.satsPerBtc,
+            spendableSats:
+                (_confirmedBalance + _pendingBalance) * BitcoinConstants.satsPerBtc,
             initialAddress: result,
             bitcoinPrice: _getCurrentBtcPrice(),
           ),

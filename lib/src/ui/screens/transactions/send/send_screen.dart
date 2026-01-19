@@ -44,6 +44,7 @@ import 'package:provider/provider.dart';
 class SendScreen extends StatefulWidget {
   final String aspId;
   final double availableSats;
+  final double spendableSats; // Confirmed + pending balance for max button
   final String? initialAddress;
   final bool fromClipboard;
   final double? bitcoinPrice; // Pass cached price to avoid network delay
@@ -52,6 +53,7 @@ class SendScreen extends StatefulWidget {
     super.key,
     required this.aspId,
     required this.availableSats,
+    required this.spendableSats,
     this.initialAddress,
     this.fromClipboard = false,
     this.bitcoinPrice,
@@ -1210,12 +1212,13 @@ class SendScreenState extends State<SendScreen> {
         // To find max amount: amount + fee = balance, where fee = amount * 0.0025
         // So: amount * 1.0025 = balance => amount = balance / 1.0025
         // Use floor() for maxAmount to be conservative, then verify with actual fee calc
+        // Note: Use spendableSats (confirmed + pending) for max calculation
         final maxAmount =
-            (widget.availableSats / (1 + _boltzFeePercent / 100)).floor();
+            (widget.spendableSats / (1 + _boltzFeePercent / 100)).floor();
         // Calculate what the actual fee would be (using same rounding as _calculateBoltzFee)
         final actualFee = (maxAmount * _boltzFeePercent / 100).round();
         // If total exceeds balance due to rounding edge case, add 1 to fee
-        if (maxAmount + actualFee > widget.availableSats) {
+        if (maxAmount + actualFee > widget.spendableSats) {
           return actualFee + 1;
         }
         return actualFee;
@@ -1237,7 +1240,8 @@ class SendScreenState extends State<SendScreen> {
 
   void _setMaxAmount() {
     final estimatedFees = _getEstimatedFees();
-    final maxSats = (widget.availableSats - estimatedFees).floor();
+    // Use spendableSats (confirmed + pending) for max calculation
+    final maxSats = (widget.spendableSats - estimatedFees).floor();
     final safeMax = maxSats > 0 ? maxSats : 0;
 
     // Calculate all values from sats (source of truth)
