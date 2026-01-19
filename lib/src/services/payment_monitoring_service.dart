@@ -42,8 +42,10 @@ class PaymentMonitoringService extends ChangeNotifier
   String? _arkAddress;
   String? _boardingAddress;
 
-  // Balance tracking for detecting missed payments
+  // Tracking for detecting missed payments
   BigInt? _lastKnownBalance;
+  Set<String> _knownTxIds = {};
+  int? _pausedAtTimestamp;
 
   // Callback for wallet refresh (set by BottomNav or other parent widget)
   VoidCallback? onWalletRefreshNeeded;
@@ -127,14 +129,30 @@ class PaymentMonitoringService extends ChangeNotifier
     }
   }
 
-  /// Store the current balance before the app goes to background
+  /// Store the current state before the app goes to background
   Future<void> _storeCurrentBalance() async {
     try {
       final balanceResult = await balance();
       _lastKnownBalance = balanceResult.offchain.totalSats;
-      logger.i("Stored balance before pause: $_lastKnownBalance sats");
+
+      // Store current timestamp
+      _pausedAtTimestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+      // Store known transaction IDs
+      final transactions = await txHistory();
+      _knownTxIds = transactions.map((tx) {
+        return tx.map(
+          boarding: (t) => t.txid,
+          round: (t) => t.txid,
+          redeem: (t) => t.txid,
+          offboard: (t) => t.txid,
+        );
+      }).toSet();
+
+      logger.i(
+          "Stored state before pause: balance=$_lastKnownBalance sats, ${_knownTxIds.length} known txs");
     } catch (e) {
-      logger.e("Error storing balance before pause: $e");
+      logger.e("Error storing state before pause: $e");
     }
   }
 
@@ -143,6 +161,10 @@ class PaymentMonitoringService extends ChangeNotifier
     if (_lastKnownBalance == null) return;
 
     try {
+      // Small delay to allow state to update after app resume
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      // First check if balance increased
       final balanceResult = await balance();
       final currentBalance = balanceResult.offchain.totalSats;
       final previousBalance = _lastKnownBalance!;
@@ -150,53 +172,97 @@ class PaymentMonitoringService extends ChangeNotifier
       logger.i(
           "Checking for missed payments - Previous: $previousBalance, Current: $currentBalance");
 
-      if (currentBalance > previousBalance) {
-        final difference = currentBalance - previousBalance;
-        logger.i("Balance increased by $difference sats while backgrounded!");
+      if (currentBalance <= previousBalance) {
+        // No balance increase, update state and return
+        _lastKnownBalance = currentBalance;
+        return;
+      }
 
-        // Get the latest transaction to show in the overlay
-        final transactions = await txHistory();
-        if (transactions.isNotEmpty) {
-          // Find the most recent incoming transaction
-          for (final tx in transactions) {
-            final BigInt txAmount = tx.map(
-              boarding: (t) => t.amountSats,
-              round: (t) => t.amountSats,
-              redeem: (t) => t.amountSats,
-              offboard: (t) => BigInt.from(t.amountSats),
-            ) as BigInt;
+      // Balance increased - find the new incoming transaction(s)
+      final transactions = await txHistory();
+      PaymentReceived? missedPayment;
 
-            final txid = tx.map(
-              boarding: (t) => t.txid,
-              round: (t) => t.txid,
-              redeem: (t) => t.txid,
-              offboard: (t) => t.txid,
-            );
+      for (final tx in transactions) {
+        final txid = tx.map(
+          boarding: (t) => t.txid,
+          round: (t) => t.txid,
+          redeem: (t) => t.txid,
+          offboard: (t) => t.txid,
+        );
 
-            // Check if this is a positive (incoming) transaction
-            if (txAmount > BigInt.zero) {
-              final payment = PaymentReceived(
-                txid: txid,
-                amountSats: txAmount,
-              );
+        // Skip if we already knew about this transaction
+        if (_knownTxIds.contains(txid)) continue;
 
-              // Emit to stream
-              _paymentController.add(payment);
+        // Check if this is an incoming transaction
+        final isIncoming = tx.map(
+          boarding: (t) => true, // Boarding is always incoming
+          round: (t) => t.amountSats > 0, // Positive round = incoming
+          redeem: (t) => t.amountSats > 0, // Positive redeem = incoming
+          offboard: (t) => false, // Offboard is always outgoing
+        );
 
-              // Show overlay if not suppressed
-              _showPaymentOverlay(payment);
+        if (!isIncoming) continue;
 
-              break; // Only handle the most recent incoming tx
-            }
-          }
+        // Get the amount
+        final amountSats = tx.map(
+          boarding: (t) => t.amountSats,
+          round: (t) => BigInt.from(t.amountSats),
+          redeem: (t) => BigInt.from(t.amountSats),
+          offboard: (t) => BigInt.zero,
+        );
+
+        // Check timestamp if available (prefer newer transactions)
+        final txTimestamp = tx.map(
+          boarding: (t) => t.confirmedAt,
+          round: (t) => t.createdAt,
+          redeem: (t) => t.createdAt,
+          offboard: (t) => t.confirmedAt,
+        );
+
+        // If we have a timestamp and it's before we paused, skip
+        if (txTimestamp != null &&
+            _pausedAtTimestamp != null &&
+            txTimestamp < _pausedAtTimestamp!) {
+          continue;
         }
+
+        logger.i("Found missed incoming tx: $txid, amount: $amountSats sats");
+
+        missedPayment = PaymentReceived(
+          txid: txid,
+          amountSats: amountSats,
+        );
+
+        // Only show the first (most recent) missed payment
+        break;
+      }
+
+      if (missedPayment != null) {
+        logger.i(
+            "Showing notification for missed payment: ${missedPayment.amountSats} sats");
+
+        // Emit to stream
+        _paymentController.add(missedPayment);
+
+        // Show overlay with delay to ensure UI is ready
+        Future.delayed(const Duration(milliseconds: 300), () {
+          _showPaymentOverlay(missedPayment!);
+        });
 
         // Trigger wallet refresh
         onWalletRefreshNeeded?.call();
       }
 
-      // Update the last known balance
+      // Update stored state
       _lastKnownBalance = currentBalance;
+      _knownTxIds = transactions.map((tx) {
+        return tx.map(
+          boarding: (t) => t.txid,
+          round: (t) => t.txid,
+          redeem: (t) => t.txid,
+          offboard: (t) => t.txid,
+        );
+      }).toSet();
     } catch (e) {
       logger.e("Error checking for missed payments: $e");
     }
@@ -295,13 +361,26 @@ class PaymentMonitoringService extends ChangeNotifier
       return;
     }
 
-    overlayService.showPaymentReceivedBottomSheet(
-      context: _overlayContext!,
-      payment: payment,
-      onDismiss: () {
-        onWalletRefreshNeeded?.call();
-      },
-    );
+    // Use post frame callback to ensure UI is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Re-check context is still valid after the frame
+      if (_overlayContext == null || !_overlayContext!.mounted) {
+        logger.w("Context became invalid before showing overlay");
+        return;
+      }
+
+      try {
+        overlayService.showPaymentReceivedBottomSheet(
+          context: _overlayContext!,
+          payment: payment,
+          onDismiss: () {
+            onWalletRefreshNeeded?.call();
+          },
+        );
+      } catch (e) {
+        logger.e("Error showing payment overlay: $e");
+      }
+    });
   }
 
   /// Manually trigger a wallet refresh.
