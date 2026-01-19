@@ -41,15 +41,13 @@ class _LockScreenState extends State<LockScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final biometricService = context.read<BiometricService>();
 
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
-      // Reset authentication when app goes to background
-      if (biometricService.isEnabled) {
-        biometricService.resetAuthentication();
-      }
+    if (state == AppLifecycleState.paused) {
+      // Record when app went to background (grace period starts)
+      biometricService.onAppBackgrounded();
     } else if (state == AppLifecycleState.resumed) {
-      // Re-authenticate when app comes back to foreground
-      if (biometricService.shouldShowLockScreen) {
+      // Check if grace period expired and re-authentication is needed
+      final needsAuth = biometricService.onAppResumed();
+      if (needsAuth) {
         _attemptAuthentication();
       }
     }
