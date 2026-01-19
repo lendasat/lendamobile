@@ -399,10 +399,13 @@ class _AmountWidgetState extends State<AmountWidget>
                   }
                 },
                 behavior: HitTestBehavior.opaque,
-                child: !_service.swapped
-                    ? _buildBitcoinToMoneyDisplay(
-                        context, bitcoinPrice, currencyService)
-                    : _buildMoneyToBitcoinDisplay(context, currencyService),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: !_service.swapped
+                      ? _buildBitcoinToMoneyDisplay(
+                          context, bitcoinPrice, currencyService)
+                      : _buildMoneyToBitcoinDisplay(context, currencyService),
+                ),
               ),
             ],
           ),
@@ -425,7 +428,7 @@ class _AmountWidgetState extends State<AmountWidget>
     if (_displayFiat.isEmpty || bitcoinPrice == null) {
       return Text(
         "\u2248 ${currencyService.symbol}0",
-        style: materialTheme.textTheme.bodyLarge?.copyWith(color: textColor),
+        style: materialTheme.textTheme.titleLarge?.copyWith(color: textColor),
       );
     }
 
@@ -438,7 +441,7 @@ class _AmountWidgetState extends State<AmountWidget>
 
     return Text(
       "\u2248 ${currencyService.formatAmount(usdValue)}",
-      style: materialTheme.textTheme.bodyLarge?.copyWith(color: textColor),
+      style: materialTheme.textTheme.titleLarge?.copyWith(color: textColor),
     );
   }
 
@@ -459,10 +462,10 @@ class _AmountWidgetState extends State<AmountWidget>
       children: [
         Text(
           "\u2248 $displayValue",
-          style: materialTheme.textTheme.bodyLarge?.copyWith(color: textColor),
+          style: materialTheme.textTheme.titleLarge?.copyWith(color: textColor),
         ),
         const SizedBox(width: 4),
-        _getCurrencyIcon(context, _service.currentUnit),
+        _getCurrencyIcon(context, _service.currentUnit, size: 20),
       ],
     );
   }
