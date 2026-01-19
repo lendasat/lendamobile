@@ -183,7 +183,6 @@ class SendScreenState extends State<SendScreen> {
     }
   }
 
-
   @override
   void dispose() {
     _addressChangeTimer?.cancel();
@@ -1270,22 +1269,22 @@ class SendScreenState extends State<SendScreen> {
   ) {
     final currencyService = context.watch<CurrencyPreferenceService>();
 
-    // Format available balance based on current input state
+    // Format spendable balance (confirmed + pending) based on current input state
     String availableDisplay;
     if (_amountInputState == 'currency') {
       // Show in fiat
       availableDisplay = _bitcoinPrice != null
           ? currencyService.formatAmount(
-              (widget.availableSats / BitcoinConstants.satsPerBtc) *
+              (widget.spendableSats / BitcoinConstants.satsPerBtc) *
                   _bitcoinPrice!)
           : '\$0.00';
     } else if (_amountInputState == 'bitcoin') {
       // Show in BTC
-      final btcAvailable = widget.availableSats / BitcoinConstants.satsPerBtc;
+      final btcAvailable = widget.spendableSats / BitcoinConstants.satsPerBtc;
       availableDisplay = '${btcAvailable.toStringAsFixed(8)} BTC';
     } else {
       // Show in sats (default)
-      availableDisplay = '${widget.availableSats.toStringAsFixed(0)} sats';
+      availableDisplay = '${widget.spendableSats.toStringAsFixed(0)} sats';
     }
 
     return Padding(
