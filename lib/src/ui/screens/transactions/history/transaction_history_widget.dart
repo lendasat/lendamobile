@@ -39,6 +39,10 @@ class TransactionHistoryWidget extends StatefulWidget {
   /// Use this when the header is rendered separately as a sticky sliver.
   final bool showHeader;
 
+  /// When true, returns a SliverList for lazy loading within a CustomScrollView.
+  /// This provides better performance for long transaction lists.
+  final bool asSliverList;
+
   const TransactionHistoryWidget({
     super.key,
     required this.aspId,
@@ -49,6 +53,7 @@ class TransactionHistoryWidget extends StatefulWidget {
     this.showBtcAsMain = true,
     this.bitcoinPrice,
     this.showHeader = true,
+    this.asSliverList = false,
   });
 
   @override
@@ -493,6 +498,192 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     }
   }
 
+  /// Get a flat list of display items for lazy building
+  /// Each item is either a header (String) or an activity group (List<WalletActivityItem>)
+  List<_SliverDisplayItem> _getSliverDisplayItems() {
+    if (_filteredActivity.isEmpty) return [];
+
+    final List<_SliverDisplayItem> items = [];
+
+    // Separate pending items from confirmed items
+    final List<WalletActivityItem> pendingItems = [];
+    final List<WalletActivityItem> confirmedItems = [];
+
+    for (final item in _filteredActivity) {
+      if (_isPendingTransaction(item)) {
+        pendingItems.add(item);
+      } else {
+        confirmedItems.add(item);
+      }
+    }
+
+    // Add pending section
+    if (pendingItems.isNotEmpty) {
+      items.add(_SliverDisplayItem.header('Pending'));
+      items.add(_SliverDisplayItem.group(pendingItems, 'Pending'));
+    }
+
+    // Categorize confirmed items by time
+    Map<String, List<WalletActivityItem>> categorizedActivity = {};
+    DateTime now = DateTime.now();
+    DateTime startOfThisMonth = DateTime(now.year, now.month, 1);
+
+    for (WalletActivityItem item in confirmedItems) {
+      final timestamp = item.timestamp;
+
+      if (timestamp == 0) {
+        categorizedActivity.putIfAbsent('Unknown Date', () => []).add(item);
+        continue;
+      }
+
+      DateTime date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+
+      if (date.isAfter(startOfThisMonth)) {
+        String timeTag = _displayTimeAgo(timestamp);
+        categorizedActivity.putIfAbsent(timeTag, () => []).add(item);
+      } else {
+        String yearMonth = '${date.year}, ${DateFormat('MMMM').format(date)}';
+        categorizedActivity.putIfAbsent(yearMonth, () => []).add(item);
+      }
+    }
+
+    // Add categorized items
+    categorizedActivity.forEach((category, activityItems) {
+      if (activityItems.isNotEmpty) {
+        items.add(_SliverDisplayItem.header(category));
+        items.add(_SliverDisplayItem.group(activityItems, category));
+      }
+    });
+
+    return items;
+  }
+
+  /// Build a SliverList for lazy loading of transaction items
+  /// Use this instead of wrapping in SliverToBoxAdapter for better performance
+  Widget buildAsSliverList() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Handle loading state
+    if (widget.loading) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: dotProgress(context),
+        ),
+      );
+    }
+
+    // Handle error state
+    if (_error != null) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
+          child: Center(
+            child: Column(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  AppLocalizations.of(context)!.errorLoadingTransactions,
+                  style: TextStyle(
+                    color: isDark ? AppTheme.white60 : AppTheme.black60,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Handle empty state
+    if (widget.transactions.isEmpty && widget.swaps.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.history,
+                  color: isDark ? AppTheme.white60 : AppTheme.black60,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  AppLocalizations.of(context)!.noTransactionHistoryYet,
+                  style: TextStyle(
+                    color: isDark ? AppTheme.white60 : AppTheme.black60,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Handle filtered empty state
+    if (_filteredActivity.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.search_off,
+                  color: isDark ? AppTheme.white60 : AppTheme.black60,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No matching activity',
+                  style: TextStyle(
+                    color: isDark ? AppTheme.white60 : AppTheme.black60,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Build lazy sliver list
+    final displayItems = _getSliverDisplayItems();
+
+    return SliverList.builder(
+      itemCount: displayItems.length,
+      itemBuilder: (context, index) {
+        final item = displayItems[index];
+
+        if (item.isHeader) {
+          return Padding(
+            key: ValueKey('header_${item.headerText}'),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.cardPadding,
+              vertical: AppTheme.elementSpacing,
+            ),
+            child: Text(
+              item.headerText!,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          );
+        } else {
+          return _ActivityContainer(
+            key: ValueKey('container_${item.groupKey}'),
+            activityItems: item.activityItems!,
+            aspId: widget.aspId,
+            hideAmounts: widget.hideAmounts,
+            showBtcAsMain: widget.showBtcAsMain,
+            bitcoinPrice: widget.bitcoinPrice,
+          );
+        }
+      },
+    );
+  }
+
   /// Build the header widget (title + search bar)
   /// This can be used externally for sticky header implementation
   Widget buildHeader({bool includeBottomPadding = true}) {
@@ -566,6 +757,11 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // Use sliver mode for lazy loading in CustomScrollView
+    if (widget.asSliverList) {
+      return buildAsSliverList();
+    }
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
@@ -1350,4 +1546,23 @@ class _PendingTransactionItemWidget extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Helper class for sliver display items (either a header or a group of activities)
+class _SliverDisplayItem {
+  final String? headerText;
+  final List<WalletActivityItem>? activityItems;
+  final String? groupKey;
+
+  _SliverDisplayItem._({this.headerText, this.activityItems, this.groupKey});
+
+  factory _SliverDisplayItem.header(String text) {
+    return _SliverDisplayItem._(headerText: text);
+  }
+
+  factory _SliverDisplayItem.group(List<WalletActivityItem> items, String key) {
+    return _SliverDisplayItem._(activityItems: items, groupKey: key);
+  }
+
+  bool get isHeader => headerText != null;
 }

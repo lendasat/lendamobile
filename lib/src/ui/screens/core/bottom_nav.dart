@@ -138,21 +138,11 @@ class _BottomNavState extends State<BottomNav> {
   Widget _buildNavItem(int index, IconData icon, bool isLight) {
     final isSelected = _selectedIndex == index;
     return Expanded(
-      child: GestureDetector(
+      child: _AnimatedNavItem(
+        icon: icon,
+        isSelected: isSelected,
+        isLight: isLight,
         onTap: () => _onItemTapped(index),
-        behavior: HitTestBehavior.opaque,
-        child: SizedBox(
-          height: double.infinity,
-          child: Center(
-            child: Icon(
-              icon,
-              size: 24,
-              color: isSelected
-                  ? (isLight ? Colors.black : Colors.white)
-                  : (isLight ? Colors.grey.shade600 : Colors.grey.shade400),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -198,6 +188,92 @@ class _BottomNavState extends State<BottomNav> {
             child: BottomNavGradient(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Animated navigation item with scale animation on tap
+class _AnimatedNavItem extends StatefulWidget {
+  final IconData icon;
+  final bool isSelected;
+  final bool isLight;
+  final VoidCallback onTap;
+
+  const _AnimatedNavItem({
+    required this.icon,
+    required this.isSelected,
+    required this.isLight,
+    required this.onTap,
+  });
+
+  @override
+  State<_AnimatedNavItem> createState() => _AnimatedNavItemState();
+}
+
+class _AnimatedNavItemState extends State<_AnimatedNavItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _scaleController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.85).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) {
+    _scaleController.forward();
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    _scaleController.forward().then((_) => _scaleController.reverse());
+    widget.onTap();
+  }
+
+  void _onTapCancel() {
+    _scaleController.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        height: double.infinity,
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _scaleAnimation,
+            builder: (context, child) => Transform.scale(
+              scale: _scaleAnimation.value,
+              child: child,
+            ),
+            child: Icon(
+              widget.icon,
+              size: 24,
+              color: widget.isSelected
+                  ? (widget.isLight ? Colors.black : Colors.white)
+                  : (widget.isLight
+                      ? Colors.grey.shade600
+                      : Colors.grey.shade400),
+            ),
+          ),
+        ),
       ),
     );
   }

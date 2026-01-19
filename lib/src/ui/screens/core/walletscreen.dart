@@ -9,6 +9,8 @@ import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/boarding_tracking_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
+import 'package:ark_flutter/src/services/pending_transaction_service.dart';
+import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
@@ -126,6 +128,9 @@ class WalletScreenState extends State<WalletScreen>
     // Listen to swap service changes for automatic UI updates
     _swapService.addListener(_onSwapsChanged);
 
+    // Listen to pending transaction service for send completion updates
+    PendingTransactionService().addListener(_onPendingTransactionChanged);
+
     // Fetch exchange rates and check for alpha warning
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CurrencyPreferenceService>().fetchExchangeRates();
@@ -149,6 +154,26 @@ class WalletScreenState extends State<WalletScreen>
         _swaps = List.from(_swapService.swaps);
       });
       logger.d("Swaps updated from service notification");
+    }
+  }
+
+  void _onPendingTransactionChanged() {
+    if (mounted) {
+      // When a pending transaction completes (success or fail), refresh wallet data
+      final pendingService = PendingTransactionService();
+      final hasCompletedTx = pendingService.pendingItems.any(
+        (item) =>
+            item.pending.status == PendingTransactionStatus.success ||
+            item.pending.status == PendingTransactionStatus.failed,
+      );
+
+      if (hasCompletedTx) {
+        logger.i("Pending transaction completed - refreshing wallet data");
+        fetchWalletData();
+      }
+
+      // Also trigger rebuild to show/hide pending items
+      setState(() {});
     }
   }
 
@@ -271,6 +296,7 @@ class WalletScreenState extends State<WalletScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _swapService.removeListener(_onSwapsChanged);
+    PendingTransactionService().removeListener(_onPendingTransactionChanged);
     _paymentSubscription?.cancel();
     _keyboardDebounceTimer?.cancel();
     _scrollController.dispose();
@@ -831,10 +857,8 @@ class WalletScreenState extends State<WalletScreen>
                 // Sticky header for transaction history
                 _buildStickyTransactionHeader(),
 
-                // Transaction list content
-                SliverToBoxAdapter(
-                  child: _buildTransactionList(),
-                ),
+                // Transaction list content (lazy loaded)
+                _buildTransactionList(),
 
                 // Bottom padding with SafeArea
                 SliverToBoxAdapter(
@@ -870,6 +894,7 @@ class WalletScreenState extends State<WalletScreen>
       showBtcAsMain: showCoinBalance,
       bitcoinPrice: _getCurrentBtcPrice(),
       showHeader: false,
+      asSliverList: true, // Enable lazy loading for better scroll performance
     );
   }
 
@@ -903,9 +928,14 @@ class WalletScreenState extends State<WalletScreen>
               colors: [
                 bgColor,
                 bgColor,
-                bgColor.withValues(alpha: 0),
+                isDark
+                    ? Colors.black.withValues(alpha: 0.6)
+                    : Colors.white.withValues(alpha: 0.6),
+                isDark
+                    ? Colors.black.withValues(alpha: 0)
+                    : Colors.white.withValues(alpha: 0),
               ],
-              stops: const [0.0, 0.92, 1.0],
+              stops: const [0.0, 0.75, 0.9, 1.0],
             ),
           ),
           child: Column(
