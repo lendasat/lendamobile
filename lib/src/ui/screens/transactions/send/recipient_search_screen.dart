@@ -35,12 +35,14 @@ import 'package:provider/provider.dart';
 class RecipientSearchScreen extends StatefulWidget {
   final String aspId;
   final double availableSats;
+  final double spendableSats; // Confirmed + pending balance for max button
   final double? bitcoinPrice; // Pass from WalletScreen to avoid redundant fetch
 
   const RecipientSearchScreen({
     super.key,
     required this.aspId,
     required this.availableSats,
+    required this.spendableSats,
     this.bitcoinPrice,
   });
 
@@ -173,6 +175,7 @@ class RecipientSearchScreenState extends State<RecipientSearchScreen> {
         builder: (context) => SendScreen(
           aspId: widget.aspId,
           availableSats: widget.availableSats,
+          spendableSats: widget.spendableSats,
           initialAddress: address,
           fromClipboard: fromClipboard,
           bitcoinPrice: _bitcoinPrice,
