@@ -268,20 +268,14 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
                 decoration: BoxDecoration(
                   color: _addressFromWallet
                       ? Colors.transparent
-                      : Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.1),
+                      : (isDarkMode
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.05)),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _addressFromWallet
-                        ? (isDarkMode
-                            ? Colors.white.withValues(alpha: 0.2)
-                            : Colors.black.withValues(alpha: 0.1))
-                        : Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.2),
+                    color: isDarkMode
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : Colors.black.withValues(alpha: 0.1),
                   ),
                 ),
                 child: Row(
@@ -294,11 +288,8 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
                         child: dotProgress(
                           context,
                           size: 8,
-                          color: _addressFromWallet
-                              ? (isDarkMode
-                                  ? AppTheme.white60
-                                  : AppTheme.black60)
-                              : Theme.of(context).colorScheme.primary,
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
                         ),
                       )
                     else
@@ -307,9 +298,7 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
                             ? Icons.swap_horiz_rounded
                             : Icons.account_balance_wallet_outlined,
                         size: 18,
-                        color: _addressFromWallet
-                            ? (isDarkMode ? AppTheme.white60 : AppTheme.black60)
-                            : Theme.of(context).colorScheme.primary,
+                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
                       ),
                     const SizedBox(width: 8),
                     Text(
@@ -319,11 +308,9 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
                               ? 'Change Wallet'
                               : 'Connect Wallet'),
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: _addressFromWallet
-                                ? (isDarkMode
-                                    ? AppTheme.white60
-                                    : AppTheme.black60)
-                                : Theme.of(context).colorScheme.primary,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                             fontWeight: FontWeight.w600,
                           ),
                     ),
