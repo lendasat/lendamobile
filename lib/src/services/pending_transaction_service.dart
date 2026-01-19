@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
+import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:ark_flutter/src/services/recipient_storage_service.dart';
@@ -11,6 +12,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 /// Service to manage pending transactions that are being sent in the background.
@@ -44,6 +46,7 @@ class PendingTransactionService extends ChangeNotifier {
     required String address,
     required int amountSats,
     required Future<String> Function() sendFunction,
+    double? btcPrice,
   }) async {
     final id = 'pending-${_uuid.v4()}';
     final pending = PendingTransaction(
@@ -51,6 +54,7 @@ class PendingTransactionService extends ChangeNotifier {
       address: address,
       amountSats: amountSats,
       createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      btcPrice: btcPrice,
     );
 
     _pendingTransactions[id] = pending;
@@ -102,7 +106,7 @@ class PendingTransactionService extends ChangeNotifier {
       PaymentMonitoringService().triggerWalletRefresh();
 
       // Show success bottom sheet
-      _showCompletionBottomSheet(pending);
+      _showCompletionBottomSheet(pending, btcPrice: pending.btcPrice);
 
       // Remove from pending after a short delay (real tx should appear in history)
       Future.delayed(const Duration(seconds: 3), () {
@@ -117,7 +121,7 @@ class PendingTransactionService extends ChangeNotifier {
       notifyListeners();
 
       // Show error bottom sheet
-      _showCompletionBottomSheet(pending);
+      _showCompletionBottomSheet(pending, btcPrice: pending.btcPrice);
 
       // Remove failed pending after showing error
       Future.delayed(const Duration(seconds: 5), () {
@@ -162,7 +166,8 @@ class PendingTransactionService extends ChangeNotifier {
   }
 
   /// Show a bottom sheet with the completion status
-  void _showCompletionBottomSheet(PendingTransaction pending) {
+  void _showCompletionBottomSheet(PendingTransaction pending,
+      {double? btcPrice}) {
     final context = OverlayService.navigatorKey.currentContext;
     if (context == null) {
       logger.w('PendingTransactionService: No context for bottom sheet');
@@ -182,7 +187,7 @@ class PendingTransactionService extends ChangeNotifier {
     arkBottomSheet(
       context: context,
       height: isSuccess ? 450 : 500,
-      child: _SendCompletionSheet(pending: pending),
+      child: _SendCompletionSheet(pending: pending, btcPrice: btcPrice),
     );
   }
 
@@ -210,6 +215,7 @@ class PendingTransactionService extends ChangeNotifier {
     required String address,
     required int amountSats,
     String? txid,
+    double? btcPrice,
   }) {
     final pending = PendingTransaction(
       id: 'direct-success',
@@ -220,7 +226,7 @@ class PendingTransactionService extends ChangeNotifier {
     pending.status = PendingTransactionStatus.success;
     pending.txid = txid;
 
-    _showCompletionBottomSheet(pending);
+    _showCompletionBottomSheet(pending, btcPrice: btcPrice);
   }
 
   /// Show an error bottom sheet for failed transactions
@@ -243,117 +249,169 @@ class PendingTransactionService extends ChangeNotifier {
 }
 
 /// Bottom sheet widget showing send completion status
-class _SendCompletionSheet extends StatelessWidget {
+class _SendCompletionSheet extends StatefulWidget {
   final PendingTransaction pending;
+  final double? btcPrice;
 
-  const _SendCompletionSheet({required this.pending});
+  const _SendCompletionSheet({required this.pending, this.btcPrice});
+
+  @override
+  State<_SendCompletionSheet> createState() => _SendCompletionSheetState();
+}
+
+class _SendCompletionSheetState extends State<_SendCompletionSheet> {
+  bool _showSats = true;
 
   @override
   Widget build(BuildContext context) {
-    final isSuccess = pending.status == PendingTransactionStatus.success;
+    final isSuccess = widget.pending.status == PendingTransactionStatus.success;
     final theme = Theme.of(context);
+    final currencyService = context.watch<CurrencyPreferenceService>();
 
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.cardPadding),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Bani image for success, error icon for failure
-          if (isSuccess)
-            SizedBox(
-              width: 150,
-              height: 150,
-              child: Image.asset(
-                'assets/images/bani/bani_success.png',
-                fit: BoxFit.contain,
-              ),
-            )
-          else
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: AppTheme.errorColor.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.close_rounded,
-                size: 56,
-                color: AppTheme.errorColor,
-              ),
-            ),
-          const SizedBox(height: AppTheme.cardPadding),
-
-          // Title
-          Text(
-            isSuccess ? 'Transaction Sent!' : 'Transaction Failed',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-
-          // Amount or error
-          if (isSuccess) ...[
-            Text(
-              _formatSats(pending.amountSats),
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: AppTheme.elementSpacing / 2),
-            Text(
-              'sent successfully',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-          ] else ...[
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.cardPadding),
-                  child: Text(
-                    _cleanErrorMessage(pending.errorMessage),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.errorColor,
+    return Column(
+      children: [
+        // Main content area - centered
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Bani image for success, error icon for failure
+                  if (isSuccess)
+                    SizedBox(
+                      width: 160,
+                      height: 160,
+                      child: Image.asset(
+                        'assets/images/bani/bani_success.png',
+                        fit: BoxFit.contain,
+                      ),
+                    )
+                  else
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: AppTheme.errorColor.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 64,
+                        color: AppTheme.errorColor,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+                  const SizedBox(height: AppTheme.cardPadding * 1.5),
+
+                  // Amount or error
+                  if (isSuccess) ...[
+                    GestureDetector(
+                      onTap: () => setState(() => _showSats = !_showSats),
+                      behavior: HitTestBehavior.opaque,
+                      child: _showSats
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _formatSatsNumber(widget.pending.amountSats),
+                                  style: theme.textTheme.displaySmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Icon(
+                                  AppTheme.satoshiIcon,
+                                  size: 32,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ],
+                            )
+                          : Text(
+                              _formatFiat(
+                                  widget.pending.amountSats, currencyService),
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: AppTheme.elementSpacing),
+                    Text(
+                      'Transaction Sent',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.hintColor,
+                      ),
+                    ),
+                  ] else ...[
+                    Text(
+                      'Transaction Failed',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.errorColor,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.elementSpacing),
+                    Text(
+                      _cleanErrorMessage(widget.pending.errorMessage),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.hintColor,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
               ),
             ),
-          ],
-
-          const SizedBox(height: AppTheme.cardPadding),
-
-          // Close button
-          LongButtonWidget(
-            title: 'Done',
-            customWidth: double.infinity,
-            onTap: () => Navigator.of(context).pop(),
           ),
-        ],
-      ),
+        ),
+
+        // Bottom button
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.cardPadding),
+            child: LongButtonWidget(
+              title: 'Done',
+              customWidth: double.infinity,
+              onTap: () => Navigator.of(context).pop(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  String _formatSats(int sats) {
-    if (sats >= BitcoinConstants.satsPerBtc) {
-      return '${(sats / BitcoinConstants.satsPerBtc).toStringAsFixed(8)} BTC';
-    } else if (sats >= 1000000) {
-      return '${(sats / 1000000).toStringAsFixed(2)}M sats';
-    } else if (sats >= 1000) {
-      return '${(sats / 1000).toStringAsFixed(1)}K sats';
-    }
-    return '$sats sats';
+  String _formatSatsNumber(int sats) {
+    // Show full amount with thousand separators for clarity
+    return _formatWithSeparators(sats);
   }
 
-  String _truncateAddress(String address) {
-    if (address.length <= 20) return address;
-    return '${address.substring(0, 8)}...${address.substring(address.length - 8)}';
+  String _formatWithSeparators(int number) {
+    final str = number.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) {
+        buffer.write(',');
+      }
+      buffer.write(str[i]);
+    }
+    return buffer.toString();
+  }
+
+  String _formatFiat(int sats, CurrencyPreferenceService currencyService) {
+    final btcPrice = widget.btcPrice ?? 0;
+    if (btcPrice == 0) return '—';
+
+    final btcAmount = sats / BitcoinConstants.satsPerBtc;
+    // btcPrice is in USD, formatAmount converts from USD to user's currency
+    final usdAmount = btcAmount * btcPrice;
+    return currencyService.formatAmount(usdAmount);
   }
 
   /// Clean up error messages to be more user-friendly

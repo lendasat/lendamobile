@@ -807,6 +807,7 @@ class SendScreenState extends State<SendScreen> {
           address: address,
           amountSats: amountSats,
           txid: txid,
+          btcPrice: _bitcoinPrice,
         );
       }
     } catch (e) {
@@ -854,6 +855,7 @@ class SendScreenState extends State<SendScreen> {
     await PendingTransactionService().addPendingTransaction(
       address: address,
       amountSats: amountSats,
+      btcPrice: _bitcoinPrice,
       sendFunction: () async {
         logger.i("Background: Executing send to $address for $amountSats sats");
         final txid = await send(

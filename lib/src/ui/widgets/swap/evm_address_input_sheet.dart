@@ -1,5 +1,7 @@
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
@@ -7,6 +9,7 @@ import 'package:ark_flutter/src/ui/screens/transactions/receive/qr_scanner_scree
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -171,6 +174,11 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
     }
   }
 
+  void _clearAddress() {
+    _addressController.clear();
+    _onAddressChanged('');
+  }
+
   /// Clean EVM address from QR code data
   String _cleanEvmAddress(String data) {
     String cleanAddress = data.trim();
@@ -209,233 +217,283 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final hasText = _addressController.text.isNotEmpty;
+    final hasError = _errorText != null;
 
     // Different text based on whether this is source or destination address
     final titleText = widget.isSourceAddress
         ? 'Send ${widget.tokenSymbol}'
         : 'Receive ${widget.tokenSymbol}';
 
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.cardPadding),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return ArkScaffold(
+      context: context,
+      extendBodyBehindAppBar: true,
+      appBar: BitNetAppBar(
+        context: context,
+        text: titleText,
+        hasBackButton: false,
+        actions: _addressFromWallet
+            ? [
+                Padding(
+                  padding:
+                      const EdgeInsets.only(right: AppTheme.elementSpacing),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.check_circle,
+                        size: 14,
+                        color: AppTheme.successColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Connected',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: AppTheme.successColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ]
+            : null,
+      ),
+      body: Column(
         children: [
-          // Title with wallet connection indicator
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                titleText,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              if (_addressFromWallet)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      size: 14,
-                      color: AppTheme.successColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Connected',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppTheme.successColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ],
-                ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
+          const SizedBox(height: AppTheme.cardPadding * 3.5),
 
-          // Connect/Change wallet button
-          if (!_walletConnectService.isConnected &&
-                  _addressController.text.isEmpty ||
-              _addressFromWallet) ...[
-            GestureDetector(
-              onTap: _isConnectingWallet
-                  ? null
-                  : () => _connectWallet(isChanging: _addressFromWallet),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: _addressFromWallet
-                      ? Colors.transparent
-                      : (isDarkMode
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.black.withValues(alpha: 0.05)),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isDarkMode
-                        ? Colors.white.withValues(alpha: 0.2)
-                        : Colors.black.withValues(alpha: 0.1),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (_isConnectingWallet)
-                      SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: dotProgress(
-                          context,
-                          size: 8,
-                          color:
-                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                        ),
-                      )
-                    else
-                      Icon(
-                        _addressFromWallet
-                            ? Icons.swap_horiz_rounded
-                            : Icons.account_balance_wallet_outlined,
-                        size: 18,
-                        color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                      ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _isConnectingWallet
-                          ? 'Connecting...'
-                          : (_addressFromWallet
-                              ? 'Change Wallet'
-                              : 'Connect Wallet'),
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: isDarkMode
-                                ? AppTheme.white60
-                                : AppTheme.black60,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (!_addressFromWallet) ...[
-              const SizedBox(height: AppTheme.elementSpacing),
-              Row(
+          Expanded(
+            child: SingleChildScrollView(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Divider(
-                      color: isDarkMode
-                          ? Colors.white.withOpacity(0.2)
-                          : Colors.black.withOpacity(0.2),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.elementSpacing),
-                    child: Text(
-                      'or enter manually',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  // Connect/Change wallet button
+                  if (!_walletConnectService.isConnected &&
+                          _addressController.text.isEmpty ||
+                      _addressFromWallet) ...[
+                    GestureDetector(
+                      onTap: _isConnectingWallet
+                          ? null
+                          : () =>
+                              _connectWallet(isChanging: _addressFromWallet),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: _addressFromWallet
+                              ? Colors.transparent
+                              : (isDarkMode
+                                  ? Colors.white.withValues(alpha: 0.08)
+                                  : Colors.black.withValues(alpha: 0.05)),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
                             color: isDarkMode
-                                ? Colors.white.withOpacity(0.4)
-                                : Colors.black.withOpacity(0.4),
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : Colors.black.withValues(alpha: 0.1),
                           ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_isConnectingWallet)
+                              SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: dotProgress(
+                                  context,
+                                  size: 8,
+                                  color: isDarkMode
+                                      ? AppTheme.white60
+                                      : AppTheme.black60,
+                                ),
+                              )
+                            else
+                              Icon(
+                                _addressFromWallet
+                                    ? Icons.swap_horiz_rounded
+                                    : Icons.account_balance_wallet_outlined,
+                                size: 18,
+                                color: isDarkMode
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                              ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _isConnectingWallet
+                                  ? 'Connecting...'
+                                  : (_addressFromWallet
+                                      ? 'Change Wallet'
+                                      : 'Connect Wallet'),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge
+                                  ?.copyWith(
+                                    color: isDarkMode
+                                        ? AppTheme.white60
+                                        : AppTheme.black60,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: Divider(
-                      color: isDarkMode
-                          ? Colors.white.withOpacity(0.2)
-                          : Colors.black.withOpacity(0.2),
+                    if (!_addressFromWallet) ...[
+                      const SizedBox(height: AppTheme.elementSpacing),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: isDarkMode
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : Colors.black.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.elementSpacing),
+                            child: Text(
+                              'or enter manually',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                    color: isDarkMode
+                                        ? Colors.white.withValues(alpha: 0.4)
+                                        : Colors.black.withValues(alpha: 0.4),
+                                  ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: isDarkMode
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : Colors.black.withValues(alpha: 0.2),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: AppTheme.elementSpacing),
+                  ],
+
+                  // Address input
+                  GlassContainer(
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.borderRadiusMid),
+                    border: _addressFromWallet
+                        ? Border.all(
+                            color: AppTheme.successColor.withValues(alpha: 0.3),
+                            width: 1,
+                          )
+                        : (hasError
+                            ? Border.all(
+                                color:
+                                    AppTheme.errorColor.withValues(alpha: 0.5),
+                                width: 1,
+                              )
+                            : null),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.cardPadding,
+                        vertical: AppTheme.elementSpacing * 0.5,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _addressController,
+                              onChanged: _onAddressChanged,
+                              style: TextStyle(
+                                color: isDarkMode ? Colors.white : Colors.black,
+                                fontSize: 14,
+                                fontFamily: 'monospace',
+                              ),
+                              decoration: InputDecoration(
+                                hintText: '0x...',
+                                hintStyle: TextStyle(
+                                  color: isDarkMode
+                                      ? AppTheme.white60
+                                      : AppTheme.black60,
+                                ),
+                                border: InputBorder.none,
+                                errorText: _errorText,
+                                errorStyle: const TextStyle(
+                                  color: AppTheme.errorColor,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Show clear button if text exists, otherwise show paste and QR buttons
+                          if (hasText) ...[
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: _clearAddress,
+                              child: Icon(
+                                Icons.cancel,
+                                color: Theme.of(context).hintColor,
+                                size: 22,
+                              ),
+                            ),
+                          ] else ...[
+                            // Paste button (Apple standard icon)
+                            IconButton(
+                              onPressed: _pasteFromClipboard,
+                              icon: Icon(
+                                CupertinoIcons.doc_on_clipboard,
+                                color: isDarkMode
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                                size: 20,
+                              ),
+                              tooltip: 'Paste',
+                            ),
+                            // QR scan button
+                            IconButton(
+                              onPressed: _openQrScanner,
+                              icon: Icon(
+                                Icons.qr_code_scanner_rounded,
+                                color: isDarkMode
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                                size: 20,
+                              ),
+                              tooltip: 'Scan QR',
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
-            ],
-            const SizedBox(height: AppTheme.elementSpacing),
-          ],
+            ),
+          ),
 
-          // Address input
-          GlassContainer(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-            border: _addressFromWallet
-                ? Border.all(
-                    color: AppTheme.successColor.withValues(alpha: 0.3),
-                    width: 1,
-                  )
-                : null,
+          // Bottom button
+          SafeArea(
+            top: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.cardPadding,
-                vertical: AppTheme.elementSpacing * 0.5,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _addressController,
-                      onChanged: _onAddressChanged,
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        fontSize: 14,
-                        fontFamily: 'monospace',
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '0x...',
-                        hintStyle: TextStyle(
-                          color:
-                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                        ),
-                        border: InputBorder.none,
-                        errorText: _errorText,
-                        errorStyle: const TextStyle(
-                          color: AppTheme.errorColor,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Paste button
-                  IconButton(
-                    onPressed: _pasteFromClipboard,
-                    icon: Icon(
-                      Icons.paste_rounded,
-                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                      size: 20,
-                    ),
-                    tooltip: 'Paste',
-                  ),
-                  // QR scan button
-                  IconButton(
-                    onPressed: _openQrScanner,
-                    icon: Icon(
-                      Icons.qr_code_scanner_rounded,
-                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                      size: 20,
-                    ),
-                    tooltip: 'Scan QR',
-                  ),
-                ],
+              padding: const EdgeInsets.all(AppTheme.cardPadding),
+              child: LongButtonWidget(
+                title: 'Continue',
+                customWidth: double.infinity,
+                buttonType:
+                    _isValid ? ButtonType.solid : ButtonType.transparent,
+                state: _isValid ? ButtonState.idle : ButtonState.disabled,
+                onTap: _isValid
+                    ? () {
+                        final address = _addressController.text;
+                        Navigator.pop(context);
+                        widget.onAddressConfirmed(address);
+                      }
+                    : null,
               ),
             ),
-          ),
-          const SizedBox(height: AppTheme.cardPadding),
-          // Confirm button - shows validation error if address is invalid
-          LongButtonWidget(
-            title: _addressController.text.isEmpty
-                ? 'Continue'
-                : (_isValid
-                    ? 'Continue'
-                    : 'Not a valid ${widget.network} address'),
-            customWidth: double.infinity,
-            buttonType: _isValid ? ButtonType.solid : ButtonType.transparent,
-            state: _isValid ? ButtonState.idle : ButtonState.disabled,
-            onTap: _isValid
-                ? () {
-                    final address = _addressController.text;
-                    Navigator.pop(context);
-                    widget.onAddressConfirmed(address);
-                  }
-                : null,
           ),
         ],
       ),

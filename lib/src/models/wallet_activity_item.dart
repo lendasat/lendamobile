@@ -231,6 +231,7 @@ class PendingTransaction {
   final String address;
   final int amountSats;
   final int createdAt;
+  final double? btcPrice; // BTC price at time of transaction for fiat display
   PendingTransactionStatus status;
   String? txid;
   String? errorMessage;
@@ -240,6 +241,7 @@ class PendingTransaction {
     required this.address,
     required this.amountSats,
     required this.createdAt,
+    this.btcPrice,
     this.status = PendingTransactionStatus.sending,
     this.txid,
     this.errorMessage,
