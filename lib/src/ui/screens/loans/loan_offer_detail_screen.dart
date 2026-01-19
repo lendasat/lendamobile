@@ -45,7 +45,8 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
 
   bool _isCreating = false;
   bool _isConnectingWallet = false;
-  String _processingStep = 'Processing...';
+  final ValueNotifier<String> _processingStepNotifier =
+      ValueNotifier('Processing...');
   double _calculatedInterest = 0;
   double _originationFee = 0;
   double _originationFeeAmount = 0;
@@ -148,6 +149,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     _amountController.dispose();
     _durationController.dispose();
     _addressController.dispose();
+    _processingStepNotifier.dispose();
     super.dispose();
   }
 
@@ -170,6 +172,54 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     setState(() {});
   }
 
+  /// Shows a processing bottom sheet with animated status updates
+  void _showProcessingBottomSheet() {
+    _processingStepNotifier.value = 'Creating loan request...';
+
+    arkBottomSheet(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      height: MediaQuery.of(context).size.height * 0.35,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: ValueListenableBuilder<String>(
+        valueListenable: _processingStepNotifier,
+        builder: (context, step, _) {
+          return Padding(
+            padding: const EdgeInsets.all(AppTheme.cardPadding * 1.5),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Animated loader
+                dotProgress(context),
+                const SizedBox(height: AppTheme.cardPadding * 1.5),
+                // Status text
+                Text(
+                  step,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppTheme.elementSpacing),
+                Text(
+                  'Please wait while we process your loan request',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.6),
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Future<void> _createContract() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -178,10 +228,9 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       return;
     }
 
-    setState(() {
-      _isCreating = true;
-      _processingStep = 'Creating loan request...';
-    });
+    // Show the processing bottom sheet
+    setState(() => _isCreating = true);
+    _showProcessingBottomSheet();
 
     // Suppress payment notifications during collateral send
     PaymentOverlayService().startSuppression();
@@ -210,16 +259,16 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
       if (contract.contractAddress == null ||
           contract.effectiveCollateralSats <= 0) {
         if (mounted) {
-          setState(() => _processingStep = 'Waiting for approval...');
+          _processingStepNotifier.value = 'Waiting for approval...';
         }
 
         // Poll until approved or timeout
         contract = await _waitForContractApproval(contract.id);
       }
 
-      // Navigate to contract detail screen
-      // User will manually click "Pay Collateral" button to send funds
+      // Close bottom sheet and navigate to contract detail screen
       if (mounted) {
+        Navigator.pop(context); // Close bottom sheet
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -232,6 +281,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     } catch (e) {
       logger.e('[Loan] Error: $e');
       if (mounted) {
+        Navigator.pop(context); // Close bottom sheet
         OverlayService().showError('Failed: ${e.toString()}');
       }
     } finally {
@@ -283,7 +333,7 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
         final statusMsg = contract.status == ContractStatus.approved
             ? 'Preparing collateral...'
             : 'Waiting for approval...';
-        setState(() => _processingStep = '$statusMsg (${attempt + 1}s)');
+        _processingStepNotifier.value = '$statusMsg (${attempt + 1}s)';
       }
     }
 
@@ -464,28 +514,6 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             alignment: Alignment.bottomCenter,
             child: _buildFloatingActionButton(),
           ),
-          // Processing overlay
-          if (_isCreating)
-            Container(
-              color: Colors.black.withValues(alpha: 0.7),
-              child: Center(
-                child: GlassContainer(
-                  padding: const EdgeInsets.all(AppTheme.cardPadding * 2),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      dotProgress(context),
-                      const SizedBox(height: AppTheme.cardPadding),
-                      Text(
-                        _processingStep,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
