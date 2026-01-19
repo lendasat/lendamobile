@@ -132,13 +132,28 @@ class _ReceiveScreenState extends State<ReceiveScreen>
 
   Future<void> _fetchBitcoinPrice() async {
     // Skip if already have price from parent
-    if (_bitcoinPrice != null) return;
+    if (_bitcoinPrice != null) {
+      // Update global cache with the price we have
+      BitcoinPriceCache.updatePrice(_bitcoinPrice!);
+      return;
+    }
+
+    // Try to get from cache first
+    final cachedPrice = BitcoinPriceCache.currentPrice;
+    if (cachedPrice != null && cachedPrice > 0) {
+      setState(() {
+        _bitcoinPrice = cachedPrice;
+      });
+      return;
+    }
 
     try {
       final priceData = await fetchBitcoinPriceData(TimeRange.day);
       if (priceData.isNotEmpty && mounted) {
+        final price = priceData.last.price;
+        BitcoinPriceCache.updatePrice(price);
         setState(() {
-          _bitcoinPrice = priceData.last.price;
+          _bitcoinPrice = price;
         });
       }
     } catch (e) {
@@ -432,6 +447,7 @@ class _ReceiveScreenState extends State<ReceiveScreen>
     PaymentOverlayService().showPaymentReceivedBottomSheet(
       context: context,
       payment: payment,
+      bitcoinPrice: _bitcoinPrice,
       onDismiss: () {
         if (mounted) {
           _unfocusAll();

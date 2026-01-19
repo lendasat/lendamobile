@@ -1,11 +1,15 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
+import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 /// Service to manage payment received overlays globally
 class PaymentOverlayService {
@@ -36,6 +40,7 @@ class PaymentOverlayService {
   Future<void> showPaymentReceivedBottomSheet({
     required BuildContext context,
     required PaymentReceived payment,
+    double? bitcoinPrice,
     VoidCallback? onDismiss,
   }) async {
     // Haptic feedback for success
@@ -47,6 +52,7 @@ class PaymentOverlayService {
       enableDrag: true,
       child: _PaymentReceivedBottomSheetContent(
         payment: payment,
+        bitcoinPrice: bitcoinPrice,
         onDismiss: onDismiss,
       ),
     );
@@ -155,15 +161,24 @@ class PaymentOverlayService {
 }
 
 /// Payment received bottom sheet content widget
-class _PaymentReceivedBottomSheetContent extends StatelessWidget {
+class _PaymentReceivedBottomSheetContent extends StatefulWidget {
   final PaymentReceived payment;
+  final double? bitcoinPrice;
   final VoidCallback? onDismiss;
 
   const _PaymentReceivedBottomSheetContent({
     required this.payment,
+    this.bitcoinPrice,
     this.onDismiss,
   });
 
+  @override
+  State<_PaymentReceivedBottomSheetContent> createState() =>
+      _PaymentReceivedBottomSheetContentState();
+}
+
+class _PaymentReceivedBottomSheetContentState
+    extends State<_PaymentReceivedBottomSheetContent> {
   String _formatAmount(int sats) {
     // Format with thousands separator
     final formatted = sats.toString().replaceAllMapped(
@@ -177,6 +192,14 @@ class _PaymentReceivedBottomSheetContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final currencyService = context.watch<CurrencyPreferenceService>();
+    final showCoinBalance = currencyService.showCoinBalance;
+
+    final amountSats = widget.payment.amountSats.toInt();
+    final amountBtc = amountSats / BitcoinConstants.satsPerBtc;
+    // Use provided price, or fall back to global cache
+    final btcPrice = widget.bitcoinPrice ?? BitcoinPriceCache.currentPrice ?? 0;
+    final amountUsd = amountBtc * btcPrice;
 
     return Padding(
       padding: const EdgeInsets.all(AppTheme.cardPadding),
@@ -202,24 +225,36 @@ class _PaymentReceivedBottomSheetContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTheme.elementSpacing),
-          // Amount display
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '+${_formatAmount(payment.amountSats.toInt())}',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: AppTheme.successColor,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Image.asset(
-                'assets/images/sats.png',
-                width: 24,
-                height: 24,
-              ),
-            ],
+          // Amount display (tappable to toggle between sats and fiat)
+          GestureDetector(
+            onTap: () => currencyService.toggleShowCoinBalance(),
+            behavior: HitTestBehavior.opaque,
+            child: (showCoinBalance || btcPrice == 0)
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '+${_formatAmount(amountSats)}',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.successColor,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        AppTheme.satoshiIcon,
+                        size: 32,
+                        color: AppTheme.successColor,
+                      ),
+                    ],
+                  )
+                : Text(
+                    '+${currencyService.formatAmount(amountUsd)}',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppTheme.successColor,
+                    ),
+                  ),
           ),
           const SizedBox(height: AppTheme.cardPadding * 2),
           // Back to wallet button
@@ -227,7 +262,6 @@ class _PaymentReceivedBottomSheetContent extends StatelessWidget {
             title: l10n?.backToWallet ?? 'Back to Wallet',
             buttonType: ButtonType.transparent,
             customWidth: double.infinity,
-            customHeight: 56,
             onTap: () {
               Navigator.of(context).pop();
             },

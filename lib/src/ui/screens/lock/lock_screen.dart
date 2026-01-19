@@ -25,9 +25,16 @@ class _LockScreenState extends State<LockScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Trigger authentication on first build
+    // Trigger authentication on first build with slight delay for better UX
+    // This allows the UI to render before the biometric prompt appears
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _attemptAuthentication();
+      if (!mounted) return;
+      // Small delay to let the lock screen UI render first
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _attemptAuthentication();
+        }
+      });
     });
   }
 
@@ -98,7 +105,8 @@ class _LockScreenState extends State<LockScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildLockScreen(BuildContext context, BiometricService biometricService) {
+  Widget _buildLockScreen(
+      BuildContext context, BiometricService biometricService) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final biometricName = biometricService.getBiometricTypeName();
 

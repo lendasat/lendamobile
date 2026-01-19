@@ -26,6 +26,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bottom_action_buttons.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
+import 'package:ark_flutter/src/ui/widgets/loans/loan_widgets.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -250,7 +251,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
   Future<void> _cancelContract() async {
     await arkBottomSheet(
       context: context,
-      child: _ConfirmationSheet(
+      child: ConfirmationSheet(
         title: AppLocalizations.of(context)?.cancel ?? 'Cancel',
         message:
             'Are you sure you want to cancel this loan request? This action cannot be undone.',
@@ -353,7 +354,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
     await arkBottomSheet(
       context: context,
-      child: _ConfirmationSheet(
+      child: ConfirmationSheet(
         title: 'Pay Collateral',
         message:
             'Send ${_contract!.effectiveCollateralBtc.toStringAsFixed(6)} BTC as collateral for this loan?',
@@ -423,7 +424,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
     await arkBottomSheet(
       context: context,
-      child: _RepayConfirmationSheet(
+      child: RepayConfirmationSheet(
         amountToRepay: amountToRepay,
         targetTokenSymbol: targetToken.symbol,
         onConfirm: () async {
@@ -553,7 +554,7 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
 
     await arkBottomSheet(
       context: context,
-      child: _MarkAsPaidSheet(
+      child: MarkAsPaidSheet(
         unpaidInstallments: unpaidInstallments,
         formatDate: _formatDate,
         onConfirm: (installment, txid) async {
@@ -1029,33 +1030,55 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          GestureDetector(
+          const SizedBox(height: AppTheme.elementSpacing),
+          // Amount (tappable to toggle sats/fiat)
+          ArkListTile(
+            contentPadding: EdgeInsets.zero,
+            text: 'Amount',
             onTap: () => currencyService.toggleShowCoinBalance(),
-            behavior: HitTestBehavior.opaque,
-            child: _buildDetailRow(
-              'AMOUNT',
-              showCoinBalance
-                  ? '${collateralSats.toStringAsFixed(0)} sats'
-                  : currencyService.formatAmount(collateralUsd),
-              subtext: showCoinBalance
-                  ? currencyService.formatAmount(collateralUsd)
-                  : '${collateralSats.toStringAsFixed(0)} sats',
-              trailing: Icon(
-                Icons.swap_vert,
-                size: 14,
-                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-              ),
+            trailing: showCoinBalance
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${collateralSats.toStringAsFixed(0)}',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        AppTheme.satoshiIcon,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ],
+                  )
+                : Text(
+                    currencyService.formatAmount(collateralUsd),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+          ),
+
+          // Initial LTV
+          ArkListTile(
+            contentPadding: EdgeInsets.zero,
+            text: 'Initial LTV',
+            trailing: Text(
+              '${(_contract!.initialLtv * 100).toStringAsFixed(1)}%',
+              style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
-          _buildDetailRow(
-            'INITIAL LTV',
-            '${(_contract!.initialLtv * 100).toStringAsFixed(1)}%',
+
+          // Liquidation Price
+          ArkListTile(
+            contentPadding: EdgeInsets.zero,
+            text: 'Liquidation Price',
+            trailing: Text(
+              '\$${_contract!.liquidationPrice.toStringAsFixed(2)}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           ),
-          _buildDetailRow(
-            'LIQUIDATION PRICE',
-            '\$${_contract!.liquidationPrice.toStringAsFixed(2)}',
-          ),
+
+          // Contract Address
           if (_contract!.contractAddress != null)
             ArkListTile(
               contentPadding: EdgeInsets.zero,
@@ -1181,7 +1204,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                             const SizedBox(width: AppTheme.elementSpacing / 2),
                             Icon(
                               Icons.copy,
-                              color: AppTheme.colorBitcoin.withValues(alpha: 0.7),
+                              color:
+                                  AppTheme.colorBitcoin.withValues(alpha: 0.7),
                               size: AppTheme.cardPadding * 0.75,
                             ),
                           ],
@@ -1486,7 +1510,8 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                   Text(
                     value,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                          fontWeight:
+                              isBold ? FontWeight.bold : FontWeight.w600,
                           color: highlight ? AppTheme.colorBitcoin : null,
                         ),
                   ),
@@ -1494,8 +1519,9 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
                     Text(
                       subtext,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color:
-                                isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                            color: isDarkMode
+                                ? AppTheme.white60
+                                : AppTheme.black60,
                             fontSize: 10,
                           ),
                     ),
@@ -1519,451 +1545,5 @@ class _ContractDetailScreenState extends State<ContractDetailScreen> {
     } catch (_) {
       return dateStr;
     }
-  }
-}
-
-/// Bottom sheet for marking an installment as paid with transaction ID.
-class _MarkAsPaidSheet extends StatefulWidget {
-  final List<Installment> unpaidInstallments;
-  final String Function(String) formatDate;
-  final Future<void> Function(Installment installment, String txid) onConfirm;
-
-  const _MarkAsPaidSheet({
-    required this.unpaidInstallments,
-    required this.formatDate,
-    required this.onConfirm,
-  });
-
-  @override
-  State<_MarkAsPaidSheet> createState() => _MarkAsPaidSheetState();
-}
-
-class _MarkAsPaidSheetState extends State<_MarkAsPaidSheet> {
-  late Installment _selectedInstallment;
-  final TextEditingController _txidController = TextEditingController();
-  bool _isValid = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedInstallment = widget.unpaidInstallments.first;
-  }
-
-  @override
-  void dispose() {
-    _txidController.dispose();
-    super.dispose();
-  }
-
-  void _onTxidChanged(String value) {
-    setState(() {
-      _isValid = value.trim().isNotEmpty;
-    });
-  }
-
-  Future<void> _pasteFromClipboard() async {
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    if (data?.text != null) {
-      _txidController.text = data!.text!.trim();
-      _onTxidChanged(_txidController.text);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.cardPadding),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title
-          Text(
-            'Confirm Payment',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-          // Info text
-          Text(
-            'Enter the transaction ID of your payment to confirm repayment.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                ),
-          ),
-          const SizedBox(height: AppTheme.cardPadding),
-
-          // Installment selector (if multiple)
-          if (widget.unpaidInstallments.length > 1) ...[
-            Text(
-              'SELECT INSTALLMENT',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            GlassContainer(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: DropdownButton<Installment>(
-                  value: _selectedInstallment,
-                  isExpanded: true,
-                  underline: const SizedBox(),
-                  dropdownColor: Theme.of(context).colorScheme.surface,
-                  items: widget.unpaidInstallments.map((i) {
-                    return DropdownMenuItem(
-                      value: i,
-                      child: Text(
-                        '\$${i.totalPayment.toStringAsFixed(2)} - Due ${widget.formatDate(i.dueDate)}',
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => _selectedInstallment = value);
-                    }
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-          ] else ...[
-            GlassContainer(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.cardPadding),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.payments,
-                      size: 20,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '\$${_selectedInstallment.totalPayment.toStringAsFixed(2)}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            'Due ${widget.formatDate(_selectedInstallment.dueDate)}',
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: isDarkMode
-                                          ? AppTheme.white60
-                                          : AppTheme.black60,
-                                    ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-          ],
-
-          // Transaction ID input
-          Text(
-            'TRANSACTION ID',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-          ),
-          const SizedBox(height: 8),
-          GlassContainer(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.cardPadding,
-                vertical: AppTheme.elementSpacing * 0.5,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _txidController,
-                      onChanged: _onTxidChanged,
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        fontSize: 14,
-                        fontFamily: 'monospace',
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Enter transaction ID or hash',
-                        hintStyle: TextStyle(
-                          color:
-                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                        ),
-                        border: InputBorder.none,
-                      ),
-                      maxLines: 2,
-                    ),
-                  ),
-                  // Paste button
-                  IconButton(
-                    onPressed: _pasteFromClipboard,
-                    icon: Icon(
-                      Icons.paste_rounded,
-                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                      size: 20,
-                    ),
-                    tooltip: 'Paste',
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: AppTheme.cardPadding),
-
-          // Confirm button
-          LongButtonWidget(
-            title: 'Confirm Payment',
-            customWidth: double.infinity,
-            state: _isValid ? ButtonState.idle : ButtonState.disabled,
-            onTap: _isValid
-                ? () => widget.onConfirm(
-                      _selectedInstallment,
-                      _txidController.text.trim(),
-                    )
-                : null,
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-        ],
-      ),
-    );
-  }
-}
-
-/// Generic confirmation bottom sheet for simple yes/no actions.
-class _ConfirmationSheet extends StatelessWidget {
-  final String title;
-  final String message;
-  final String confirmText;
-  final String cancelText;
-  final Color? confirmColor;
-  final VoidCallback onConfirm;
-
-  const _ConfirmationSheet({
-    required this.title,
-    required this.message,
-    required this.confirmText,
-    required this.cancelText,
-    this.confirmColor,
-    required this.onConfirm,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.cardPadding),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-          // Message
-          Text(
-            message,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                ),
-          ),
-          const SizedBox(height: AppTheme.cardPadding * 1.5),
-          // Buttons
-          Row(
-            children: [
-              Expanded(
-                child: LongButtonWidget(
-                  title: cancelText,
-                  buttonType: ButtonType.secondary,
-                  customWidth: double.infinity,
-                  onTap: () => Navigator.pop(context),
-                ),
-              ),
-              const SizedBox(width: AppTheme.elementSpacing),
-              Expanded(
-                child: LongButtonWidget(
-                  title: confirmText,
-                  buttonType: ButtonType.primary,
-                  customWidth: double.infinity,
-                  buttonGradient: confirmColor != null
-                      ? LinearGradient(colors: [confirmColor!, confirmColor!])
-                      : null,
-                  onTap: onConfirm,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-        ],
-      ),
-    );
-  }
-}
-
-/// Confirmation sheet for loan repayment with Lendaswap.
-class _RepayConfirmationSheet extends StatelessWidget {
-  final double amountToRepay;
-  final String targetTokenSymbol;
-  final VoidCallback onConfirm;
-
-  const _RepayConfirmationSheet({
-    required this.amountToRepay,
-    required this.targetTokenSymbol,
-    required this.onConfirm,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.cardPadding),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title
-          Text(
-            'Repay with Lendaswap',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: AppTheme.cardPadding),
-          // Amount card
-          GlassContainer(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-            child: Padding(
-              padding: const EdgeInsets.all(AppTheme.cardPadding),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.payments_rounded,
-                    size: 32,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Amount to repay',
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: isDarkMode
-                                        ? AppTheme.white60
-                                        : AppTheme.black60,
-                                  ),
-                        ),
-                        Text(
-                          '\$${amountToRepay.toStringAsFixed(2)}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: AppTheme.cardPadding),
-          // Info text
-          Text(
-            'This will swap BTC from your wallet to $targetTokenSymbol '
-            'and send it to the lender\'s repayment address.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                ),
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-          // Lendaswap badge
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color:
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.flash_on_rounded,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Powered by Lendaswap',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.cardPadding * 1.5),
-          // Buttons
-          Row(
-            children: [
-              Expanded(
-                child: LongButtonWidget(
-                  title: AppLocalizations.of(context)?.cancel ?? 'Cancel',
-                  buttonType: ButtonType.secondary,
-                  customWidth: double.infinity,
-                  onTap: () => Navigator.pop(context),
-                ),
-              ),
-              const SizedBox(width: AppTheme.elementSpacing),
-              Expanded(
-                child: LongButtonWidget(
-                  title: 'Repay',
-                  buttonType: ButtonType.primary,
-                  customWidth: double.infinity,
-                  buttonGradient: const LinearGradient(
-                    colors: [Color(0xFF8247E5), Color(0xFF6C3DC1)],
-                  ),
-                  onTap: onConfirm,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-        ],
-      ),
-    );
   }
 }

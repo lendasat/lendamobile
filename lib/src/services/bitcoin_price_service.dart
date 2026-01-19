@@ -3,6 +3,18 @@ import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
 
+/// Simple global cache for current Bitcoin price
+/// Updated by wallet screen, readable from anywhere
+class BitcoinPriceCache {
+  static double? _cachedPrice;
+
+  static double? get currentPrice => _cachedPrice;
+
+  static void updatePrice(double price) {
+    _cachedPrice = price;
+  }
+}
+
 /// Fetches Bitcoin price data from the backend historical price service
 /// Includes retry logic for cold-start scenarios (server returning 500)
 Future<List<PriceData>> fetchBitcoinPriceData(TimeRange timeRange) async {
