@@ -23,6 +23,10 @@ class PaymentOverlayService {
   /// notifications (e.g., when change from an outgoing tx is detected).
   bool _suppressPaymentNotifications = false;
 
+  /// Track recently shown payments to prevent duplicates
+  String? _lastShownPaymentTxid;
+  DateTime? _lastShownPaymentTime;
+
   /// Whether payment notifications are currently suppressed.
   bool get suppressPaymentNotifications => _suppressPaymentNotifications;
 
@@ -36,6 +40,24 @@ class PaymentOverlayService {
     _suppressPaymentNotifications = false;
   }
 
+  /// Check if this payment was recently shown (deduplication)
+  bool _isRecentlyShown(String txid) {
+    if (_lastShownPaymentTxid == txid && _lastShownPaymentTime != null) {
+      final elapsed = DateTime.now().difference(_lastShownPaymentTime!);
+      // Don't show the same payment within 10 seconds
+      if (elapsed.inSeconds < 10) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Mark a payment as shown
+  void _markAsShown(String txid) {
+    _lastShownPaymentTxid = txid;
+    _lastShownPaymentTime = DateTime.now();
+  }
+
   /// Show a payment received bottom sheet
   Future<void> showPaymentReceivedBottomSheet({
     required BuildContext context,
@@ -43,6 +65,12 @@ class PaymentOverlayService {
     double? bitcoinPrice,
     VoidCallback? onDismiss,
   }) async {
+    // Deduplicate - don't show the same payment twice within 10 seconds
+    if (_isRecentlyShown(payment.txid)) {
+      return;
+    }
+    _markAsShown(payment.txid);
+
     // Haptic feedback for success
     await HapticFeedback.mediumImpact();
 
