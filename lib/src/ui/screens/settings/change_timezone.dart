@@ -1,6 +1,5 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
-import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/timezone_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
@@ -46,23 +45,18 @@ class _TimezonePickerBody extends StatefulWidget {
 
 class _TimezonePickerBodyState extends State<_TimezonePickerBody> {
   String _searchText = '';
-  bool _isLoading = true;
-  late List<Location> _allLocations;
-  List<Location> _filteredLocations = [];
+  late final List<Location> _allLocations;
+  late List<Location> _filteredLocations;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final locations = timeZoneDatabase.locations.values.toList();
-      // Sort alphabetically by name
-      locations.sort((a, b) => a.name.compareTo(b.name));
-      setState(() {
-        _allLocations = locations;
-        _filteredLocations = locations;
-        _isLoading = false;
-      });
-    });
+    // Load timezones synchronously - no need for post-frame callback
+    final locations = timeZoneDatabase.locations.values.toList();
+    // Sort alphabetically by name
+    locations.sort((a, b) => a.name.compareTo(b.name));
+    _allLocations = locations;
+    _filteredLocations = locations;
   }
 
   void _filterTimezones(String searchText) {
@@ -85,10 +79,6 @@ class _TimezonePickerBodyState extends State<_TimezonePickerBody> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return dotProgress(context);
-    }
-
     return ArkScaffoldUnsafe(
       context: context,
       resizeToAvoidBottomInset: false,

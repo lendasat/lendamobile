@@ -6,6 +6,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
+import 'package:ark_flutter/src/services/boarding_tracking_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
@@ -176,6 +177,9 @@ class WalletScreenState extends State<WalletScreen>
   }
 
   Future<void> _initializeWalletData() async {
+    // Initialize boarding tracking service for onchain receive detection
+    await BoardingTrackingService.initialize();
+
     await fetchWalletData();
     if (_totalBalance == 0 && _transactions.isEmpty && mounted) {
       logger.i("Initial data appears empty, retrying after delay...");
@@ -325,6 +329,10 @@ class WalletScreenState extends State<WalletScreen>
   }
 
   void _updateChartCalculator() {
+    // Only create calculator if not already cached
+    // It gets invalidated (set to null) in fetchWalletData() when data changes
+    if (_chartCalculator != null) return;
+
     _chartCalculator = BalanceChartCalculator(
       transactions: _transactions,
       priceData: _bitcoinPriceData,
@@ -522,6 +530,11 @@ class WalletScreenState extends State<WalletScreen>
       });
 
       final transactions = await txHistory();
+
+      // Track boarding transactions for onchain receive detection
+      // This allows us to show settled boarding txs as "Onchain" in history
+      await BoardingTrackingService.processTransactions(transactions);
+
       if (mounted) {
         setState(() {
           _isTransactionFetching = false;

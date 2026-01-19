@@ -78,10 +78,12 @@ class _TransactionDetailSheetState extends State<TransactionDetailSheet> {
     super.initState();
     txID = widget.txid;
     if (txID != null) {
-      // Load transaction details in background - don't block UI
+      // Load transaction details in parallel - don't block UI
       // The fallback view shows immediately with basic info
-      _loadTransaction();
-      _loadRecipientAddress();
+      Future.wait([
+        _loadTransaction(),
+        _loadRecipientAddress(),
+      ]);
     }
   }
 
