@@ -267,6 +267,10 @@ class WalletScreenState extends State<WalletScreen>
         setState(() {
           _bitcoinPriceData = priceData;
           _updateGradientColors();
+          // Update global price cache for other screens
+          if (priceData.isNotEmpty) {
+            BitcoinPriceCache.updatePrice(priceData.last.price);
+          }
         });
       }
     } catch (e) {

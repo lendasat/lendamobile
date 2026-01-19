@@ -4,6 +4,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
+import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
@@ -260,13 +261,14 @@ class _SendCompletionSheet extends StatefulWidget {
 }
 
 class _SendCompletionSheetState extends State<_SendCompletionSheet> {
-  bool _showSats = true;
-
   @override
   Widget build(BuildContext context) {
     final isSuccess = widget.pending.status == PendingTransactionStatus.success;
     final theme = Theme.of(context);
     final currencyService = context.watch<CurrencyPreferenceService>();
+    final showCoinBalance = currencyService.showCoinBalance;
+    // Use provided price, or fall back to global cache
+    final btcPrice = widget.btcPrice ?? BitcoinPriceCache.currentPrice ?? 0;
 
     return Column(
       children: [
@@ -308,9 +310,9 @@ class _SendCompletionSheetState extends State<_SendCompletionSheet> {
                   // Amount or error
                   if (isSuccess) ...[
                     GestureDetector(
-                      onTap: () => setState(() => _showSats = !_showSats),
+                      onTap: () => currencyService.toggleShowCoinBalance(),
                       behavior: HitTestBehavior.opaque,
-                      child: _showSats
+                      child: (showCoinBalance || btcPrice == 0)
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,

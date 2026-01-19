@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:flutter/material.dart';
 
@@ -355,8 +357,9 @@ class PaymentMonitoringService extends ChangeNotifier
       return;
     }
 
-    // Check if we have a valid context
-    if (_overlayContext == null || !_overlayContext!.mounted) {
+    // Use global navigator key to get context - works from any screen
+    final context = OverlayService.navigatorKey.currentContext;
+    if (context == null || !context.mounted) {
       logger.w("Cannot show payment overlay - no valid context");
       return;
     }
@@ -364,15 +367,17 @@ class PaymentMonitoringService extends ChangeNotifier
     // Use post frame callback to ensure UI is ready
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Re-check context is still valid after the frame
-      if (_overlayContext == null || !_overlayContext!.mounted) {
+      final ctx = OverlayService.navigatorKey.currentContext;
+      if (ctx == null || !ctx.mounted) {
         logger.w("Context became invalid before showing overlay");
         return;
       }
 
       try {
         overlayService.showPaymentReceivedBottomSheet(
-          context: _overlayContext!,
+          context: ctx,
           payment: payment,
+          bitcoinPrice: BitcoinPriceCache.currentPrice,
           onDismiss: () {
             onWalletRefreshNeeded?.call();
           },
