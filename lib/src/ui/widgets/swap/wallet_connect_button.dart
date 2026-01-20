@@ -1,4 +1,7 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:app_links/app_links.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -34,16 +37,22 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
   bool _isInitializing = false;
   bool _wasConnected = false;
 
+  // Deep link handling
+  AppLinks? _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _walletService.addListener(_onWalletStateChanged);
     _initializeLocalAppKit();
+    _setupDeepLinkListener();
   }
 
   @override
   void dispose() {
+    _linkSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _walletService.removeListener(_onWalletStateChanged);
     _localAppKit?.removeListener(_onLocalAppKitChanged);
@@ -51,11 +60,57 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
     super.dispose();
   }
 
+  /// Set up deep link listener to handle wallet redirects
+  void _setupDeepLinkListener() {
+    if (kIsWeb) return;
+
+    _appLinks = AppLinks();
+
+    // Handle links that opened the app
+    _appLinks!.getInitialLink().then((uri) {
+      if (uri != null) {
+        _handleDeepLink(uri);
+      }
+    });
+
+    // Handle links while app is running
+    _linkSubscription = _appLinks!.uriLinkStream.listen((uri) {
+      _handleDeepLink(uri);
+    });
+  }
+
+  /// Handle incoming deep links from wallets
+  Future<void> _handleDeepLink(Uri uri) async {
+    logger.i('WalletConnectButton received deep link: $uri');
+
+    if (_localAppKit == null) {
+      logger.w('AppKit not initialized, cannot handle deep link');
+      return;
+    }
+
+    try {
+      final handled = await _localAppKit!.dispatchEnvelope(uri.toString());
+      logger.i('Deep link handled: $handled');
+
+      if (handled) {
+        // Force state update
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      logger.e('Error handling deep link: $e');
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       logger.i('App resumed - checking wallet connection state');
-      if (_walletService.isConnected && !_wasConnected) {
+      // Check local AppKit state
+      final isConnected = _localAppKit?.isConnected ?? false;
+      logger.i(
+          'Local AppKit connected: $isConnected, wasConnected: $_wasConnected');
+
+      if (isConnected && !_wasConnected) {
         _wasConnected = true;
         widget.onConnected?.call();
         if (mounted) setState(() {});
