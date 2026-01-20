@@ -3,6 +3,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/inline_calendar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:flutter/material.dart';
@@ -49,12 +50,14 @@ class WalletFilterController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<DateTime?> selectDate(BuildContext context) async {
-    return showDatePicker(
+  Future<DateTime?> selectDate(BuildContext context,
+      {DateTime? initialDate}) async {
+    return showInlineCalendar(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: initialDate ?? DateTime.now(),
       firstDate: DateTime(2009), // Bitcoin genesis
       lastDate: DateTime.now(),
+      title: 'Select Date',
     );
   }
 }
@@ -295,7 +298,10 @@ class _WalletFilterScreenState extends State<WalletFilterScreen> {
               child: GlassContainer(
                 child: InkWell(
                   onTap: () async {
-                    final selected = await controller.selectDate(context);
+                    final selected = await controller.selectDate(
+                      context,
+                      initialDate: controller.startDate.value,
+                    );
                     if (selected != null) {
                       setState(() {
                         controller.setStartDate(selected);
@@ -305,17 +311,35 @@ class _WalletFilterScreenState extends State<WalletFilterScreen> {
                     }
                   },
                   child: Padding(
-                    padding: const EdgeInsets.all(
-                      AppTheme.elementSpacing / 2,
-                    ),
-                    child: Center(
-                      child: Text(
-                        controller.startDate.value != null
-                            ? DateFormat('dd-MM-yyyy')
-                                .format(controller.startDate.value!)
-                            : 'None',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
+                    padding: const EdgeInsets.all(AppTheme.elementSpacing),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 16,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          controller.startDate.value != null
+                              ? DateFormat('MMM d, yyyy')
+                                  .format(controller.startDate.value!)
+                              : 'Start date',
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    color: controller.startDate.value != null
+                                        ? null
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.5),
+                                  ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -325,16 +349,23 @@ class _WalletFilterScreenState extends State<WalletFilterScreen> {
               margin: const EdgeInsets.symmetric(
                 horizontal: AppTheme.elementSpacing,
               ),
-              child: Text(
-                'to',
-                style: Theme.of(context).textTheme.titleSmall,
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                size: 16,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.4),
               ),
             ),
             Expanded(
               child: GlassContainer(
                 child: InkWell(
                   onTap: () async {
-                    final selected = await controller.selectDate(context);
+                    final selected = await controller.selectDate(
+                      context,
+                      initialDate: controller.endDate.value,
+                    );
                     if (selected != null) {
                       setState(() {
                         controller.setEndDate(selected);
@@ -344,15 +375,35 @@ class _WalletFilterScreenState extends State<WalletFilterScreen> {
                     }
                   },
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Center(
-                      child: Text(
-                        controller.endDate.value != null
-                            ? DateFormat('dd-MM-yyyy')
-                                .format(controller.endDate.value!)
-                            : 'None',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
+                    padding: const EdgeInsets.all(AppTheme.elementSpacing),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 16,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          controller.endDate.value != null
+                              ? DateFormat('MMM d, yyyy')
+                                  .format(controller.endDate.value!)
+                              : 'End date',
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    color: controller.endDate.value != null
+                                        ? null
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.5),
+                                  ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/ui/widgets/utility/inline_calendar.dart';
 import 'package:flutter/material.dart';
 
 class TransactionFilterService extends ChangeNotifier {
@@ -129,14 +130,15 @@ class TransactionFilterService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<DateTime?> selectDate(BuildContext context) async {
-    DateTime? picked = await showDatePicker(
+  Future<DateTime?> selectDate(BuildContext context,
+      {DateTime? initialDate}) async {
+    return showInlineCalendar(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2009),
-      lastDate: DateTime(2101),
+      initialDate: initialDate ?? DateTime.now(),
+      firstDate: DateTime(2009), // Bitcoin genesis
+      lastDate: DateTime.now(),
+      title: 'Select Date',
     );
-    return picked;
   }
 
   bool isInDateRange(int locktime) {

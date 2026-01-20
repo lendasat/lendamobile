@@ -648,15 +648,17 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
 
       case FundingStep.completed:
         // This state is briefly shown before navigation
-        return const Column(
-          children: [
-            Icon(Icons.check_circle, size: 64, color: Colors.green),
-            SizedBox(height: AppTheme.cardPadding),
-            Text(
-              'Swap funded!',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ],
+        return const Center(
+          child: Column(
+            children: [
+              Icon(Icons.check_circle, size: 64, color: Colors.green),
+              SizedBox(height: AppTheme.cardPadding),
+              Text(
+                'Swap funded!',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         );
     }
   }
