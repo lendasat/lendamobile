@@ -6,7 +6,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bottom_action_buttons.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:flutter/material.dart';
 
@@ -104,16 +104,11 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
         text: AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
         hasBackButton: false,
       ),
-      floatingActionButton: SizedBox(
-        width: MediaQuery.of(context).size.width - (AppTheme.cardPadding * 2),
-        child: LongButtonWidget(
-          title: AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
-          customWidth: double.infinity,
-          state: widget.isLoading ? ButtonState.loading : ButtonState.idle,
-          onTap: widget.isLoading ? null : widget.onConfirm,
-        ),
+      bottomSheet: BottomCenterButton(
+        title: AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
+        state: widget.isLoading ? ButtonState.loading : ButtonState.idle,
+        onTap: widget.isLoading ? null : widget.onConfirm,
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
         child: Column(
@@ -138,8 +133,8 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
               const SizedBox(height: AppTheme.elementSpacing),
               _buildAddressRow(context, isDarkMode),
             ],
-            // Extra space at bottom for floating button
-            const SizedBox(height: AppTheme.cardPadding * 5),
+            // Extra space at bottom for button
+            const SizedBox(height: AppTheme.cardPadding * 2),
           ],
         ),
       ),

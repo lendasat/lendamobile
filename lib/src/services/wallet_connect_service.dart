@@ -306,12 +306,18 @@ class WalletConnectService extends ChangeNotifier {
 
     // Always prefer the fresh context passed in
     final modalContext = context ?? _context!;
+
+    // Check if context has changed - if so, we need to reinitialize
+    // This handles the case where openModal is called from a different screen
+    // than where the modal was originally created (e.g., by WalletConnectButton)
+    final contextChanged = context != null && _context != context;
     _context = modalContext;
 
-    // If not initialized or needs reinit, do a full reinit with fresh context
+    // If not initialized, needs reinit, or context changed, do a full reinit
     if (_appKitModal == null ||
         _needsReinitAfterDisconnect ||
-        !_isInitialized) {
+        !_isInitialized ||
+        contextChanged) {
       logger.i('Initializing/reinitializing AppKit with fresh context...');
       await _reinitializeModal();
     }

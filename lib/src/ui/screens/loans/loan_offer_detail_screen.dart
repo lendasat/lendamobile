@@ -108,10 +108,6 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
     setState(() => _isConnectingWallet = true);
 
     try {
-      if (!_walletConnectService.isInitialized) {
-        await _walletConnectService.initialize(context);
-      }
-
       // If changing wallet, disconnect first
       if (isChanging && _walletConnectService.isConnected) {
         await _walletConnectService.disconnect();
@@ -122,9 +118,12 @@ class _LoanOfferDetailScreenState extends State<LoanOfferDetailScreen> {
             _addressFromWallet = false;
           });
         }
+        // Small delay after disconnect to allow cleanup
+        await Future.delayed(const Duration(milliseconds: 300));
       }
 
-      await _walletConnectService.openModal();
+      // Always pass fresh context to ensure modal can be shown properly
+      await _walletConnectService.openModal(context: context);
 
       // After connecting, switch to Polygon and get address
       // Loans ALWAYS use Polygon for USDC payouts

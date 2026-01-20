@@ -108,12 +108,13 @@ class _EvmAddressInputSheetState extends State<EvmAddressInputSheet> {
             _isValid = false;
           });
         }
+        // Small delay after disconnect to allow cleanup
+        await Future.delayed(const Duration(milliseconds: 300));
       }
 
-      if (!_walletConnectService.isInitialized) {
-        await _walletConnectService.initialize(context);
-      }
-      await _walletConnectService.openModal();
+      // Always pass fresh context to ensure modal can be shown properly
+      // The service will reinitialize if needed
+      await _walletConnectService.openModal(context: context);
 
       // After connecting, switch to the required chain and get address
       if (_walletConnectService.isConnected) {

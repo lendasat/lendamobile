@@ -121,6 +121,8 @@ class WalletConnectService extends ChangeNotifier {
 
 ### Using in Screens
 
+**Preferred: Use WalletConnectButton widget**
+
 ```dart
 class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
   final WalletConnectService _walletService = WalletConnectService();
@@ -143,6 +145,26 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
   }
 }
 ```
+
+**Alternative: Direct service call with custom UI**
+
+If you need custom connect button styling (e.g., in a bottom sheet), you can call `openModal()` directly. **IMPORTANT**: Always pass the current `context` to ensure the modal uses a valid Navigator:
+
+```dart
+Future<void> _connectWallet() async {
+  // If disconnecting first, add a small delay for cleanup
+  if (_walletService.isConnected) {
+    await _walletService.disconnect();
+    await Future.delayed(const Duration(milliseconds: 300));
+  }
+
+  // ALWAYS pass context - this ensures the modal reinitializes
+  // with the current Navigator context
+  await _walletService.openModal(context: context);
+}
+```
+
+The service will automatically reinitialize the modal when the context changes, which handles cases where the modal was previously created by a `WalletConnectButton` in a different screen.
 
 ## Configuration
 
