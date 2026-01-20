@@ -17,7 +17,7 @@ Future<DateTime?> showInlineCalendar({
 }) async {
   return arkBottomSheet<DateTime>(
     context: context,
-    height: MediaQuery.of(context).size.height * 0.55,
+    height: MediaQuery.of(context).size.height * 0.9,
     child: _InlineCalendarSheet(
       initialDate: initialDate ?? DateTime.now(),
       firstDate: firstDate ?? DateTime(2009), // Bitcoin genesis
@@ -108,7 +108,7 @@ class _InlineCalendarSheetState extends State<_InlineCalendarSheet> {
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
         child: Column(
           children: [
-            const SizedBox(height: AppTheme.cardPadding * 2),
+            const SizedBox(height: AppTheme.cardPadding * 3),
             // Month navigation
             _buildMonthNavigation(isDark),
             const SizedBox(height: AppTheme.cardPadding),
