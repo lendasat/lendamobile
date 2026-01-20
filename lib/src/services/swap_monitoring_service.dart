@@ -170,21 +170,28 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
       await _swapService.refreshSwaps();
       final swaps = _swapService.swaps;
 
-      // Find pending/processing swaps
+      // Find swaps that need monitoring:
+      // - pending/processing swaps (waiting for deposit or processing)
+      // - claimable swaps (ready to be auto-claimed)
       _pendingSwapIds.clear();
       for (final swap in swaps) {
-        if (swap.status == SwapStatusSimple.waitingForDeposit ||
-            swap.status == SwapStatusSimple.processing) {
+        final needsMonitoring =
+            swap.status == SwapStatusSimple.waitingForDeposit ||
+                swap.status == SwapStatusSimple.processing ||
+                swap.canClaimGelato ||
+                swap.canClaimVhtlc;
+
+        if (needsMonitoring && !_claimedSwapIds.contains(swap.id)) {
           _pendingSwapIds.add(swap.id);
         }
       }
 
       if (_pendingSwapIds.isNotEmpty) {
         logger.i(
-            "[SwapMonitor] Found ${_pendingSwapIds.length} pending swaps, starting monitoring");
+            "[SwapMonitor] Found ${_pendingSwapIds.length} swaps needing monitoring, starting");
         _startMonitoring();
       } else {
-        logger.d("[SwapMonitor] No pending swaps, not starting monitoring");
+        logger.d("[SwapMonitor] No swaps need monitoring");
         _stopMonitoring();
       }
     } catch (e) {
@@ -220,7 +227,7 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     // Start periodic polling (every 5 seconds for pending swaps)
     _pollTimer = Timer.periodic(
       Duration(seconds: _pollIntervalSeconds),
-      (_) => _checkAndClaimSwaps(),
+      (_) => _safeCheckAndClaimSwaps(),
     );
 
     logger.i(
@@ -234,6 +241,19 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     _isMonitoring = false;
     notifyListeners();
     logger.i("[SwapMonitor] Stopped monitoring");
+  }
+
+  /// Safe wrapper for _checkAndClaimSwaps that catches all exceptions.
+  /// This ensures the Timer doesn't cause issues if an unexpected error occurs.
+  Future<void> _safeCheckAndClaimSwaps() async {
+    try {
+      await _checkAndClaimSwaps();
+    } catch (e, stackTrace) {
+      // This should rarely happen since _checkAndClaimSwaps has its own try-catch,
+      // but this provides an extra safety net for truly unexpected errors.
+      logger.e(
+          "[SwapMonitor] Unexpected error in polling callback: $e\n$stackTrace");
+    }
   }
 
   Future<void> _checkAndClaimSwaps() async {
@@ -266,14 +286,18 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
           continue;
         }
 
-        // Track pending/processing swaps
-        if (swap.status == SwapStatusSimple.waitingForDeposit ||
-            swap.status == SwapStatusSimple.processing) {
-          stillPending.add(swap.id);
-        }
-
         // Skip if already processed
         if (_claimedSwapIds.contains(swap.id)) continue;
+
+        // Track swaps that still need monitoring (pending, processing, or claimable)
+        final needsMonitoring =
+            swap.status == SwapStatusSimple.waitingForDeposit ||
+                swap.status == SwapStatusSimple.processing ||
+                swap.canClaimGelato ||
+                swap.canClaimVhtlc;
+        if (needsMonitoring) {
+          stillPending.add(swap.id);
+        }
 
         // BTC → Polygon: Auto-claim via Gelato (gasless)
         if (swap.canClaimGelato) {

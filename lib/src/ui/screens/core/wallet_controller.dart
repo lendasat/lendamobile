@@ -28,6 +28,7 @@ class WalletController extends ChangeNotifier {
   final String aspId;
   final LendaSwapService _swapService;
   final LendasatService _lendasatService;
+  final PendingTransactionService _pendingTransactionService;
 
   WalletState _state = WalletState.initial();
   bool _isRefreshing = false;
@@ -37,12 +38,15 @@ class WalletController extends ChangeNotifier {
     required this.aspId,
     LendaSwapService? swapService,
     LendasatService? lendasatService,
+    PendingTransactionService? pendingTransactionService,
   })  : _swapService = swapService ?? LendaSwapService(),
-        _lendasatService = lendasatService ?? LendasatService() {
+        _lendasatService = lendasatService ?? LendasatService(),
+        _pendingTransactionService =
+            pendingTransactionService ?? PendingTransactionService() {
     // Listen to swap service changes
     _swapService.addListener(_onSwapsChanged);
     // Listen to pending transaction service
-    PendingTransactionService().addListener(_onPendingTransactionChanged);
+    _pendingTransactionService.addListener(_onPendingTransactionChanged);
   }
 
   /// Current state.
@@ -54,7 +58,7 @@ class WalletController extends ChangeNotifier {
   @override
   void dispose() {
     _swapService.removeListener(_onSwapsChanged);
-    PendingTransactionService().removeListener(_onPendingTransactionChanged);
+    _pendingTransactionService.removeListener(_onPendingTransactionChanged);
     super.dispose();
   }
 
@@ -64,8 +68,7 @@ class WalletController extends ChangeNotifier {
   }
 
   void _onPendingTransactionChanged() {
-    final pendingService = PendingTransactionService();
-    final hasCompletedTx = pendingService.pendingItems.any(
+    final hasCompletedTx = _pendingTransactionService.pendingItems.any(
       (item) =>
           item.pending.status == PendingTransactionStatus.success ||
           item.pending.status == PendingTransactionStatus.failed,

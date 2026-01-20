@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
@@ -25,42 +24,41 @@ class CameraPermissionSheetContent extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.all(AppTheme.cardPadding),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.cardPadding * 1.5,
+        vertical: AppTheme.cardPadding,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildIcon(),
-          const SizedBox(height: AppTheme.cardPadding),
+          const SizedBox(height: AppTheme.elementSpacing),
+          _buildBaniImage(),
+          const SizedBox(height: AppTheme.cardPadding * 1.5),
           _buildTitle(context),
           const SizedBox(height: AppTheme.elementSpacing),
           _buildDescription(isDarkMode),
           const Spacer(),
           _buildButtons(context),
+          const SizedBox(height: AppTheme.elementSpacing),
         ],
       ),
     );
   }
 
-  Widget _buildIcon() {
-    return Container(
-      width: 64,
-      height: 64,
-      decoration: BoxDecoration(
-        color: AppTheme.colorBitcoin.withValues(alpha: 0.1),
-        shape: BoxShape.circle,
-      ),
-      child: const Icon(
-        CupertinoIcons.camera_fill,
-        color: AppTheme.colorBitcoin,
-        size: 32,
+  Widget _buildBaniImage() {
+    return SizedBox(
+      height: 140,
+      child: Image.asset(
+        'assets/images/bani/bani_shocked.png',
+        fit: BoxFit.contain,
       ),
     );
   }
 
   Widget _buildTitle(BuildContext context) {
     return Text(
-      "You haven't granted camera access yet",
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+      "Camera Access Required",
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
       textAlign: TextAlign.center,
@@ -69,11 +67,12 @@ class CameraPermissionSheetContent extends StatelessWidget {
 
   Widget _buildDescription(bool isDarkMode) {
     return Text(
-      'To scan QR codes, the app needs permission to use your camera. '
+      'To scan QR codes, we need permission to use your camera. '
       'Please enable it in your device settings.',
       style: TextStyle(
         color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-        fontSize: 14,
+        fontSize: 15,
+        height: 1.5,
       ),
       textAlign: TextAlign.center,
     );
@@ -92,7 +91,7 @@ class CameraPermissionSheetContent extends StatelessWidget {
         const SizedBox(width: AppTheme.elementSpacing),
         Expanded(
           child: LongButtonWidget(
-            title: 'Grant Access',
+            title: 'Open Settings',
             buttonType: ButtonType.solid,
             onTap: onGrantAccess ??
                 () {
@@ -118,7 +117,7 @@ Future<void> showCameraPermissionSheet({
 
   await arkBottomSheet(
     context: context,
-    height: screenHeight * 0.5,
+    height: screenHeight * 0.65,
     isDismissible: true,
     child: CameraPermissionSheetContent(
       onCancel: () => Navigator.of(context).pop(),
