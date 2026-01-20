@@ -17,7 +17,7 @@ Future<DateTime?> showInlineCalendar({
 }) async {
   return arkBottomSheet<DateTime>(
     context: context,
-    height: MediaQuery.of(context).size.height * 0.9,
+    height: MediaQuery.of(context).size.height * 0.7,
     child: _InlineCalendarSheet(
       initialDate: initialDate ?? DateTime.now(),
       firstDate: firstDate ?? DateTime(2009), // Bitcoin genesis
