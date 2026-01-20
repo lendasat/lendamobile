@@ -112,7 +112,8 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
       _wasConnected = _appKit!.isConnected;
 
       // Sync to global service so other screens can access connection state
-      WalletConnectService().setAppKitModal(_appKit);
+      // Pass context to enable auto-close functionality when wallet connects
+      WalletConnectService().setAppKitModal(_appKit, context: context);
 
       logger.i('AppKit initialized in widget, connected: $_wasConnected');
     } catch (e) {

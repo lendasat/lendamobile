@@ -104,39 +104,49 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
         text: AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
         hasBackButton: false,
       ),
-      bottomSheet: BottomCenterButton(
-        title: AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
-        state: widget.isLoading ? ButtonState.loading : ButtonState.idle,
-        onTap: widget.isLoading ? null : widget.onConfirm,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Column(
-          children: [
-            const SizedBox(height: AppTheme.cardPadding * 2),
-            // You pay card
-            _buildPayCard(context, isDarkMode),
-            const SizedBox(height: AppTheme.elementSpacing),
-            // Arrow
-            Icon(
-              Icons.arrow_downward_rounded,
-              color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+      body: Stack(
+        children: [
+          // Main scrollable content
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(AppTheme.cardPadding),
+            child: Column(
+              children: [
+                const SizedBox(height: AppTheme.cardPadding * 2),
+                // You pay card
+                _buildPayCard(context, isDarkMode),
+                const SizedBox(height: AppTheme.elementSpacing),
+                // Arrow
+                Icon(
+                  Icons.arrow_downward_rounded,
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                ),
+                const SizedBox(height: AppTheme.elementSpacing),
+                // You receive card (with net amount after fees)
+                _buildReceiveCard(context, isDarkMode),
+                const SizedBox(height: AppTheme.cardPadding),
+                // Collapsible fees section
+                _buildFeesSection(context, isDarkMode),
+                // Receiving address (if applicable)
+                if (widget.targetAddress != null) ...[
+                  const SizedBox(height: AppTheme.elementSpacing),
+                  _buildAddressRow(context, isDarkMode),
+                ],
+                // Extra space at bottom for floating button
+                const SizedBox(height: AppTheme.cardPadding * 6),
+              ],
             ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            // You receive card (with net amount after fees)
-            _buildReceiveCard(context, isDarkMode),
-            const SizedBox(height: AppTheme.cardPadding),
-            // Collapsible fees section
-            _buildFeesSection(context, isDarkMode),
-            // Receiving address (if applicable)
-            if (widget.targetAddress != null) ...[
-              const SizedBox(height: AppTheme.elementSpacing),
-              _buildAddressRow(context, isDarkMode),
-            ],
-            // Extra space at bottom for button
-            const SizedBox(height: AppTheme.cardPadding * 2),
-          ],
-        ),
+          ),
+          // Floating action button at bottom (overlays content with gradient)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: BottomCenterButton(
+              title:
+                  AppLocalizations.of(context)?.confirmSwap ?? 'Confirm Swap',
+              state: widget.isLoading ? ButtonState.loading : ButtonState.idle,
+              onTap: widget.isLoading ? null : widget.onConfirm,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -19,21 +19,28 @@ class BottomActionContainer extends StatelessWidget {
   /// Whether to show the top gradient. Defaults to true.
   final bool showGradient;
 
+  /// Whether to use a transparent background. Defaults to false.
+  /// Set to true for use in bottom sheets where the background should blend.
+  final bool transparentBackground;
+
   const BottomActionContainer({
     super.key,
     required this.child,
     this.showGradient = true,
+    this.transparentBackground = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isLight = Theme.of(context).brightness == Brightness.light;
-    final backgroundColor = isLight ? Colors.grey.shade200 : Colors.black;
+    // Use theme surface color to match screen backgrounds
+    final backgroundColor = transparentBackground
+        ? Colors.transparent
+        : Theme.of(context).colorScheme.surface;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (showGradient) const BottomNavGradient(),
+        if (showGradient && !transparentBackground) const BottomNavGradient(),
         Container(
           color: backgroundColor,
           child: SafeArea(
@@ -69,6 +76,10 @@ class BottomCenterButton extends StatelessWidget {
   /// Optional widget to show below the button (e.g., error text, info text)
   final Widget? bottomWidget;
 
+  /// Whether to use a transparent background. Defaults to false.
+  /// Set to true for use in bottom sheets where the background should blend.
+  final bool transparentBackground;
+
   const BottomCenterButton({
     super.key,
     required this.title,
@@ -78,11 +89,13 @@ class BottomCenterButton extends StatelessWidget {
     this.isLoading = false,
     this.buttonGradient,
     this.bottomWidget,
+    this.transparentBackground = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return BottomActionContainer(
+      transparentBackground: transparentBackground,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

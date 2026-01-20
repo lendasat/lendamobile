@@ -5,8 +5,8 @@ class BottomNavGradient extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLight = Theme.of(context).brightness == Brightness.light;
-    final baseColor = isLight ? Colors.grey.shade200 : Colors.black;
+    // Use theme surface color to match screen backgrounds
+    final baseColor = Theme.of(context).colorScheme.surface;
 
     return Container(
       height: 28, // ~cardPadding * 1.75
