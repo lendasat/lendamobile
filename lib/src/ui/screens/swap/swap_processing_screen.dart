@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:ark_flutter/theme.dart';
-import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
@@ -262,11 +261,9 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
         text: 'Swap in Progress',
         hasBackButton: true,
       ),
-      body: _isLoading
-          ? dotProgress(context)
-          : _errorMessage != null
-              ? _buildErrorState(context)
-              : _buildProcessingState(context, isDarkMode),
+      body: _errorMessage != null
+          ? _buildErrorState(context)
+          : _buildProcessingState(context, isDarkMode),
     );
   }
 
@@ -349,6 +346,41 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
 
   Widget _buildStatusIndicator(
       BuildContext context, SwapStatusSimple status, bool isDarkMode) {
+    // Show loading spinner when still loading swap info
+    if (_isLoading) {
+      return Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppTheme.colorBitcoin.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Center(
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppTheme.colorBitcoin),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          Text(
+            'Loading...',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.colorBitcoin,
+                ),
+          ),
+        ],
+      );
+    }
+
     IconData icon;
     Color color;
     String statusText;
