@@ -137,6 +137,7 @@ class WalletConnectService extends ChangeNotifier {
       }
 
       _isInitialized = true;
+      _wasConnectedBeforeStateChange = isConnected;
       logger.i('Reown AppKit initialized successfully');
       notifyListeners();
     } catch (e) {
@@ -144,6 +145,8 @@ class WalletConnectService extends ChangeNotifier {
       rethrow;
     }
   }
+
+  bool _wasConnectedBeforeStateChange = false;
 
   void _onModalStateChanged() {
     logger.i('=== AppKit State Changed ===');
@@ -153,7 +156,43 @@ class WalletConnectService extends ChangeNotifier {
     logger.i('session: ${_appKitModal?.session}');
     logger.i('session service: ${_appKitModal?.session?.sessionService}');
     logger.i('============================');
+
+    // If we just connected (state changed from disconnected to connected),
+    // try to close the modal since the library's internal closeModal may fail
+    // due to stale context
+    if (isConnected && !_wasConnectedBeforeStateChange && _context != null) {
+      _tryCloseModalSafely();
+    }
+    _wasConnectedBeforeStateChange = isConnected;
+
     notifyListeners();
+  }
+
+  /// Try to close the modal safely using the root navigator
+  /// This handles the case where the library's internal closeModal fails
+  void _tryCloseModalSafely() {
+    // Use post-frame callback to ensure we're not in the middle of a build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_context == null) return;
+
+      try {
+        // Check if context is still mounted
+        if (_context is Element && !(_context as Element).mounted) {
+          logger.w('Context no longer mounted, cannot close modal');
+          return;
+        }
+
+        // Try to pop using the root navigator to close the bottom sheet modal
+        final navigator = Navigator.maybeOf(_context!, rootNavigator: true);
+        if (navigator != null && navigator.canPop()) {
+          logger.i('Manually closing wallet connect modal after connection');
+          navigator.pop();
+        }
+      } catch (e) {
+        // Silently ignore - the modal may already be closed or context is invalid
+        logger.w('Could not manually close modal: $e');
+      }
+    });
   }
 
   /// Set up deep link listener to handle wallet redirects
