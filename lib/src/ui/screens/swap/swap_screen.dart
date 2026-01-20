@@ -840,6 +840,9 @@ class SwapScreenState extends State<SwapScreen>
 
   /// Initiate the swap flow
   void _initiateSwap() {
+    // Dismiss keyboard immediately when starting swap flow
+    FocusManager.instance.primaryFocus?.unfocus();
+
     // Validate amounts
     final usd = double.tryParse(usdAmount);
     if (usd == null || usd <= 0) {
