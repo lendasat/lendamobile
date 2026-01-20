@@ -1489,7 +1489,7 @@ class _SwapItemWidget extends StatelessWidget {
                           children: [
                             Text(
                               showBtcAsMain
-                                  ? '${amountSats.isNegative ? "" : "+"}${amountSats.abs()}'
+                                  ? '${amountSats.isNegative ? "-" : "+"}${amountSats.abs()}'
                                   : '${amountSats.isNegative ? "-" : "+"}\$${usdAmount.toStringAsFixed(2)}',
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.titleLarge,

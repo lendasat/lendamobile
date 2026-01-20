@@ -4,10 +4,12 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/rust/api/lendaswap_api.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
+import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
-import 'package:ark_flutter/src/ui/screens/swap/swap_processing_screen.dart';
-import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bottom_action_buttons.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/wallet_connect_button.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
@@ -87,26 +89,9 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
   }
 
   Future<void> _createSwap() async {
-    if (!_walletService.isConnected ||
-        _walletService.connectedAddress == null) {
-      setState(() => _error = 'Please connect your wallet first');
-      return;
-    }
-
-    final connectedAddress = _walletService.connectedAddress!;
-
-    // Validate EVM address format (should start with 0x and be 42 chars)
-    if (_walletService.isSolanaAddress && !_walletService.isEvmAddress) {
-      logger.w('Connected purely with Solana: $connectedAddress');
-      setState(() => _error =
-          'You connected with a Solana address. LendaSwap currently only supports Polygon and Ethereum for these swaps. If you are using Phantom, please make sure to select Polygon or Ethereum in the AppKit network selection.');
-      return;
-    }
-
-    if (!connectedAddress.startsWith('0x') || connectedAddress.length != 42) {
-      logger.e('Invalid EVM address format: $connectedAddress');
-      setState(() => _error =
-          'Invalid wallet address format. Please connect an EVM-compatible wallet (Polygon/Ethereum).');
+    final validationError = _validateWalletConnection();
+    if (validationError != null) {
+      setState(() => _error = validationError);
       return;
     }
 
@@ -116,20 +101,14 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
     });
 
     try {
-      // Get Arkade address for receiving BTC
       final addresses = await ark_api.address();
-      final arkadeAddress = addresses.offchain;
+      final connectedAddress = _walletService.connectedAddress!;
 
-      logger.i('Creating swap with:');
-      logger.i('  targetArkAddress: $arkadeAddress');
-      logger.i('  userEvmAddress: $connectedAddress');
-      logger.i('  sourceAmount: ${widget.usdAmount}');
-      logger.i('  sourceToken: ${widget.sourceToken.tokenId}');
-      logger.i('  sourceChain: ${widget.sourceToken.chainId}');
+      logger.i(
+          'Creating swap: ${widget.usdAmount} ${widget.sourceToken.tokenId} → BTC');
 
-      // Create the swap with the connected EVM address
       final result = await _swapService.createBuyBtcSwap(
-        targetArkAddress: arkadeAddress,
+        targetArkAddress: addresses.offchain,
         userEvmAddress: connectedAddress,
         sourceAmount: widget.usdAmount,
         sourceToken: widget.sourceToken.tokenId,
@@ -142,15 +121,32 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
       });
 
       logger.i('Swap created: ${result.swapId}');
-      logger.i('HTLC address: ${result.evmHtlcAddress}');
-      logger.i(
-          'createSwapTx: ${result.createSwapTx?.substring(0, 20) ?? "null"}...');
     } catch (e) {
       logger.e('Failed to create swap: $e');
-      setState(() => _error = 'Failed to create swap: ${e.toString()}');
+      setState(() => _error = _parseError(e.toString()));
     } finally {
       setState(() => _isCreatingSwap = false);
     }
+  }
+
+  /// Validate wallet connection and return error message if invalid
+  String? _validateWalletConnection() {
+    if (!_walletService.isConnected ||
+        _walletService.connectedAddress == null) {
+      return 'Please connect your wallet first';
+    }
+
+    final address = _walletService.connectedAddress!;
+
+    if (_walletService.isSolanaAddress && !_walletService.isEvmAddress) {
+      return 'Solana wallets are not supported. Please connect a Polygon or Ethereum wallet.';
+    }
+
+    if (!address.startsWith('0x') || address.length != 42) {
+      return 'Invalid wallet address. Please connect an EVM-compatible wallet.';
+    }
+
+    return null;
   }
 
   Future<void> _fundSwap() async {
@@ -172,10 +168,8 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
     });
 
     try {
-      // Ensure we're on the correct chain before transactions
       await _walletService.ensureCorrectChain(_evmChain);
 
-      // Step 1: Approve token spending
       logger.i('Approving token spending...');
       await _walletService.approveToken(
         tokenAddress: _swapResult!.sourceTokenAddress,
@@ -185,7 +179,6 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
       logger.i('Token approved, creating swap on HTLC...');
       setState(() => _currentStep = FundingStep.creatingHtlc);
 
-      // Step 2: Call createSwap on HTLC contract
       final txHash = await _walletService.sendTransaction(
         to: _swapResult!.evmHtlcAddress,
         data: createSwapTx,
@@ -194,30 +187,59 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
       logger.i('Swap funded! TX: $txHash');
       setState(() => _currentStep = FundingStep.completed);
 
-      // Navigate to processing screen
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SwapProcessingScreen(
-              swapId: _swapResult!.swapId,
-              sourceToken: widget.sourceToken,
-              targetToken: widget.targetToken,
-              sourceAmount: widget.sourceAmount,
-              targetAmount: widget.targetAmount,
-            ),
-          ),
-        );
-      }
+      // Start monitoring and navigate back to wallet
+      _onSwapFundingSuccess();
     } catch (e) {
       logger.e('Failed to fund swap: $e');
       setState(() {
-        _error = 'Failed to fund swap: ${e.toString()}';
-        _currentStep = FundingStep.fundSwap; // Reset to allow retry
+        _error = _parseError(e.toString());
+        _currentStep = FundingStep.fundSwap;
       });
     } finally {
       setState(() => _isFunding = false);
     }
+  }
+
+  /// Handle successful swap funding - navigate back to wallet
+  void _onSwapFundingSuccess() {
+    if (!mounted || _swapResult == null) return;
+
+    // Start background monitoring for auto-claim
+    SwapMonitoringService().startMonitoringSwap(_swapResult!.swapId);
+
+    // Navigate back to wallet
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    PaymentMonitoringService().switchToWalletTab();
+    OverlayService().showSuccess('Swap initiated! Processing in background...');
+  }
+
+  /// Parse error message into user-friendly text
+  String _parseError(String error) {
+    final errorLower = error.toLowerCase();
+
+    if (errorLower.contains('user rejected') ||
+        errorLower.contains('user denied')) {
+      return 'Transaction was rejected in wallet';
+    }
+    if (errorLower.contains('insufficient funds') ||
+        errorLower.contains('insufficient balance')) {
+      return 'Insufficient balance for this transaction';
+    }
+    if (errorLower.contains('network') || errorLower.contains('connection')) {
+      return 'Network error. Please check your connection.';
+    }
+    if (errorLower.contains('timeout')) {
+      return 'Request timed out. Please try again.';
+    }
+
+    // Clean up error message
+    String cleanError = error;
+    if (cleanError.contains('Exception:')) {
+      cleanError = cleanError.split('Exception:').last.trim();
+    }
+    return cleanError.length > 100
+        ? '${cleanError.substring(0, 97)}...'
+        : cleanError;
   }
 
   @override
@@ -226,18 +248,23 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
 
     return ArkScaffold(
       context: context,
+      extendBodyBehindAppBar: true,
       appBar: BitNetAppBar(
         context: context,
         text: 'Fund Swap',
-        transparent: false,
+        transparent: true,
       ),
       body: Stack(
         children: [
+          // Main scrollable content
           SingleChildScrollView(
             padding: const EdgeInsets.all(AppTheme.cardPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Space for app bar
+                const SizedBox(height: AppTheme.cardPadding * 2),
+
                 // Swap summary
                 _buildSwapSummary(isDark),
                 const SizedBox(height: AppTheme.cardPadding),
@@ -277,59 +304,59 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
                 // Current step content (non-button parts)
                 _buildCurrentStepContent(isDark),
 
-                // Extra space at bottom for floating button
-                const SizedBox(height: 100),
+                // Extra space at bottom for button
+                const SizedBox(height: AppTheme.cardPadding * 6),
               ],
             ),
           ),
-
-          // Floating buttons at bottom based on current step
-          if (_currentStep == FundingStep.connectWallet)
-            Positioned(
-              left: AppTheme.cardPadding,
-              right: AppTheme.cardPadding,
-              bottom: AppTheme.cardPadding,
-              child: _walletService.isConnected
-                  ? LongButtonWidget(
-                      title: 'Continue with ${_walletService.shortAddress}',
-                      customWidth: double.infinity,
-                      onTap: () {
-                        setState(() => _currentStep = FundingStep.createSwap);
-                      },
-                    )
-                  : WalletConnectButton(
-                      chain: _evmChain,
-                      onConnected: () {
-                        setState(() => _currentStep = FundingStep.createSwap);
-                      },
-                    ),
-            ),
-          if (_currentStep == FundingStep.createSwap)
-            Positioned(
-              left: AppTheme.cardPadding,
-              right: AppTheme.cardPadding,
-              bottom: AppTheme.cardPadding,
-              child: LongButtonWidget(
-                title: _isCreatingSwap ? 'Creating Swap...' : 'Create Swap',
-                customWidth: double.infinity,
-                state: _isCreatingSwap ? ButtonState.loading : ButtonState.idle,
-                onTap: _isCreatingSwap ? null : _createSwap,
-              ),
-            ),
-          if (_currentStep == FundingStep.fundSwap)
-            Positioned(
-              left: AppTheme.cardPadding,
-              right: AppTheme.cardPadding,
-              bottom: AppTheme.cardPadding,
-              child: LongButtonWidget(
-                title: 'Approve & Fund Swap',
-                customWidth: double.infinity,
-                onTap: _fundSwap,
-              ),
-            ),
+          // Floating action button at bottom (overlays content with gradient)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: _buildBottomButton(isDark),
+          ),
         ],
       ),
     );
+  }
+
+  /// Build the bottom button based on current step
+  Widget _buildBottomButton(bool isDark) {
+    switch (_currentStep) {
+      case FundingStep.connectWallet:
+        if (_walletService.isConnected) {
+          return BottomCenterButton(
+            title: 'Continue with ${_walletService.shortAddress}',
+            onTap: () {
+              setState(() => _currentStep = FundingStep.createSwap);
+            },
+          );
+        }
+        // For WalletConnectButton, wrap in BottomActionContainer
+        return BottomActionContainer(
+          child: WalletConnectButton(
+            chain: _evmChain,
+            onConnected: () {
+              setState(() => _currentStep = FundingStep.createSwap);
+            },
+          ),
+        );
+      case FundingStep.createSwap:
+        return BottomCenterButton(
+          title: _isCreatingSwap ? 'Creating Swap...' : 'Create Swap',
+          state: _isCreatingSwap ? ButtonState.loading : ButtonState.idle,
+          onTap: _isCreatingSwap ? null : _createSwap,
+        );
+      case FundingStep.fundSwap:
+        return BottomCenterButton(
+          title: 'Approve & Fund Swap',
+          onTap: _fundSwap,
+        );
+      case FundingStep.approvingToken:
+      case FundingStep.creatingHtlc:
+      case FundingStep.completed:
+        // No button during these steps
+        return const SizedBox.shrink();
+    }
   }
 
   Widget _buildSwapSummary(bool isDark) {
@@ -566,166 +593,25 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GlassContainer(
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppTheme.cardPadding),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.account_balance_wallet,
-                          color: Colors.green,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Wallet Connected',
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              _walletService.shortAddress ?? '',
-                              style: TextStyle(
-                                color: isDark
-                                    ? AppTheme.white60
-                                    : AppTheme.black60,
-                                fontFamily: 'monospace',
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () async {
-                          await _walletService.disconnect();
-                          setState(() {
-                            _currentStep = FundingStep.connectWallet;
-                            _error = null;
-                          });
-                        },
-                        child: Text(
-                          'Switch',
-                          style: TextStyle(
-                            color: isDark ? AppTheme.white60 : AppTheme.black60,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildWalletConnectedCard(isDark),
               const SizedBox(height: AppTheme.cardPadding),
-              Text(
-                'Continue with your connected wallet or switch to a different one.',
-                style: TextStyle(
-                  color: isDark ? AppTheme.white60 : AppTheme.black60,
-                ),
-              ),
+              _buildHelpText(
+                  'Continue with your connected wallet or switch to a different one.',
+                  isDark),
             ],
           );
         }
-        return Text(
-          'Connect your ${_evmChain.name} wallet to fund the swap.',
-          style: TextStyle(
-            color: isDark ? AppTheme.white60 : AppTheme.black60,
-          ),
-        );
+        return _buildHelpText(
+            'Connect your ${_evmChain.name} wallet to fund the swap.', isDark);
 
       case FundingStep.createSwap:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GlassContainer(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.cardPadding),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.account_balance_wallet,
-                        color: Colors.green,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Wallet Connected',
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            _walletService.shortAddress ?? '',
-                            style: TextStyle(
-                              color:
-                                  isDark ? AppTheme.white60 : AppTheme.black60,
-                              fontFamily: 'monospace',
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Disconnect button to switch wallets
-                    TextButton(
-                      onPressed: () async {
-                        await _walletService.disconnect();
-                        setState(() {
-                          _currentStep = FundingStep.connectWallet;
-                          _error = null;
-                        });
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                      ),
-                      child: Text(
-                        'Switch',
-                        style: TextStyle(
-                          color: isDark ? AppTheme.white60 : AppTheme.black60,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            _buildWalletConnectedCard(isDark),
             const SizedBox(height: AppTheme.cardPadding),
-            Text(
-              'Create the swap to get the funding details.',
-              style: TextStyle(
-                color: isDark ? AppTheme.white60 : AppTheme.black60,
-              ),
-            ),
+            _buildHelpText(
+                'Create the swap to get the funding details.', isDark),
           ],
         );
 
@@ -736,47 +622,17 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (_swapResult != null) ...[
-              GlassContainer(
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppTheme.cardPadding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Swap Details',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildDetailRow('Swap ID',
-                          '${_swapResult!.swapId.substring(0, 8)}...', isDark),
-                      _buildDetailRow(
-                          'HTLC',
-                          '${_swapResult!.evmHtlcAddress.substring(0, 10)}...',
-                          isDark),
-                      _buildDetailRow('You receive',
-                          '${_swapResult!.satsToReceive} sats', isDark),
-                      _buildDetailRow(
-                          'Fee', '${_swapResult!.feeSats} sats', isDark),
-                    ],
-                  ),
-                ),
-              ),
+              _buildSwapDetailsCard(isDark),
               const SizedBox(height: AppTheme.cardPadding),
             ],
-            if (_currentStep == FundingStep.approvingToken) ...[
-              _buildProgressIndicator('Approving token...', isDark),
-            ] else if (_currentStep == FundingStep.creatingHtlc) ...[
-              _buildProgressIndicator('Creating HTLC...', isDark),
-            ] else ...[
-              Text(
+            if (_currentStep == FundingStep.approvingToken)
+              _buildProgressIndicator('Approving token...', isDark)
+            else if (_currentStep == FundingStep.creatingHtlc)
+              _buildProgressIndicator('Creating HTLC...', isDark)
+            else ...[
+              _buildHelpText(
                 'Click below to approve and fund the swap. This will open your wallet for two transactions:',
-                style: TextStyle(
-                  color: isDark ? AppTheme.white60 : AppTheme.black60,
-                ),
+                isDark,
               ),
               const SizedBox(height: 8),
               Text(
@@ -791,24 +647,133 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
         );
 
       case FundingStep.completed:
-        return Column(
+        // This state is briefly shown before navigation
+        return const Column(
           children: [
-            const Icon(Icons.check_circle, size: 64, color: Colors.green),
-            const SizedBox(height: AppTheme.cardPadding),
-            const Text(
-              'Swap funded successfully!',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
+            Icon(Icons.check_circle, size: 64, color: Colors.green),
+            SizedBox(height: AppTheme.cardPadding),
             Text(
-              'Navigating to swap status...',
-              style: TextStyle(
-                color: isDark ? AppTheme.white60 : AppTheme.black60,
-              ),
+              'Swap funded!',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
         );
     }
+  }
+
+  /// Build wallet connected card with switch button
+  Widget _buildWalletConnectedCard(bool isDark) {
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet,
+                color: Colors.green,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Wallet Connected',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    _walletService.shortAddress ?? '',
+                    style: TextStyle(
+                      color: isDark ? AppTheme.white60 : AppTheme.black60,
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: _disconnectWallet,
+              child: Text(
+                'Switch',
+                style: TextStyle(
+                  color: isDark ? AppTheme.white60 : AppTheme.black60,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build swap details card
+  Widget _buildSwapDetailsCard(bool isDark) {
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.cardPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Swap Details',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildDetailRow(
+                'Swap ID', _truncateId(_swapResult!.swapId), isDark),
+            _buildDetailRow(
+                'HTLC', _truncateId(_swapResult!.evmHtlcAddress), isDark),
+            _buildDetailRow(
+                'You receive', '${_swapResult!.satsToReceive} sats', isDark),
+            _buildDetailRow('Fee', '${_swapResult!.feeSats} sats', isDark),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build help text widget
+  Widget _buildHelpText(String text, bool isDark) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: isDark ? AppTheme.white60 : AppTheme.black60,
+      ),
+    );
+  }
+
+  /// Disconnect wallet and reset to connect step
+  Future<void> _disconnectWallet() async {
+    await _walletService.disconnect();
+    setState(() {
+      _currentStep = FundingStep.connectWallet;
+      _error = null;
+    });
+  }
+
+  /// Truncate ID for display
+  String _truncateId(String id) {
+    if (id.length <= 14) return id;
+    return '${id.substring(0, 8)}...${id.substring(id.length - 4)}';
   }
 
   Widget _buildDetailRow(String label, String value, bool isDark) {

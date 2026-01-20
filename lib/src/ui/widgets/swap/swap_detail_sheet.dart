@@ -17,6 +17,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bottom_action_buttons.dart';
 import 'package:ark_flutter/src/ui/screens/swap/swap_processing_screen.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
@@ -301,6 +302,13 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
+    // Check if we should show the deposit button at the bottom
+    final status = _swapInfo?.status ?? SwapStatusSimple.waitingForDeposit;
+    final isWaitingForDeposit = status == SwapStatusSimple.waitingForDeposit;
+    final showDepositButton = isWaitingForDeposit &&
+        _swapInfo?.direction == 'evm_to_btc' &&
+        _swapInfo?.depositAddress != null;
+
     return ArkScaffoldUnsafe(
       context: context,
       extendBodyBehindAppBar: true,
@@ -310,11 +318,25 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
         text: 'Swap Details',
         hasBackButton: false,
       ),
-      body: _isLoading
-          ? dotProgress(context)
-          : _errorMessage != null && _swapInfo == null
-              ? _buildErrorState(context)
-              : _buildContent(context, isDarkMode),
+      body: Stack(
+        children: [
+          // Main content
+          _isLoading
+              ? dotProgress(context)
+              : _errorMessage != null && _swapInfo == null
+                  ? _buildErrorState(context)
+                  : _buildContent(context, isDarkMode),
+          // Floating deposit button at bottom
+          if (showDepositButton)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: BottomCenterButton(
+                title: 'Deposit',
+                onTap: _navigateToDeposit,
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -364,6 +386,12 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     final sourceToken = _getSourceToken();
     final targetToken = _getTargetToken();
     final status = _swapInfo?.status ?? SwapStatusSimple.waitingForDeposit;
+
+    // Check if deposit button will be shown (for extra bottom padding)
+    final isWaitingForDeposit = status == SwapStatusSimple.waitingForDeposit;
+    final showDepositButton = isWaitingForDeposit &&
+        _swapInfo?.direction == 'evm_to_btc' &&
+        _swapInfo?.depositAddress != null;
 
     return NotificationListener<OverscrollNotification>(
       onNotification: (notification) {
@@ -448,6 +476,9 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                 ),
                 child: _buildActionButtons(context, status),
               ),
+              // Extra space at bottom for floating button
+              if (showDepositButton)
+                const SizedBox(height: AppTheme.cardPadding * 5),
             ],
           ),
         ),
@@ -1035,27 +1066,13 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     final canClaim =
         _swapInfo?.canClaimGelato == true || _swapInfo?.canClaimVhtlc == true;
     final canRefund = _swapInfo?.canRefund == true;
-    final isWaitingForDeposit = status == SwapStatusSimple.waitingForDeposit;
-    // Only show deposit button for EVM → BTC swaps (user needs to send EVM tokens)
-    final showDepositButton = isWaitingForDeposit &&
-        _swapInfo?.direction == 'evm_to_btc' &&
-        _swapInfo?.depositAddress != null;
 
-    if (!canClaim && !canRefund && !showDepositButton) {
+    if (!canClaim && !canRefund) {
       return const SizedBox.shrink();
     }
 
     return Column(
       children: [
-        // Deposit button for pending EVM → BTC swaps
-        if (showDepositButton) ...[
-          LongButtonWidget(
-            title: 'Deposit',
-            customWidth: double.infinity,
-            onTap: _navigateToDeposit,
-          ),
-          const SizedBox(height: AppTheme.cardPadding),
-        ],
         // Claim section
         if (canClaim) ...[
           GlassContainer(
