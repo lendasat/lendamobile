@@ -744,10 +744,32 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                 });
               },
               suffixIcon: IconButton(
-                icon: Icon(
-                  Icons.tune,
-                  color: isDark ? AppTheme.white60 : AppTheme.black60,
-                  size: AppTheme.cardPadding * 0.75,
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      Icons.tune,
+                      color: _filterService?.hasAnyFilter == true
+                          ? AppTheme.colorBitcoin
+                          : isDark
+                              ? AppTheme.white60
+                              : AppTheme.black60,
+                      size: AppTheme.cardPadding * 0.75,
+                    ),
+                    if (_filterService?.hasAnyFilter == true)
+                      Positioned(
+                        right: -2,
+                        top: -2,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.colorBitcoin,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 onPressed: () async {
                   // Unfocus search field before opening filter

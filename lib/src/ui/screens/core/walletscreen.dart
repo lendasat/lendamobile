@@ -1,19 +1,11 @@
 import 'dart:async';
-
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
-import 'package:ark_flutter/src/rust/api/ark_api.dart';
-import 'package:ark_flutter/src/rust/lendaswap.dart';
-import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
-import 'package:ark_flutter/src/services/boarding_tracking_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
-import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
-import 'package:ark_flutter/src/services/pending_transaction_service.dart';
-import 'package:ark_flutter/src/models/wallet_activity_item.dart';
-import 'package:ark_flutter/src/services/lendasat_service.dart';
-import 'package:ark_flutter/src/services/lendaswap_service.dart';
-import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/rust/api/ark_api.dart' show PaymentReceived;
+import 'package:ark_flutter/src/services/payment_monitoring_service.dart'
+    show PaymentMonitoringService;
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/services/user_preferences_service.dart';
@@ -25,13 +17,10 @@ import 'package:ark_flutter/src/ui/screens/transactions/send/send_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/settings.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/history/transaction_history_widget.dart';
 import 'package:ark_flutter/src/ui/screens/transactions/history/transaction_filter_screen.dart';
+import 'package:ark_flutter/src/services/transaction_filter_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart';
-import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_price_chart.dart'
-    show PriceData;
-import 'package:ark_flutter/src/ui/widgets/wallet/balance_chart_calculator.dart';
 import 'package:ark_flutter/src/ui/widgets/wallet/wallet_header.dart';
-import 'package:ark_flutter/src/ui/widgets/wallet/wallet_mini_chart.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
@@ -39,6 +28,8 @@ import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'wallet_config.dart';
+import 'wallet_controller.dart';
 
 /// Enum for balance type display
 enum BalanceType { pending, confirmed, total }
@@ -58,139 +49,45 @@ class WalletScreen extends StatefulWidget {
 
 class WalletScreenState extends State<WalletScreen>
     with WidgetsBindingObserver {
-  // Loading states
-  bool _isBalanceLoading = true;
-  bool _isTransactionFetching = true;
-  List<Transaction> _transactions = [];
+  late final WalletController _controller;
 
-  // Key for transaction history widget to control its focus
+  // UI controllers
   final GlobalKey<TransactionHistoryWidgetState> _transactionHistoryKey =
       GlobalKey<TransactionHistoryWidgetState>();
-  bool _wasKeyboardVisible = false;
-  Timer? _keyboardDebounceTimer;
-
-  // Swap history
-  final LendaSwapService _swapService = LendaSwapService();
-  List<SwapInfo> _swaps = [];
-
-  // Lendasat loans (for locked collateral display)
-  final LendasatService _lendasatService = LendasatService();
-  int _lockedCollateralSats = 0;
-
-  // On-chain boarding balance (pending settle)
-  int _boardingBalanceSats = 0;
-  bool _isSettling = false;
-  bool _skipAutoSettle = false;
-  DateTime? _lastSettleAttempt;
-
-  // Balance values
-  double _pendingBalance = 0.0;
-  double _confirmedBalance = 0.0;
-  double _totalBalance = 0.0;
-
-  // Recoverable/expired VTXOs (need settle to recover)
-  int _recoverableSats = 0;
-  int _expiredSats = 0;
-
-  // Bitcoin chart data
-  List<PriceData> _bitcoinPriceData = [];
-
-  // Gradient colors (cached for performance)
-  Color _gradientTopColor = AppTheme.successColor.withValues(alpha: 0.3);
-  Color _gradientBottomColor =
-      AppTheme.successColorGradient.withValues(alpha: 0.15);
-
-  // Recovery status
-  bool _wordRecoverySet = false;
-
-  // Scroll controller for nested scrolling
   final ScrollController _scrollController = ScrollController();
+  Timer? _keyboardDebounceTimer;
+  bool _wasKeyboardVisible = false;
 
-  // Refresh guard to prevent multiple simultaneous refreshes
-  bool _isRefreshing = false;
-
-  // Balance chart calculator for performance
-  BalanceChartCalculator? _chartCalculator;
-
-  // Payment stream subscription for auto-refresh
+  // Payment stream subscription
   StreamSubscription<PaymentReceived>? _paymentSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _controller = WalletController(aspId: widget.aspId);
     logger.i("WalletScreen initialized with ASP ID: ${widget.aspId}");
-    _loadCachedBalance();
-    _initializeWalletData();
-    _loadBitcoinPriceData();
-    _loadRecoveryStatus();
 
-    // Listen to swap service changes for automatic UI updates
-    _swapService.addListener(_onSwapsChanged);
-
-    // Listen to pending transaction service for send completion updates
-    PendingTransactionService().addListener(_onPendingTransactionChanged);
-
-    // Fetch exchange rates and check for alpha warning
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CurrencyPreferenceService>().fetchExchangeRates();
-      _checkAndShowAlphaWarning();
-
-      // Subscribe to payment stream for auto-refresh when payment received
-      final paymentService = context.read<PaymentMonitoringService>();
-      _paymentSubscription = paymentService.paymentStream.listen((payment) {
-        logger.i(
-            "WalletScreen received payment notification: ${payment.amountSats} sats");
-        if (mounted) {
-          fetchWalletData();
-        }
-      });
+      _initializeScreen();
     });
   }
 
-  void _onSwapsChanged() {
-    if (mounted) {
-      setState(() {
-        _swaps = List.from(_swapService.swaps);
-      });
-      logger.d("Swaps updated from service notification");
-    }
-  }
+  Future<void> _initializeScreen() async {
+    final userPrefs = context.read<UserPreferencesService>();
+    context.read<CurrencyPreferenceService>().fetchExchangeRates();
+    await _controller.initialize(userPrefs);
+    _checkAndShowAlphaWarning();
 
-  void _onPendingTransactionChanged() {
-    if (mounted) {
-      // When a pending transaction completes (success or fail), refresh wallet data
-      final pendingService = PendingTransactionService();
-      final hasCompletedTx = pendingService.pendingItems.any(
-        (item) =>
-            item.pending.status == PendingTransactionStatus.success ||
-            item.pending.status == PendingTransactionStatus.failed,
-      );
-
-      if (hasCompletedTx) {
-        logger.i("Pending transaction completed - refreshing wallet data");
-        fetchWalletData();
+    // Subscribe to payment stream for auto-refresh
+    final paymentService = context.read<PaymentMonitoringService>();
+    _paymentSubscription = paymentService.paymentStream.listen((payment) {
+      logger.i(
+          "WalletScreen received payment notification: ${payment.amountSats} sats");
+      if (mounted) {
+        _controller.fetchWalletData();
       }
-
-      // Also trigger rebuild to show/hide pending items
-      setState(() {});
-    }
-  }
-
-  Future<void> _loadCachedBalance() async {
-    try {
-      final cachedBalance = await SettingsService().getCachedBalance();
-      if (cachedBalance != null && mounted) {
-        setState(() {
-          _totalBalance = cachedBalance.total;
-          _confirmedBalance = cachedBalance.confirmed;
-          _pendingBalance = cachedBalance.pending;
-        });
-        logger.i("Loaded cached balance: ${cachedBalance.total} BTC");
-      }
-    } catch (e) {
-      logger.w("Could not load cached balance: $e");
-    }
+    });
   }
 
   @override
@@ -205,28 +102,17 @@ class WalletScreenState extends State<WalletScreen>
   void didChangeMetrics() {
     super.didChangeMetrics();
     _keyboardDebounceTimer?.cancel();
-    _keyboardDebounceTimer = Timer(const Duration(milliseconds: 100), () {
-      if (!mounted) return;
-      final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
-      if (_wasKeyboardVisible && !keyboardVisible) {
-        _transactionHistoryKey.currentState?.unfocusSearch();
-      }
-      _wasKeyboardVisible = keyboardVisible;
-    });
-  }
-
-  Future<void> _initializeWalletData() async {
-    // Initialize boarding tracking service for onchain receive detection
-    await BoardingTrackingService.initialize();
-
-    await fetchWalletData();
-    if (_totalBalance == 0 && _transactions.isEmpty && mounted) {
-      logger.i("Initial data appears empty, retrying after delay...");
-      await Future.delayed(const Duration(milliseconds: 1500));
-      if (mounted) {
-        await fetchWalletData();
-      }
-    }
+    _keyboardDebounceTimer = Timer(
+      const Duration(milliseconds: WalletConfig.keyboardDebounceMs),
+      () {
+        if (!mounted) return;
+        final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+        if (_wasKeyboardVisible && !keyboardVisible) {
+          _transactionHistoryKey.currentState?.unfocusSearch();
+        }
+        _wasKeyboardVisible = keyboardVisible;
+      },
+    );
   }
 
   Future<void> _checkAndShowAlphaWarning() async {
@@ -281,9 +167,7 @@ class WalletScreenState extends State<WalletScreen>
               title: "I Understand",
               customWidth: double.infinity,
               customHeight: 56,
-              onTap: () {
-                Navigator.of(context).pop();
-              },
+              onTap: () => Navigator.of(context).pop(),
             ),
             const SizedBox(height: AppTheme.elementSpacing),
           ],
@@ -295,90 +179,11 @@ class WalletScreenState extends State<WalletScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _swapService.removeListener(_onSwapsChanged);
-    PendingTransactionService().removeListener(_onPendingTransactionChanged);
     _paymentSubscription?.cancel();
     _keyboardDebounceTimer?.cancel();
     _scrollController.dispose();
+    _controller.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadBitcoinPriceData() async {
-    try {
-      final userPrefs = context.read<UserPreferencesService>();
-      final timeRange = _convertChartTimeRange(userPrefs.chartTimeRange);
-      final priceData = await fetchBitcoinPriceData(timeRange);
-      if (mounted) {
-        setState(() {
-          _bitcoinPriceData = priceData;
-          _updateGradientColors();
-          // Update global price cache for other screens
-          if (priceData.isNotEmpty) {
-            BitcoinPriceCache.updatePrice(priceData.last.price);
-          }
-        });
-      }
-    } catch (e) {
-      logger.e('Error loading bitcoin price data: $e');
-    }
-  }
-
-  Future<void> _loadRecoveryStatus() async {
-    try {
-      final wordRecovery = await SettingsService().isWordRecoverySet();
-      if (mounted) {
-        setState(() {
-          _wordRecoverySet = wordRecovery;
-        });
-      }
-    } catch (e) {
-      logger.e('Error loading recovery status: $e');
-    }
-  }
-
-  TimeRange _convertChartTimeRange(ChartTimeRange range) {
-    switch (range) {
-      case ChartTimeRange.day:
-        return TimeRange.day;
-      case ChartTimeRange.week:
-        return TimeRange.week;
-      case ChartTimeRange.month:
-        return TimeRange.month;
-      case ChartTimeRange.year:
-        return TimeRange.year;
-      case ChartTimeRange.max:
-        return TimeRange.max;
-    }
-  }
-
-  void _updateGradientColors() {
-    final isPositive = _isPriceChangePositive();
-    setState(() {
-      _gradientTopColor = isPositive
-          ? AppTheme.successColor.withValues(alpha: 0.3)
-          : AppTheme.errorColor.withValues(alpha: 0.3);
-      _gradientBottomColor = isPositive
-          ? AppTheme.successColorGradient.withValues(alpha: 0.15)
-          : AppTheme.errorColorGradient.withValues(alpha: 0.15);
-    });
-  }
-
-  bool _isPriceChangePositive() {
-    if (_bitcoinPriceData.isEmpty) return true;
-    _updateChartCalculator();
-    return _chartCalculator!.isPriceChangePositive(_getCurrentBtcPrice());
-  }
-
-  void _updateChartCalculator() {
-    // Only create calculator if not already cached
-    // It gets invalidated (set to null) in fetchWalletData() when data changes
-    if (_chartCalculator != null) return;
-
-    _chartCalculator = BalanceChartCalculator(
-      transactions: _transactions,
-      priceData: _bitcoinPriceData,
-      currentBalance: _totalBalance,
-    );
   }
 
   void scrollToTop() {
@@ -389,282 +194,30 @@ class WalletScreenState extends State<WalletScreen>
     );
   }
 
-  Future<void> fetchWalletData() async {
-    if (_isRefreshing) {
-      logger.d("Skipping refresh - already in progress");
-      return;
-    }
-
-    _isRefreshing = true;
-    _chartCalculator = null; // Invalidate chart cache
-
-    try {
-      await Future.wait([
-        _fetchBalance(),
-        _fetchTransactions(),
-        _fetchSwaps(),
-        _fetchLockedCollateral(),
-        _fetchBoardingBalance(),
-      ]);
-
-      if (_bitcoinPriceData.isNotEmpty && mounted) {
-        _updateGradientColors();
-      }
-
-      if (_boardingBalanceSats > 0 && !_isSettling) {
-        _settleBoarding();
-      }
-
-      if ((_recoverableSats > 0 || _expiredSats > 0) && !_isSettling) {
-        _settleRecoverableVtxos();
-      }
-    } finally {
-      _isRefreshing = false;
-    }
-  }
-
-  Future<void> refreshSwapsOnly() async {
-    await _fetchSwaps();
-  }
-
-  Future<void> _fetchSwaps() async {
-    try {
-      if (!_swapService.isInitialized) {
-        await _swapService.initialize();
-      }
-      await _swapService.refreshSwaps();
-      if (mounted) {
-        setState(() {
-          _swaps = List.from(_swapService.swaps);
-        });
-      }
-      logger.i("Fetched ${_swaps.length} swaps");
-    } catch (e) {
-      logger.w("Could not fetch swaps: $e");
-    }
-  }
-
-  Future<void> _fetchLockedCollateral() async {
-    try {
-      if (!_lendasatService.isInitialized) {
-        await _lendasatService.initialize();
-      }
-      if (_lendasatService.isAuthenticated) {
-        await _lendasatService.refreshContracts();
-        int totalLocked = 0;
-        for (final contract in _lendasatService.activeContracts) {
-          totalLocked += contract.effectiveCollateralSats;
-        }
-        if (mounted) {
-          setState(() {
-            _lockedCollateralSats = totalLocked;
-          });
-        }
-        logger.i(
-            "Locked collateral: $_lockedCollateralSats sats from ${_lendasatService.activeContracts.length} active contracts");
-      }
-    } catch (e) {
-      logger.w("Could not fetch locked collateral: $e");
-    }
-  }
-
-  Future<void> _fetchBoardingBalance() async {
-    try {
-      final pendingBalance = await getPendingBalance();
-      if (mounted) {
-        setState(() {
-          _boardingBalanceSats = pendingBalance.toInt();
-        });
-      }
-      if (pendingBalance > BigInt.zero) {
-        logger.i("Boarding balance: $pendingBalance sats (pending settle)");
-      }
-    } catch (e) {
-      logger.w("Could not fetch boarding balance: $e");
-    }
-  }
-
-  Future<void> _settleBoarding({bool manual = false}) async {
-    if (_isSettling || _boardingBalanceSats == 0) return;
-
-    if (!manual && _skipAutoSettle) {
-      final lastAttempt = _lastSettleAttempt;
-      if (lastAttempt != null &&
-          DateTime.now().difference(lastAttempt).inMinutes < 5) {
-        logger.d("Skipping auto-settle - waiting for more confirmations");
-        return;
-      }
-      _skipAutoSettle = false;
-    }
-
-    setState(() {
-      _isSettling = true;
-    });
-
-    try {
-      logger.i("Settling $_boardingBalanceSats sats from boarding address...");
-      await settle();
-      logger.i("Settle completed successfully!");
-      _skipAutoSettle = false;
-      await _fetchBalance();
-      await _fetchBoardingBalance();
-
-      if (mounted) {
-        OverlayService().showSuccess('Funds settled successfully!');
-      }
-    } catch (e) {
-      logger.e("Error settling boarding UTXOs: $e");
-      _lastSettleAttempt = DateTime.now();
-
-      final errorStr = e.toString().toLowerCase();
-      if (errorStr.contains('not yet valid') ||
-          errorStr.contains('invalid_intent_timerange')) {
-        _skipAutoSettle = true;
-        if (manual && mounted) {
-          OverlayService().showError(
-            'Funds need more confirmations before they can be settled. Please wait a few minutes and try again.',
-          );
-        }
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSettling = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _settleRecoverableVtxos() async {
-    if (_isSettling || (_recoverableSats == 0 && _expiredSats == 0)) return;
-
-    setState(() {
-      _isSettling = true;
-    });
-
-    final totalToRecover = _recoverableSats + _expiredSats;
-    try {
-      logger
-          .i("Settling $totalToRecover sats from recoverable/expired VTXOs...");
-      await settle();
-      logger.i("Recoverable VTXOs settled successfully!");
-      await _fetchBalance();
-
-      if (mounted && totalToRecover > 0) {
-        OverlayService().showSuccess('Recovered $totalToRecover sats!');
-      }
-    } catch (e) {
-      logger.e("Error settling recoverable VTXOs: $e");
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSettling = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _fetchTransactions() async {
-    try {
-      setState(() {
-        _isTransactionFetching = true;
-      });
-
-      final transactions = await txHistory();
-
-      // Track boarding transactions for onchain receive detection
-      // This allows us to show settled boarding txs as "Onchain" in history
-      await BoardingTrackingService.processTransactions(transactions);
-
-      if (mounted) {
-        setState(() {
-          _isTransactionFetching = false;
-          _transactions = transactions;
-        });
-      }
-      logger.i("Fetched ${transactions.length} transactions");
-    } catch (e) {
-      logger.e("Error fetching transaction history: $e");
-      if (mounted) {
-        setState(() {
-          _isTransactionFetching = false;
-        });
-        OverlayService().showError(
-            "${AppLocalizations.of(context)!.couldntUpdateTransactions} ${e.toString()}");
-      }
-    }
-  }
-
-  Future<void> _fetchBalance() async {
-    setState(() {
-      _isBalanceLoading = true;
-    });
-
-    try {
-      final balanceResult = await balance();
-
-      final newPendingBalance = balanceResult.offchain.pendingSats.toDouble() /
-          BitcoinConstants.satsPerBtc;
-      final newConfirmedBalance =
-          balanceResult.offchain.confirmedSats.toDouble() /
-              BitcoinConstants.satsPerBtc;
-      final newTotalBalance = balanceResult.offchain.totalSats.toDouble() /
-          BitcoinConstants.satsPerBtc;
-
-      if (mounted) {
-        setState(() {
-          _pendingBalance = newPendingBalance;
-          _confirmedBalance = newConfirmedBalance;
-          _totalBalance = newTotalBalance;
-          _recoverableSats = balanceResult.offchain.recoverableSats.toInt();
-          _expiredSats = balanceResult.offchain.expiredSats.toInt();
-          _isBalanceLoading = false;
-        });
-      }
-
-      await SettingsService().setCachedBalance(
-        total: newTotalBalance,
-        confirmed: newConfirmedBalance,
-        pending: newPendingBalance,
-      );
-
-      logger.i(
-          "Balance updated: Total: $_totalBalance BTC, Confirmed: $_confirmedBalance BTC, Pending: $_pendingBalance BTC");
-    } catch (e) {
-      logger.e("Error fetching balance: $e");
-      if (mounted) {
-        setState(() {
-          _isBalanceLoading = false;
-        });
-        OverlayService().showError(
-            "${AppLocalizations.of(context)!.couldntUpdateBalance} ${e.toString()}");
-      }
-    }
-  }
-
-  double _getCurrentBtcPrice() {
-    if (_bitcoinPriceData.isEmpty) return 0;
-    return _bitcoinPriceData.last.price;
-  }
+  // Public methods for external refresh
+  Future<void> fetchWalletData() => _controller.fetchWalletData();
+  Future<void> refreshSwapsOnly() => _controller.refreshSwapsOnly();
 
   // Navigation handlers
   void _handleSend() {
+    final state = _controller.state;
     logger.i("Send button pressed");
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => RecipientSearchScreen(
           aspId: widget.aspId,
-          availableSats: _totalBalance * BitcoinConstants.satsPerBtc,
-          spendableSats:
-              (_confirmedBalance + _pendingBalance) * BitcoinConstants.satsPerBtc,
-          bitcoinPrice: _getCurrentBtcPrice(),
+          availableSats: state.totalBalance * BitcoinConstants.satsPerBtc,
+          spendableSats: (state.confirmedBalance + state.pendingBalance) *
+              BitcoinConstants.satsPerBtc,
+          bitcoinPrice: state.currentBtcPrice,
         ),
       ),
     );
   }
 
   Future<void> _handleReceive() async {
+    final state = _controller.state;
     logger.i("Receive button pressed");
     await Navigator.push(
       context,
@@ -672,21 +225,20 @@ class WalletScreenState extends State<WalletScreen>
         builder: (context) => ReceiveScreen(
           aspId: widget.aspId,
           amount: 0,
-          bitcoinPrice: _getCurrentBtcPrice(),
+          bitcoinPrice: state.currentBtcPrice,
         ),
       ),
     );
     logger.i("Returned from receive flow, refreshing wallet data");
-    fetchWalletData();
+    _controller.fetchWalletData();
   }
 
   Future<void> _handleScan() async {
+    final state = _controller.state;
     logger.i("Scan button pressed");
     final result = await Navigator.push<String>(
       context,
-      MaterialPageRoute(
-        builder: (context) => const QrScannerScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const QrScannerScreen()),
     );
 
     if (result != null && mounted) {
@@ -696,11 +248,11 @@ class WalletScreenState extends State<WalletScreen>
         MaterialPageRoute(
           builder: (context) => SendScreen(
             aspId: widget.aspId,
-            availableSats: _totalBalance * BitcoinConstants.satsPerBtc,
-            spendableSats:
-                (_confirmedBalance + _pendingBalance) * BitcoinConstants.satsPerBtc,
+            availableSats: state.totalBalance * BitcoinConstants.satsPerBtc,
+            spendableSats: (state.confirmedBalance + state.pendingBalance) *
+                BitcoinConstants.satsPerBtc,
             initialAddress: result,
-            bitcoinPrice: _getCurrentBtcPrice(),
+            bitcoinPrice: state.currentBtcPrice,
           ),
         ),
       );
@@ -711,19 +263,17 @@ class WalletScreenState extends State<WalletScreen>
     logger.i("Buy button pressed");
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const BuyScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const BuyScreen()),
     );
   }
 
   void _handleBitcoinChart() {
-    logger.i("Bitcoin chart button pressed");
     final l10n = AppLocalizations.of(context)!;
 
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.9,
+      height: MediaQuery.of(context).size.height *
+          WalletConfig.chartSheetHeightRatio,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
@@ -733,11 +283,10 @@ class WalletScreenState extends State<WalletScreen>
             text: l10n.bitcoinPriceChart,
           ),
           SizedBox(height: AppTheme.cardPadding * 1.5),
-          Expanded(
+          const Expanded(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
-              child: const BitcoinChartCard(),
+              padding: EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
+              child: BitcoinChartCard(),
             ),
           ),
           Padding(
@@ -782,31 +331,18 @@ class WalletScreenState extends State<WalletScreen>
 
     arkBottomSheet(
       context: context,
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: MediaQuery.of(context).size.height *
+          WalletConfig.settingsSheetHeightRatio,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Settings(aspId: widget.aspId),
     ).then((_) {
-      _loadRecoveryStatus();
+      _controller.loadRecoveryStatus();
     });
-  }
-
-  List<WalletChartData> _getChartData() {
-    if (_bitcoinPriceData.isEmpty) return [];
-    _updateChartCalculator();
-    return _chartCalculator!.getChartData();
-  }
-
-  (double, bool, double) _getPriceChangeMetrics() {
-    if (_bitcoinPriceData.isEmpty) return (0.0, true, 0.0);
-    _updateChartCalculator();
-    return _chartCalculator!.calculatePriceChangeMetrics(_getCurrentBtcPrice());
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final (percentChange, isPositive, balanceChangeInFiat) =
-        _getPriceChangeMetrics();
 
     final systemUiStyle = SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -825,91 +361,100 @@ class WalletScreenState extends State<WalletScreen>
         child: Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           extendBodyBehindAppBar: true,
-          body: RefreshIndicator(
-            onRefresh: fetchWalletData,
-            child: CustomScrollView(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                // Main wallet header with gradient and chart
-                SliverToBoxAdapter(
-                  child: WalletHeader(
-                    totalBalance: _totalBalance,
-                    btcPrice: _getCurrentBtcPrice(),
-                    lockedCollateralSats: _lockedCollateralSats,
-                    boardingBalanceSats: _boardingBalanceSats,
-                    isSettling: _isSettling,
-                    skipAutoSettle: _skipAutoSettle,
-                    chartData: _getChartData(),
-                    isBalanceLoading: _isBalanceLoading,
-                    percentChange: percentChange,
-                    isPositive: isPositive,
-                    balanceChangeInFiat: balanceChangeInFiat,
-                    gradientTopColor: _gradientTopColor,
-                    gradientBottomColor: _gradientBottomColor,
-                    hasAnyRecovery: _wordRecoverySet,
-                    onSend: _handleSend,
-                    onReceive: _handleReceive,
-                    onScan: _handleScan,
-                    onBuy: _handleBuy,
-                    onChart: _handleBitcoinChart,
-                    onSettings: _handleSettings,
-                    onSettleBoarding: () => _settleBoarding(manual: true),
-                  ),
+          body: ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) {
+              final state = _controller.state;
+              final (percentChange, isPositive, balanceChangeInFiat) =
+                  _controller.getPriceChangeMetrics();
+
+              return RefreshIndicator(
+                onRefresh: _controller.fetchWalletData,
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: WalletHeader(
+                        totalBalance: state.totalBalance,
+                        btcPrice: state.currentBtcPrice,
+                        lockedCollateralSats: state.lockedCollateralSats,
+                        boardingBalanceSats: state.boardingBalanceSats,
+                        isSettling: state.isSettling,
+                        skipAutoSettle: state.skipAutoSettle,
+                        chartData: _controller.getChartData(),
+                        isBalanceLoading: state.isBalanceLoading,
+                        percentChange: percentChange,
+                        isPositive: isPositive,
+                        balanceChangeInFiat: balanceChangeInFiat,
+                        gradientTopColor: state.gradientTopColor,
+                        gradientBottomColor: state.gradientBottomColor,
+                        hasAnyRecovery: state.wordRecoverySet,
+                        onSend: _handleSend,
+                        onReceive: _handleReceive,
+                        onScan: _handleScan,
+                        onBuy: _handleBuy,
+                        onChart: _handleBitcoinChart,
+                        onSettings: _handleSettings,
+                        onSettleBoarding: () =>
+                            _controller.settleBoarding(manual: true),
+                      ),
+                    ),
+                    _StickyTransactionHeader(
+                      isTransactionFetching: state.isTransactionFetching,
+                      hasTransactions: state.hasTransactions,
+                      transactionHistoryKey: _transactionHistoryKey,
+                      onRefresh: () async {
+                        await _controller.fetchWalletData();
+                      },
+                    ),
+                    _TransactionList(
+                      transactionHistoryKey: _transactionHistoryKey,
+                      aspId: widget.aspId,
+                      transactions: state.transactions,
+                      swaps: state.swaps,
+                      isLoading: state.isTransactionFetching,
+                      bitcoinPrice: state.currentBtcPrice,
+                    ),
+                    SliverToBoxAdapter(
+                      child: SafeArea(
+                        top: false,
+                        child: SizedBox(height: AppTheme.cardPadding * 2),
+                      ),
+                    ),
+                  ],
                 ),
-
-                // Sticky header for transaction history
-                _buildStickyTransactionHeader(),
-
-                // Transaction list content (lazy loaded)
-                _buildTransactionList(),
-
-                // Bottom padding with SafeArea
-                SliverToBoxAdapter(
-                  child: SafeArea(
-                    top: false,
-                    child: SizedBox(height: AppTheme.cardPadding * 2),
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildTransactionList() {
-    // Use .select() to only rebuild when specific values change
-    final balancesVisible = context.select<UserPreferencesService, bool>(
-      (service) => service.balancesVisible,
-    );
-    final showCoinBalance = context.select<CurrencyPreferenceService, bool>(
-      (service) => service.showCoinBalance,
-    );
+/// Sticky header for transaction list.
+class _StickyTransactionHeader extends StatelessWidget {
+  final bool isTransactionFetching;
+  final bool hasTransactions;
+  final GlobalKey<TransactionHistoryWidgetState> transactionHistoryKey;
+  final VoidCallback onRefresh;
 
-    return TransactionHistoryWidget(
-      key: _transactionHistoryKey,
-      aspId: widget.aspId,
-      transactions: _transactions,
-      swaps: _swaps,
-      loading: _isTransactionFetching,
-      hideAmounts: !balancesVisible,
-      showBtcAsMain: showCoinBalance,
-      bitcoinPrice: _getCurrentBtcPrice(),
-      showHeader: false,
-      asSliverList: true, // Enable lazy loading for better scroll performance
-    );
-  }
+  const _StickyTransactionHeader({
+    required this.isTransactionFetching,
+    required this.hasTransactions,
+    required this.transactionHistoryKey,
+    required this.onRefresh,
+  });
 
-  Widget _buildStickyTransactionHeader() {
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
-    final hasTransactions = _transactions.isNotEmpty || _swaps.isNotEmpty;
 
-    final double headerHeight = (!_isTransactionFetching && hasTransactions)
-        ? 112.0 + AppTheme.cardPadding
-        : 40.0 + AppTheme.cardPadding;
+    final double headerHeight = (!isTransactionFetching && hasTransactions)
+        ? WalletConfig.headerHeightWithSearch + AppTheme.cardPadding
+        : WalletConfig.headerHeightBasic + AppTheme.cardPadding;
 
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
 
@@ -958,14 +503,7 @@ class WalletScreenState extends State<WalletScreen>
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     GestureDetector(
-                      onTap: _isTransactionFetching
-                          ? null
-                          : () async {
-                              await Future.wait([
-                                _fetchTransactions(),
-                                _fetchSwaps(),
-                              ]);
-                            },
+                      onTap: isTransactionFetching ? null : onRefresh,
                       child: Icon(
                         Icons.refresh,
                         size: 20,
@@ -976,7 +514,7 @@ class WalletScreenState extends State<WalletScreen>
                 ),
               ),
               const SizedBox(height: AppTheme.elementSpacing),
-              if (!_isTransactionFetching && hasTransactions)
+              if (!isTransactionFetching && hasTransactions)
                 Padding(
                   padding: const EdgeInsets.only(
                     left: AppTheme.cardPadding,
@@ -984,41 +522,111 @@ class WalletScreenState extends State<WalletScreen>
                     top: AppTheme.elementSpacing,
                     bottom: AppTheme.elementSpacing,
                   ),
-                  child: SearchFieldWidget(
-                    hintText: l10n.search,
-                    isSearchEnabled: true,
-                    handleSearch: (value) {
-                      _transactionHistoryKey.currentState
-                          ?.applySearchFromExternal(value);
+                  child: Consumer<TransactionFilterService>(
+                    builder: (context, filterService, _) {
+                      final hasActiveFilter = filterService.hasAnyFilter;
+                      return SearchFieldWidget(
+                        hintText: l10n.search,
+                        isSearchEnabled: true,
+                        handleSearch: (value) {
+                          transactionHistoryKey.currentState
+                              ?.applySearchFromExternal(value);
+                        },
+                        onChanged: (value) {
+                          transactionHistoryKey.currentState
+                              ?.applySearchFromExternal(value);
+                        },
+                        suffixIcon: IconButton(
+                          icon: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(
+                                Icons.tune,
+                                color: hasActiveFilter
+                                    ? AppTheme.colorBitcoin
+                                    : isDark
+                                        ? AppTheme.white60
+                                        : AppTheme.black60,
+                                size: AppTheme.cardPadding * 0.75,
+                              ),
+                              if (hasActiveFilter)
+                                Positioned(
+                                  right: -2,
+                                  top: -2,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: AppTheme.colorBitcoin,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          onPressed: () async {
+                            FocusScope.of(context).unfocus();
+                            await arkBottomSheet(
+                              context: context,
+                              height: MediaQuery.of(context).size.height *
+                                  WalletConfig.filterSheetHeightRatio,
+                              backgroundColor:
+                                  Theme.of(context).scaffoldBackgroundColor,
+                              child: const TransactionFilterScreen(),
+                            );
+                            transactionHistoryKey.currentState?.refreshFilter();
+                          },
+                        ),
+                      );
                     },
-                    onChanged: (value) {
-                      _transactionHistoryKey.currentState
-                          ?.applySearchFromExternal(value);
-                    },
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        Icons.tune,
-                        color: isDark ? AppTheme.white60 : AppTheme.black60,
-                        size: AppTheme.cardPadding * 0.75,
-                      ),
-                      onPressed: () async {
-                        FocusScope.of(context).unfocus();
-                        await arkBottomSheet(
-                          context: context,
-                          height: MediaQuery.of(context).size.height * 0.7,
-                          backgroundColor:
-                              Theme.of(context).scaffoldBackgroundColor,
-                          child: const TransactionFilterScreen(),
-                        );
-                        _transactionHistoryKey.currentState?.refreshFilter();
-                      },
-                    ),
                   ),
                 ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Transaction list widget.
+class _TransactionList extends StatelessWidget {
+  final GlobalKey<TransactionHistoryWidgetState> transactionHistoryKey;
+  final String aspId;
+  final List transactions;
+  final List swaps;
+  final bool isLoading;
+  final double bitcoinPrice;
+
+  const _TransactionList({
+    required this.transactionHistoryKey,
+    required this.aspId,
+    required this.transactions,
+    required this.swaps,
+    required this.isLoading,
+    required this.bitcoinPrice,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final balancesVisible = context.select<UserPreferencesService, bool>(
+      (service) => service.balancesVisible,
+    );
+    final showCoinBalance = context.select<CurrencyPreferenceService, bool>(
+      (service) => service.showCoinBalance,
+    );
+
+    return TransactionHistoryWidget(
+      key: transactionHistoryKey,
+      aspId: aspId,
+      transactions: transactions.cast(),
+      swaps: swaps.cast(),
+      loading: isLoading,
+      hideAmounts: !balancesVisible,
+      showBtcAsMain: showCoinBalance,
+      bitcoinPrice: bitcoinPrice,
+      showHeader: false,
+      asSliverList: true,
     );
   }
 }

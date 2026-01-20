@@ -3,9 +3,6 @@ import 'dart:async';
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
-import 'package:ark_flutter/src/services/lendasat_service.dart';
-import 'package:ark_flutter/src/services/overlay_service.dart';
-import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
@@ -18,8 +15,10 @@ import 'package:ark_flutter/src/ui/screens/loans/contract_detail_screen.dart';
 import 'package:ark_flutter/src/ui/screens/loans/loan_filter_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/loans/offer_card.dart';
 import 'package:ark_flutter/src/ui/widgets/loans/contract_card.dart';
-import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
+import 'loans_config.dart';
+import 'loans_controller.dart';
+import 'loans_state.dart';
 
 /// Main Lendasat Loans screen with offers and contracts.
 class LoansScreen extends StatefulWidget {
@@ -32,42 +31,28 @@ class LoansScreen extends StatefulWidget {
 }
 
 class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
-  final LendasatService _lendasatService = LendasatService();
-  final SettingsService _settingsService = SettingsService();
+  late final LoansController _controller;
   final ScrollController _scrollController = ScrollController();
-  String _searchQuery = '';
   final FocusNode _searchFocusNode = FocusNode();
   bool _wasKeyboardVisible = false;
   Timer? _keyboardDebounceTimer;
-
-  bool _isLoading = true;
-  bool _isRegistering = false;
-  String? _errorMessage;
-  Timer? _autoRefreshTimer;
-
-  // Filter state
-  LoanFilterOptions _filterOptions = const LoanFilterOptions();
-
-  // Debug info
-  String? _debugPubkey;
-  String? _debugDerivationPath;
-  bool _showDebugInfo = false; // Debug info disabled for production
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeLendasat();
-    _startAutoRefreshTimer();
+    _controller = LoansController();
+    _controller.initialize();
+    _controller.startAutoRefreshTimer();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
-    _autoRefreshTimer?.cancel();
     _keyboardDebounceTimer?.cancel();
     _searchFocusNode.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -76,12 +61,11 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
     _searchFocusNode.unfocus();
   }
 
-  /// Scrolls to the top of the loans screen with a smooth animation
-  /// Called when user taps the loans tab while already on the loans screen
+  /// Scrolls to the top of the loans screen with a smooth animation.
   void scrollToTop() {
     _scrollController.animateTo(
       0,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: LoansConfig.scrollToTopDurationMs),
       curve: Curves.easeOut,
     );
   }
@@ -91,184 +75,113 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     switch (state) {
       case AppLifecycleState.resumed:
-        // Restart auto-refresh timer and refresh data
-        _startAutoRefreshTimer();
-        if (mounted && !_isLoading) {
-          _refresh();
+        _controller.startAutoRefreshTimer();
+        if (mounted && !_controller.state.isLoading) {
+          _controller.refresh();
         }
         break;
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
-        // Stop auto-refresh timer to save battery
-        _autoRefreshTimer?.cancel();
-        _autoRefreshTimer = null;
+        _controller.stopAutoRefreshTimer();
         break;
       default:
         break;
     }
   }
 
-  void _startAutoRefreshTimer() {
-    _autoRefreshTimer?.cancel();
-    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted && _lendasatService.activeContracts.isNotEmpty) {
-        _refresh();
-      }
-    });
-  }
-
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    // Debounce keyboard detection to avoid ~60 callbacks during animation
     _keyboardDebounceTimer?.cancel();
-    _keyboardDebounceTimer = Timer(const Duration(milliseconds: 100), () {
-      if (!mounted) return;
-      final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
-      if (_wasKeyboardVisible && !keyboardVisible) {
-        // Keyboard was just dismissed - unfocus search field
-        _searchFocusNode.unfocus();
-      }
-      _wasKeyboardVisible = keyboardVisible;
-    });
-  }
-
-  Future<void> _initializeLendasat() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      await _lendasatService.initialize();
-
-      // Fetch debug info
-      try {
-        _debugPubkey = await _lendasatService.getPublicKey();
-        _debugDerivationPath = await _lendasatService.getDerivationPath();
-        logger.i('Lendasat pubkey: $_debugPubkey');
-        logger.i('Lendasat derivation path: $_debugDerivationPath');
-      } catch (e) {
-        logger.w('Could not get debug info: $e');
-      }
-
-      // Try to authenticate with Lendasat using wallet pubkey
-      if (!_lendasatService.isAuthenticated) {
-        await _autoAuthenticate();
-      }
-
-      // Try to load data
-      await _loadData();
-
-      // If data is empty after initial load, retry after a short delay
-      // This handles the case where Ark keypair derivation is still in progress
-      if ((_lendasatService.offers.isEmpty ||
-              (_lendasatService.isAuthenticated &&
-                  _lendasatService.contracts.isEmpty)) &&
-          mounted) {
-        logger.i('Lendasat: Initial data empty, retrying after delay...');
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (mounted) {
-          await _loadData();
+    _keyboardDebounceTimer = Timer(
+      const Duration(milliseconds: LoansConfig.keyboardDebounceMs),
+      () {
+        if (!mounted) return;
+        final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+        if (_wasKeyboardVisible && !keyboardVisible) {
+          _searchFocusNode.unfocus();
         }
-
-        // If contracts are still empty after retry, try one more time
-        // This handles slow network or auth token propagation delays
-        if (_lendasatService.isAuthenticated &&
-            _lendasatService.contracts.isEmpty &&
-            mounted) {
-          logger.i('Lendasat: Contracts still empty, retrying once more...');
-          await Future.delayed(const Duration(milliseconds: 500));
-          if (mounted) {
-            try {
-              await _lendasatService.refreshContracts();
-            } catch (e) {
-              logger.w('Could not load contracts on retry: $e');
-            }
-          }
-        }
-      }
-    } catch (e) {
-      logger.e('Error initializing Lendasat: $e');
-      setState(() => _errorMessage = e.toString());
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+        _wasKeyboardVisible = keyboardVisible;
+      },
+    );
   }
 
-  /// Load offers and contracts data.
-  Future<void> _loadData() async {
-    try {
-      if (_lendasatService.isAuthenticated) {
-        await Future.wait([
-          _lendasatService.refreshOffers(),
-          _lendasatService.refreshContracts(),
-        ]);
-      } else {
-        // Try to load offers (may require auth depending on API)
-        await _lendasatService.refreshOffers();
-      }
-    } catch (e) {
-      // Check if this is a 401 error - token expired
-      if (_isUnauthorizedError(e)) {
-        logger.i('Token expired, re-authenticating...');
-        await _autoAuthenticate();
-        // Retry loading data after re-authentication
-        if (_lendasatService.isAuthenticated) {
-          try {
-            await Future.wait([
-              _lendasatService.refreshOffers(),
-              _lendasatService.refreshContracts(),
-            ]);
-          } catch (retryError) {
-            logger.w('Could not load data after re-auth: $retryError');
-          }
-        }
-      } else {
-        // Log but don't fail for other errors
-        logger.w('Could not load data: $e');
-      }
-    }
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        final state = _controller.state;
+
+        return ArkScaffoldUnsafe(
+          context: context,
+          body: GestureDetector(
+            onTap: () => _searchFocusNode.unfocus(),
+            behavior: HitTestBehavior.translucent,
+            child: state.isLoading
+                ? dotProgress(context)
+                : state.errorMessage != null
+                    ? _LoansErrorView(
+                        errorMessage: state.errorMessage,
+                        onRetry: _controller.initialize,
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _controller.refresh,
+                        child: CustomScrollView(
+                          controller: _scrollController,
+                          slivers: [
+                            const SliverToBoxAdapter(
+                              child:
+                                  SizedBox(height: AppTheme.cardPadding * 2.5),
+                            ),
+                            if (state.showDebugInfo)
+                              SliverToBoxAdapter(
+                                child: _LoansDebugCard(
+                                  state: state,
+                                  onClose: _controller.hideDebugInfo,
+                                ),
+                              ),
+                            if (!state.isAuthenticated)
+                              SliverToBoxAdapter(
+                                child: _LoansAuthBanner(
+                                  isRegistering: state.isRegistering,
+                                  onSignUp: () => _showSignupModal(context),
+                                ),
+                              ),
+                            SliverToBoxAdapter(
+                              child: _LoansOffersHeader(),
+                            ),
+                            _LoansOffersSliver(
+                              offers: state.arkadeOffers,
+                              onOfferTap: (offer) => _openOfferDetail(offer),
+                            ),
+                            _LoansStickyHeader(
+                              searchFocusNode: _searchFocusNode,
+                              filterOptions: state.filterOptions,
+                              onSearchChanged: _controller.setSearchQuery,
+                              onFilterTap: () =>
+                                  _showFilterSheet(context, state),
+                            ),
+                            _LoansContractsSliver(
+                              isAuthenticated: state.isAuthenticated,
+                              contracts: state.filteredContracts,
+                              hasActiveFilters: state.hasActiveFilters,
+                              onContractTap: (contract) =>
+                                  _openContractDetail(contract),
+                            ),
+                            const SliverToBoxAdapter(
+                              child: SizedBox(height: AppTheme.cardPadding * 2),
+                            ),
+                          ],
+                        ),
+                      ),
+          ),
+        );
+      },
+    );
   }
 
-  /// Check if error is a 401 Unauthorized error (token expired).
-  bool _isUnauthorizedError(dynamic error) {
-    final errorStr = error.toString().toLowerCase();
-    return errorStr.contains('401') ||
-        errorStr.contains('unauthorized') ||
-        errorStr.contains('invalid token');
-  }
-
-  /// Auto-authenticate with Lendasat using the wallet keypair.
-  /// User should have been registered during wallet signup.
-  Future<void> _autoAuthenticate() async {
-    try {
-      final result = await _lendasatService.authenticate();
-
-      if (result is AuthResult_NeedsRegistration) {
-        // Pubkey not registered - user needs to create an account
-        logger.w('Lendasat: Pubkey not registered, user needs to sign up');
-        // Don't show error - user can still see offers
-      } else if (result is AuthResult_Success) {
-        logger.i('Lendasat: Auto-authentication successful');
-        // Immediately load contracts after successful auth
-        try {
-          await _lendasatService.refreshContracts();
-          logger.i('Lendasat: Contracts loaded after auth');
-        } catch (e) {
-          logger.w('Could not load contracts after auth: $e');
-        }
-      }
-    } catch (e) {
-      logger.e('Lendasat auto-auth error: $e');
-      // Don't throw - user can still see offers without auth
-    }
-  }
-
-  /// Show signup modal to register with Lendasat.
-  void _showSignupModal() {
+  void _showSignupModal(BuildContext context) {
     final emailController = TextEditingController();
     String? errorMessage;
     final l10n = AppLocalizations.of(context)!;
@@ -311,7 +224,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                   keyboardType: TextInputType.emailAddress,
                   autocorrect: false,
                   autofocus: true,
-                  enabled: !_isRegistering,
+                  enabled: !_controller.state.isRegistering,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
@@ -356,77 +269,42 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                   },
                 ),
                 const SizedBox(height: AppTheme.cardPadding),
-                LongButtonWidget(
-                  title: 'Sign Up',
-                  buttonType: ButtonType.solid,
-                  customWidth: double.infinity,
-                  isLoading: _isRegistering,
-                  onTap: () async {
-                    final email = emailController.text.trim().toLowerCase();
+                ListenableBuilder(
+                  listenable: _controller,
+                  builder: (context, _) {
+                    return LongButtonWidget(
+                      title: 'Sign Up',
+                      buttonType: ButtonType.solid,
+                      customWidth: double.infinity,
+                      isLoading: _controller.state.isRegistering,
+                      onTap: () async {
+                        final email = emailController.text.trim().toLowerCase();
 
-                    // Validate email
-                    if (email.isEmpty) {
-                      setModalState(() => errorMessage = l10n.pleaseEnterEmail);
-                      return;
-                    }
-
-                    final emailRegex =
-                        RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                    if (!emailRegex.hasMatch(email)) {
-                      setModalState(() => errorMessage = l10n.invalidEmail);
-                      return;
-                    }
-
-                    setModalState(() => errorMessage = null);
-                    setState(() => _isRegistering = true);
-                    setModalState(() {});
-
-                    try {
-                      // Register with Lendasat
-                      logger.i('[SIGNUP] Registering with Lendasat...');
-                      await _lendasatService.register(
-                        email: email,
-                        name: 'Lendasat User',
-                        inviteCode: 'LAS-651K4',
-                      );
-
-                      // Save email
-                      await _settingsService.setUserEmail(email);
-                      logger.i('[SIGNUP] Registration successful');
-
-                      // Authenticate
-                      await _autoAuthenticate();
-
-                      // Refresh data
-                      await _loadData();
-
-                      if (mounted) {
-                        Navigator.of(context).pop();
-                        OverlayService()
-                            .showSuccess('Registration successful!');
-                        setState(() => _isRegistering = false);
-                      }
-                    } catch (e) {
-                      logger.e('[SIGNUP] Registration failed: $e');
-                      setState(() => _isRegistering = false);
-
-                      // Check if already registered
-                      if (e.toString().toLowerCase().contains('already') ||
-                          e.toString().toLowerCase().contains('exists')) {
-                        // Try to authenticate anyway
-                        await _autoAuthenticate();
-                        if (_lendasatService.isAuthenticated) {
-                          await _loadData();
-                          if (mounted) {
-                            Navigator.of(context).pop();
-                            setState(() {});
-                          }
+                        if (email.isEmpty) {
+                          setModalState(
+                              () => errorMessage = l10n.pleaseEnterEmail);
                           return;
                         }
-                      }
 
-                      setModalState(() => errorMessage = e.toString());
-                    }
+                        final emailRegex =
+                            RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                        if (!emailRegex.hasMatch(email)) {
+                          setModalState(() => errorMessage = l10n.invalidEmail);
+                          return;
+                        }
+
+                        setModalState(() => errorMessage = null);
+
+                        try {
+                          await _controller.register(email: email);
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                          }
+                        } catch (e) {
+                          setModalState(() => errorMessage = e.toString());
+                        }
+                      },
+                    );
                   },
                 ),
               ],
@@ -437,109 +315,126 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _refresh() async {
-    try {
-      await Future.wait([
-        _lendasatService.refreshOffers(),
-        if (_lendasatService.isAuthenticated)
-          _lendasatService.refreshContracts(),
-      ]);
-      if (mounted) setState(() {});
-    } catch (e) {
-      // Check if this is a 401 error - token expired
-      if (_isUnauthorizedError(e)) {
-        logger.i('Token expired during refresh, re-authenticating...');
-        await _autoAuthenticate();
-        // Retry refresh after re-authentication
-        if (_lendasatService.isAuthenticated) {
-          try {
-            await Future.wait([
-              _lendasatService.refreshOffers(),
-              _lendasatService.refreshContracts(),
-            ]);
-            if (mounted) setState(() {});
-          } catch (retryError) {
-            logger.e('Error refreshing after re-auth: $retryError');
-          }
-        }
-      } else {
-        logger.e('Error refreshing: $e');
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ArkScaffoldUnsafe(
+  Future<void> _showFilterSheet(BuildContext context, LoansState state) async {
+    _searchFocusNode.unfocus();
+    await arkBottomSheet(
       context: context,
-      body: GestureDetector(
-        onTap: () => _searchFocusNode.unfocus(),
-        behavior: HitTestBehavior.translucent,
-        child: _isLoading
-            ? dotProgress(context)
-            : _errorMessage != null
-                ? _buildErrorView()
-                : RefreshIndicator(
-                    onRefresh: _refresh,
-                    child: CustomScrollView(
-                      controller: _scrollController,
-                      slivers: [
-                        // Top padding
-                        const SliverToBoxAdapter(
-                          child: SizedBox(height: AppTheme.cardPadding * 2.5),
-                        ),
-
-                        // Debug info (development only)
-                        if (_showDebugInfo)
-                          SliverToBoxAdapter(child: _buildDebugCard(context)),
-
-                        // Auth banner (if not authenticated)
-                        if (!_lendasatService.isAuthenticated)
-                          SliverToBoxAdapter(child: _buildAuthBanner()),
-
-                        // Offers section
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppTheme.cardPadding,
-                              AppTheme.cardPadding,
-                              AppTheme.cardPadding,
-                              AppTheme.elementSpacing,
-                            ),
-                            child: Text(
-                              AppLocalizations.of(context)?.availableOffers ??
-                                  'Available Offers',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                          ),
-                        ),
-
-                        // Offers list
-                        _buildOffersSliver(),
-
-                        // My Contracts section with sticky header
-                        _buildStickyContractsHeader(),
-
-                        // Contracts list
-                        _buildContractsSliver(),
-
-                        // Bottom padding
-                        const SliverToBoxAdapter(
-                          child: SizedBox(height: AppTheme.cardPadding * 2),
-                        ),
-                      ],
-                    ),
-                  ),
+      height: MediaQuery.of(context).size.height *
+          LoansConfig.filterSheetHeightRatio,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: LoanFilterScreen(
+        initialFilters: state.filterOptions,
+        onApply: _controller.setFilterOptions,
       ),
     );
   }
 
-  Widget _buildDebugCard(BuildContext context) {
+  void _openOfferDetail(LoanOffer offer) {
+    _searchFocusNode.unfocus();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LoanOfferDetailScreen(offer: offer),
+      ),
+    ).then((_) => _controller.refresh());
+  }
+
+  void _openContractDetail(Contract contract) {
+    _searchFocusNode.unfocus();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ContractDetailScreen(contractId: contract.id),
+      ),
+    ).then((_) => _controller.refresh());
+  }
+}
+
+// ============================================================================
+// Private Widget Classes
+// ============================================================================
+
+class _LoansOffersHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.cardPadding,
+        AppTheme.cardPadding,
+        AppTheme.cardPadding,
+        AppTheme.elementSpacing,
+      ),
+      child: Text(
+        AppLocalizations.of(context)?.availableOffers ?? 'Available Offers',
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+      ),
+    );
+  }
+}
+
+class _LoansErrorView extends StatelessWidget {
+  final String? errorMessage;
+  final VoidCallback onRetry;
+
+  const _LoansErrorView({
+    required this.errorMessage,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppTheme.cardPadding),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: AppTheme.cardPadding * 2),
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppTheme.errorColor,
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+            Text(
+              AppLocalizations.of(context)?.error ?? 'Error',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: AppTheme.elementSpacing),
+            Text(
+              errorMessage ??
+                  (AppLocalizations.of(context)?.unknownError ??
+                      'Unknown error'),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: AppTheme.cardPadding),
+            LongButtonWidget(
+              title: AppLocalizations.of(context)?.retry ?? 'Retry',
+              buttonType: ButtonType.secondary,
+              onTap: onRetry,
+            ),
+            const SizedBox(height: AppTheme.cardPadding * 2),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LoansDebugCard extends StatelessWidget {
+  final LoansState state;
+  final VoidCallback onClose;
+
+  const _LoansDebugCard({
+    required this.state,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GlassContainer(
       margin: const EdgeInsets.all(AppTheme.cardPadding),
       padding: const EdgeInsets.all(AppTheme.cardPadding),
@@ -564,36 +459,48 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.close, size: 18),
-                onPressed: () => setState(() => _showDebugInfo = false),
+                onPressed: onClose,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
             ],
           ),
           const SizedBox(height: AppTheme.elementSpacing),
-          _buildDebugRow(
-              'Derivation Path', _debugDerivationPath ?? 'Loading...'),
+          _DebugRow(
+            label: 'Derivation Path',
+            value: state.debugDerivationPath ?? 'Loading...',
+          ),
           const SizedBox(height: 4),
-          _buildDebugRow('Public Key', _debugPubkey ?? 'Loading...',
-              isMonospace: true),
+          _DebugRow(
+            label: 'Public Key',
+            value: state.debugPubkey ?? 'Loading...',
+            isMonospace: true,
+          ),
           const SizedBox(height: 4),
-          _buildDebugRow(
-              'Auth Status',
-              _lendasatService.isAuthenticated
-                  ? 'Authenticated'
-                  : 'Not Authenticated'),
-          if (_lendasatService.publicKey != null) ...[
-            const SizedBox(height: 4),
-            _buildDebugRow('Service PubKey', _lendasatService.publicKey!,
-                isMonospace: true),
-          ],
+          _DebugRow(
+            label: 'Auth Status',
+            value:
+                state.isAuthenticated ? 'Authenticated' : 'Not Authenticated',
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildDebugRow(String label, String value,
-      {bool isMonospace = false}) {
+class _DebugRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool isMonospace;
+
+  const _DebugRow({
+    required this.label,
+    required this.value,
+    this.isMonospace = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -619,9 +526,19 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
       ],
     );
   }
+}
 
-  Widget _buildAuthBanner() {
-    // Not authenticated - show info banner with signup option
+class _LoansAuthBanner extends StatelessWidget {
+  final bool isRegistering;
+  final VoidCallback onSignUp;
+
+  const _LoansAuthBanner({
+    required this.isRegistering,
+    required this.onSignUp,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GlassContainer(
       margin: const EdgeInsets.all(AppTheme.cardPadding),
       padding: const EdgeInsets.all(AppTheme.cardPadding),
@@ -653,58 +570,25 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
           LongButtonWidget(
             title: 'Sign Up',
             buttonType: ButtonType.primary,
-            onTap: _showSignupModal,
+            onTap: onSignUp,
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildErrorView() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppTheme.cardPadding),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: AppTheme.cardPadding * 2),
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppTheme.errorColor,
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-            Text(
-              AppLocalizations.of(context)?.error ?? 'Error',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            Text(
-              _errorMessage ??
-                  (AppLocalizations.of(context)?.unknownError ??
-                      'Unknown error'),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-            LongButtonWidget(
-              title: AppLocalizations.of(context)?.retry ?? 'Retry',
-              buttonType: ButtonType.secondary,
-              onTap: _initializeLendasat,
-            ),
-            const SizedBox(height: AppTheme.cardPadding * 2),
-          ],
-        ),
-      ),
-    );
-  }
+class _LoansOffersSliver extends StatelessWidget {
+  final List<LoanOffer> offers;
+  final void Function(LoanOffer) onOfferTap;
 
-  Widget _buildOffersSliver() {
-    // Filter offers to only show Arkade collateral (our wallet uses Arkade)
-    final offers = _lendasatService.offers
-        .where((offer) => offer.collateralAsset == CollateralAsset.arkadeBtc)
-        .toList();
+  const _LoansOffersSliver({
+    required this.offers,
+    required this.onOfferTap,
+  });
 
+  @override
+  Widget build(BuildContext context) {
     if (offers.isEmpty) {
       return SliverToBoxAdapter(
         child: Padding(
@@ -749,7 +633,7 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
             final offer = offers[index];
             return OfferCard(
               offer: offer,
-              onTap: () => _openOfferDetail(offer),
+              onTap: () => onOfferTap(offer),
             );
           },
           childCount: offers.length,
@@ -757,14 +641,26 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
       ),
     );
   }
+}
 
-  /// Builds the sticky "My Contracts" header with gradient fade
-  Widget _buildStickyContractsHeader() {
+class _LoansStickyHeader extends StatelessWidget {
+  final FocusNode searchFocusNode;
+  final LoanFilterOptions filterOptions;
+  final void Function(String) onSearchChanged;
+  final VoidCallback onFilterTap;
+
+  const _LoansStickyHeader({
+    required this.searchFocusNode,
+    required this.filterOptions,
+    required this.onSearchChanged,
+    required this.onFilterTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final bgColor = Theme.of(context).scaffoldBackgroundColor;
-
-    // Match wallet screen pattern: 112 + cardPadding for search bar visible
-    const double headerHeight = 112.0 + AppTheme.elementSpacing;
+    const double headerHeight =
+        LoansConfig.headerHeight + AppTheme.elementSpacing;
 
     return SliverAppBar(
       pinned: true,
@@ -794,7 +690,6 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Match wallet screen top spacing
               const SizedBox(height: AppTheme.cardPadding * 2),
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -813,42 +708,38 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                 child: SearchFieldWidget(
                   hintText: l10n?.search ?? 'Search',
                   isSearchEnabled: true,
-                  node: _searchFocusNode,
-                  handleSearch: (value) {
-                    setState(() {
-                      _searchQuery = value.toLowerCase();
-                    });
-                  },
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value.toLowerCase();
-                    });
-                  },
+                  node: searchFocusNode,
+                  handleSearch: onSearchChanged,
+                  onChanged: onSearchChanged,
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      Icons.tune,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppTheme.white60
-                          : AppTheme.black60,
-                      size: AppTheme.cardPadding * 0.75,
-                    ),
-                    onPressed: () async {
-                      _searchFocusNode.unfocus();
-                      await arkBottomSheet(
-                        context: context,
-                        height: MediaQuery.of(context).size.height * 0.6,
-                        backgroundColor:
-                            Theme.of(context).scaffoldBackgroundColor,
-                        child: LoanFilterScreen(
-                          initialFilters: _filterOptions,
-                          onApply: (filters) {
-                            setState(() {
-                              _filterOptions = filters;
-                            });
-                          },
+                    icon: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Icon(
+                          Icons.tune,
+                          color: filterOptions.hasFilter
+                              ? AppTheme.colorBitcoin
+                              : Theme.of(context).brightness == Brightness.dark
+                                  ? AppTheme.white60
+                                  : AppTheme.black60,
+                          size: AppTheme.cardPadding * 0.75,
                         ),
-                      );
-                    },
+                        if (filterOptions.hasFilter)
+                          Positioned(
+                            right: -2,
+                            top: -2,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: AppTheme.colorBitcoin,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    onPressed: onFilterTap,
                   ),
                 ),
               ),
@@ -858,9 +749,24 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
       ),
     );
   }
+}
 
-  Widget _buildContractsSliver() {
-    if (!_lendasatService.isAuthenticated) {
+class _LoansContractsSliver extends StatelessWidget {
+  final bool isAuthenticated;
+  final List<Contract> contracts;
+  final bool hasActiveFilters;
+  final void Function(Contract) onContractTap;
+
+  const _LoansContractsSliver({
+    required this.isAuthenticated,
+    required this.contracts,
+    required this.hasActiveFilters,
+    required this.onContractTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isAuthenticated) {
       return SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.cardPadding),
@@ -895,73 +801,6 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
         ),
       );
     }
-
-    // Filter contracts by search query and status filter in a single pass
-    final hasSearchFilter = _searchQuery.isNotEmpty;
-    final hasStatusFilter = _filterOptions.hasFilter;
-
-    final contracts = (!hasSearchFilter && !hasStatusFilter)
-        ? _lendasatService.contracts
-        : _lendasatService.contracts.where((contract) {
-            // Apply search filter
-            if (hasSearchFilter) {
-              final lenderName = contract.lender.name.toLowerCase();
-              final amount = contract.loanAmount.toStringAsFixed(2);
-              final statusText = contract.statusText.toLowerCase();
-              final matchesSearch = lenderName.contains(_searchQuery) ||
-                  amount.contains(_searchQuery) ||
-                  statusText.contains(_searchQuery);
-              if (!matchesSearch) return false;
-            }
-
-            // Apply status filter
-            if (hasStatusFilter) {
-              final status = contract.status;
-              final expiryDate = DateTime.parse(contract.expiry);
-              final isOverdue = DateTime.now().isAfter(expiryDate) &&
-                  status != ContractStatus.repaymentConfirmed &&
-                  status != ContractStatus.closed &&
-                  status != ContractStatus.closing &&
-                  status != ContractStatus.closingByClaim;
-
-              bool matchesStatus = false;
-              for (final filter in _filterOptions.selectedStatuses) {
-                switch (filter) {
-                  case 'Active':
-                    if (status == ContractStatus.principalGiven ||
-                        status == ContractStatus.extended) matchesStatus = true;
-                    break;
-                  case 'Pending':
-                    if (status == ContractStatus.requested ||
-                        status == ContractStatus.approved ||
-                        status == ContractStatus.collateralSeen ||
-                        status == ContractStatus.collateralConfirmed)
-                      matchesStatus = true;
-                    break;
-                  case 'Repayment Confirmed':
-                    if (status == ContractStatus.repaymentConfirmed)
-                      matchesStatus = true;
-                    break;
-                  case 'Closed':
-                    if (status == ContractStatus.closed ||
-                        status == ContractStatus.closing ||
-                        status == ContractStatus.closingByClaim)
-                      matchesStatus = true;
-                    break;
-                  case 'Overdue':
-                    if (isOverdue) matchesStatus = true;
-                    break;
-                }
-                if (matchesStatus) break;
-              }
-              if (!matchesStatus) return false;
-            }
-
-            return true;
-          }).toList();
-
-    final hasActiveFilters =
-        _searchQuery.isNotEmpty || _filterOptions.hasFilter;
 
     if (contracts.isEmpty) {
       return SliverToBoxAdapter(
@@ -1013,32 +852,12 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
             final contract = contracts[index];
             return ContractCard(
               contract: contract,
-              onTap: () => _openContractDetail(contract),
+              onTap: () => onContractTap(contract),
             );
           },
           childCount: contracts.length,
         ),
       ),
     );
-  }
-
-  void _openOfferDetail(LoanOffer offer) {
-    _searchFocusNode.unfocus();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => LoanOfferDetailScreen(offer: offer),
-      ),
-    ).then((_) => _refresh());
-  }
-
-  void _openContractDetail(Contract contract) {
-    _searchFocusNode.unfocus();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ContractDetailScreen(contractId: contract.id),
-      ),
-    ).then((_) => _refresh());
   }
 }

@@ -109,6 +109,7 @@ class _LoanFilterScreenState extends State<LoanFilterScreen> {
         children: [
           Expanded(
             child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppTheme.paddingM),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
