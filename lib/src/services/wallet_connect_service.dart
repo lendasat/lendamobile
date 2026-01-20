@@ -296,13 +296,20 @@ class WalletConnectService extends ChangeNotifier {
       logger.i(
           'Reinitializing modal before open (needsReinit: $_needsReinitAfterDisconnect, connected: $isConnected)...');
       await _reinitializeModal();
+
+      // Wait for a frame to ensure the widget tree is ready after reinit
+      await Future.delayed(const Duration(milliseconds: 100));
     }
 
     logger.i('Opening wallet connect modal (attempt ${retryCount + 1})...');
+    logger.i(
+        'Context valid: ${_context != null}, AppKit initialized: $_isInitialized');
+    logger.i('AppKitModal status: ${_appKitModal?.status}');
 
     try {
       await _appKitModal!.openModalView();
-      logger.i('Modal opened successfully');
+      logger.i(
+          'Modal opened successfully, status after: ${_appKitModal?.status}');
     } catch (e) {
       final errorStr = e.toString();
       logger.e('Modal open error: $errorStr');
