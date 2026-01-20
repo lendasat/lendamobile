@@ -299,8 +299,9 @@ class WalletConnectService extends ChangeNotifier {
     logger.i('AppKitModal status: ${_appKitModal?.status}');
 
     try {
-      // Use the library's openModalView which should show the bottom sheet
-      await _appKitModal!.openModalView();
+      // Open the modal with the main wallets page explicitly
+      // This is the recommended pattern from the official example
+      await _appKitModal!.openModalView(ReownAppKitModalMainWalletsPage());
       logger.i('Modal opened, status: ${_appKitModal?.status}');
     } catch (e) {
       final errorStr = e.toString();
