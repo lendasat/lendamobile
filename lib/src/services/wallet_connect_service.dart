@@ -278,8 +278,12 @@ class WalletConnectService extends ChangeNotifier {
     }
 
     // Proactively reinit if needed (after disconnect, the modal state is corrupted)
-    if (_needsReinitAfterDisconnect && _context != null) {
-      logger.i('Reinitializing modal after disconnect...');
+    // Also reinit if not connected - the modal often breaks after any state change
+    if ((_needsReinitAfterDisconnect || !isConnected) &&
+        _context != null &&
+        retryCount == 0) {
+      logger.i(
+          'Reinitializing modal before open (needsReinit: $_needsReinitAfterDisconnect, connected: $isConnected)...');
       await _reinitializeModal();
     }
 
