@@ -69,8 +69,39 @@ class _QrScannerScreenState extends State<QrScannerScreen>
   // ─────────────────────────────────────────────────────────────────────────
 
   void _initializeCamera() {
-    _cameraController = MobileScannerController(autoStart: true);
-    _cameraController.addListener(_handleCameraStateChange);
+    // Create controller without autoStart - we'll start manually after widget is built
+    // This ensures the native permission dialog has time to show
+    _cameraController = MobileScannerController(autoStart: false);
+
+    // Start camera after the first frame to ensure widget is mounted
+    // The native permission dialog will show automatically if needed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _startCameraWithPermissionHandling();
+      }
+    });
+  }
+
+  Future<void> _startCameraWithPermissionHandling() async {
+    try {
+      // This will trigger the native permission dialog if not yet granted
+      await _cameraController.start();
+
+      // If we get here, permission was granted
+      if (mounted) {
+        setState(() => _permissionDenied = false);
+      }
+    } catch (e) {
+      // Permission denied or other error - add listener to track state
+      _cameraController.addListener(_handleCameraStateChange);
+
+      // Check if it's a permission error
+      final state = _cameraController.value;
+      if (state.error != null &&
+          state.error!.errorCode == MobileScannerErrorCode.permissionDenied) {
+        _onPermissionDenied();
+      }
+    }
   }
 
   void _handleCameraStateChange() {
@@ -85,7 +116,7 @@ class _QrScannerScreenState extends State<QrScannerScreen>
       return;
     }
 
-    // Camera started successfully - remove listener to prevent constant calls
+    // Camera started successfully - remove listener
     if (state.isRunning && state.error == null) {
       _cameraController.removeListener(_handleCameraStateChange);
     }
@@ -106,7 +137,6 @@ class _QrScannerScreenState extends State<QrScannerScreen>
 
   Future<void> _retryCamera() async {
     _hasHandledPermissionError = false;
-    _cameraController.addListener(_handleCameraStateChange);
 
     try {
       await _cameraController.start();
@@ -114,7 +144,12 @@ class _QrScannerScreenState extends State<QrScannerScreen>
         setState(() => _permissionDenied = false);
       }
     } catch (e) {
-      // Permission still denied - listener will handle
+      // Permission still denied - check and show bottom sheet again
+      final state = _cameraController.value;
+      if (state.error != null &&
+          state.error!.errorCode == MobileScannerErrorCode.permissionDenied) {
+        _onPermissionDenied();
+      }
     }
   }
 
