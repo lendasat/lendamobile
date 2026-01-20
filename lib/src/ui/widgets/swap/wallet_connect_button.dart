@@ -75,12 +75,22 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
     final isConnected = _appKit?.isConnected ?? false;
     if (isConnected && !_wasConnected) {
       _wasConnected = true;
+      // Ensure we're on the correct chain after connection
+      _ensureCorrectChain();
       widget.onConnected?.call();
     } else if (!isConnected && _wasConnected) {
       _wasConnected = false;
       widget.onDisconnected?.call();
     }
     // Service is automatically notified via its listener on the modal
+  }
+
+  Future<void> _ensureCorrectChain() async {
+    try {
+      await WalletConnectService().ensureCorrectChain(widget.chain);
+    } catch (e) {
+      logger.e('Failed to switch to ${widget.chain.name}: $e');
+    }
   }
 
   Future<void> _initializeAppKit() async {
