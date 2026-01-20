@@ -271,7 +271,18 @@ class WalletConnectService extends ChangeNotifier {
 
   /// Open the wallet connection modal
   /// This shows the same UI as lendaswap website (all wallets, social login, etc.)
-  Future<void> openModal({int retryCount = 0}) async {
+  /// Pass a fresh [context] to ensure the modal can be shown properly
+  Future<void> openModal({BuildContext? context, int retryCount = 0}) async {
+    // Update stored context if a fresh one is provided
+    if (context != null) {
+      _context = context;
+    }
+
+    if (_appKitModal == null && _context != null) {
+      // Not initialized yet, initialize with context
+      await initialize(_context!);
+    }
+
     if (_appKitModal == null) {
       throw Exception(
           'AppKit not initialized. Call initialize(context) first.');

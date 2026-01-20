@@ -99,7 +99,8 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
     }
 
     try {
-      await _walletService.openModal();
+      // Pass fresh context to ensure modal can be shown properly after reinit
+      await _walletService.openModal(context: context);
     } catch (e) {
       logger.e('Failed to open modal: $e');
       if (mounted) {

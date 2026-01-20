@@ -83,7 +83,8 @@ class SwapScreenState extends State<SwapScreen>
 
   // Balance state (for insufficient funds checking)
   BigInt _availableBalanceSats = BigInt.zero;
-  BigInt _spendableBalanceSats = BigInt.zero; // Confirmed + pending for max button
+  BigInt _spendableBalanceSats =
+      BigInt.zero; // Confirmed + pending for max button
   bool _isLoadingBalance = true;
 
   // Swap service
@@ -937,6 +938,9 @@ class SwapScreenState extends State<SwapScreen>
   Future<void> _executeSwap({
     String? targetEvmAddress,
   }) async {
+    // Dismiss keyboard first to prevent it from reopening after sheet closes
+    FocusManager.instance.primaryFocus?.unfocus();
+
     setState(() => isLoading = true);
     Navigator.pop(context); // Close confirmation sheet
 
