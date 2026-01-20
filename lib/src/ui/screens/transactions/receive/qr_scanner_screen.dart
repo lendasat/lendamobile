@@ -115,10 +115,11 @@ class _QrScannerScreenState extends State<QrScannerScreen>
     _isShowingBottomSheet = true;
 
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     await arkBottomSheet(
       context: context,
-      heightFactor: 0.5,
+      height: screenHeight * 0.5,
       isDismissible: true,
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
@@ -279,60 +280,6 @@ class _QrScannerScreenState extends State<QrScannerScreen>
     }
   }
 
-  Widget _buildPermissionDeniedPlaceholder(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.cardPadding * 2),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                CupertinoIcons.camera_fill,
-                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                size: 40,
-              ),
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-            Text(
-              'Camera Access Required',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppTheme.elementSpacing),
-            Text(
-              'Enable camera access in settings to scan QR codes',
-              style: TextStyle(
-                color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppTheme.cardPadding),
-            LongButtonWidget(
-              title: 'Open Settings',
-              buttonType: ButtonType.solid,
-              onTap: _openAppSettings,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -349,71 +296,67 @@ class _QrScannerScreenState extends State<QrScannerScreen>
       ),
       body: Stack(
         children: [
-          // Camera preview or placeholder
-          if (_permissionDenied)
-            _buildPermissionDeniedPlaceholder(context)
-          else
-            MobileScanner(
-              controller: cameraController,
-              onDetect: (barcode) {
-                if (barcode.barcodes.isNotEmpty &&
-                    barcode.barcodes.first.rawValue != null) {
-                  _onQRCodeScanned(barcode.barcodes.first.rawValue!);
-                }
-              },
-            ),
+          // Camera preview (always shown)
+          MobileScanner(
+            controller: cameraController,
+            onDetect: (barcode) {
+              if (barcode.barcodes.isNotEmpty &&
+                  barcode.barcodes.first.rawValue != null) {
+                _onQRCodeScanned(barcode.barcodes.first.rawValue!);
+              }
+            },
+          ),
 
-          // QR Scanner Overlay with cutout and corners (only show when camera active)
-          if (!_permissionDenied) const QRScannerOverlay(),
+          // QR Scanner Overlay with cutout and corners
+          const QRScannerOverlay(),
 
-          // Bottom controls (only show when camera active)
-          if (!_permissionDenied)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  bottom: AppTheme.cardPadding * 8,
-                ),
-                child: GlassContainer(
-                  width: AppTheme.cardPadding * 6.5,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.elementSpacing * 1.5,
-                      vertical: AppTheme.elementSpacing / 1.25,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Switch camera button
-                        GestureDetector(
-                          onTap: () => cameraController.switchCamera(),
-                          child: const Icon(CupertinoIcons.switch_camera),
+          // Bottom controls
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                bottom: AppTheme.cardPadding * 8,
+              ),
+              child: GlassContainer(
+                width: AppTheme.cardPadding * 6.5,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.elementSpacing * 1.5,
+                    vertical: AppTheme.elementSpacing / 1.25,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Switch camera button
+                      GestureDetector(
+                        onTap: () => cameraController.switchCamera(),
+                        child: const Icon(CupertinoIcons.switch_camera),
+                      ),
+
+                      // Torch toggle button
+                      GestureDetector(
+                        onTap: _toggleTorch,
+                        child: Icon(
+                          _torchEnabled
+                              ? CupertinoIcons.bolt_fill
+                              : CupertinoIcons.bolt_slash_fill,
+                          color: _torchEnabled
+                              ? AppTheme.colorBitcoin
+                              : AppTheme.white90,
                         ),
+                      ),
 
-                        // Torch toggle button
-                        GestureDetector(
-                          onTap: _toggleTorch,
-                          child: Icon(
-                            _torchEnabled
-                                ? CupertinoIcons.bolt_fill
-                                : CupertinoIcons.bolt_slash_fill,
-                            color: _torchEnabled
-                                ? AppTheme.colorBitcoin
-                                : AppTheme.white90,
-                          ),
-                        ),
-
-                        // Pick from gallery button
-                        GestureDetector(
-                          onTap: _pickImageAndScan,
-                          child: const Icon(CupertinoIcons.photo_fill),
-                        ),
-                      ],
-                    ),
+                      // Pick from gallery button
+                      GestureDetector(
+                        onTap: _pickImageAndScan,
+                        child: const Icon(CupertinoIcons.photo_fill),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
+          ),
         ],
       ),
     );
