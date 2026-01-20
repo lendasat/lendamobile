@@ -3,8 +3,10 @@ import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/rust/lendasat/models.dart'
+    show Contract, Installment;
 import 'package:ark_flutter/src/services/lendasat_service.dart'
-    show ContractExtension;
+    show ContractExtension, InstallmentExtension;
 import 'package:ark_flutter/src/ui/screens/swap/swap_processing_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
@@ -185,8 +187,8 @@ class _ContractDetailsBody extends StatelessWidget {
               left: AppTheme.cardPadding,
               right: AppTheme.cardPadding,
               bottom: state.hasActionButtons
-                  ? AppTheme.cardPadding * 8
-                  : AppTheme.cardPadding,
+                  ? AppTheme.cardPadding * 10
+                  : AppTheme.cardPadding * 4,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,7 +231,7 @@ class _ContractDetailsBody extends StatelessWidget {
 
 /// Status header with contract ID and status badge.
 class _StatusHeader extends StatelessWidget {
-  final dynamic contract;
+  final Contract contract;
   final ContractDetailController controller;
 
   const _StatusHeader({
@@ -398,7 +400,7 @@ class _StatusHeader extends StatelessWidget {
 
 /// Status badge widget.
 class _StatusBadge extends StatelessWidget {
-  final dynamic contract;
+  final Contract contract;
   final Color color;
 
   const _StatusBadge({required this.contract, required this.color});
@@ -433,7 +435,7 @@ class _StatusBadge extends StatelessWidget {
 
 /// Loan details section.
 class _LoanDetails extends StatelessWidget {
-  final dynamic contract;
+  final Contract contract;
 
   const _LoanDetails({required this.contract});
 
@@ -519,7 +521,7 @@ class _LoanDetails extends StatelessWidget {
 
 /// Collateral details section.
 class _CollateralDetails extends StatelessWidget {
-  final dynamic contract;
+  final Contract contract;
   final ContractDetailState state;
   final ContractDetailController controller;
 
@@ -616,7 +618,7 @@ class _CollateralDetails extends StatelessWidget {
 
 /// Contract address tile with copy functionality.
 class _ContractAddressTile extends StatelessWidget {
-  final dynamic contract;
+  final Contract contract;
   final ContractDetailState state;
   final ContractDetailController controller;
 
@@ -678,7 +680,7 @@ class _ContractAddressTile extends StatelessWidget {
 
 /// Repayment schedule section.
 class _RepaymentSchedule extends StatelessWidget {
-  final dynamic contract;
+  final Contract contract;
   final ContractDetailState state;
   final ContractDetailController controller;
 
@@ -727,6 +729,13 @@ class _RepaymentSchedule extends StatelessWidget {
                 state: state,
                 controller: controller,
               ),
+            if (contract.loanRepaymentAddress != null &&
+                contract.loanRepaymentAddress!.isNotEmpty)
+              _StablecoinAddressTile(
+                contract: contract,
+                state: state,
+                controller: controller,
+              ),
             const SizedBox(height: 16),
             Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
             const SizedBox(height: 16),
@@ -745,7 +754,7 @@ class _RepaymentSchedule extends StatelessWidget {
 
 /// BTC repayment address tile.
 class _BtcAddressTile extends StatelessWidget {
-  final dynamic contract;
+  final Contract contract;
   final ContractDetailState state;
   final ContractDetailController controller;
 
@@ -808,9 +817,78 @@ class _BtcAddressTile extends StatelessWidget {
   }
 }
 
+/// Stablecoin repayment address tile.
+class _StablecoinAddressTile extends StatelessWidget {
+  final Contract contract;
+  final ContractDetailState state;
+  final ContractDetailController controller;
+
+  const _StablecoinAddressTile({
+    required this.contract,
+    required this.state,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    // Purple color for stablecoins (matches the repay button gradient)
+    const stablecoinColor = Color(0xFF8247E5);
+
+    return ArkListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(
+        Icons.attach_money_rounded,
+        size: 20,
+        color: stablecoinColor,
+      ),
+      text: '${contract.loanAssetDisplayName} Address',
+      onTap: controller.copyStablecoinAddress,
+      trailing: SizedBox(
+        width: AppTheme.cardPadding * 6,
+        child: state.showStablecoinAddressCopied
+            ? Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Icon(
+                    Icons.check,
+                    color: AppTheme.successColor,
+                    size: AppTheme.cardPadding * 0.75,
+                  ),
+                  const SizedBox(width: AppTheme.elementSpacing / 2),
+                  const Text(
+                    'Copied',
+                    style: TextStyle(color: AppTheme.successColor),
+                  ),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Expanded(
+                    child: Text(
+                      contract.loanRepaymentAddress!,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.elementSpacing / 2),
+                  Icon(
+                    Icons.copy,
+                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                    size: AppTheme.cardPadding * 0.75,
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
 /// Installment row widget.
 class _InstallmentRow extends StatelessWidget {
-  final dynamic installment;
+  final Installment installment;
   final ContractDetailController controller;
 
   const _InstallmentRow({
@@ -990,16 +1068,37 @@ class _ActionButtons extends StatelessWidget {
         if (contract.canRepayWithLendaswap) ...[
           if (state.canPayCollateral) const SizedBox(height: 12),
           LongButtonWidget(
-            title: state.isRepaying ? 'SWAPPING...' : 'REPAY',
-            buttonType: ButtonType.primary,
+            title: state.isRepaying
+                ? 'SWAPPING...'
+                : state.hasInsufficientRepaymentBalance
+                    ? 'NOT ENOUGH FUNDS'
+                    : 'REPAY',
+            buttonType: state.hasInsufficientRepaymentBalance
+                ? ButtonType.secondary
+                : ButtonType.primary,
             customWidth: double.infinity,
-            buttonGradient: const LinearGradient(
-              colors: [Color(0xFF8247E5), Color(0xFF6C3DC1)],
-            ),
-            onTap: state.isRepaying || state.isActionLoading
+            buttonGradient: state.hasInsufficientRepaymentBalance
+                ? null
+                : const LinearGradient(
+                    colors: [Color(0xFF8247E5), Color(0xFF6C3DC1)],
+                  ),
+            onTap: state.isRepaying ||
+                    state.isActionLoading ||
+                    state.hasInsufficientRepaymentBalance
                 ? null
                 : () => _showRepayConfirmation(context),
           ),
+          if (state.hasInsufficientRepaymentBalance)
+            Padding(
+              padding: const EdgeInsets.only(top: AppTheme.elementSpacing),
+              child: Text(
+                'You need approximately ${(state.estimatedRepaymentSats / BitcoinConstants.satsPerBtc).toStringAsFixed(6)} BTC to repay this loan',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.errorColor,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,

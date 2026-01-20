@@ -1,3 +1,4 @@
+import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/rust/lendasat/models.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart'
     show ContractExtension;
@@ -14,6 +15,7 @@ class ContractDetailState {
   final String? errorMessage;
   final bool showAddressCopied;
   final bool showBtcAddressCopied;
+  final bool showStablecoinAddressCopied;
   final BigInt availableBalanceSats;
   final List<PriceData> bitcoinPriceData;
 
@@ -26,6 +28,7 @@ class ContractDetailState {
     this.errorMessage,
     this.showAddressCopied = false,
     this.showBtcAddressCopied = false,
+    this.showStablecoinAddressCopied = false,
     BigInt? availableBalanceSats,
     this.bitcoinPriceData = const [],
   }) : availableBalanceSats = availableBalanceSats ?? BigInt.zero;
@@ -75,6 +78,32 @@ class ContractDetailState {
     return availableBalanceSats < requiredSats;
   }
 
+  /// Estimated sats needed for loan repayment (with 5% buffer for fees).
+  /// Returns 0 if cannot be calculated (no price data or no repayment needed).
+  int get estimatedRepaymentSats {
+    if (contract == null || currentBtcPrice <= 0) return 0;
+    if (!contract!.canRepayWithLendaswap) return 0;
+
+    final amountToRepay = contract!.balanceOutstanding;
+    if (amountToRepay <= 0) return 0;
+
+    // Convert USD to BTC, then to sats, with 5% buffer for swap fees
+    final btcNeeded = amountToRepay / currentBtcPrice;
+    final satsNeeded = btcNeeded * BitcoinConstants.satsPerBtc;
+    final satsWithBuffer = satsNeeded * 1.05; // 5% buffer for fees
+
+    return satsWithBuffer.ceil();
+  }
+
+  /// Whether user has insufficient balance for loan repayment.
+  bool get hasInsufficientRepaymentBalance {
+    if (contract == null || !contract!.canRepayWithLendaswap) return false;
+    if (currentBtcPrice <= 0) return false; // Can't estimate without price
+
+    final requiredSats = BigInt.from(estimatedRepaymentSats);
+    return availableBalanceSats < requiredSats;
+  }
+
   ContractDetailState copyWith({
     Contract? contract,
     bool? isLoading,
@@ -85,6 +114,7 @@ class ContractDetailState {
     bool clearError = false,
     bool? showAddressCopied,
     bool? showBtcAddressCopied,
+    bool? showStablecoinAddressCopied,
     BigInt? availableBalanceSats,
     List<PriceData>? bitcoinPriceData,
   }) {
@@ -97,6 +127,8 @@ class ContractDetailState {
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       showAddressCopied: showAddressCopied ?? this.showAddressCopied,
       showBtcAddressCopied: showBtcAddressCopied ?? this.showBtcAddressCopied,
+      showStablecoinAddressCopied:
+          showStablecoinAddressCopied ?? this.showStablecoinAddressCopied,
       availableBalanceSats: availableBalanceSats ?? this.availableBalanceSats,
       bitcoinPriceData: bitcoinPriceData ?? this.bitcoinPriceData,
     );

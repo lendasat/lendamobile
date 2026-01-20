@@ -923,6 +923,63 @@ extension ContractExtension on Contract {
 
   /// Check if contract is using Ark collateral.
   bool get isArkCollateral => collateralAsset == CollateralAsset.arkadeBtc;
+
+  /// Get display name for loan asset.
+  String get loanAssetDisplayName {
+    switch (loanAsset) {
+      case LoanAsset.usdcPol:
+        return 'USDC (Polygon)';
+      case LoanAsset.usdtPol:
+        return 'USDT (Polygon)';
+      case LoanAsset.usdcEth:
+        return 'USDC (Ethereum)';
+      case LoanAsset.usdtEth:
+        return 'USDT (Ethereum)';
+      case LoanAsset.usdcStrk:
+        return 'USDC (Starknet)';
+      case LoanAsset.usdtStrk:
+        return 'USDT (Starknet)';
+      case LoanAsset.usdcSol:
+        return 'USDC (Solana)';
+      case LoanAsset.usdtSol:
+        return 'USDT (Solana)';
+      case LoanAsset.usdtLiquid:
+        return 'USDT (Liquid)';
+      case LoanAsset.usd:
+        return 'USD';
+      case LoanAsset.eur:
+        return 'EUR';
+      case LoanAsset.chf:
+        return 'CHF';
+      case LoanAsset.mxn:
+        return 'MXN';
+    }
+  }
+
+  /// Get short display name for loan asset (just the symbol).
+  String get loanAssetSymbol {
+    switch (loanAsset) {
+      case LoanAsset.usdcPol:
+      case LoanAsset.usdcEth:
+      case LoanAsset.usdcStrk:
+      case LoanAsset.usdcSol:
+        return 'USDC';
+      case LoanAsset.usdtPol:
+      case LoanAsset.usdtEth:
+      case LoanAsset.usdtStrk:
+      case LoanAsset.usdtSol:
+      case LoanAsset.usdtLiquid:
+        return 'USDT';
+      case LoanAsset.usd:
+        return 'USD';
+      case LoanAsset.eur:
+        return 'EUR';
+      case LoanAsset.chf:
+        return 'CHF';
+      case LoanAsset.mxn:
+        return 'MXN';
+    }
+  }
 }
 
 /// Extension for LoanOffer to provide convenient helper methods.
