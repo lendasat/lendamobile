@@ -5,6 +5,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
+import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
@@ -39,8 +40,17 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
   @override
   void initState() {
     super.initState();
+    // Register that we're viewing this swap (prevents bottom sheet notification)
+    PaymentOverlayService().setCurrentlyViewedSwap(widget.swapId);
     HapticFeedback.mediumImpact();
     _trackSwap();
+  }
+
+  @override
+  void dispose() {
+    // Unregister swap viewing
+    PaymentOverlayService().setCurrentlyViewedSwap(null);
+    super.dispose();
   }
 
   Future<void> _trackSwap() async {
