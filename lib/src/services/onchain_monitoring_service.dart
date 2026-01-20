@@ -155,8 +155,8 @@ class OnchainMonitoringService extends ChangeNotifier
       _pendingTransactions.addAll(currentPendingBoarding);
 
       // Start or stop monitoring based on whether we have pending transactions
-      final hasPending =
-          currentPendingBoarding.isNotEmpty || currentPendingOffboard.isNotEmpty;
+      final hasPending = currentPendingBoarding.isNotEmpty ||
+          currentPendingOffboard.isNotEmpty;
       if (hasPending) {
         logger.d(
             "[OnchainMonitor] ${currentPendingBoarding.length} pending boarding, ${currentPendingOffboard.length} pending offboard, monitoring");
@@ -177,15 +177,15 @@ class OnchainMonitoringService extends ChangeNotifier
 
     // Check if notifications are suppressed (e.g., during swap)
     if (overlayService.suppressPaymentNotifications) {
-      logger.i(
-          "[OnchainMonitor] Payment notification suppressed for $txid");
+      logger.i("[OnchainMonitor] Payment notification suppressed for $txid");
       return;
     }
 
     // Use global navigator key to get context - works from any screen
     final context = OverlayService.navigatorKey.currentContext;
     if (context == null || !context.mounted) {
-      logger.w("[OnchainMonitor] Cannot show payment overlay - no valid context");
+      logger
+          .w("[OnchainMonitor] Cannot show payment overlay - no valid context");
       return;
     }
 
@@ -202,7 +202,8 @@ class OnchainMonitoringService extends ChangeNotifier
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = OverlayService.navigatorKey.currentContext;
       if (ctx == null || !ctx.mounted) {
-        logger.w("[OnchainMonitor] Context became invalid before showing overlay");
+        logger.w(
+            "[OnchainMonitor] Context became invalid before showing overlay");
         return;
       }
 
@@ -233,8 +234,19 @@ class OnchainMonitoringService extends ChangeNotifier
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(
       Duration(seconds: _pollIntervalSeconds),
-      (_) => _checkForPendingTransactions(),
+      (_) => _safeCheckForPendingTransactions(),
     );
+  }
+
+  /// Safe wrapper for _checkForPendingTransactions that catches all exceptions.
+  /// This ensures the Timer doesn't cause issues if an unexpected error occurs.
+  Future<void> _safeCheckForPendingTransactions() async {
+    try {
+      await _checkForPendingTransactions();
+    } catch (e, stackTrace) {
+      logger.e(
+          "[OnchainMonitor] Unexpected error in polling callback: $e\n$stackTrace");
+    }
   }
 
   /// Stop polling.

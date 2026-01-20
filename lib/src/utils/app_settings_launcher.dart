@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
@@ -10,9 +11,6 @@ import 'package:ark_flutter/src/services/overlay_service.dart';
 class AppSettingsLauncher {
   AppSettingsLauncher._();
 
-  /// Package name used for Android intent URIs
-  static const String _androidPackageName = 'com.lendasat.lendamobile';
-
   /// Opens the app's settings page in device settings.
   ///
   /// - iOS: Opens Settings app directly to app permissions
@@ -20,10 +18,6 @@ class AppSettingsLauncher {
   ///
   /// Shows an error message if the settings cannot be opened.
   static Future<void> openAppSettings(BuildContext context) async {
-    // Capture mounted state before async operation
-    final navigator = Navigator.of(context, rootNavigator: true);
-    final isContextMounted = context.mounted;
-
     try {
       if (Platform.isIOS) {
         await _openIOSSettings();
@@ -31,33 +25,28 @@ class AppSettingsLauncher {
         await _openAndroidSettings();
       }
     } catch (e) {
-      // Only show error if context is still valid
-      if (isContextMounted && navigator.context.mounted) {
-        _showFallbackError();
-      }
+      _showFallbackError();
     }
   }
 
   /// Opens iOS app settings using the app-settings: URL scheme
   static Future<void> _openIOSSettings() async {
     final uri = Uri.parse('app-settings:');
-    await launchUrl(uri);
+    final canLaunch = await canLaunchUrl(uri);
+    if (canLaunch) {
+      await launchUrl(uri);
+    } else {
+      _showFallbackError();
+    }
   }
 
-  /// Opens Android app settings using intent URI scheme
+  /// Opens Android app settings using the app_settings package
   static Future<void> _openAndroidSettings() async {
-    final uri = Uri.parse(
-      'intent:#Intent;'
-      'action=android.settings.APPLICATION_DETAILS_SETTINGS;'
-      'data=package:$_androidPackageName;'
-      'S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3D$_androidPackageName;'
-      'end',
-    );
-
-    await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    try {
+      await AppSettings.openAppSettings();
+    } catch (_) {
+      _showFallbackError();
+    }
   }
 
   /// Shows a fallback error message when settings cannot be opened
