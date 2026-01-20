@@ -24,7 +24,8 @@ class WalletConnectButton extends StatefulWidget {
   State<WalletConnectButton> createState() => _WalletConnectButtonState();
 }
 
-class _WalletConnectButtonState extends State<WalletConnectButton> {
+class _WalletConnectButtonState extends State<WalletConnectButton>
+    with WidgetsBindingObserver {
   final WalletConnectService _walletService = WalletConnectService();
   bool _isInitializing = false;
   bool _wasConnected = false;
@@ -32,14 +33,32 @@ class _WalletConnectButtonState extends State<WalletConnectButton> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _walletService.addListener(_onWalletStateChanged);
     _initializeAppKit();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _walletService.removeListener(_onWalletStateChanged);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // When app resumes from background (e.g., after MetaMask approval),
+    // check if connection state changed
+    if (state == AppLifecycleState.resumed) {
+      logger.i('App resumed - checking wallet connection state');
+      // Force a state check by notifying listeners
+      // The AppKit modal should have updated its state
+      if (_walletService.isConnected && !_wasConnected) {
+        _wasConnected = true;
+        widget.onConnected?.call();
+        if (mounted) setState(() {});
+      }
+    }
   }
 
   void _onWalletStateChanged() {
