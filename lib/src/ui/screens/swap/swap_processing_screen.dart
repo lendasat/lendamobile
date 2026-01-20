@@ -11,6 +11,7 @@ import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/qr_border_painter.dart';
@@ -23,6 +24,7 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Screen that shows the processing status of an ongoing swap.
 class SwapProcessingScreen extends StatefulWidget {
@@ -64,6 +66,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   String? _errorMessage;
   bool _showWalletConnectClaim = false;
   bool _isClaimingWalletConnect = false;
+  bool _isRefunding = false;
 
   /// Get the target EVM chain for claiming tokens
   EvmChain get _targetEvmChain {
@@ -261,6 +264,127 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     if (mounted) {
       OverlayService().showSuccess('Copied to clipboard');
     }
+  }
+
+  /// Format a duration in seconds to a human-readable string.
+  String _formatDuration(int seconds) {
+    if (seconds < 60) {
+      return '$seconds seconds';
+    } else if (seconds < 3600) {
+      final minutes = seconds ~/ 60;
+      final secs = seconds % 60;
+      return secs > 0 ? '${minutes}m ${secs}s' : '$minutes minutes';
+    } else {
+      final hours = seconds ~/ 3600;
+      final minutes = (seconds % 3600) ~/ 60;
+      return minutes > 0 ? '${hours}h ${minutes}m' : '$hours hours';
+    }
+  }
+
+  /// Check if the refund locktime has passed.
+  /// Returns true if refund is available, false otherwise.
+  bool _isRefundLocktimePassed() {
+    if (_swapInfo?.refundLocktime == null) return true; // No locktime = allow
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    return now >= _swapInfo!.refundLocktime!;
+  }
+
+  /// Get remaining time until refund is available.
+  /// Returns null if refund is already available.
+  int? _getRefundTimeRemaining() {
+    if (_swapInfo?.refundLocktime == null) return null;
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final remaining = _swapInfo!.refundLocktime! - now;
+    return remaining > 0 ? remaining : null;
+  }
+
+  /// Handle the refund button tap.
+  /// Routes to appropriate refund method based on swap direction.
+  Future<void> _handleRefund() async {
+    if (_swapInfo == null || !_swapInfo!.canRefund) return;
+
+    // Check if locktime has passed
+    if (!_isRefundLocktimePassed()) {
+      final remaining = _getRefundTimeRemaining();
+      if (remaining != null) {
+        OverlayService().showError(
+          'Refund available in ${_formatDuration(remaining)}',
+        );
+        return;
+      }
+    }
+
+    // Check if this is an EVM→BTC swap (requires web interface)
+    if (_swapService.requiresWebRefund(_swapInfo!)) {
+      await _showEvmRefundInfoSheet();
+      return;
+    }
+
+    // BTC→EVM swap - can refund directly from mobile via VHTLC
+    if (_swapService.canRefundFromMobile(_swapInfo!)) {
+      final refundAddress = await _showRefundAddressSheet();
+      if (refundAddress == null || refundAddress.isEmpty) return;
+
+      setState(() => _isRefunding = true);
+
+      try {
+        final txid =
+            await _swapService.refundVhtlc(widget.swapId, refundAddress);
+        if (mounted) {
+          OverlayService()
+              .showSuccess('Refund initiated: ${_truncateId(txid)}');
+          await _loadSwapInfo();
+        }
+      } catch (e) {
+        logger.e('Refund failed: $e');
+        if (mounted) {
+          OverlayService().showError('Refund failed: ${e.toString()}');
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isRefunding = false);
+        }
+      }
+    }
+  }
+
+  /// Show a bottom sheet to collect the refund address.
+  Future<String?> _showRefundAddressSheet() async {
+    final controller = TextEditingController();
+    String? result;
+
+    await arkBottomSheet(
+      context: context,
+      child: _RefundAddressSheet(
+        controller: controller,
+        onConfirm: (address) {
+          result = address;
+          Navigator.pop(context);
+        },
+      ),
+    );
+
+    return result;
+  }
+
+  /// Show info sheet for EVM→BTC refunds that require web interface.
+  Future<void> _showEvmRefundInfoSheet() async {
+    await arkBottomSheet(
+      context: context,
+      child: _EvmRefundInfoSheet(
+        swapId: widget.swapId,
+        onOpenWeb: () async {
+          Navigator.pop(context);
+          // Open LendaSwap web interface
+          final url = Uri.parse('https://lendaswap.lendasat.com');
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } else {
+            OverlayService().showError('Could not open web browser');
+          }
+        },
+      ),
+    );
   }
 
   @override
@@ -844,13 +968,28 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
             ),
             if (_swapInfo!.canRefund) ...[
               const SizedBox(height: AppTheme.cardPadding),
-              LongButtonWidget(
-                title: 'Refund',
-                buttonType: ButtonType.secondary,
-                onTap: () {
-                  // TODO: Implement refund flow
-                },
-              ),
+              Builder(builder: (context) {
+                final remaining = _getRefundTimeRemaining();
+                final isLocked = remaining != null;
+
+                String buttonTitle;
+                if (_isRefunding) {
+                  buttonTitle = 'Refunding...';
+                } else if (isLocked) {
+                  buttonTitle = 'Refund in ${_formatDuration(remaining)}';
+                } else {
+                  buttonTitle = 'Refund';
+                }
+
+                return LongButtonWidget(
+                  title: buttonTitle,
+                  buttonType: ButtonType.secondary,
+                  state: _isRefunding
+                      ? ButtonState.loading
+                      : (isLocked ? ButtonState.disabled : ButtonState.idle),
+                  onTap: (_isRefunding || isLocked) ? null : _handleRefund,
+                );
+              }),
             ],
           ],
         ),
@@ -951,5 +1090,329 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     } catch (e) {
       return timestamp;
     }
+  }
+}
+
+/// Bottom sheet widget for collecting refund address.
+class _RefundAddressSheet extends StatefulWidget {
+  final TextEditingController controller;
+  final Function(String) onConfirm;
+
+  const _RefundAddressSheet({
+    required this.controller,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_RefundAddressSheet> createState() => _RefundAddressSheetState();
+}
+
+class _RefundAddressSheetState extends State<_RefundAddressSheet> {
+  String? _errorText;
+  bool _isValid = false;
+
+  bool _validateAddress(String address) {
+    if (address.isEmpty) return false;
+    // Ark bech32m addresses
+    if (address.startsWith('ark1') || address.startsWith('tark1')) {
+      return address.length >= 20;
+    }
+    // Bitcoin bech32 addresses
+    if (address.startsWith('bc1') || address.startsWith('tb1')) {
+      return address.length >= 26;
+    }
+    // Legacy Bitcoin addresses
+    if (address.startsWith('1') ||
+        address.startsWith('3') ||
+        address.startsWith('m') ||
+        address.startsWith('n') ||
+        address.startsWith('2')) {
+      return address.length >= 26 && address.length <= 35;
+    }
+    return false;
+  }
+
+  void _onAddressChanged(String value) {
+    setState(() {
+      if (value.isEmpty) {
+        _errorText = null;
+        _isValid = false;
+      } else if (!_validateAddress(value)) {
+        _errorText = 'Invalid Bitcoin/Arkade address';
+        _isValid = false;
+      } else {
+        _errorText = null;
+        _isValid = true;
+      }
+    });
+  }
+
+  Future<void> _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data?.text != null) {
+      widget.controller.text = data!.text!.trim();
+      _onAddressChanged(widget.controller.text);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.cardPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Refund Address',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          Text(
+            'Enter the Bitcoin or Arkade address where you want to receive your refund.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          GlassContainer(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.cardPadding,
+                vertical: AppTheme.elementSpacing * 0.5,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: widget.controller,
+                      onChanged: _onAddressChanged,
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                        fontSize: 14,
+                        fontFamily: 'monospace',
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'ark1... or bc1...',
+                        hintStyle: TextStyle(
+                          color:
+                              isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                        ),
+                        border: InputBorder.none,
+                        errorText: _errorText,
+                        errorStyle: const TextStyle(
+                          color: AppTheme.errorColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _pasteFromClipboard,
+                    icon: Icon(
+                      Icons.paste_rounded,
+                      color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                      size: 20,
+                    ),
+                    tooltip: 'Paste',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+          Row(
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                size: 16,
+                color: Colors.orange,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Make sure this is your address. Refunds cannot be reversed.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.orange,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          LongButtonWidget(
+            title: 'Confirm Refund',
+            customWidth: double.infinity,
+            state: _isValid ? ButtonState.idle : ButtonState.disabled,
+            onTap: _isValid
+                ? () => widget.onConfirm(widget.controller.text)
+                : null,
+          ),
+          SafeArea(
+            top: false,
+            child: const SizedBox(height: AppTheme.cardPadding),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom sheet widget explaining EVM→BTC refunds require web interface.
+class _EvmRefundInfoSheet extends StatelessWidget {
+  final String swapId;
+  final VoidCallback onOpenWeb;
+
+  const _EvmRefundInfoSheet({
+    required this.swapId,
+    required this.onOpenWeb,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.cardPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                color: AppTheme.primaryColor,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Refund via Web',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          Text(
+            'This swap requires you to sign a transaction with your EVM wallet (e.g., MetaMask) to refund your stablecoins.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                ),
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+          Text(
+            'Please use the LendaSwap web interface to complete your refund:',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
+                ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          GlassContainer(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.cardPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Steps to refund:',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: AppTheme.elementSpacing),
+                  _buildStep(context, '1', 'Go to lendaswap.lendasat.com'),
+                  _buildStep(context, '2', 'Connect the same wallet you used'),
+                  _buildStep(context, '3', 'Find this swap in your history'),
+                  _buildStep(context, '4', 'Click "Refund" when available'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+          Row(
+            children: [
+              const Icon(
+                Icons.schedule_rounded,
+                size: 16,
+                color: Colors.orange,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Note: Refund becomes available after the timelock expires.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.orange,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+          LongButtonWidget(
+            title: 'Open Web Interface',
+            customWidth: double.infinity,
+            onTap: onOpenWeb,
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+          LongButtonWidget(
+            title: 'Close',
+            buttonType: ButtonType.secondary,
+            customWidth: double.infinity,
+            onTap: () => Navigator.pop(context),
+          ),
+          SafeArea(
+            top: false,
+            child: const SizedBox(height: AppTheme.cardPadding),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep(BuildContext context, String number, String text) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                number,
+                style: TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

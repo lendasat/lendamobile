@@ -488,6 +488,19 @@ pub async fn lendaswap_refund_vhtlc(swap_id: String, refund_address: String) -> 
     lendaswap::refund_vhtlc(&swap_id, &refund_address).await
 }
 
+/// Refund on-chain HTLC for a failed BTC to Arkade swap.
+///
+/// This spends from the Taproot HTLC back to the user's Bitcoin address.
+/// The refund is only possible after the locktime has expired.
+///
+/// Returns the transaction ID.
+pub async fn lendaswap_refund_onchain_htlc(
+    swap_id: String,
+    refund_address: String,
+) -> Result<String> {
+    lendaswap::refund_onchain_htlc(&swap_id, &refund_address).await
+}
+
 /// Recover swaps from server (after mnemonic restore).
 pub async fn lendaswap_recover_swaps() -> Result<Vec<SwapInfo>> {
     tracing::info!("[LendaSwap API] recover_swaps called");

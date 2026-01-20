@@ -7,6 +7,7 @@ import 'package:ark_flutter/src/models/wallet_activity_item.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
@@ -59,6 +60,8 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
   @override
   void initState() {
     super.initState();
+    // Register that we're viewing this swap (prevents duplicate bottom sheet notification)
+    PaymentOverlayService().setCurrentlyViewedSwap(widget.swapId);
     if (widget.initialSwapItem != null) {
       _swapInfo = widget.initialSwapItem!.swap;
       _isLoading = false;
@@ -71,6 +74,8 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
 
   void _onMonitorStateChanged() {
     if (mounted) {
+      // Refresh swap info when monitor state changes (e.g., auto-claim completed)
+      _loadSwapInfo();
       setState(() {});
     }
   }
@@ -79,6 +84,8 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
   void dispose() {
     _pollTimer?.cancel();
     _swapMonitor.removeListener(_onMonitorStateChanged);
+    // Clear the viewed swap so future notifications can show
+    PaymentOverlayService().setCurrentlyViewedSwap(null);
     super.dispose();
   }
 

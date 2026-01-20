@@ -46,6 +46,11 @@ class SwapInfo {
   /// Used for loan repayment verification.
   final String? evmHtlcClaimTxid;
 
+  /// Unix timestamp after which refund becomes available.
+  /// For BTC→EVM: vhtlc_refund_locktime (Arkade VHTLC)
+  /// For EVM→BTC: evm_refund_locktime (EVM HTLC contract)
+  final PlatformInt64? refundLocktime;
+
   const SwapInfo({
     required this.id,
     required this.status,
@@ -64,6 +69,7 @@ class SwapInfo {
     required this.canRefund,
     required this.detailedStatus,
     this.evmHtlcClaimTxid,
+    this.refundLocktime,
   });
 
   @override
@@ -84,7 +90,8 @@ class SwapInfo {
       canClaimVhtlc.hashCode ^
       canRefund.hashCode ^
       detailedStatus.hashCode ^
-      evmHtlcClaimTxid.hashCode;
+      evmHtlcClaimTxid.hashCode ^
+      refundLocktime.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -107,7 +114,8 @@ class SwapInfo {
           canClaimVhtlc == other.canClaimVhtlc &&
           canRefund == other.canRefund &&
           detailedStatus == other.detailedStatus &&
-          evmHtlcClaimTxid == other.evmHtlcClaimTxid;
+          evmHtlcClaimTxid == other.evmHtlcClaimTxid &&
+          refundLocktime == other.refundLocktime;
 }
 
 /// Simplified swap status for Flutter UI.

@@ -370,7 +370,7 @@ class LendaSwapService extends ChangeNotifier {
     }
   }
 
-  /// Refund a failed swap.
+  /// Refund a failed BTC to EVM swap (VHTLC refund).
   Future<String> refundVhtlc(String swapId, String refundAddress) async {
     try {
       final txid = await lendaswap_api.lendaswapRefundVhtlc(
@@ -383,6 +383,40 @@ class LendaSwapService extends ChangeNotifier {
       logger.e('Error refunding VHTLC: $e');
       rethrow;
     }
+  }
+
+  /// Refund a failed BTC to Arkade swap (on-chain HTLC refund).
+  ///
+  /// This spends from the Taproot HTLC back to the user's Bitcoin address.
+  /// The refund is only possible after the locktime has expired.
+  Future<String> refundOnchainHtlc(String swapId, String refundAddress) async {
+    try {
+      final txid = await lendaswap_api.lendaswapRefundOnchainHtlc(
+        swapId: swapId,
+        refundAddress: refundAddress,
+      );
+      await refreshSwaps();
+      return txid;
+    } catch (e) {
+      logger.e('Error refunding on-chain HTLC: $e');
+      rethrow;
+    }
+  }
+
+  /// Check if a swap can be refunded from mobile.
+  ///
+  /// Returns true for BTC→EVM swaps (can refund via VHTLC).
+  /// Returns false for EVM→BTC swaps (requires web interface with WalletConnect).
+  bool canRefundFromMobile(SwapInfo swap) {
+    return swap.canRefund && swap.direction == 'btc_to_evm';
+  }
+
+  /// Check if a swap requires web interface for refund.
+  ///
+  /// EVM→BTC swaps require the user's EVM wallet to sign a transaction,
+  /// which is not possible from the mobile app without WalletConnect.
+  bool requiresWebRefund(SwapInfo swap) {
+    return swap.canRefund && swap.direction == 'evm_to_btc';
   }
 
   /// Recover swaps from server (after mnemonic restore).
