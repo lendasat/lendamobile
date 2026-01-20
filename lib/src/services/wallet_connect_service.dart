@@ -273,59 +273,44 @@ class WalletConnectService extends ChangeNotifier {
   /// This shows the same UI as lendaswap website (all wallets, social login, etc.)
   /// Pass a fresh [context] to ensure the modal can be shown properly
   Future<void> openModal({BuildContext? context, int retryCount = 0}) async {
-    // Update stored context if a fresh one is provided
-    if (context != null) {
-      _context = context;
+    // MUST have a fresh context to show the modal
+    if (context == null && _context == null) {
+      throw Exception(
+          'No context available. Pass a BuildContext to openModal.');
     }
 
-    if (_appKitModal == null && _context != null) {
-      // Not initialized yet, initialize with context
-      await initialize(_context!);
+    // Always prefer the fresh context passed in
+    final modalContext = context ?? _context!;
+    _context = modalContext;
+
+    // If not initialized or needs reinit, do a full reinit with fresh context
+    if (_appKitModal == null ||
+        _needsReinitAfterDisconnect ||
+        !_isInitialized) {
+      logger.i('Initializing/reinitializing AppKit with fresh context...');
+      await _reinitializeModal();
     }
 
     if (_appKitModal == null) {
-      throw Exception(
-          'AppKit not initialized. Call initialize(context) first.');
-    }
-
-    // Proactively reinit if needed (after disconnect, the modal state is corrupted)
-    // Also reinit if not connected - the modal often breaks after any state change
-    if ((_needsReinitAfterDisconnect || !isConnected) &&
-        _context != null &&
-        retryCount == 0) {
-      logger.i(
-          'Reinitializing modal before open (needsReinit: $_needsReinitAfterDisconnect, connected: $isConnected)...');
-      await _reinitializeModal();
-
-      // Wait for a frame to ensure the widget tree is ready after reinit
-      await Future.delayed(const Duration(milliseconds: 100));
+      throw Exception('Failed to initialize AppKit');
     }
 
     logger.i('Opening wallet connect modal (attempt ${retryCount + 1})...');
-    logger.i(
-        'Context valid: ${_context != null}, AppKit initialized: $_isInitialized');
     logger.i('AppKitModal status: ${_appKitModal?.status}');
 
     try {
+      // Use the library's openModalView which should show the bottom sheet
       await _appKitModal!.openModalView();
-      logger.i(
-          'Modal opened successfully, status after: ${_appKitModal?.status}');
+      logger.i('Modal opened, status: ${_appKitModal?.status}');
     } catch (e) {
       final errorStr = e.toString();
       logger.e('Modal open error: $errorStr');
 
-      // Handle "Bad state: No element" bug in reown_appkit after disconnect
-      // The modal's internal widget stack is empty after disconnect
-      final needsReinit = errorStr.contains('No element') ||
-          errorStr.contains('Bad state') ||
-          errorStr.contains('disposed');
-
-      if (needsReinit && _context != null && retryCount < 2) {
-        logger.w('Modal needs reinit, attempting recovery...');
+      // Handle errors by reinitializing
+      if (retryCount < 2) {
+        logger.w('Modal error, attempting reinit and retry...');
         await _reinitializeModal();
-
-        // Try opening again after reinit
-        await openModal(retryCount: retryCount + 1);
+        await openModal(context: context, retryCount: retryCount + 1);
       } else {
         rethrow;
       }
@@ -334,19 +319,55 @@ class WalletConnectService extends ChangeNotifier {
 
   /// Reinitialize the modal (used after disconnect or on error)
   Future<void> _reinitializeModal() async {
+    logger.i('Reinitializing modal...');
+
+    // Clean up old instance
     _isInitialized = false;
     _needsReinitAfterDisconnect = false;
-    _appKitModal?.removeListener(_onModalStateChanged);
-    try {
-      _appKitModal?.dispose();
-    } catch (_) {}
-    _appKitModal = null;
 
-    // Small delay to let cleanup finish
-    await Future.delayed(const Duration(milliseconds: 300));
+    if (_appKitModal != null) {
+      _appKitModal!.removeListener(_onModalStateChanged);
+      try {
+        _appKitModal!.dispose();
+      } catch (e) {
+        logger.w('Error disposing old modal: $e');
+      }
+      _appKitModal = null;
+    }
 
+    // Wait for cleanup
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    // Create fresh instance with current context
     if (_context != null) {
-      await initialize(_context!, force: true);
+      try {
+        logger.i('Creating fresh ReownAppKitModal...');
+        _appKitModal = ReownAppKitModal(
+          context: _context!,
+          projectId: projectId,
+          metadata: const PairingMetadata(
+            name: 'LendaMobile',
+            description: 'Bitcoin-collateralized lending & swaps',
+            url: 'https://lendasat.com',
+            icons: ['https://lendasat.com/logo.png'],
+            redirect: Redirect(
+              native: 'lendamobile://wc',
+              universal: 'https://lendasat.com/wc',
+              linkMode: false,
+            ),
+          ),
+        );
+
+        await _appKitModal!.init();
+        _appKitModal!.addListener(_onModalStateChanged);
+        _isInitialized = true;
+        _wasConnectedBeforeStateChange = isConnected;
+        logger.i('Fresh modal initialized, status: ${_appKitModal?.status}');
+      } catch (e) {
+        logger.e('Failed to reinitialize modal: $e');
+        _appKitModal = null;
+        _isInitialized = false;
+      }
     }
   }
 
