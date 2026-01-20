@@ -118,7 +118,7 @@ class _QrScannerScreenState extends State<QrScannerScreen>
 
     await arkBottomSheet(
       context: context,
-      height: 280,
+      heightFactor: 0.5,
       isDismissible: true,
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
