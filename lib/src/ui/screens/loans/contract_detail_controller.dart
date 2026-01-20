@@ -141,9 +141,10 @@ class ContractDetailController extends ChangeNotifier {
     try {
       final contract = await _lendasatService.getContract(contractId);
 
-      // Also refresh balance if contract is awaiting deposit
+      // Also refresh balance if contract is awaiting deposit or can be repaid
       BigInt? balance;
-      if (contract.status == ContractStatus.approved) {
+      if (contract.status == ContractStatus.approved ||
+          contract.canRepayWithLendaswap) {
         balance = await _fetchWalletBalance();
       }
 
@@ -194,6 +195,21 @@ class ContractDetailController extends ChangeNotifier {
     Future.delayed(
       Duration(seconds: ContractDetailConfig.copyFeedbackSeconds),
       () => _updateState(_state.copyWith(showBtcAddressCopied: false)),
+    );
+  }
+
+  /// Copy stablecoin repayment address with visual feedback.
+  void copyStablecoinAddress() {
+    if (_state.contract?.loanRepaymentAddress == null) return;
+    Clipboard.setData(
+        ClipboardData(text: _state.contract!.loanRepaymentAddress!));
+    HapticFeedback.lightImpact();
+
+    _updateState(_state.copyWith(showStablecoinAddressCopied: true));
+
+    Future.delayed(
+      Duration(seconds: ContractDetailConfig.copyFeedbackSeconds),
+      () => _updateState(_state.copyWith(showStablecoinAddressCopied: false)),
     );
   }
 
