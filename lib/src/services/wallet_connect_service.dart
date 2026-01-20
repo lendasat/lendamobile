@@ -119,10 +119,10 @@ class WalletConnectService extends ChangeNotifier {
           url: 'https://lendasat.com',
           icons: ['https://lendasat.com/logo.png'],
           redirect: Redirect(
-            native: 'lendamobile://',
-            universal:
-                'https://lendasat.com', // Added universal link for better MetaMask compatibility
-            linkMode: true,
+            native: 'lendamobile://wc',
+            universal: 'https://lendasat.com/wc',
+            // linkMode: false for simple deep links (no domain verification needed)
+            linkMode: false,
           ),
         ),
       );
