@@ -5,6 +5,7 @@ import 'package:ark_flutter/src/rust/lendaswap.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
+import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:flutter/material.dart';
 
 /// Event emitted when a swap is auto-claimed.
@@ -422,13 +423,31 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
-    final amount = swap.direction == 'btc_to_evm'
-        ? '\$${swap.targetAmountUsd.toStringAsFixed(2)}'
-        : '${(swap.sourceAmountSats.toInt() / 100000000).toStringAsFixed(8)} BTC';
+    final overlayService = PaymentOverlayService();
 
-    OverlayService().showSuccess(
-      'Swap completed! Received $amount',
-    );
+    // For EVM→BTC swaps, suppress payment notifications to avoid showing both
+    // "Payment Received" and "Swap Complete" bottom sheets
+    if (swap.direction == 'evm_to_btc') {
+      overlayService.startSuppression();
+      // Stop suppression after 5 seconds to allow future payment notifications
+      Future.delayed(const Duration(seconds: 5), () {
+        overlayService.stopSuppression();
+      });
+    }
+
+    // Show bottom sheet if user is not viewing this swap's screen
+    if (!overlayService.isSwapCurrentlyViewed(swap.id)) {
+      overlayService.showSwapCompletedBottomSheet(
+        context: _overlayContext!,
+        swap: swap,
+      );
+    } else {
+      // User is viewing the swap screen - just show a simple toast
+      final amount = swap.direction == 'btc_to_evm'
+          ? '\$${swap.targetAmountUsd.toStringAsFixed(2)}'
+          : '${(swap.sourceAmountSats.toInt() / 100000000).toStringAsFixed(8)} BTC';
+      OverlayService().showSuccess('Swap completed! Received $amount');
+    }
   }
 
   /// Schedule a delayed wallet refresh after a claim.

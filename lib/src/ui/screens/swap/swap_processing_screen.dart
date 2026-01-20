@@ -6,6 +6,7 @@ import 'package:ark_flutter/src/services/lendaswap_service.dart';
 import 'package:ark_flutter/src/services/lendasat_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
+import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
@@ -76,6 +77,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   @override
   void initState() {
     super.initState();
+    // Register that we're viewing this swap (prevents bottom sheet notification)
+    PaymentOverlayService().setCurrentlyViewedSwap(widget.swapId);
     // Tell the monitoring service to watch this swap
     _swapMonitor.startMonitoringSwap(widget.swapId);
     _loadSwapInfo();
@@ -85,6 +88,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
 
   @override
   void dispose() {
+    // Unregister swap viewing
+    PaymentOverlayService().setCurrentlyViewedSwap(null);
     _pollTimer?.cancel();
     _claimSubscription?.cancel();
     super.dispose();

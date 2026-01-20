@@ -1,8 +1,11 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
+import 'package:ark_flutter/src/rust/lendaswap.dart' show SwapInfo;
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/lendaswap_service.dart'
+    show SwapInfoExtension;
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
@@ -27,6 +30,14 @@ class PaymentOverlayService {
   String? _lastShownPaymentTxid;
   DateTime? _lastShownPaymentTime;
 
+  /// Track currently viewed swap ID to avoid showing bottom sheet when user
+  /// is already viewing the swap detail/processing screen.
+  String? _currentlyViewedSwapId;
+
+  /// Track recently shown swap completions to prevent duplicates
+  String? _lastShownSwapId;
+  DateTime? _lastShownSwapTime;
+
   /// Whether payment notifications are currently suppressed.
   bool get suppressPaymentNotifications => _suppressPaymentNotifications;
 
@@ -38,6 +49,34 @@ class PaymentOverlayService {
   /// Stop suppressing payment notifications (call when swap/send completes).
   void stopSuppression() {
     _suppressPaymentNotifications = false;
+  }
+
+  /// Register that user is viewing a swap screen (call on swap screen init).
+  void setCurrentlyViewedSwap(String? swapId) {
+    _currentlyViewedSwapId = swapId;
+  }
+
+  /// Check if a swap is currently being viewed.
+  bool isSwapCurrentlyViewed(String swapId) {
+    return _currentlyViewedSwapId == swapId;
+  }
+
+  /// Check if a swap completion was recently shown (deduplication).
+  bool _isSwapRecentlyShown(String swapId) {
+    if (_lastShownSwapId == swapId && _lastShownSwapTime != null) {
+      final elapsed = DateTime.now().difference(_lastShownSwapTime!);
+      // Don't show the same swap completion within 30 seconds
+      if (elapsed.inSeconds < 30) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Mark a swap completion as shown.
+  void _markSwapAsShown(String swapId) {
+    _lastShownSwapId = swapId;
+    _lastShownSwapTime = DateTime.now();
   }
 
   /// Check if this payment was recently shown (deduplication)
@@ -81,6 +120,41 @@ class PaymentOverlayService {
       child: _PaymentReceivedBottomSheetContent(
         payment: payment,
         bitcoinPrice: bitcoinPrice,
+        onDismiss: onDismiss,
+      ),
+    );
+
+    // Call onDismiss when bottom sheet is closed
+    onDismiss?.call();
+  }
+
+  /// Show a swap completed bottom sheet.
+  /// Only shows if user is not currently viewing the swap screen.
+  Future<void> showSwapCompletedBottomSheet({
+    required BuildContext context,
+    required SwapInfo swap,
+    VoidCallback? onDismiss,
+  }) async {
+    // Don't show if user is viewing this swap's screen
+    if (isSwapCurrentlyViewed(swap.id)) {
+      return;
+    }
+
+    // Deduplicate - don't show the same swap twice within 30 seconds
+    if (_isSwapRecentlyShown(swap.id)) {
+      return;
+    }
+    _markSwapAsShown(swap.id);
+
+    // Haptic feedback for success
+    await HapticFeedback.mediumImpact();
+
+    await arkBottomSheet(
+      context: context,
+      isDismissible: true,
+      enableDrag: true,
+      child: _SwapCompletedBottomSheetContent(
+        swap: swap,
         onDismiss: onDismiss,
       ),
     );
@@ -283,6 +357,134 @@ class _PaymentReceivedBottomSheetContentState
                       color: AppTheme.successColor,
                     ),
                   ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding * 2),
+          // Back to wallet button
+          LongButtonWidget(
+            title: l10n?.backToWallet ?? 'Back to Wallet',
+            buttonType: ButtonType.transparent,
+            customWidth: double.infinity,
+            onTap: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          const SizedBox(height: AppTheme.cardPadding),
+        ],
+      ),
+    );
+  }
+}
+
+/// Swap completed bottom sheet content widget
+class _SwapCompletedBottomSheetContent extends StatelessWidget {
+  final SwapInfo swap;
+  final VoidCallback? onDismiss;
+
+  const _SwapCompletedBottomSheetContent({
+    required this.swap,
+    this.onDismiss,
+  });
+
+  String _formatAmount(int sats) {
+    final formatted = sats.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
+    return formatted;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final currencyService = context.watch<CurrencyPreferenceService>();
+    final showCoinBalance = currencyService.showCoinBalance;
+
+    // Determine what was received based on swap direction
+    final isBtcToEvm = swap.isBtcToEvm;
+    final receivedAmountUsd = swap.targetAmountUsd;
+    final sentAmountSats = swap.sourceAmountSats.toInt();
+    final btcPrice = BitcoinPriceCache.currentPrice ?? 0;
+
+    // For BTC→EVM swaps, user receives stablecoins
+    // For EVM→BTC swaps, user receives BTC
+    final receivedBtcSats = isBtcToEvm ? 0 : sentAmountSats;
+    final receivedBtc = receivedBtcSats / BitcoinConstants.satsPerBtc;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.cardPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: AppTheme.cardPadding),
+          // Bani success image
+          SizedBox(
+            width: 160,
+            height: 160,
+            child: Image.asset(
+              'assets/images/bani/bani_success.png',
+              fit: BoxFit.contain,
+            ),
+          ),
+          const SizedBox(height: AppTheme.cardPadding * 1.5),
+          // Title
+          Text(
+            'Swap Complete!',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: AppTheme.elementSpacing),
+          // Amount display
+          GestureDetector(
+            onTap: () => currencyService.toggleShowCoinBalance(),
+            behavior: HitTestBehavior.opaque,
+            child: isBtcToEvm
+                // Received stablecoins
+                ? Text(
+                    '+\$${receivedAmountUsd.toStringAsFixed(2)}',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppTheme.successColor,
+                    ),
+                  )
+                // Received BTC
+                : (showCoinBalance || btcPrice == 0)
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '+${_formatAmount(receivedBtcSats)}',
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: AppTheme.successColor,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            AppTheme.satoshiIcon,
+                            size: 32,
+                            color: AppTheme.successColor,
+                          ),
+                        ],
+                      )
+                    : Text(
+                        '+${currencyService.formatAmount(receivedBtc * btcPrice)}',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.successColor,
+                        ),
+                      ),
+          ),
+          const SizedBox(height: AppTheme.elementSpacing / 2),
+          // Swap direction subtitle
+          Text(
+            isBtcToEvm
+                ? '${_formatAmount(sentAmountSats)} sats → ${swap.targetToken.toUpperCase()}'
+                : '\$${receivedAmountUsd.toStringAsFixed(2)} → BTC',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
           ),
           const SizedBox(height: AppTheme.cardPadding * 2),
           // Back to wallet button
