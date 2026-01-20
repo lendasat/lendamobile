@@ -12,13 +12,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 /// QR code scanner screen with camera permission handling.
-///
-/// Features:
-/// - Live camera preview with QR code detection
-/// - Gallery image scanning
-/// - Torch/flashlight toggle
-/// - Front/back camera switching
-/// - Graceful permission denial handling
 class QrScannerScreen extends StatefulWidget {
   const QrScannerScreen({super.key});
 
@@ -28,158 +21,48 @@ class QrScannerScreen extends StatefulWidget {
 
 class _QrScannerScreenState extends State<QrScannerScreen>
     with WidgetsBindingObserver {
-  late final MobileScannerController _cameraController;
+  // Simple controller - no autoStart parameter, uses default behavior
+  // This automatically triggers native permission dialog
+  final MobileScannerController _cameraController = MobileScannerController();
   final ImagePicker _imagePicker = ImagePicker();
 
   bool _isProcessingQR = false;
   bool _torchEnabled = false;
-  bool _permissionDenied = false;
-  bool _hasHandledPermissionError = false;
-  bool _isShowingPermissionSheet = false;
-  bool _wentToSettings = false; // Track if user actually went to settings
+  bool _hasShownPermissionSheet = false;
+  bool _wentToSettings = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeCamera();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _cameraController.removeListener(_handleCameraStateChange);
     _cameraController.dispose();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Only retry if user actually went to settings, not just dismissed the sheet
-    if (state == AppLifecycleState.resumed &&
-        _permissionDenied &&
-        _wentToSettings) {
-      _wentToSettings = false; // Reset flag
-      _retryCamera();
+    // When user returns from settings, try to restart camera
+    if (state == AppLifecycleState.resumed && _wentToSettings) {
+      _wentToSettings = false;
+      _hasShownPermissionSheet = false; // Allow showing sheet again if still denied
+      _cameraController.start();
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Camera Initialization & Permission Handling
-  // ─────────────────────────────────────────────────────────────────────────
-
-  void _initializeCamera() {
-    // Use autoStart: true - this triggers the native permission dialog
-    _cameraController = MobileScannerController(autoStart: true);
-
-    // Add listener after delay to allow native permission dialog to show first
-    // The native dialog is handled by the OS, we only handle the result
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      if (mounted && !_hasHandledPermissionError) {
-        _cameraController.addListener(_handleCameraStateChange);
-        // Check current state in case permission was already denied
-        _checkInitialPermissionState();
-      }
-    });
-  }
-
-  void _checkInitialPermissionState() {
-    final state = _cameraController.value;
-
-    // If there's a permission error, handle it
-    if (state.error != null &&
-        state.error!.errorCode == MobileScannerErrorCode.permissionDenied) {
-      _onPermissionDenied();
-    }
-  }
-
-  void _handleCameraStateChange() {
-    if (_hasHandledPermissionError || _isShowingPermissionSheet) return;
-
-    final state = _cameraController.value;
-
-    // Check for permission denied error
-    if (state.error != null &&
-        state.error!.errorCode == MobileScannerErrorCode.permissionDenied) {
-      _onPermissionDenied();
-      return;
-    }
-
-    // Camera started successfully - remove listener
-    if (state.isRunning && state.error == null) {
-      _cameraController.removeListener(_handleCameraStateChange);
-    }
-  }
-
-  void _onPermissionDenied() {
-    _hasHandledPermissionError = true;
-    _cameraController.removeListener(_handleCameraStateChange);
-    _cameraController.stop();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_isShowingPermissionSheet) {
-        setState(() => _permissionDenied = true);
-        _showPermissionSheet();
-      }
-    });
-  }
-
-  Future<void> _retryCamera() async {
-    _hasHandledPermissionError = false;
-
-    try {
-      await _cameraController.start();
-
-      // Check if camera started successfully
-      if (mounted) {
-        final state = _cameraController.value;
-        if (state.error == null) {
-          setState(() => _permissionDenied = false);
-        } else if (state.error!.errorCode ==
-            MobileScannerErrorCode.permissionDenied) {
-          // Permission still denied
-          _onPermissionDenied();
-        }
-      }
-    } catch (e) {
-      // Error starting camera - check state
-      _checkInitialPermissionState();
-    }
-  }
-
-  Future<void> _showPermissionSheet() async {
-    if (_isShowingPermissionSheet) return;
-    _isShowingPermissionSheet = true;
-
-    await showCameraPermissionSheet(
-      context: context,
-      onGrantAccess: () {
-        _wentToSettings = true; // Mark that user is going to settings
-        AppSettingsLauncher.openAppSettings(context);
-      },
-    );
-
-    _isShowingPermissionSheet = false;
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // QR Code Scanning
-  // ─────────────────────────────────────────────────────────────────────────
-
-  void _onBarcodeDetected(BarcodeCapture capture) {
-    if (capture.barcodes.isEmpty) return;
-
-    final code = capture.barcodes.first.rawValue;
-    if (code != null) {
-      _handleScannedCode(code);
-    }
-  }
-
-  void _handleScannedCode(String code) {
+  void _onQRCodeScanned(String data) {
     if (_isProcessingQR) return;
     _isProcessingQR = true;
+    Navigator.of(context).pop(data);
+  }
 
-    Navigator.of(context).pop(code);
+  Future<void> _toggleTorch() async {
+    await _cameraController.toggleTorch();
+    setState(() => _torchEnabled = !_torchEnabled);
   }
 
   Future<void> _pickImageAndScan() async {
@@ -191,42 +74,37 @@ class _QrScannerScreenState extends State<QrScannerScreen>
       if (result != null && result.barcodes.isNotEmpty) {
         final code = result.barcodes.first.rawValue;
         if (code != null && mounted) {
-          _handleScannedCode(code);
+          _onQRCodeScanned(code);
         }
-      } else {
-        _showNoQrCodeFoundError();
+      } else if (mounted) {
+        OverlayService().showError(
+          AppLocalizations.of(context)?.error ?? 'No QR code found in image',
+        );
       }
     } catch (e) {
-      _showScanError(e);
+      if (mounted) {
+        OverlayService().showError('Error scanning image: $e');
+      }
     }
   }
 
-  void _showNoQrCodeFoundError() {
-    if (!mounted) return;
-    OverlayService().showError(
-      AppLocalizations.of(context)?.error ?? 'No QR code found in image',
-    );
+  void _showPermissionSheet() {
+    if (_hasShownPermissionSheet) return;
+    _hasShownPermissionSheet = true;
+
+    // Show after current frame to avoid build issues
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      showCameraPermissionSheet(
+        context: context,
+        onGrantAccess: () {
+          _wentToSettings = true;
+          AppSettingsLauncher.openAppSettings(context);
+        },
+      );
+    });
   }
-
-  void _showScanError(Object error) {
-    if (!mounted) return;
-    OverlayService().showError('Error scanning image: $error');
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Camera Controls
-  // ─────────────────────────────────────────────────────────────────────────
-
-  Future<void> _toggleTorch() async {
-    await _cameraController.toggleTorch();
-    setState(() => _torchEnabled = !_torchEnabled);
-  }
-
-  void _switchCamera() => _cameraController.switchCamera();
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Build
-  // ─────────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -244,13 +122,34 @@ class _QrScannerScreenState extends State<QrScannerScreen>
       ),
       body: Stack(
         children: [
+          // Camera preview with error handling
           MobileScanner(
             controller: _cameraController,
-            onDetect: _onBarcodeDetected,
+            onDetect: (capture) {
+              if (capture.barcodes.isNotEmpty) {
+                final code = capture.barcodes.first.rawValue;
+                if (code != null) {
+                  _onQRCodeScanned(code);
+                }
+              }
+            },
+            // Handle permission errors via errorBuilder
+            errorBuilder: (context, error) {
+              // Show permission sheet if permission denied
+              if (error.errorCode == MobileScannerErrorCode.permissionDenied) {
+                _showPermissionSheet();
+              }
+              // Return empty container - camera preview area stays black
+              return const SizedBox.expand();
+            },
           ),
+
+          // QR Scanner Overlay
           const QRScannerOverlay(),
+
+          // Bottom controls
           QrScannerControls(
-            onSwitchCamera: _switchCamera,
+            onSwitchCamera: () => _cameraController.switchCamera(),
             onToggleTorch: _toggleTorch,
             onPickImage: _pickImageAndScan,
             isTorchEnabled: _torchEnabled,
