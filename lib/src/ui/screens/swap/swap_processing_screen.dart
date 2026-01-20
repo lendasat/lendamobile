@@ -64,6 +64,15 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
   bool _showWalletConnectClaim = false;
   bool _isClaimingWalletConnect = false;
 
+  /// Get the target EVM chain for claiming tokens
+  EvmChain get _targetEvmChain {
+    final chainId = widget.targetToken.chainId.toLowerCase();
+    if (chainId.contains('ethereum') || chainId == 'eth') {
+      return EvmChain.ethereum;
+    }
+    return EvmChain.polygon;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -726,7 +735,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Your swap is ready! Connect your Ethereum wallet to claim your tokens. '
+              'Your swap is ready! Connect your ${_targetEvmChain.name} wallet to claim your tokens. '
               'You will need to pay gas fees for the claim transaction.',
               style: TextStyle(
                 color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
@@ -736,7 +745,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
             const SizedBox(height: AppTheme.cardPadding),
             // WalletConnect button
             WalletConnectButton(
-              chain: EvmChain.ethereum,
+              chain: _targetEvmChain,
               onConnected: () {},
             ),
             if (_walletService.isConnected) ...[
