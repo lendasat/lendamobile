@@ -435,46 +435,59 @@ class _SwapCompletedBottomSheetContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTheme.elementSpacing),
-          // Amount display
+          // Amount display with swap icon
           GestureDetector(
             onTap: () => currencyService.toggleShowCoinBalance(),
             behavior: HitTestBehavior.opaque,
-            child: isBtcToEvm
-                // Received stablecoins
-                ? Text(
-                    '+\$${receivedAmountUsd.toStringAsFixed(2)}',
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.swap_horiz_rounded,
+                  size: 32,
+                  color: AppTheme.successColor,
+                ),
+                const SizedBox(width: 8),
+                if (isBtcToEvm)
+                  // Received stablecoins
+                  Text(
+                    '\$${receivedAmountUsd.toStringAsFixed(2)}',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                       color: AppTheme.successColor,
                     ),
                   )
-                // Received BTC
-                : (showCoinBalance || btcPrice == 0)
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '+${_formatAmount(receivedBtcSats)}',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: AppTheme.successColor,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            AppTheme.satoshiIcon,
-                            size: 32,
-                            color: AppTheme.successColor,
-                          ),
-                        ],
-                      )
-                    : Text(
-                        '+${currencyService.formatAmount(receivedBtc * btcPrice)}',
+                else if (showCoinBalance || btcPrice == 0)
+                  // Received BTC in sats
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _formatAmount(receivedBtcSats),
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                           color: AppTheme.successColor,
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        AppTheme.satoshiIcon,
+                        size: 32,
+                        color: AppTheme.successColor,
+                      ),
+                    ],
+                  )
+                else
+                  // Received BTC in fiat
+                  Text(
+                    currencyService.formatAmount(receivedBtc * btcPrice),
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppTheme.successColor,
+                    ),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: AppTheme.elementSpacing / 2),
           // Swap direction subtitle
