@@ -4,9 +4,10 @@ import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 
 /// Button for connecting/disconnecting EVM wallets via Reown AppKit
-/// Uses the global WalletConnectService singleton
+/// Creates ReownAppKitModal in didChangeDependencies to ensure valid context
 class WalletConnectButton extends StatefulWidget {
   final EvmChain chain;
   final VoidCallback? onConnected;
@@ -25,30 +26,40 @@ class WalletConnectButton extends StatefulWidget {
 
 class _WalletConnectButtonState extends State<WalletConnectButton>
     with WidgetsBindingObserver {
-  final WalletConnectService _walletService = WalletConnectService();
+  ReownAppKitModal? _appKit;
   bool _isInitializing = false;
   bool _wasConnected = false;
+  bool _didInit = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _walletService.addListener(_onWalletStateChanged);
-    _initializeIfNeeded();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Initialize here where context is guaranteed to be valid
+    if (!_didInit) {
+      _didInit = true;
+      _initializeAppKit();
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _walletService.removeListener(_onWalletStateChanged);
+    _appKit?.removeListener(_onAppKitChanged);
+    // Don't dispose - the service manages the lifecycle
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      logger.i('App resumed - checking wallet connection state');
-      if (_walletService.isConnected && !_wasConnected) {
+      logger.i('App resumed - checking wallet connection');
+      if (_appKit?.isConnected == true && !_wasConnected) {
         _wasConnected = true;
         widget.onConnected?.call();
         if (mounted) setState(() {});
@@ -56,32 +67,56 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
     }
   }
 
-  void _onWalletStateChanged() {
+  void _onAppKitChanged() {
     if (!mounted) return;
+    logger.i('AppKit changed - connected: ${_appKit?.isConnected}');
     setState(() {});
 
-    if (_walletService.isConnected && !_wasConnected) {
+    final isConnected = _appKit?.isConnected ?? false;
+    if (isConnected && !_wasConnected) {
       _wasConnected = true;
       widget.onConnected?.call();
-    } else if (!_walletService.isConnected && _wasConnected) {
+    } else if (!isConnected && _wasConnected) {
       _wasConnected = false;
       widget.onDisconnected?.call();
     }
+    // Service is automatically notified via its listener on the modal
   }
 
-  Future<void> _initializeIfNeeded() async {
-    if (_walletService.isInitialized) {
-      _wasConnected = _walletService.isConnected;
-      return;
-    }
+  Future<void> _initializeAppKit() async {
+    if (_appKit != null) return;
 
     setState(() => _isInitializing = true);
 
     try {
-      await _walletService.initialize(context);
-      _wasConnected = _walletService.isConnected;
+      logger.i('Creating ReownAppKitModal with widget context...');
+
+      _appKit = ReownAppKitModal(
+        context: context,
+        projectId: WalletConnectService.projectId,
+        metadata: const PairingMetadata(
+          name: 'LendaMobile',
+          description: 'Bitcoin-collateralized lending & swaps',
+          url: 'https://lendasat.com',
+          icons: ['https://lendasat.com/logo.png'],
+          redirect: Redirect(
+            native: 'lendamobile://wc',
+            universal: 'https://lendasat.com/wc',
+            linkMode: false,
+          ),
+        ),
+      );
+
+      await _appKit!.init();
+      _appKit!.addListener(_onAppKitChanged);
+      _wasConnected = _appKit!.isConnected;
+
+      // Sync to global service so other screens can access connection state
+      WalletConnectService().setAppKitModal(_appKit);
+
+      logger.i('AppKit initialized in widget, connected: $_wasConnected');
     } catch (e) {
-      logger.e('Failed to initialize WalletConnect: $e');
+      logger.e('Failed to initialize AppKit: $e');
     } finally {
       if (mounted) {
         setState(() => _isInitializing = false);
@@ -90,25 +125,38 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
   }
 
   Future<void> _openModal() async {
+    if (_appKit == null) {
+      logger.w('AppKit not ready, initializing...');
+      await _initializeAppKit();
+    }
+
+    if (_appKit == null) {
+      logger.e('AppKit still null after init');
+      return;
+    }
+
     try {
-      // Always pass fresh context when opening modal
-      await _walletService.openModal(context: context);
+      logger.i('Opening modal with MainWalletsPage...');
+      await _appKit!.openModalView(ReownAppKitModalMainWalletsPage());
+      logger.i('Modal should be visible now');
     } catch (e) {
-      logger.e('Failed to open wallet modal: $e');
+      logger.e('Error opening modal: $e');
     }
   }
 
   Future<void> _disconnect() async {
     try {
-      await _walletService.disconnect();
+      await _appKit?.disconnect();
+      logger.i('Disconnected');
     } catch (e) {
-      logger.e('Failed to disconnect: $e');
+      logger.e('Disconnect error: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isConnected = _appKit?.isConnected ?? false;
 
     if (_isInitializing) {
       return const LongButtonWidget(
@@ -119,7 +167,13 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
       );
     }
 
-    if (_walletService.isConnected) {
+    if (isConnected) {
+      final address = _appKit?.session?.getAddress('eip155') ??
+          _appKit?.session?.getAddress('solana');
+      final shortAddress = address != null && address.length > 12
+          ? '${address.substring(0, 6)}...${address.substring(address.length - 4)}'
+          : address;
+
       return Container(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
         decoration: BoxDecoration(
@@ -160,7 +214,7 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
                     ),
                   ),
                   Text(
-                    _walletService.shortAddress ?? '',
+                    shortAddress ?? '',
                     style: TextStyle(
                       color: isDark ? AppTheme.white60 : AppTheme.black60,
                       fontSize: 12,
@@ -182,7 +236,7 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
       );
     }
 
-    // Disconnected state
+    // Not connected - show connect button
     return LongButtonWidget(
       buttonType: ButtonType.solid,
       title: 'Connect ${widget.chain.name} Wallet',

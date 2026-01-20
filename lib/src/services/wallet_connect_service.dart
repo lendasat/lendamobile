@@ -94,6 +94,31 @@ class WalletConnectService extends ChangeNotifier {
   /// The AppKit modal instance (for direct access to widgets)
   ReownAppKitModal? get appKitModal => _appKitModal;
 
+  /// Set the AppKit modal from an external source (e.g., WalletConnectButton widget)
+  /// This allows the button widget to manage its own modal while keeping the service in sync
+  void setAppKitModal(ReownAppKitModal? modal) {
+    if (_appKitModal == modal) return;
+
+    // Clean up old listener
+    if (_appKitModal != null) {
+      _appKitModal!.removeListener(_onModalStateChanged);
+    }
+
+    _appKitModal = modal;
+    _isInitialized = modal != null;
+    _needsReinitAfterDisconnect = false;
+
+    // Add listener to new modal
+    if (modal != null) {
+      modal.addListener(_onModalStateChanged);
+      _wasConnectedBeforeStateChange = modal.isConnected;
+    }
+
+    logger.i(
+        'AppKit modal set from external source - connected: ${modal?.isConnected}');
+    notifyListeners();
+  }
+
   /// Initialize the AppKit modal
   /// Must be called with a BuildContext before using the service
   Future<void> initialize(BuildContext context, {bool force = false}) async {
