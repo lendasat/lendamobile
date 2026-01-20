@@ -36,6 +36,7 @@ class _QrScannerScreenState extends State<QrScannerScreen>
   bool _permissionDenied = false;
   bool _hasHandledPermissionError = false;
   bool _isShowingPermissionSheet = false;
+  bool _wentToSettings = false; // Track if user actually went to settings
 
   @override
   void initState() {
@@ -54,7 +55,11 @@ class _QrScannerScreenState extends State<QrScannerScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _permissionDenied) {
+    // Only retry if user actually went to settings, not just dismissed the sheet
+    if (state == AppLifecycleState.resumed &&
+        _permissionDenied &&
+        _wentToSettings) {
+      _wentToSettings = false; // Reset flag
       _retryCamera();
     }
   }
@@ -119,7 +124,10 @@ class _QrScannerScreenState extends State<QrScannerScreen>
 
     await showCameraPermissionSheet(
       context: context,
-      onGrantAccess: () => AppSettingsLauncher.openAppSettings(context),
+      onGrantAccess: () {
+        _wentToSettings = true; // Mark that user is going to settings
+        AppSettingsLauncher.openAppSettings(context);
+      },
     );
 
     _isShowingPermissionSheet = false;
