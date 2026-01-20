@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:ark_flutter/theme.dart';
-import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 
 /// Button for connecting/disconnecting EVM wallets via Reown AppKit
-/// Shows the same wallet selection modal as the lendaswap website
+/// Uses AppKitModalConnectButton with custom styling for reliable modal display
 class WalletConnectButton extends StatefulWidget {
   final EvmChain chain;
   final VoidCallback? onConnected;
@@ -51,8 +51,6 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
     // check if connection state changed
     if (state == AppLifecycleState.resumed) {
       logger.i('App resumed - checking wallet connection state');
-      // Force a state check by notifying listeners
-      // The AppKit modal should have updated its state
       if (_walletService.isConnected && !_wasConnected) {
         _wasConnected = true;
         widget.onConnected?.call();
@@ -77,7 +75,10 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
   }
 
   Future<void> _initializeAppKit() async {
-    if (_walletService.isInitialized) return;
+    if (_walletService.isInitialized) {
+      _wasConnected = _walletService.isConnected;
+      return;
+    }
 
     setState(() => _isInitializing = true);
 
@@ -89,23 +90,6 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
     } finally {
       if (mounted) {
         setState(() => _isInitializing = false);
-      }
-    }
-  }
-
-  Future<void> _openModal() async {
-    if (!_walletService.isInitialized) {
-      await _initializeAppKit();
-    }
-
-    try {
-      // Pass fresh context to ensure modal can be shown properly after reinit
-      await _walletService.openModal(context: context);
-    } catch (e) {
-      logger.e('Failed to open modal: $e');
-      if (mounted) {
-        OverlayService()
-            .showError('Failed to open wallet modal: ${e.toString()}');
       }
     }
   }
@@ -123,7 +107,7 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (_isInitializing) {
-      return LongButtonWidget(
+      return const LongButtonWidget(
         buttonType: ButtonType.secondary,
         title: 'Initializing...',
         customWidth: double.infinity,
@@ -131,8 +115,8 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
       );
     }
 
+    // If connected, show connected state with disconnect option
     if (_walletService.isConnected) {
-      // Connected state
       return Container(
         padding: const EdgeInsets.all(AppTheme.cardPadding),
         decoration: BoxDecoration(
@@ -195,16 +179,38 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
       );
     }
 
-    // Disconnected state - icon color matches text color for solid buttons
-    return LongButtonWidget(
-      buttonType: ButtonType.solid,
-      title: 'Connect ${widget.chain.name} Wallet',
-      leadingIcon: const Icon(
-        Icons.account_balance_wallet_outlined,
-        color: Color(0xFF1A0A00), // Match text color for solid buttons
+    // If not initialized yet, show a simple button
+    final appKit = _walletService.appKitModal;
+    if (appKit == null) {
+      return LongButtonWidget(
+        buttonType: ButtonType.solid,
+        title: 'Connect ${widget.chain.name} Wallet',
+        leadingIcon: const Icon(
+          Icons.account_balance_wallet_outlined,
+          color: Color(0xFF1A0A00),
+        ),
+        customWidth: double.infinity,
+        onTap: _initializeAppKit,
+      );
+    }
+
+    // Use AppKitModalConnectButton with custom styling for reliable modal opening
+    // The library handles modal state internally when using this widget
+    return AppKitModalConnectButton(
+      appKit: appKit,
+      custom: LongButtonWidget(
+        buttonType: ButtonType.solid,
+        title: 'Connect ${widget.chain.name} Wallet',
+        leadingIcon: const Icon(
+          Icons.account_balance_wallet_outlined,
+          color: Color(0xFF1A0A00),
+        ),
+        customWidth: double.infinity,
+        onTap: () {
+          logger.i('Custom button tapped, opening modal via AppKit...');
+          appKit.openModalView();
+        },
       ),
-      customWidth: double.infinity,
-      onTap: _openModal,
     );
   }
 }
