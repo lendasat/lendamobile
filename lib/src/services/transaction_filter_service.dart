@@ -35,17 +35,17 @@ class TransactionFilterService extends ChangeNotifier {
   bool get hasDirectionFilter =>
       _selectedFilters.any((f) => directionFilters.contains(f));
 
-  /// Check if a network type is enabled (visible)
-  /// Returns true if no network filters are set (all visible) or if this network is selected
+  /// Check if a network filter pill should be highlighted
+  /// Returns true only if this network is explicitly selected
+  /// No selection = no pills highlighted = show all (default)
   bool isNetworkEnabled(String network) {
-    if (!hasNetworkFilter) return true; // No filters = all enabled
     return _selectedFilters.contains(network);
   }
 
-  /// Check if a direction is enabled (visible)
-  /// Returns true if no direction filters are set (all visible) or if this direction is selected
+  /// Check if a direction filter pill should be highlighted
+  /// Returns true only if this direction is explicitly selected
+  /// No selection = no pills highlighted = show all (default)
   bool isDirectionEnabled(String direction) {
-    if (!hasDirectionFilter) return true; // No filters = all enabled
     return _selectedFilters.contains(direction);
   }
 
@@ -68,52 +68,28 @@ class TransactionFilterService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Toggle a network filter with whitelist logic
-  /// Clicking a network SELECTS it (shows only selected networks)
-  /// First click: show only that network
-  /// Additional clicks: add/remove from visible set
+  /// Toggle a network filter - simple on/off toggle
+  /// - Highlighted pills = types that will be shown
+  /// - No pills highlighted = show all (default)
+  /// - Some pills highlighted = show only those types
   void toggleNetworkFilter(String network) {
-    if (!hasNetworkFilter) {
-      // No network filters set = all are visible
-      // User clicks one to SELECT it (show only this one)
-      _selectedFilters.add(network);
-    } else if (_selectedFilters.contains(network)) {
-      // This network is selected, deselect it (hide it)
+    if (_selectedFilters.contains(network)) {
       _selectedFilters.remove(network);
-      // If no networks left selected, we stay in that state (nothing shown)
-      // User needs to select something or clear filters
     } else {
-      // This network is not selected, select it (show it)
       _selectedFilters.add(network);
-      // If all networks are now selected, clear them (back to default "all visible")
-      if (networkFilters.every((n) => _selectedFilters.contains(n))) {
-        for (final n in networkFilters) {
-          _selectedFilters.remove(n);
-        }
-      }
     }
     notifyListeners();
   }
 
-  /// Toggle a direction filter with whitelist logic
-  /// Clicking a direction SELECTS it (shows only selected directions)
+  /// Toggle a direction filter - simple on/off toggle
+  /// - Highlighted pills = directions that will be shown
+  /// - No pills highlighted = show all (default)
+  /// - Some pills highlighted = show only those directions
   void toggleDirectionFilter(String direction) {
-    if (!hasDirectionFilter) {
-      // No direction filters set = all are visible
-      // User clicks one to SELECT it (show only this one)
-      _selectedFilters.add(direction);
-    } else if (_selectedFilters.contains(direction)) {
-      // This direction is selected, deselect it (hide it)
+    if (_selectedFilters.contains(direction)) {
       _selectedFilters.remove(direction);
     } else {
-      // This direction is not selected, select it (show it)
       _selectedFilters.add(direction);
-      // If all directions are now selected, clear them (back to default "all visible")
-      if (directionFilters.every((d) => _selectedFilters.contains(d))) {
-        for (final d in directionFilters) {
-          _selectedFilters.remove(d);
-        }
-      }
     }
     notifyListeners();
   }
