@@ -613,7 +613,10 @@ class _EvmSwapFundingScreenState extends State<EvmSwapFundingScreen> {
                       TextButton(
                         onPressed: () async {
                           await _walletService.disconnect();
-                          setState(() {});
+                          setState(() {
+                            _currentStep = FundingStep.connectWallet;
+                            _error = null;
+                          });
                         },
                         child: Text(
                           'Switch',

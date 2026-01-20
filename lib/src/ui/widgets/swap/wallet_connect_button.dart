@@ -194,22 +194,37 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
       );
     }
 
-    // Use AppKitModalConnectButton with custom styling for reliable modal opening
-    // The library handles modal state internally when using this widget
+    // Use AppKitModalConnectButton - it handles the tap internally
+    // We provide a styled container and let the library handle tap events
     return AppKitModalConnectButton(
       appKit: appKit,
-      custom: LongButtonWidget(
-        buttonType: ButtonType.solid,
-        title: 'Connect ${widget.chain.name} Wallet',
-        leadingIcon: const Icon(
-          Icons.account_balance_wallet_outlined,
-          color: Color(0xFF1A0A00),
+      // Don't use a widget with its own onTap - let AppKitModalConnectButton handle it
+      custom: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        decoration: BoxDecoration(
+          color: AppTheme.colorBitcoin,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
         ),
-        customWidth: double.infinity,
-        onTap: () {
-          logger.i('Custom button tapped, opening modal via AppKit...');
-          appKit.openModalView();
-        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.account_balance_wallet_outlined,
+              color: Color(0xFF1A0A00),
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Connect ${widget.chain.name} Wallet',
+              style: const TextStyle(
+                color: Color(0xFF1A0A00),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
