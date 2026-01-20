@@ -72,14 +72,18 @@ class _QrScannerScreenState extends State<QrScannerScreen>
     if (_hasHandledPermissionError || _isShowingPermissionSheet) return;
 
     final state = _cameraController.value;
-    if (_isPermissionDeniedError(state)) {
-      _onPermissionDenied();
-    }
-  }
 
-  bool _isPermissionDeniedError(MobileScannerState state) {
-    return state.error != null &&
-        state.error!.errorCode == MobileScannerErrorCode.permissionDenied;
+    // Check for permission denied error
+    if (state.error != null &&
+        state.error!.errorCode == MobileScannerErrorCode.permissionDenied) {
+      _onPermissionDenied();
+      return;
+    }
+
+    // Camera started successfully - remove listener to prevent constant calls
+    if (state.isRunning && state.error == null) {
+      _cameraController.removeListener(_handleCameraStateChange);
+    }
   }
 
   void _onPermissionDenied() {
