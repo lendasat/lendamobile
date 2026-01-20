@@ -147,6 +147,17 @@ Future<String> lendaswapRefundVhtlc(
     RustLib.instance.api.crateApiLendaswapApiLendaswapRefundVhtlc(
         swapId: swapId, refundAddress: refundAddress);
 
+/// Refund on-chain HTLC for a failed BTC to Arkade swap.
+///
+/// This spends from the Taproot HTLC back to the user's Bitcoin address.
+/// The refund is only possible after the locktime has expired.
+///
+/// Returns the transaction ID.
+Future<String> lendaswapRefundOnchainHtlc(
+        {required String swapId, required String refundAddress}) =>
+    RustLib.instance.api.crateApiLendaswapApiLendaswapRefundOnchainHtlc(
+        swapId: swapId, refundAddress: refundAddress);
+
 /// Recover swaps from server (after mnemonic restore).
 Future<List<SwapInfo>> lendaswapRecoverSwaps() =>
     RustLib.instance.api.crateApiLendaswapApiLendaswapRecoverSwaps();

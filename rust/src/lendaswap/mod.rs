@@ -434,6 +434,48 @@ pub async fn refund_vhtlc(swap_id: &str, refund_address: &str) -> Result<String>
         .map_err(|e| anyhow!("Failed to refund VHTLC: {}", e))
 }
 
+/// Refund on-chain HTLC for a failed BTC to Arkade swap.
+///
+/// This spends from the Taproot HTLC back to the user's Bitcoin address.
+/// The refund is only possible after the locktime has expired.
+pub async fn refund_onchain_htlc(swap_id: &str, refund_address: &str) -> Result<String> {
+    let lock = get_client_lock();
+    let guard = lock.read().await;
+    let client = guard
+        .as_ref()
+        .ok_or_else(|| anyhow!("LendaSwap client not initialized"))?;
+
+    tracing::info!(
+        "[LendaSwap] refund_onchain_htlc called for swap {} to address {}",
+        swap_id,
+        refund_address
+    );
+
+    let result = client
+        .refund_onchain_htlc(swap_id, refund_address)
+        .await
+        .map_err(|e| anyhow!("Failed to refund on-chain HTLC: {}", e));
+
+    match &result {
+        Ok(txid) => {
+            tracing::info!(
+                "[LendaSwap] refund_onchain_htlc SUCCESS for {} - txid: {}",
+                swap_id,
+                txid
+            );
+        }
+        Err(e) => {
+            tracing::error!(
+                "[LendaSwap] refund_onchain_htlc FAILED for {}: {:?}",
+                swap_id,
+                e
+            );
+        }
+    }
+
+    result
+}
+
 /// Recover swaps from server (after mnemonic restore).
 pub async fn recover_swaps() -> Result<Vec<ExtendedSwapStorageData>> {
     let lock = get_client_lock();
@@ -625,6 +667,10 @@ pub struct SwapInfo {
     /// This is set when the swap completes and the EVM side is claimed.
     /// Used for loan repayment verification.
     pub evm_htlc_claim_txid: Option<String>,
+    /// Unix timestamp after which refund becomes available.
+    /// For BTC→EVM: vhtlc_refund_locktime (Arkade VHTLC)
+    /// For EVM→BTC: evm_refund_locktime (EVM HTLC contract)
+    pub refund_locktime: Option<i64>,
 }
 
 impl SwapInfo {
@@ -635,11 +681,10 @@ impl SwapInfo {
                 // For BTC→EVM: can claim via Gelato when server has funded
                 let can_claim = matches!(r.common.status, ApiSwapStatus::ServerFunded);
                 // Can refund if in refundable state
+                // Note: ClientRefundedServerFunded means client already refunded - server must act
                 let can_refund = matches!(
                     r.common.status,
-                    ApiSwapStatus::ClientRefundedServerFunded
-                        | ApiSwapStatus::ClientInvalidFunded
-                        | ApiSwapStatus::ClientFundedTooLate
+                    ApiSwapStatus::ClientInvalidFunded | ApiSwapStatus::ClientFundedTooLate
                 );
 
                 SwapInfo {
@@ -660,17 +705,18 @@ impl SwapInfo {
                     can_refund,
                     detailed_status: format!("{:?}", r.common.status),
                     evm_htlc_claim_txid: r.evm_htlc_claim_txid.clone(),
+                    // For BTC→EVM: use vhtlc_refund_locktime (Arkade VHTLC)
+                    refund_locktime: Some(r.common.vhtlc_refund_locktime as i64),
                 }
             }
             GetSwapResponse::EvmToBtc(r) => {
                 // For EVM→BTC: can claim VHTLC when server has funded
                 let can_claim = matches!(r.common.status, ApiSwapStatus::ServerFunded);
                 // Can refund if in refundable state
+                // Note: ClientRefundedServerFunded means client already refunded - server must act
                 let can_refund = matches!(
                     r.common.status,
-                    ApiSwapStatus::ClientRefundedServerFunded
-                        | ApiSwapStatus::ClientInvalidFunded
-                        | ApiSwapStatus::ClientFundedTooLate
+                    ApiSwapStatus::ClientInvalidFunded | ApiSwapStatus::ClientFundedTooLate
                 );
 
                 SwapInfo {
@@ -691,6 +737,8 @@ impl SwapInfo {
                     can_refund,
                     detailed_status: format!("{:?}", r.common.status),
                     evm_htlc_claim_txid: r.evm_htlc_claim_txid.clone(),
+                    // For EVM→BTC: use evm_refund_locktime (EVM HTLC contract)
+                    refund_locktime: Some(r.common.evm_refund_locktime as i64),
                 }
             }
             GetSwapResponse::BtcToArkade(_) => {

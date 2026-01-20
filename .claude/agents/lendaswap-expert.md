@@ -322,11 +322,179 @@ const response = await api.create_arkade_to_evm_swap(request, targetChain);
 
 ---
 
+## Refund System
+
+### Refund Scenarios Overview
+
+There are **three distinct refund scenarios** based on swap direction and failure mode:
+
+| Scenario | Direction    | What Failed                                       | User Needs to Refund | Refund Method                     |
+| -------- | ------------ | ------------------------------------------------- | -------------------- | --------------------------------- |
+| 1        | BTC → EVM    | User funded VHTLC but server didn't fund EVM HTLC | Arkade VHTLC         | `refund_vhtlc()`                  |
+| 2        | EVM → BTC    | User funded EVM HTLC but swap failed/expired      | EVM HTLC on-chain    | Web/WalletConnect (contract call) |
+| 3        | BTC → Arkade | User funded Bitcoin on-chain HTLC but swap failed | Bitcoin HTLC         | `refund_onchain_htlc()`           |
+
+### API Swap Statuses That Trigger Refunds
+
+From `client-sdk/core/src/api/types.rs`:
+
+| Status                       | Description                                            | Action Required                        |
+| ---------------------------- | ------------------------------------------------------ | -------------------------------------- |
+| `ClientInvalidFunded`        | Client funded with wrong parameters                    | Client refunds                         |
+| `ClientFundedTooLate`        | Lightning invoice expired before payment               | Client refunds                         |
+| `ClientRefundedServerFunded` | ERROR: Client already refunded, server still has funds | Server must refund (client cannot act) |
+
+### Refund Locktime
+
+Each HTLC has a timelock after which the refund becomes available:
+
+- **EVM HTLC**: `evm_refund_locktime` (unix timestamp)
+- **Arkade VHTLC**: `vhtlc_refund_locktime` (unix timestamp)
+- **On-chain BTC HTLC**: `btc_refund_locktime` (unix timestamp)
+
+The web interface shows a countdown timer. The refund button only becomes active after the locktime passes.
+
+### Mobile App Implementation
+
+**Location:** `rust/src/lendaswap/mod.rs` (lines 423-477)
+
+#### VHTLC Refund (BTC→EVM failures)
+
+```rust
+pub async fn refund_vhtlc(swap_id: &str, refund_address: &str) -> Result<String>
+```
+
+- Calls `vhtlc::refund()` from the SDK
+- Requires a valid Arkade/Bitcoin address for receiving the refund
+- Only works for BTC→EVM swaps
+
+#### On-chain HTLC Refund (BTC→Arkade failures)
+
+```rust
+pub async fn refund_onchain_htlc(swap_id: &str, refund_address: &str) -> Result<String>
+```
+
+- Calls `client.refund_onchain_htlc()` from the SDK
+- Rebuilds the Taproot HTLC scripts and spends from the refund leaf
+- Only works after `btc_refund_locktime` has passed
+
+### Dart Service Methods
+
+**Location:** `lib/src/services/lendaswap_service.dart` (lines 373-420)
+
+```dart
+/// Refund a BTC→EVM swap via VHTLC
+Future<String> refundVhtlc(String swapId, String refundAddress)
+
+/// Refund a BTC→Arkade swap via on-chain HTLC
+Future<String> refundOnchainHtlc(String swapId, String refundAddress)
+
+/// Check if refundable from mobile (BTC→EVM only)
+bool canRefundFromMobile(SwapInfo swap)
+
+/// Check if requires web interface (EVM→BTC)
+bool requiresWebRefund(SwapInfo swap)
+```
+
+### UI Implementation
+
+**Location:** `lib/src/ui/screens/swap/swap_processing_screen.dart` (lines 269-345)
+
+The refund flow routes based on swap direction:
+
+1. **BTC→EVM** (`canRefundFromMobile`): Shows `_RefundAddressSheet` → calls `refundVhtlc()`
+2. **EVM→BTC** (`requiresWebRefund`): Shows `_EvmRefundInfoSheet` → opens web interface
+
+### Web Reference Implementation
+
+**Location:** `~/lendasat/lendaswap/frontend/apps/lendaswap/src/app/wizard/steps/PolygonToBtcRefundStep.tsx`
+
+For EVM→BTC refunds, the web:
+
+1. Connects user's wallet via WalletConnect
+2. Checks contract swap state via `getSwap()`
+3. Verifies locktime has passed
+4. Calls `refundSwap()` on the EVM HTLC contract
+5. User signs with their external wallet
+
+### HTLC Contract ABI (EVM Refund)
+
+```solidity
+function getSwap(bytes32 swapId) external view returns (Swap memory);
+function refundSwap(bytes32 swapId) external;
+```
+
+Swap ID is converted: `uuid → bytes32` (remove dashes, uppercase, pad to 64 chars)
+
+---
+
+## KNOWN ISSUES IN MOBILE IMPLEMENTATION
+
+### Issue 1: Incorrect `can_refund` Status Check
+
+**Location:** `rust/src/lendaswap/mod.rs` (lines 680-685, 711-716)
+
+**Problem:** The current code includes `ClientRefundedServerFunded` in `can_refund`:
+
+```rust
+let can_refund = matches!(
+    r.common.status,
+    ApiSwapStatus::ClientRefundedServerFunded  // WRONG!
+        | ApiSwapStatus::ClientInvalidFunded
+        | ApiSwapStatus::ClientFundedTooLate
+);
+```
+
+**Why it's wrong:** `ClientRefundedServerFunded` means the client has ALREADY refunded. This is an error state where the SERVER needs to refund their HTLC. The client cannot initiate any action.
+
+**Fix:** Remove `ClientRefundedServerFunded`:
+
+```rust
+let can_refund = matches!(
+    r.common.status,
+    ApiSwapStatus::ClientInvalidFunded
+        | ApiSwapStatus::ClientFundedTooLate
+);
+```
+
+### Issue 2: Missing Refund Locktime in SwapInfo
+
+**Problem:** The `SwapInfo` struct doesn't include the refund locktime, so the UI cannot show:
+
+- Whether refund is available yet
+- Countdown timer until refund becomes available
+
+**Fix:** Add to `SwapInfo` struct:
+
+```rust
+pub refund_locktime: Option<i64>, // Unix timestamp
+```
+
+And populate from `r.common.vhtlc_refund_locktime` or `r.common.evm_refund_locktime`.
+
+### Issue 3: No Locktime Validation Before Refund
+
+**Problem:** The mobile app doesn't check if the locktime has passed before attempting refund. The SDK will fail, but user experience is poor.
+
+**Fix:** Add locktime check in `_handleRefund()`:
+
+```dart
+final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+if (_swapInfo!.refundLocktime != null && now < _swapInfo!.refundLocktime!) {
+  final remaining = _swapInfo!.refundLocktime! - now;
+  OverlayService().showError('Refund available in ${_formatDuration(remaining)}');
+  return;
+}
+```
+
+---
+
 ## Potential Issues to Watch
 
 1. **Key Index Synchronization** - If user uses both mobile and web, key indices may diverge (recovery handles this)
 2. **Storage Format Incompatibility** - Different formats but same underlying `ExtendedSwapStorageData` structure
 3. **Lightning Support Gaps** - Mobile has Rust bindings for EVM-to-Lightning but UI flow is incomplete
+4. **EVM→BTC Refund Gap** - Mobile cannot refund EVM→BTC swaps directly; users must use web interface
 
 ---
 

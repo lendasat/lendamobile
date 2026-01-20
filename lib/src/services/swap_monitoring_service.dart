@@ -344,6 +344,7 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> _claimGelato(SwapInfo swap) async {
     _claimingSwapIds.add(swap.id);
+    notifyListeners(); // Notify UI that claim is starting
 
     try {
       logger.i("[SwapMonitor] Auto-claiming swap ${swap.id} via Gelato");
@@ -388,11 +389,21 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
       ));
     } finally {
       _claimingSwapIds.remove(swap.id);
+      notifyListeners(); // Notify UI that claim finished (success or failure)
     }
   }
 
   Future<void> _claimVhtlc(SwapInfo swap) async {
     _claimingSwapIds.add(swap.id);
+    notifyListeners(); // Notify UI that claim is starting
+
+    // Start payment notification suppression BEFORE claiming to prevent race condition
+    // where PaymentMonitoringService detects the incoming BTC before we show the swap sheet
+    final overlayService = PaymentOverlayService();
+    if (swap.direction == 'evm_to_btc') {
+      overlayService.startSuppression();
+      logger.d("[SwapMonitor] Started payment suppression before VHTLC claim");
+    }
 
     try {
       logger.i("[SwapMonitor] Auto-claiming swap ${swap.id} via VHTLC");
@@ -430,6 +441,13 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     } catch (e) {
       logger.e("[SwapMonitor] Failed to auto-claim VHTLC: $e");
 
+      // Stop suppression on failure so payment notifications work normally
+      if (swap.direction == 'evm_to_btc') {
+        overlayService.stopSuppression();
+        logger.d(
+            "[SwapMonitor] Stopped payment suppression after VHTLC claim failure");
+      }
+
       _claimEventController.add(SwapClaimEvent(
         swapId: swap.id,
         type: ClaimType.vhtlc,
@@ -438,6 +456,7 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
       ));
     } finally {
       _claimingSwapIds.remove(swap.id);
+      notifyListeners(); // Notify UI that claim finished (success or failure)
     }
   }
 
@@ -449,13 +468,14 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
 
     final overlayService = PaymentOverlayService();
 
-    // For EVM→BTC swaps, suppress payment notifications to avoid showing both
-    // "Payment Received" and "Swap Complete" bottom sheets
+    // For EVM→BTC swaps, schedule suppression stop after 5 seconds
+    // Note: Suppression was already started BEFORE the claim in _claimVhtlc
+    // to prevent race conditions with PaymentMonitoringService
     if (swap.direction == 'evm_to_btc') {
-      overlayService.startSuppression();
       // Stop suppression after 5 seconds to allow future payment notifications
       Future.delayed(const Duration(seconds: 5), () {
         overlayService.stopSuppression();
+        logger.d("[SwapMonitor] Stopped payment suppression after timeout");
       });
     }
 
