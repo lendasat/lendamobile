@@ -45,6 +45,7 @@ class WalletConnectService extends ChangeNotifier {
 
   ReownAppKitModal? _appKitModal;
   bool _isInitialized = false;
+  bool _needsReinitAfterDisconnect = false; // Track if modal needs reinit
   BuildContext? _context;
   AppLinks? _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
@@ -163,6 +164,12 @@ class WalletConnectService extends ChangeNotifier {
     if (isConnected && !_wasConnectedBeforeStateChange && _context != null) {
       _tryCloseModalSafely();
     }
+
+    // If we just disconnected, mark that modal needs reinit before next use
+    if (!isConnected && _wasConnectedBeforeStateChange) {
+      _needsReinitAfterDisconnect = true;
+    }
+
     _wasConnectedBeforeStateChange = isConnected;
 
     notifyListeners();
@@ -270,6 +277,12 @@ class WalletConnectService extends ChangeNotifier {
           'AppKit not initialized. Call initialize(context) first.');
     }
 
+    // Proactively reinit if needed (after disconnect, the modal state is corrupted)
+    if (_needsReinitAfterDisconnect && _context != null) {
+      logger.i('Reinitializing modal after disconnect...');
+      await _reinitializeModal();
+    }
+
     logger.i('Opening wallet connect modal (attempt ${retryCount + 1})...');
 
     try {
@@ -287,25 +300,31 @@ class WalletConnectService extends ChangeNotifier {
 
       if (needsReinit && _context != null && retryCount < 2) {
         logger.w('Modal needs reinit, attempting recovery...');
-
-        // Reset and reinitialize the modal
-        _isInitialized = false;
-        _appKitModal?.removeListener(_onModalStateChanged);
-        try {
-          _appKitModal?.dispose();
-        } catch (_) {}
-        _appKitModal = null;
-
-        // Small delay to let cleanup finish
-        await Future.delayed(const Duration(milliseconds: 300));
-
-        await initialize(_context!, force: true);
+        await _reinitializeModal();
 
         // Try opening again after reinit
         await openModal(retryCount: retryCount + 1);
       } else {
         rethrow;
       }
+    }
+  }
+
+  /// Reinitialize the modal (used after disconnect or on error)
+  Future<void> _reinitializeModal() async {
+    _isInitialized = false;
+    _needsReinitAfterDisconnect = false;
+    _appKitModal?.removeListener(_onModalStateChanged);
+    try {
+      _appKitModal?.dispose();
+    } catch (_) {}
+    _appKitModal = null;
+
+    // Small delay to let cleanup finish
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (_context != null) {
+      await initialize(_context!, force: true);
     }
   }
 
@@ -368,6 +387,12 @@ class WalletConnectService extends ChangeNotifier {
     } catch (e) {
       logger.e('Error disconnecting: $e');
     }
+
+    // Mark that we need to reinit the modal before next use
+    // The reown_appkit library has a bug where the internal widget stack
+    // becomes corrupted after disconnect
+    _needsReinitAfterDisconnect = true;
+
     notifyListeners();
   }
 
