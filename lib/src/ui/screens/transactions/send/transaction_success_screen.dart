@@ -95,7 +95,7 @@ class _TransactionSuccessScreenState extends State<TransactionSuccessScreen> {
             padding: const EdgeInsets.all(16.0),
             child: LongButtonWidget(
               title: AppLocalizations.of(context)!.backToWallet,
-              buttonType: ButtonType.transparent,
+              buttonType: ButtonType.solid,
               customWidth: double.infinity,
               customHeight: 56,
               onTap: () {

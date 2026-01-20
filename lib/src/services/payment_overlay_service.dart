@@ -362,7 +362,7 @@ class _PaymentReceivedBottomSheetContentState
           // Back to wallet button
           LongButtonWidget(
             title: l10n?.backToWallet ?? 'Back to Wallet',
-            buttonType: ButtonType.transparent,
+            buttonType: ButtonType.solid,
             customWidth: double.infinity,
             onTap: () {
               Navigator.of(context).pop();
@@ -490,7 +490,7 @@ class _SwapCompletedBottomSheetContent extends StatelessWidget {
           // Back to wallet button
           LongButtonWidget(
             title: l10n?.backToWallet ?? 'Back to Wallet',
-            buttonType: ButtonType.transparent,
+            buttonType: ButtonType.solid,
             customWidth: double.infinity,
             onTap: () {
               Navigator.of(context).pop();
