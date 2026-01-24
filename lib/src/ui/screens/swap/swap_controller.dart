@@ -249,7 +249,7 @@ class SwapController extends ChangeNotifier {
 
   SwapState _calculateFromTokenSource(String value) {
     final tokens = double.tryParse(value) ?? 0;
-    final usd = tokens * SwapConfig.defaultXautPrice;
+    final usd = tokens * _state.sourceToken.defaultUsdPrice;
     final btc = usd > 0 ? usd / _state.btcUsdPrice : 0.0;
     final sats = SwapConfig.btcToSats(btc);
     return _state.copyWith(
@@ -331,7 +331,7 @@ class SwapController extends ChangeNotifier {
 
   SwapState _calculateFromTokenTarget(String value) {
     final tokens = double.tryParse(value) ?? 0;
-    final usd = tokens * SwapConfig.defaultXautPrice;
+    final usd = tokens * _state.targetToken.defaultUsdPrice;
     final btc = usd > 0 ? usd / _state.btcUsdPrice : 0.0;
     final sats = SwapConfig.btcToSats(btc);
     return _state.copyWith(
@@ -370,7 +370,7 @@ class SwapController extends ChangeNotifier {
     } else {
       final usd = double.tryParse(_state.usdAmount) ?? 0;
       if (usd > 0) {
-        final tokens = usd / SwapConfig.defaultXautPrice;
+        final tokens = usd / target.defaultUsdPrice;
         targetController.text = tokens.toStringAsFixed(6);
       } else {
         targetController.text = '';
@@ -630,11 +630,9 @@ class SwapController extends ChangeNotifier {
         : '${_state.btcAmount.isNotEmpty ? _state.btcAmount : "0"} BTC';
   }
 
-  List<SwapToken> getAvailableSourceTokens() =>
-      [...SwapToken.btcTokens, ...SwapToken.polygonTokens];
+  List<SwapToken> getAvailableSourceTokens() => SwapToken.allTokens;
 
-  List<SwapToken> getAvailableTargetTokens() =>
-      [...SwapToken.btcTokens, ...SwapToken.polygonTokens];
+  List<SwapToken> getAvailableTargetTokens() => SwapToken.allTokens;
 
   /// Data for navigating to EVM funding screen
   ({

@@ -10,6 +10,7 @@ enum SwapToken {
   // Polygon (supports Gelato gasless swaps)
   usdcPolygon,
   usdtPolygon,
+  polPolygon,
   // Ethereum (requires WalletConnect for gas fees when claiming)
   usdcEthereum,
   usdtEthereum,
@@ -28,6 +29,8 @@ enum SwapToken {
       case 'usdt0_pol':
       case 'usdt_pol':
         return SwapToken.usdtPolygon;
+      case 'pol_pol':
+        return SwapToken.polPolygon;
       case 'usdc_eth':
         return SwapToken.usdcEthereum;
       case 'usdt_eth':
@@ -42,19 +45,24 @@ enum SwapToken {
   /// Get all BTC tokens (just Bitcoin now)
   static List<SwapToken> get btcTokens => [SwapToken.bitcoin];
 
-  /// Get all Polygon stablecoins (gasless claiming supported)
+  /// Get all Polygon tokens (gasless claiming supported)
   static List<SwapToken> get polygonTokens => [
         SwapToken.usdcPolygon,
         SwapToken.usdtPolygon,
+        SwapToken.polPolygon,
+      ];
+
+  /// Get all Ethereum tokens (requires WalletConnect for gas fees)
+  static List<SwapToken> get ethereumTokens => [
+        SwapToken.usdcEthereum,
+        SwapToken.usdtEthereum,
+        SwapToken.xautEthereum,
       ];
 
   /// Get all EVM tokens
   static List<SwapToken> get evmTokens => [
-        SwapToken.usdcPolygon,
-        SwapToken.usdtPolygon,
-        SwapToken.usdcEthereum,
-        SwapToken.usdtEthereum,
-        SwapToken.xautEthereum,
+        ...polygonTokens,
+        ...ethereumTokens,
       ];
 
   /// Get all tokens available for swapping
@@ -66,8 +74,8 @@ enum SwapToken {
   /// Get valid target tokens for a given source token
   static List<SwapToken> getValidTargets(SwapToken source) {
     if (source.isBtc) {
-      // BTC -> Stablecoins (Polygon for gasless claiming)
-      return polygonTokens;
+      // BTC -> All EVM tokens (Polygon supports gasless, Ethereum requires WalletConnect)
+      return evmTokens;
     } else {
       // EVM -> BTC (reverse swaps)
       return btcTokens;
@@ -85,6 +93,8 @@ enum SwapToken {
         return 'usdc_pol';
       case SwapToken.usdtPolygon:
         return 'usdt0_pol';
+      case SwapToken.polPolygon:
+        return 'pol_pol';
       case SwapToken.usdcEthereum:
         return 'usdc_eth';
       case SwapToken.usdtEthereum:
@@ -106,6 +116,8 @@ enum SwapToken {
         return 'USDT0';
       case SwapToken.usdtEthereum:
         return 'USDT';
+      case SwapToken.polPolygon:
+        return 'POL';
       case SwapToken.xautEthereum:
         return 'XAUt';
     }
@@ -120,6 +132,8 @@ enum SwapToken {
         return 'USDC (Polygon)';
       case SwapToken.usdtPolygon:
         return 'USDT0 (Polygon)';
+      case SwapToken.polPolygon:
+        return 'POL (Polygon)';
       case SwapToken.usdcEthereum:
         return 'USDC (Ethereum)';
       case SwapToken.usdtEthereum:
@@ -136,6 +150,7 @@ enum SwapToken {
         return 'Arkade';
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
+      case SwapToken.polPolygon:
         return 'Polygon';
       case SwapToken.usdcEthereum:
       case SwapToken.usdtEthereum:
@@ -151,6 +166,7 @@ enum SwapToken {
         return 'bitcoin';
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
+      case SwapToken.polPolygon:
         return 'polygon';
       case SwapToken.usdcEthereum:
       case SwapToken.usdtEthereum:
@@ -170,6 +186,7 @@ enum SwapToken {
     switch (this) {
       case SwapToken.bitcoin:
       case SwapToken.xautEthereum:
+      case SwapToken.polPolygon:
         return false;
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
@@ -192,6 +209,8 @@ enum SwapToken {
         return 6;
       case SwapToken.xautEthereum:
         return 6;
+      case SwapToken.polPolygon:
+        return 18;
     }
   }
 
@@ -206,6 +225,8 @@ enum SwapToken {
       case SwapToken.usdtPolygon:
       case SwapToken.usdtEthereum:
         return const Color(0xFF26A17B);
+      case SwapToken.polPolygon:
+        return const Color(0xFF8247E5);
       case SwapToken.xautEthereum:
         return const Color(0xFFD4AF37);
     }
@@ -218,6 +239,7 @@ enum SwapToken {
         return const Color(0xFFF7931A);
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
+      case SwapToken.polPolygon:
         return const Color(0xFF8247E5);
       case SwapToken.usdcEthereum:
       case SwapToken.usdtEthereum:
@@ -237,6 +259,8 @@ enum SwapToken {
       case SwapToken.usdtPolygon:
       case SwapToken.usdtEthereum:
         return Icons.attach_money;
+      case SwapToken.polPolygon:
+        return Icons.hexagon;
       case SwapToken.xautEthereum:
         return Icons.diamond;
     }
@@ -249,11 +273,36 @@ enum SwapToken {
         return Icons.currency_bitcoin;
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
+      case SwapToken.polPolygon:
         return Icons.hexagon;
       case SwapToken.usdcEthereum:
       case SwapToken.usdtEthereum:
       case SwapToken.xautEthereum:
         return Icons.diamond_outlined;
+    }
+  }
+
+  /// Check if this token is on Polygon (supports gasless Gelato claiming)
+  bool get isPolygon => chainId == 'polygon';
+
+  /// Check if this token is on Ethereum (requires WalletConnect for gas fees)
+  bool get isEthereum => chainId == 'ethereum';
+
+  /// Get default USD price for UI estimation (before quote is fetched)
+  /// Stablecoins return 1.0, other tokens return their approximate USD value
+  double get defaultUsdPrice {
+    switch (this) {
+      case SwapToken.bitcoin:
+        return 104000.0; // Approximate BTC price
+      case SwapToken.usdcPolygon:
+      case SwapToken.usdcEthereum:
+      case SwapToken.usdtPolygon:
+      case SwapToken.usdtEthereum:
+        return 1.0; // Stablecoins are 1:1 with USD
+      case SwapToken.polPolygon:
+        return 0.45; // Approximate POL price
+      case SwapToken.xautEthereum:
+        return 2650.0; // Approximate gold price per oz
     }
   }
 }

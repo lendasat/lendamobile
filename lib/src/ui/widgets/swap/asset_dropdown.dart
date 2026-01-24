@@ -316,6 +316,8 @@ class TokenIcon extends StatelessWidget {
       case SwapToken.usdtPolygon:
       case SwapToken.usdtEthereum:
         return 'assets/images/tokens/usdt.svg';
+      case SwapToken.polPolygon:
+        return 'assets/images/tokens/polygon.svg';
       case SwapToken.xautEthereum:
         return 'assets/images/tokens/xaut.svg';
     }
@@ -402,6 +404,7 @@ class TokenIconWithNetwork extends StatelessWidget {
         return 'assets/images/tokens/bitcoin.svg';
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
+      case SwapToken.polPolygon:
         return 'assets/images/tokens/polygon.svg';
       case SwapToken.usdcEthereum:
       case SwapToken.usdtEthereum:
