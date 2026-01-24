@@ -393,7 +393,7 @@ class WalletScreenState extends State<WalletScreen>
                         onSend: _handleSend,
                         onReceive: _handleReceive,
                         onScan: _handleScan,
-                        onBuy: _handleBuy,
+                        // onBuy: _handleBuy,
                         onChart: _handleBitcoinChart,
                         onSettings: _handleSettings,
                         onSettleBoarding: () =>

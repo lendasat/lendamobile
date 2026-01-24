@@ -9,14 +9,14 @@ class WalletActionButtons extends StatelessWidget {
   final VoidCallback onSend;
   final VoidCallback onReceive;
   final VoidCallback onScan;
-  final VoidCallback onBuy;
+  // final VoidCallback onBuy;
 
   const WalletActionButtons({
     super.key,
     required this.onSend,
     required this.onReceive,
     required this.onScan,
-    required this.onBuy,
+    // required this.onBuy,
   });
 
   @override
@@ -53,16 +53,17 @@ class WalletActionButtons extends StatelessWidget {
               fallbackIcon: Icons.qr_code_scanner_rounded,
             ),
           ),
-          Flexible(
-            child: BitNetImageWithTextButton(
-              "Buy",
-              onBuy,
-              width: AppTheme.cardPadding * 2.5,
-              height: AppTheme.cardPadding * 2.5,
-              fallbackIcon: FontAwesomeIcons.btc,
-              fallbackIconSize: AppTheme.iconSize * 1.5,
-            ),
-          ),
+          // Buy button - temporarily disabled
+          // Flexible(
+          //   child: BitNetImageWithTextButton(
+          //     "Buy",
+          //     onBuy,
+          //     width: AppTheme.cardPadding * 2.5,
+          //     height: AppTheme.cardPadding * 2.5,
+          //     fallbackIcon: FontAwesomeIcons.btc,
+          //     fallbackIconSize: AppTheme.iconSize * 1.5,
+          //   ),
+          // ),
         ],
       ),
     );

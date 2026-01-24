@@ -144,8 +144,10 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
         } else {
           // For BTC → EVM swaps that don't require WalletConnect,
           // navigate back to wallet - monitoring service handles completion
+          // EXCEPTION: Loan repayment swaps should stay to auto-mark installment as paid
           if (widget.sourceToken.isBtc &&
-              !_swapMonitor.requiresWalletConnect(swap)) {
+              !_swapMonitor.requiresWalletConnect(swap) &&
+              widget.loanContractId == null) {
             final isProcessing = swap.status == SwapStatusSimple.processing ||
                 swap.status == SwapStatusSimple.waitingForDeposit;
             if (isProcessing) {
@@ -736,7 +738,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
                   isLightningInvoice
                       ? Icons.bolt_rounded
                       : Icons.account_balance_wallet_rounded,
-                  color: AppTheme.colorBitcoin,
+                  color: isDarkMode ? Colors.white : Colors.black,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -759,23 +761,20 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
                   foregroundPainter:
                       isDarkMode ? BorderPainter() : BorderPainterBlack(),
                   child: Container(
-                    margin: const EdgeInsets.all(AppTheme.elementSpacing),
+                    margin: const EdgeInsets.all(AppTheme.cardPadding),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: AppTheme.cardRadiusBigger,
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(AppTheme.elementSpacing),
-                      child: SizedBox(
-                        width: 200,
-                        height: 200,
-                        child: PrettyQrView.data(
-                          data: depositAddress,
-                          decoration: const PrettyQrDecoration(
-                            shape: PrettyQrSmoothSymbol(roundFactor: 1),
-                          ),
-                          errorCorrectLevel: QrErrorCorrectLevel.H,
+                      padding:
+                          const EdgeInsets.all(AppTheme.cardPadding / 1.25),
+                      child: PrettyQrView.data(
+                        data: depositAddress,
+                        decoration: const PrettyQrDecoration(
+                          shape: PrettyQrSmoothSymbol(roundFactor: 1),
                         ),
+                        errorCorrectLevel: QrErrorCorrectLevel.H,
                       ),
                     ),
                   ),

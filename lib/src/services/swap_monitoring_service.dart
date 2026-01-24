@@ -97,10 +97,7 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     required BuildContext context,
     VoidCallback? onWalletRefresh,
   }) async {
-    if (_isInitialized) {
-      logger.d("[SwapMonitor] Already initialized");
-      return;
-    }
+    if (_isInitialized) return;
 
     _overlayContext = context;
     onWalletRefreshNeeded = onWalletRefresh;
@@ -108,22 +105,48 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     // Register for app lifecycle events
     WidgetsBinding.instance.addObserver(this);
 
+    // Listen to LendaSwapService for changes - this ensures we catch
+    // claimable swaps even if the service initializes later
+    _swapService.addListener(_onSwapServiceChanged);
+
     _isInitialized = true;
     logger.i("[SwapMonitor] Initialized");
 
-    // Initialize LendaSwapService if needed
+    // Try to initialize LendaSwapService if needed
     if (!_swapService.isInitialized) {
       try {
         await _swapService.initialize();
-        logger.i("[SwapMonitor] LendaSwapService initialized");
       } catch (e) {
-        logger.w("[SwapMonitor] Failed to initialize LendaSwapService: $e");
+        // Don't return early - we'll catch swaps later via the listener
+        logger.d("[SwapMonitor] LendaSwapService not ready: $e");
         return;
       }
     }
 
     // Check for any existing pending swaps and start monitoring if needed
     await _checkForPendingSwaps();
+  }
+
+  // Throttle swap service change checks
+  DateTime? _lastSwapServiceCheck;
+  static const int _swapServiceCheckThrottleMs = 2000;
+
+  /// Called when LendaSwapService notifies (e.g., after init or refresh)
+  void _onSwapServiceChanged() {
+    if (!_swapService.isInitialized) return;
+
+    // Throttle checks to prevent excessive processing
+    final now = DateTime.now();
+    if (_lastSwapServiceCheck != null &&
+        now.difference(_lastSwapServiceCheck!).inMilliseconds <
+            _swapServiceCheckThrottleMs) {
+      return;
+    }
+    _lastSwapServiceCheck = now;
+
+    // Check for claimable swaps whenever the swap list changes
+    logger.d("[SwapMonitor] SwapService changed, checking for claimable swaps");
+    _checkForPendingSwaps();
   }
 
   /// Start monitoring a specific swap (call this when a new swap is created)
@@ -187,11 +210,8 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
       }
 
       if (_pendingSwapIds.isNotEmpty) {
-        logger.i(
-            "[SwapMonitor] Found ${_pendingSwapIds.length} swaps needing monitoring, starting");
         _startMonitoring();
       } else {
-        logger.d("[SwapMonitor] No swaps need monitoring");
         _stopMonitoring();
       }
     } catch (e) {
@@ -200,20 +220,19 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _startMonitoring() async {
-    if (_isMonitoring) return;
-    if (_pendingSwapIds.isEmpty) {
-      logger.d("[SwapMonitor] No pending swaps to monitor");
+    if (_isMonitoring) {
+      // Already monitoring - but still trigger an immediate check for any new swaps
+      _checkAndClaimSwaps();
       return;
     }
+    if (_pendingSwapIds.isEmpty) return;
 
     // Try to initialize LendaSwapService if not already done
     if (!_swapService.isInitialized) {
       try {
         await _swapService.initialize();
-        logger.i(
-            "[SwapMonitor] LendaSwapService initialized in _startMonitoring");
       } catch (e) {
-        logger.d("[SwapMonitor] SwapService not initialized, skipping: $e");
+        logger.d("[SwapMonitor] SwapService not initialized: $e");
         return;
       }
     }
@@ -230,8 +249,8 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
       (_) => _safeCheckAndClaimSwaps(),
     );
 
-    logger.i(
-        "[SwapMonitor] Started monitoring ${_pendingSwapIds.length} swaps (interval: ${_pollIntervalSeconds}s)");
+    logger
+        .i("[SwapMonitor] Started monitoring ${_pendingSwapIds.length} swaps");
   }
 
   void _stopMonitoring() {
@@ -251,8 +270,7 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     } catch (e, stackTrace) {
       // This should rarely happen since _checkAndClaimSwaps has its own try-catch,
       // but this provides an extra safety net for truly unexpected errors.
-      logger.e(
-          "[SwapMonitor] Unexpected error in polling callback: $e\n$stackTrace");
+      logger.e("[SwapMonitor] Unexpected error: $e\n$stackTrace");
     }
   }
 
@@ -260,17 +278,13 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     if (!_swapService.isInitialized) return;
 
     try {
-      // Refresh swap list from server
+      // First load swaps from local storage
       await _swapService.refreshSwaps();
 
       final swaps = _swapService.swaps;
-      logger.d(
-          "[SwapMonitor] Checking ${swaps.length} swaps, monitoring ${_pendingSwapIds.length} pending");
-
-      // Update pending swap IDs - remove completed ones, add new pending ones
       final stillPending = <String>{};
 
-      for (final swap in swaps) {
+      for (var swap in swaps) {
         // Skip if currently claiming
         if (_claimingSwapIds.contains(swap.id)) {
           stillPending.add(swap.id);
@@ -280,7 +294,7 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
         // Check if a swap just completed
         if (swap.status == SwapStatusSimple.completed) {
           if (_pendingSwapIds.contains(swap.id)) {
-            logger.i("[SwapMonitor] Swap ${swap.id} has completed!");
+            logger.i("[SwapMonitor] Swap ${swap.id} completed");
             _claimedSwapIds.add(swap.id);
           }
           continue;
@@ -289,7 +303,32 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
         // Skip if already processed
         if (_claimedSwapIds.contains(swap.id)) continue;
 
-        // Track swaps that still need monitoring (pending, processing, or claimable)
+        // For pending swaps without claim flags, fetch fresh data from server
+        // Local storage may be stale - server knows the true claim status
+        // This catches swaps that have transitioned to claimable on the server
+        final isPendingWithoutClaimFlags =
+            (swap.status == SwapStatusSimple.waitingForDeposit ||
+                    swap.status == SwapStatusSimple.processing) &&
+                !swap.canClaimGelato &&
+                !swap.canClaimVhtlc;
+
+        if (isPendingWithoutClaimFlags) {
+          try {
+            final freshSwap = await _swapService.getSwap(swap.id);
+            // Only log if status actually changed
+            if (freshSwap.status != swap.status ||
+                freshSwap.canClaimGelato != swap.canClaimGelato ||
+                freshSwap.canClaimVhtlc != swap.canClaimVhtlc) {
+              logger.i(
+                  "[SwapMonitor] Swap ${swap.id} updated: ${swap.status}→${freshSwap.status}, canClaimGelato=${freshSwap.canClaimGelato}, canClaimVhtlc=${freshSwap.canClaimVhtlc}");
+            }
+            swap = freshSwap;
+          } catch (e) {
+            logger.w("[SwapMonitor] Failed to fetch swap ${swap.id}: $e");
+          }
+        }
+
+        // Track swaps that still need monitoring
         final needsMonitoring =
             swap.status == SwapStatusSimple.waitingForDeposit ||
                 swap.status == SwapStatusSimple.processing ||
@@ -301,23 +340,18 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
 
         // BTC → Polygon: Auto-claim via Gelato (gasless)
         if (swap.canClaimGelato) {
-          // Check if this is a Polygon target (gasless) or Ethereum (requires gas)
           final isPolygonTarget = _isPolygonTarget(swap);
-
           if (isPolygonTarget) {
-            logger.i(
-                "[SwapMonitor] Found claimable BTC→Polygon swap: ${swap.id}");
+            logger
+                .i("[SwapMonitor] Auto-claiming BTC→Polygon swap: ${swap.id}");
             await _claimGelato(swap);
-          } else {
-            // Ethereum targets require WalletConnect - can't auto-claim
-            logger.i(
-                "[SwapMonitor] Swap ${swap.id} requires manual claim (Ethereum target)");
           }
+          // Ethereum targets require WalletConnect - can't auto-claim
         }
 
         // EVM → BTC: Auto-claim VHTLC
         if (swap.canClaimVhtlc) {
-          logger.i("[SwapMonitor] Found claimable EVM→BTC swap: ${swap.id}");
+          logger.i("[SwapMonitor] Auto-claiming EVM→BTC swap: ${swap.id}");
           await _claimVhtlc(swap);
         }
       }
@@ -349,6 +383,10 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     try {
       logger.i("[SwapMonitor] Auto-claiming swap ${swap.id} via Gelato");
       await _swapService.claimGelato(swap.id);
+
+      // Fetch fresh swap data from server to update local storage
+      // This ensures the UI shows the correct "completed" status
+      await _swapService.getSwap(swap.id);
 
       logger.i("[SwapMonitor] Successfully claimed swap ${swap.id} via Gelato");
       _claimedSwapIds.add(swap.id);
@@ -408,6 +446,10 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
     try {
       logger.i("[SwapMonitor] Auto-claiming swap ${swap.id} via VHTLC");
       final txid = await _swapService.claimVhtlc(swap.id);
+
+      // Fetch fresh swap data from server to update local storage
+      // This ensures the UI shows the correct "completed" status
+      await _swapService.getSwap(swap.id);
 
       logger.i(
           "[SwapMonitor] Successfully claimed swap ${swap.id} via VHTLC, txid: $txid");
@@ -559,6 +601,7 @@ class SwapMonitoringService extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _swapService.removeListener(_onSwapServiceChanged);
     _stopMonitoring();
     _delayedRefreshTimer?.cancel();
     _claimEventController.close();

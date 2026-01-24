@@ -417,27 +417,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
           ),
           child: Column(
             children: [
-              // Status header in its own GlassContainer
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.elementSpacing,
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: GlassContainer(
-                    borderRadius: AppTheme.cardRadiusBig,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppTheme.cardPadding,
-                        horizontal: AppTheme.elementSpacing,
-                      ),
-                      child: _buildStatusHeader(context, status, isDarkMode),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppTheme.elementSpacing),
-              // Main card with swap summary and details
+              // Main card with status header, swap summary and details
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppTheme.elementSpacing,
@@ -451,6 +431,14 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                     ),
                     child: Column(
                       children: [
+                        // Status header
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppTheme.cardPadding,
+                          ),
+                          child:
+                              _buildStatusHeader(context, status, isDarkMode),
+                        ),
                         // Swap summary (amounts) in its own box
                         Padding(
                           padding: const EdgeInsets.symmetric(

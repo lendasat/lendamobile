@@ -44,7 +44,7 @@ class WalletHeader extends StatelessWidget {
   final VoidCallback onSend;
   final VoidCallback onReceive;
   final VoidCallback onScan;
-  final VoidCallback onBuy;
+  // final VoidCallback onBuy;
   final VoidCallback onChart;
   final VoidCallback onSettings;
   final VoidCallback onSettleBoarding;
@@ -68,7 +68,7 @@ class WalletHeader extends StatelessWidget {
     required this.onSend,
     required this.onReceive,
     required this.onScan,
-    required this.onBuy,
+    // required this.onBuy,
     required this.onChart,
     required this.onSettings,
     required this.onSettleBoarding,
@@ -130,7 +130,7 @@ class WalletHeader extends StatelessWidget {
                 onSend: onSend,
                 onReceive: onReceive,
                 onScan: onScan,
-                onBuy: onBuy,
+                // onBuy: onBuy,
               ),
               const SizedBox(height: AppTheme.cardPadding),
             ],
