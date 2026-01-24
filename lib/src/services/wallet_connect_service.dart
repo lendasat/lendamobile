@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:app_links/app_links.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
+import 'package:ark_flutter/src/services/overlay_service.dart';
 
 /// Supported EVM chains for WalletConnect
 enum EvmChain {
@@ -185,6 +186,8 @@ class WalletConnectService extends ChangeNotifier {
   void _onModalStateChanged() {
     logger.i('=== AppKit State Changed ===');
     logger.i('isConnected: $isConnected');
+    logger.i('_wasConnectedBeforeStateChange: $_wasConnectedBeforeStateChange');
+    logger.i('_context is null: ${_context == null}');
     logger.i('connectedAddress: $connectedAddress');
     logger.i('connectedChainId: $connectedChainId');
     logger.i('session: ${_appKitModal?.session}');
@@ -194,7 +197,12 @@ class WalletConnectService extends ChangeNotifier {
     // If we just connected (state changed from disconnected to connected),
     // try to close the modal since the library's internal closeModal may fail
     // due to stale context
-    if (isConnected && !_wasConnectedBeforeStateChange && _context != null) {
+    final shouldAutoClose =
+        isConnected && !_wasConnectedBeforeStateChange && _context != null;
+    logger.i(
+        '[AutoClose] Should auto-close: $shouldAutoClose (isConnected=$isConnected, wasConnected=$_wasConnectedBeforeStateChange, hasContext=${_context != null})');
+
+    if (shouldAutoClose) {
       _tryCloseModalSafely();
     }
 
@@ -208,30 +216,65 @@ class WalletConnectService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Try to close the modal safely using the root navigator
+  /// Try to close the modal safely using multiple approaches
   /// This handles the case where the library's internal closeModal fails
   void _tryCloseModalSafely() {
+    logger.i('[AutoClose] _tryCloseModalSafely called');
+
     // Use post-frame callback to ensure we're not in the middle of a build
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_context == null) return;
+      logger.i('[AutoClose] Post-frame callback executing');
 
+      // Try multiple approaches to close the modal
+
+      // Approach 1: Use the app's global navigator key (most reliable)
       try {
-        // Check if context is still mounted
-        if (_context is Element && !(_context as Element).mounted) {
-          logger.w('Context no longer mounted, cannot close modal');
+        final navState = OverlayService.navigatorKey.currentState;
+        logger.i('[AutoClose] Global navigator state: ${navState != null}');
+        logger.i('[AutoClose] Global navigator canPop: ${navState?.canPop()}');
+
+        if (navState != null && navState.canPop()) {
+          logger.i('[AutoClose] Closing via OverlayService navigator key');
+          navState.pop();
           return;
         }
+      } catch (e) {
+        logger.w('[AutoClose] Global navigator key approach failed: $e');
+      }
 
-        // Try to pop using the root navigator to close the bottom sheet modal
-        final navigator = Navigator.maybeOf(_context!, rootNavigator: true);
-        if (navigator != null && navigator.canPop()) {
-          logger.i('Manually closing wallet connect modal after connection');
-          navigator.pop();
+      // Approach 2: Use the stored context if still valid
+      if (_context != null) {
+        final contextMounted =
+            _context is Element ? (_context as Element).mounted : true;
+
+        if (contextMounted) {
+          try {
+            final navigator = Navigator.maybeOf(_context!, rootNavigator: true);
+            if (navigator != null && navigator.canPop()) {
+              logger.i('[AutoClose] Closing via stored context');
+              navigator.pop();
+              return;
+            }
+          } catch (e) {
+            logger.w('[AutoClose] Stored context approach failed: $e');
+          }
+        } else {
+          logger.w('[AutoClose] Stored context no longer mounted');
+        }
+      }
+
+      // Approach 3: Try to use the AppKit's closeModal (might work in some cases)
+      try {
+        if (_appKitModal != null) {
+          logger.i('[AutoClose] Attempting AppKit closeModal');
+          _appKitModal!.closeModal();
+          return;
         }
       } catch (e) {
-        // Silently ignore - the modal may already be closed or context is invalid
-        logger.w('Could not manually close modal: $e');
+        logger.w('[AutoClose] AppKit closeModal failed: $e');
       }
+
+      logger.w('[AutoClose] All approaches failed to close modal');
     });
   }
 

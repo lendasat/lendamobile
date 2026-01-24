@@ -86,8 +86,8 @@ class _BottomNavState extends State<BottomNav> {
     swapService.initialize(
       context: context,
       onWalletRefresh: () {
-        logger.i("Swap status changed - refreshing swaps only");
-        _walletKey.currentState?.refreshSwapsOnly();
+        logger.i("Swap completed - refreshing full wallet data");
+        _walletKey.currentState?.fetchWalletData();
       },
     );
   }
