@@ -88,8 +88,13 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
     _filteredActivity = _combineAllActivity();
 
-    // Reconcile pending with real transactions when widget loads
-    _pendingService.reconcileWithRealTransactions(widget.transactions);
+    // Reconcile pending with real transactions after the first frame
+    // to avoid calling notifyListeners() during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _pendingService.reconcileWithRealTransactions(widget.transactions);
+      }
+    });
 
     // Load payment info for all transactions
     _loadPaymentInfoCache();
@@ -195,8 +200,13 @@ class TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         oldWidget.swaps != widget.swaps) {
       // Invalidate cache when source data changes
       _cachedCombinedActivity = null;
-      // Reconcile pending with real transactions when data updates
-      _pendingService.reconcileWithRealTransactions(widget.transactions);
+      // Reconcile pending with real transactions after the current frame
+      // to avoid calling notifyListeners() during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _pendingService.reconcileWithRealTransactions(widget.transactions);
+        }
+      });
       // Reload payment info cache
       _loadPaymentInfoCache();
       _applySearch(_searchController.text);
