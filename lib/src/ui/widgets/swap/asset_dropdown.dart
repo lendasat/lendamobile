@@ -24,8 +24,10 @@ class AssetDropdown extends StatelessWidget {
   });
 
   void _showTokenSelector(BuildContext context) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
     arkBottomSheet(
       context: context,
+      height: screenHeight * 0.75,
       child: _TokenSelectorSheet(
         selectedToken: selectedToken,
         availableTokens: availableTokens,

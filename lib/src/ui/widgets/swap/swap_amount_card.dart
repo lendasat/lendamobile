@@ -52,7 +52,7 @@ class SwapAmountCard extends StatelessWidget {
     final screenHeight = MediaQuery.sizeOf(context).height;
     arkBottomSheet(
       context: context,
-      height: screenHeight * 0.45,
+      height: screenHeight * 0.75,
       child: TokenSelectorSheet(
         selectedToken: token,
         availableTokens: availableTokens,
