@@ -344,12 +344,18 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    // Check if we should show the deposit button at the bottom
+    // Check if we should show floating buttons at the bottom
     final status = _swapInfo?.status ?? SwapStatusSimple.waitingForDeposit;
     final isWaitingForDeposit = status == SwapStatusSimple.waitingForDeposit;
     final showDepositButton = isWaitingForDeposit &&
         _swapInfo?.direction == 'evm_to_btc' &&
         _swapInfo?.depositAddress != null;
+
+    // Check if claim button should be shown as floating
+    final canClaim =
+        _swapInfo?.canClaimGelato == true || _swapInfo?.canClaimVhtlc == true;
+    final isClaimingAnywhere =
+        _isClaiming || _swapMonitor.isClaimingSwap(widget.swapId);
 
     return ArkScaffoldUnsafe(
       context: context,
@@ -375,6 +381,18 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
               child: BottomCenterButton(
                 title: 'Deposit',
                 onTap: _navigateToDeposit,
+              ),
+            ),
+          // Floating claim button at bottom
+          if (canClaim && !showDepositButton)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: BottomCenterButton(
+                title: _swapInfo!.canClaimGelato
+                    ? 'Claim ${_getTargetToken().symbol}'
+                    : 'Claim BTC',
+                isLoading: isClaimingAnywhere,
+                onTap: isClaimingAnywhere ? null : _handleClaim,
               ),
             ),
         ],
@@ -429,11 +447,14 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     final targetToken = _getTargetToken();
     final status = _swapInfo?.status ?? SwapStatusSimple.waitingForDeposit;
 
-    // Check if deposit button will be shown (for extra bottom padding)
+    // Check if floating buttons will be shown (for extra bottom padding)
     final isWaitingForDeposit = status == SwapStatusSimple.waitingForDeposit;
     final showDepositButton = isWaitingForDeposit &&
         _swapInfo?.direction == 'evm_to_btc' &&
         _swapInfo?.depositAddress != null;
+    final canClaim =
+        _swapInfo?.canClaimGelato == true || _swapInfo?.canClaimVhtlc == true;
+    final showFloatingButton = showDepositButton || canClaim;
 
     return NotificationListener<OverscrollNotification>(
       onNotification: (notification) {
@@ -499,15 +520,15 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
                 ),
               ),
               const SizedBox(height: AppTheme.cardPadding),
-              // Action buttons outside the main card
+              // Action buttons outside the main card (only refund if claim is floating)
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppTheme.cardPadding,
                 ),
-                child: _buildActionButtons(context, status),
+                child: _buildActionButtons(context, status, canClaim),
               ),
               // Extra space at bottom for floating button
-              if (showDepositButton)
+              if (showFloatingButton)
                 const SizedBox(height: AppTheme.cardPadding * 5),
             ],
           ),
@@ -1092,19 +1113,23 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, SwapStatusSimple status) {
+  Widget _buildActionButtons(
+      BuildContext context, SwapStatusSimple status, bool claimIsFloating) {
     final canClaim =
         _swapInfo?.canClaimGelato == true || _swapInfo?.canClaimVhtlc == true;
     final canRefund = _swapInfo?.canRefund == true;
 
-    if (!canClaim && !canRefund) {
+    // If claim is floating, only show refund here
+    final showClaimHere = canClaim && !claimIsFloating;
+
+    if (!showClaimHere && !canRefund) {
       return const SizedBox.shrink();
     }
 
     return Column(
       children: [
-        // Claim section
-        if (canClaim) ...[
+        // Claim section (only if not floating)
+        if (showClaimHere) ...[
           GlassContainer(
             borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
             child: Padding(
@@ -1149,7 +1174,7 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
         ],
         // Refund section
         if (canRefund) ...[
-          if (canClaim) const SizedBox(height: AppTheme.cardPadding),
+          if (showClaimHere) const SizedBox(height: AppTheme.cardPadding),
           GlassContainer(
             borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
             child: Padding(
