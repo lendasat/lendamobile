@@ -183,6 +183,9 @@ enum SwapToken {
     }
   }
 
+  /// Check if this is a gold token (XAUT)
+  bool get isGold => this == SwapToken.xautEthereum;
+
   /// Get token decimals
   int get decimals {
     switch (this) {
@@ -267,19 +270,20 @@ enum SwapToken {
   /// Check if this token is on Ethereum (requires WalletConnect for gas fees)
   bool get isEthereum => chainId == 'ethereum';
 
-  /// Get default USD price for UI estimation (before quote is fetched)
-  /// Stablecoins return 1.0, other tokens return their approximate USD value
+  /// Fallback USD price for initial UI rendering.
+  /// Real prices are fetched from LendaSwap price feed via WebSocket.
+  /// @deprecated Use SwapState.getTokenUsdPrice() which uses live prices.
   double get defaultUsdPrice {
     switch (this) {
       case SwapToken.bitcoin:
-        return 104000.0; // Approximate BTC price
+        return 104000.0; // Fallback BTC price
       case SwapToken.usdcPolygon:
       case SwapToken.usdcEthereum:
       case SwapToken.usdtPolygon:
       case SwapToken.usdtEthereum:
         return 1.0; // Stablecoins are 1:1 with USD
       case SwapToken.xautEthereum:
-        return 2650.0; // Approximate gold price per oz
+        return 2650.0; // Fallback gold price (updated from price feed)
     }
   }
 }

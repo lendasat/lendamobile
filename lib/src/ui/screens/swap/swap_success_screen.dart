@@ -164,7 +164,9 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                                     Text(
                                       widget.sourceToken.isBtc
                                           ? '${widget.sourceAmount} BTC'
-                                          : '\$${widget.sourceAmount} ${widget.sourceToken.symbol}',
+                                          : widget.sourceToken.isStablecoin
+                                              ? '\$${widget.sourceAmount}'
+                                              : '${widget.sourceAmount} ${widget.sourceToken.symbol}',
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleMedium
@@ -239,7 +241,9 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
                                     Text(
                                       widget.targetToken.isBtc
                                           ? '${widget.targetAmount} BTC'
-                                          : '\$${widget.targetAmount} ${widget.targetToken.symbol}',
+                                          : widget.targetToken.isStablecoin
+                                              ? '\$${widget.targetAmount}'
+                                              : '${widget.targetAmount} ${widget.targetToken.symbol}',
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleMedium

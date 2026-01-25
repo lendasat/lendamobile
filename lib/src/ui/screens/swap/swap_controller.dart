@@ -11,6 +11,7 @@ import 'package:ark_flutter/src/services/bitcoin_price_service.dart'
 import 'package:ark_flutter/src/ui/widgets/bitcoin_chart/bitcoin_chart_card.dart'
     show TimeRange;
 import 'package:ark_flutter/src/services/lendaswap_service.dart';
+import 'package:ark_flutter/src/services/lendaswap_price_service.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:ark_flutter/src/services/payment_overlay_service.dart';
@@ -49,7 +50,9 @@ class SwapController extends ChangeNotifier {
   SwapState get state => _state;
 
   final LendaSwapService _swapService = LendaSwapService();
+  final LendaswapPriceFeedService _priceFeed = LendaswapPriceFeedService();
   Timer? _quoteDebounceTimer;
+  StreamSubscription<PriceUpdateMessage>? _priceSubscription;
 
   // Text controllers for UI binding
   final TextEditingController sourceController = TextEditingController();
@@ -60,11 +63,32 @@ class SwapController extends ChangeNotifier {
   void _init() {
     _loadBitcoinPrice();
     _loadBalance();
+    _connectPriceFeed();
+  }
+
+  /// Connect to the LendaSwap price feed for real-time prices.
+  void _connectPriceFeed() {
+    _priceFeed.connect();
+    _priceSubscription = _priceFeed.priceUpdates.listen(_onPriceUpdate);
+  }
+
+  /// Handle price updates from the price feed.
+  void _onPriceUpdate(PriceUpdateMessage update) {
+    logger.d('[SwapController] Received price update');
+
+    // Update token prices from the feed
+    final xautPrice = _priceFeed.getTokenUsdPrice('xaut_eth');
+    if (xautPrice != null) {
+      _updateState(_state.copyWith(xautUsdPrice: xautPrice));
+      logger.i(
+          '[SwapController] Updated XAUT price: \$${xautPrice.toStringAsFixed(2)}');
+    }
   }
 
   @override
   void dispose() {
     _quoteDebounceTimer?.cancel();
+    _priceSubscription?.cancel();
     sourceController.dispose();
     targetController.dispose();
     sourceFocusNode.dispose();
@@ -249,7 +273,7 @@ class SwapController extends ChangeNotifier {
 
   SwapState _calculateFromTokenSource(String value) {
     final tokens = double.tryParse(value) ?? 0;
-    final usd = tokens * _state.sourceToken.defaultUsdPrice;
+    final usd = tokens * _state.getTokenUsdPrice(_state.sourceToken);
     final btc = usd > 0 ? usd / _state.btcUsdPrice : 0.0;
     final sats = SwapConfig.btcToSats(btc);
     return _state.copyWith(
@@ -273,24 +297,37 @@ class SwapController extends ChangeNotifier {
   }
 
   SwapState _calculateFromBtcTarget(String value) {
+    // Helper to calculate tokenAmount for gold source tokens
+    String? calcTokenAmount(double usd) {
+      if (_state.sourceToken.isGold && usd > 0) {
+        final tokens = usd / _state.getTokenUsdPrice(_state.sourceToken);
+        return tokens.toStringAsFixed(6);
+      }
+      return null;
+    }
+
     if (_state.targetShowUsd) {
       final usd = double.tryParse(value) ?? 0;
       final btc = usd > 0 ? usd / _state.btcUsdPrice : 0.0;
       final sats = SwapConfig.btcToSats(btc);
+      final tokenAmt = calcTokenAmount(usd);
       return _state.copyWith(
         usdAmount: value,
         btcAmount: btc > 0 ? _formatBtc(btc) : '',
         satsAmount: sats > 0 ? sats.toString() : '',
+        tokenAmount: tokenAmt ?? _state.tokenAmount,
       );
     } else if (_state.targetBtcUnit == CurrencyType.sats) {
       final sats = double.tryParse(value) ?? 0;
       final btc = sats / BitcoinConstants.satsPerBtc;
       final usd = btc * _state.btcUsdPrice;
+      final tokenAmt = calcTokenAmount(usd);
 
       var newState = _state.copyWith(
         satsAmount: value,
         btcAmount: sats > 0 ? btc.toString() : '',
         usdAmount: sats > 0 ? _formatUsd(usd) : '',
+        tokenAmount: tokenAmt ?? _state.tokenAmount,
       );
 
       if (sats >= SwapConfig.satsToBtcThreshold) {
@@ -302,11 +339,13 @@ class SwapController extends ChangeNotifier {
       final btc = double.tryParse(value) ?? 0;
       final sats = SwapConfig.btcToSats(btc);
       final usd = btc * _state.btcUsdPrice;
+      final tokenAmt = calcTokenAmount(usd);
 
       var newState = _state.copyWith(
         btcAmount: value,
         satsAmount: sats > 0 ? sats.toString() : '',
         usdAmount: btc > 0 ? _formatUsd(usd) : '',
+        tokenAmount: tokenAmt ?? _state.tokenAmount,
       );
 
       if (btc > 0 && btc < SwapConfig.btcToSatsThreshold) {
@@ -331,7 +370,7 @@ class SwapController extends ChangeNotifier {
 
   SwapState _calculateFromTokenTarget(String value) {
     final tokens = double.tryParse(value) ?? 0;
-    final usd = tokens * _state.targetToken.defaultUsdPrice;
+    final usd = tokens * _state.getTokenUsdPrice(_state.targetToken);
     final btc = usd > 0 ? usd / _state.btcUsdPrice : 0.0;
     final sats = SwapConfig.btcToSats(btc);
     return _state.copyWith(
@@ -370,7 +409,7 @@ class SwapController extends ChangeNotifier {
     } else {
       final usd = double.tryParse(_state.usdAmount) ?? 0;
       if (usd > 0) {
-        final tokens = usd / target.defaultUsdPrice;
+        final tokens = usd / _state.getTokenUsdPrice(target);
         targetController.text = tokens.toStringAsFixed(6);
       } else {
         targetController.text = '';
@@ -390,11 +429,25 @@ class SwapController extends ChangeNotifier {
   // ============================================================
 
   void swapTokens() {
+    // Before swapping, calculate tokenAmount if target was a non-stablecoin token
+    // (like XAUT) since its value is calculated on-the-fly and not stored
+    String tokenAmount = _state.tokenAmount;
+    if (_state.targetToken.isGold) {
+      final usd = double.tryParse(_state.usdAmount) ?? 0;
+      if (usd > 0) {
+        final tokens = usd / _state.getTokenUsdPrice(_state.targetToken);
+        tokenAmount = tokens.toStringAsFixed(6);
+      }
+    }
+
     _updateState(_state.copyWith(
       sourceToken: _state.targetToken,
       targetToken: _state.sourceToken,
       sourceShowUsd: _state.targetShowUsd,
       targetShowUsd: _state.sourceShowUsd,
+      sourceBtcUnit: _state.targetBtcUnit,
+      targetBtcUnit: _state.sourceBtcUnit,
+      tokenAmount: tokenAmount,
     ));
     _syncSourceController();
     _syncTargetController();

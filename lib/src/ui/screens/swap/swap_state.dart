@@ -23,7 +23,9 @@ class SwapState {
     BigInt? spendableBalanceSats,
     this.isLoadingBalance = true,
     this.btcUsdPrice = 104000.0,
-  })  : availableBalanceSats = availableBalanceSats ?? BigInt.zero,
+    double? xautUsdPrice,
+  })  : _xautUsdPrice = xautUsdPrice ?? 2650.0,
+        availableBalanceSats = availableBalanceSats ?? BigInt.zero,
         spendableBalanceSats = spendableBalanceSats ?? BigInt.zero;
 
   // Token selection
@@ -54,8 +56,12 @@ class SwapState {
   final BigInt spendableBalanceSats;
   final bool isLoadingBalance;
 
-  // Price
+  // Prices
   final double btcUsdPrice;
+  final double? _xautUsdPrice;
+
+  /// XAUT USD price with fallback for hot reload safety
+  double get xautUsdPrice => _xautUsdPrice ?? 2650.0;
 
   /// Create initial state
   factory SwapState.initial() => SwapState();
@@ -113,6 +119,13 @@ class SwapState {
     return 'Swap ${sourceToken.symbol} to ${targetToken.symbol}';
   }
 
+  /// Get the USD price for a token.
+  double getTokenUsdPrice(SwapToken token) {
+    if (token.isStablecoin) return 1.0;
+    if (token.isGold) return xautUsdPrice;
+    return 1.0; // Fallback
+  }
+
   /// Copy with new values
   SwapState copyWith({
     SwapToken? sourceToken,
@@ -133,6 +146,7 @@ class SwapState {
     BigInt? spendableBalanceSats,
     bool? isLoadingBalance,
     double? btcUsdPrice,
+    double? xautUsdPrice,
   }) {
     return SwapState(
       sourceToken: sourceToken ?? this.sourceToken,
@@ -152,6 +166,7 @@ class SwapState {
       spendableBalanceSats: spendableBalanceSats ?? this.spendableBalanceSats,
       isLoadingBalance: isLoadingBalance ?? this.isLoadingBalance,
       btcUsdPrice: btcUsdPrice ?? this.btcUsdPrice,
+      xautUsdPrice: xautUsdPrice ?? this.xautUsdPrice,
     );
   }
 

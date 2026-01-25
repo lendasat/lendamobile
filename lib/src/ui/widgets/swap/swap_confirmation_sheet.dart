@@ -173,7 +173,9 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                   Text(
                     widget.sourceToken.isBtc
                         ? '${widget.sourceAmount} BTC'
-                        : '\$${widget.sourceAmount}',
+                        : widget.sourceToken.isStablecoin
+                            ? '\$${widget.sourceAmount}'
+                            : '${widget.sourceAmount} ${widget.sourceToken.symbol}',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -181,7 +183,9 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                   Text(
                     widget.sourceToken.isBtc
                         ? '≈ \$${widget.sourceAmountUsd}'
-                        : '≈ ${widget.sourceAmount} ${widget.sourceToken.symbol}',
+                        : widget.sourceToken.isStablecoin
+                            ? '≈ ${widget.sourceAmount} ${widget.sourceToken.symbol}'
+                            : '≈ \$${widget.sourceAmountUsd}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color:
                               isDarkMode ? AppTheme.white60 : AppTheme.black60,
@@ -223,7 +227,9 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                   Text(
                     widget.targetToken.isBtc
                         ? '${widget.targetAmount} BTC'
-                        : '\$$netAmount ${widget.targetToken.symbol}',
+                        : widget.targetToken.isStablecoin
+                            ? '\$$netAmount'
+                            : '$netAmount ${widget.targetToken.symbol}',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppTheme.successColor,
@@ -232,7 +238,9 @@ class _SwapConfirmationSheetState extends State<SwapConfirmationSheet> {
                   // Gross amount (before fees) - secondary
                   if (!widget.targetToken.isBtc && _totalFeesUsd > 0.01)
                     Text(
-                      '${AppLocalizations.of(context)?.beforeFees ?? 'before fees'}: \$$grossAmount',
+                      widget.targetToken.isStablecoin
+                          ? '${AppLocalizations.of(context)?.beforeFees ?? 'before fees'}: \$$grossAmount'
+                          : '${AppLocalizations.of(context)?.beforeFees ?? 'before fees'}: $grossAmount ${widget.targetToken.symbol}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: isDarkMode
                                 ? AppTheme.white60

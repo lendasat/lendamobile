@@ -10,9 +10,10 @@ abstract final class SwapConfig {
   static const double btcToSatsThreshold = 0.001; // Below this, show sats
   static const double satsToBtcThreshold = 100000000; // At 1 BTC, show BTC
 
-  // Default prices (fallbacks)
+  // Default prices (fallbacks - real prices come from LendaSwap price feed)
   static const double defaultBtcPrice = 104000.0;
-  static const double defaultXautPrice = 2650.0; // 1 oz gold
+  static const double defaultXautPrice =
+      2650.0; // 1 oz gold (updated from server)
 
   // Fee defaults (when quote unavailable)
   static const double defaultProtocolFeePercent = 0.5;

@@ -8,6 +8,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Swap amount input card - Uniswap style
 class SwapAmountCard extends StatelessWidget {
@@ -96,7 +97,9 @@ class SwapAmountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final showDollarPrefix = showUsdMode || !token.isBtc;
+    // Show $ for stablecoins or BTC in USD mode, gold icon for XAUT, BTC icon for BTC
+    final showDollarPrefix = token.isStablecoin || (showUsdMode && token.isBtc);
+    final showGoldPrefix = token.isGold;
     final showBtcPrefix = token.isBtc && !showUsdMode;
 
     return GlassContainer(
@@ -153,6 +156,16 @@ class SwapAmountCard extends StatelessWidget {
                                   : Icons.currency_bitcoin,
                               size: 32,
                               color: isDarkMode ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        // Gold icon prefix (for XAUT)
+                        if (showGoldPrefix)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4.0),
+                            child: SvgPicture.asset(
+                              'assets/images/tokens/xaut.svg',
+                              width: 28,
+                              height: 28,
                             ),
                           ),
                         // Amount input
