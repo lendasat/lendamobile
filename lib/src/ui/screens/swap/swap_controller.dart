@@ -487,6 +487,15 @@ class SwapController extends ChangeNotifier {
       );
     }
 
+    // Recalculate tokenAmount when changing to gold token
+    if (token.isGold) {
+      final usd = double.tryParse(_state.usdAmount) ?? 0;
+      if (usd > 0) {
+        final tokens = usd / newState.getTokenUsdPrice(token);
+        newState = newState.copyWith(tokenAmount: tokens.toStringAsFixed(6));
+      }
+    }
+
     _updateState(newState);
     _syncSourceController();
     _syncTargetController();
@@ -504,6 +513,15 @@ class SwapController extends ChangeNotifier {
         sourceToken: token.isBtc ? SwapToken.usdcPolygon : SwapToken.bitcoin,
         sourceShowUsd: token.isBtc,
       );
+    }
+
+    // Recalculate tokenAmount when changing to gold token
+    if (token.isGold) {
+      final usd = double.tryParse(_state.usdAmount) ?? 0;
+      if (usd > 0) {
+        final tokens = usd / newState.getTokenUsdPrice(token);
+        newState = newState.copyWith(tokenAmount: tokens.toStringAsFixed(6));
+      }
     }
 
     _updateState(newState);
