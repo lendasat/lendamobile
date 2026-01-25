@@ -214,26 +214,39 @@ class SwapController extends ChangeNotifier {
   }
 
   SwapState _calculateFromBtcSource(String value) {
+    // Helper to calculate tokenAmount for gold target tokens
+    String? calcTokenAmount(double usd) {
+      if (_state.targetToken.isGold && usd > 0) {
+        final tokens = usd / _state.getTokenUsdPrice(_state.targetToken);
+        return tokens.toStringAsFixed(6);
+      }
+      return null;
+    }
+
     if (_state.sourceShowUsd) {
       // User entered USD
       final usd = double.tryParse(value) ?? 0;
       final btc = usd > 0 ? usd / _state.btcUsdPrice : 0.0;
       final sats = SwapConfig.btcToSats(btc);
+      final tokenAmt = calcTokenAmount(usd);
       return _state.copyWith(
         usdAmount: value,
         btcAmount: btc > 0 ? _formatBtc(btc) : '',
         satsAmount: sats > 0 ? sats.toString() : '',
+        tokenAmount: tokenAmt ?? _state.tokenAmount,
       );
     } else if (_state.sourceBtcUnit == CurrencyType.sats) {
       // User entered sats
       final sats = double.tryParse(value) ?? 0;
       final btc = sats / BitcoinConstants.satsPerBtc;
       final usd = btc * _state.btcUsdPrice;
+      final tokenAmt = calcTokenAmount(usd);
 
       var newState = _state.copyWith(
         satsAmount: value,
         btcAmount: sats > 0 ? btc.toString() : '',
         usdAmount: sats > 0 ? _formatUsd(usd) : '',
+        tokenAmount: tokenAmt ?? _state.tokenAmount,
       );
 
       // Check for auto-switch to BTC
@@ -247,11 +260,13 @@ class SwapController extends ChangeNotifier {
       final btc = double.tryParse(value) ?? 0;
       final sats = SwapConfig.btcToSats(btc);
       final usd = btc * _state.btcUsdPrice;
+      final tokenAmt = calcTokenAmount(usd);
 
       var newState = _state.copyWith(
         btcAmount: value,
         satsAmount: sats > 0 ? sats.toString() : '',
         usdAmount: btc > 0 ? _formatUsd(usd) : '',
+        tokenAmount: tokenAmt ?? _state.tokenAmount,
       );
 
       // Check for auto-switch to sats
