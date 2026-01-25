@@ -8,6 +8,7 @@ import 'package:ark_flutter/src/ui/widgets/swap/swap_amount_card.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/swap_confirmation_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/fee_breakdown_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/evm_address_input_sheet.dart';
+import 'package:ark_flutter/src/ui/widgets/swap/insufficient_liquidity_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
@@ -147,9 +148,18 @@ class SwapScreenState extends State<SwapScreen>
         _controller.onSwapSuccess();
       case SwapNavigateToFunding():
         _navigateToFundingScreen();
+      case SwapInsufficientLiquidity():
+        _showInsufficientLiquiditySheet();
       case SwapError(:final message):
         OverlayService().showError(message);
     }
+  }
+
+  void _showInsufficientLiquiditySheet() {
+    arkBottomSheet(
+      context: context,
+      child: const InsufficientLiquiditySheet(),
+    );
   }
 
   void _navigateToFundingScreen() {

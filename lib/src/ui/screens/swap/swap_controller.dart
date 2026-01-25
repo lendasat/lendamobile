@@ -40,6 +40,10 @@ class SwapError extends SwapResult {
   final String message;
 }
 
+class SwapInsufficientLiquidity extends SwapResult {
+  const SwapInsufficientLiquidity();
+}
+
 /// Controller for swap screen business logic and state management.
 class SwapController extends ChangeNotifier {
   SwapController() {
@@ -595,6 +599,12 @@ class SwapController extends ChangeNotifier {
       }
     } catch (e) {
       logger.e('Swap failed: $e');
+      final errorStr = e.toString().toLowerCase();
+      // Check for liquidity errors
+      if (errorStr.contains('insufficient') &&
+          (errorStr.contains('liquidity') || errorStr.contains('wbtc'))) {
+        return const SwapInsufficientLiquidity();
+      }
       return SwapError(parseSwapError(e.toString()));
     } finally {
       _updateState(_state.copyWith(isExecuting: false));
