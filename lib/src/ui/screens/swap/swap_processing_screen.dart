@@ -864,7 +864,7 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Your swap is ready! Connect your ${_targetEvmChain.name} wallet to claim your tokens. '
+              'Your swap is ready! Connect your ${_targetEvmChain.name} wallet to claim your ${widget.targetToken.symbol}. '
               'You will need to pay gas fees for the claim transaction.',
               style: TextStyle(
                 color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
@@ -880,8 +880,9 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
             if (_walletService.isConnected) ...[
               const SizedBox(height: AppTheme.cardPadding),
               LongButtonWidget(
-                title:
-                    _isClaimingWalletConnect ? 'Claiming...' : 'Claim Tokens',
+                title: _isClaimingWalletConnect
+                    ? 'Claiming...'
+                    : 'Claim ${widget.targetToken.symbol}',
                 customWidth: double.infinity,
                 state: _isClaimingWalletConnect
                     ? ButtonState.loading
