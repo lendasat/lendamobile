@@ -21,6 +21,7 @@ import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bottom_action_buttons.dart';
 import 'package:ark_flutter/src/ui/screens/swap/swap_processing_screen.dart';
 import 'package:ark_flutter/src/services/currency_preference_service.dart';
+import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -767,13 +768,17 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     final feeSats = _swapInfo!.feeSats.toInt();
     final (feeAmount, feeUnit, isSatsUnit) = _formatFeeWithUnit(feeSats);
 
-    // Calculate fiat value of fee using the swap's exchange rate
-    // Exchange rate = targetAmountUsd / (sourceAmountSats / satsPerBtc)
+    // Calculate fiat value of fee
+    // For gold swaps (XAUT), targetAmountUsd contains the token amount, not USD,
+    // so we use the cached BTC price instead of deriving from swap data.
     final sourceAmountSats = _swapInfo!.sourceAmountSats.toInt();
     final targetAmountUsd = _swapInfo!.targetAmountUsd;
-    final btcPrice = sourceAmountSats > 0
-        ? targetAmountUsd / (sourceAmountSats / BitcoinConstants.satsPerBtc)
-        : 0.0;
+    final isGoldSwap = _getTargetToken().isGold || _getSourceToken().isGold;
+    final btcPrice = isGoldSwap
+        ? (BitcoinPriceCache.currentPrice ?? 100000.0)
+        : (sourceAmountSats > 0
+            ? targetAmountUsd / (sourceAmountSats / BitcoinConstants.satsPerBtc)
+            : 0.0);
     final feeFiat = (feeSats / BitcoinConstants.satsPerBtc) * btcPrice;
     final feeFiatFormatted = currencyService.formatAmount(feeFiat);
 

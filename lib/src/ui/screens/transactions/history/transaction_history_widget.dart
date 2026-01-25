@@ -1410,11 +1410,25 @@ class _SwapItemWidget extends StatelessWidget {
     }
   }
 
+  /// Check if swap involves gold token (XAUT)
+  bool get _isGoldSwap => swapItem.tokenSymbol == 'XAUt';
+
+  /// Calculate USD amount - for gold tokens, derive from BTC side
+  double _getUsdAmount() {
+    // For gold tokens, usdAmount contains the token amount (e.g., 0.05 XAUt),
+    // not USD. Calculate from BTC side instead.
+    if (_isGoldSwap && bitcoinPrice != null && bitcoinPrice! > 0) {
+      return (swapItem.amountSats.abs() / BitcoinConstants.satsPerBtc) *
+          bitcoinPrice!;
+    }
+    return swapItem.usdAmount;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final amountSats = swapItem.amountSats;
-    final usdAmount = swapItem.usdAmount;
+    final usdAmount = _getUsdAmount();
     final isExpired = swapItem.displayStatus == SwapDisplayStatus.expired;
 
     // Use grey color for expired swaps, bitcoin color otherwise
