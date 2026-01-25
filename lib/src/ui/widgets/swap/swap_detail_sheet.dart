@@ -196,6 +196,12 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
     }
   }
 
+  /// Check if the target token is on Ethereum (requires WalletConnect for claiming)
+  bool _isEthereumTarget() {
+    final targetToken = _swapInfo?.targetToken.toLowerCase() ?? '';
+    return targetToken.contains('eth') && !targetToken.contains('pol');
+  }
+
   Future<void> _handleClaim() async {
     if (_swapInfo == null) return;
 
@@ -203,7 +209,31 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
 
     try {
       if (_swapInfo!.canClaimGelato) {
-        logger.i('Claiming BTC→EVM swap via Gelato');
+        // Check if this is an Ethereum target - requires WalletConnect
+        if (_isEthereumTarget()) {
+          logger.i(
+              'Ethereum swap requires WalletConnect for claiming - navigating to processing screen');
+          if (mounted) {
+            // Close the detail sheet and navigate to processing screen
+            Navigator.of(context).pop();
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => SwapProcessingScreen(
+                  swapId: widget.swapId,
+                  sourceToken: SwapToken.bitcoin,
+                  targetToken: _getTargetToken(),
+                  sourceAmount:
+                      _formatAmount(_swapInfo!.sourceAmountSats.toInt()),
+                  targetAmount: _swapInfo!.targetAmountUsd.toStringAsFixed(2),
+                ),
+              ),
+            );
+          }
+          return;
+        }
+
+        // Polygon swaps can use gasless Gelato claiming
+        logger.i('Claiming BTC→Polygon swap via Gelato');
         await _swapService.claimGelato(widget.swapId);
 
         // Track swap transaction for analytics
@@ -303,6 +333,11 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
       return SwapToken.usdtEthereum;
     }
     return SwapToken.usdcPolygon;
+  }
+
+  /// Format sats amount to BTC string for display.
+  String _formatAmount(int sats) {
+    return (sats / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
   }
 
   @override

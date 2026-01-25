@@ -7,7 +7,7 @@ import '../frb_generated.dart';
 import '../lendaswap.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Initialize the LendaSwap client.
 ///
@@ -171,6 +171,25 @@ Future<void> lendaswapDeleteSwap({required String swapId}) =>
 /// Use this when local storage is corrupted.
 Future<List<SwapInfo>> lendaswapClearAndRecover() =>
     RustLib.instance.api.crateApiLendaswapApiLendaswapClearAndRecover();
+
+/// Get the preimage (secret) for a swap.
+///
+/// This is needed for claiming Ethereum swaps via WalletConnect,
+/// where the user must call claimSwap(swapId, secret) on the HTLC contract.
+///
+/// # Returns
+/// The preimage as a hex string (without 0x prefix).
+Future<String> lendaswapGetSwapPreimage({required String swapId}) =>
+    RustLib.instance.api
+        .crateApiLendaswapApiLendaswapGetSwapPreimage(swapId: swapId);
+
+/// Get HTLC claim data for calling claimSwap on Ethereum.
+///
+/// This converts the swap ID and preimage to the bytes32 format expected
+/// by the HTLC contract's claimSwap(bytes32 swapId, bytes32 secret) function.
+Future<HtlcClaimData> lendaswapGetHtlcClaimData({required String swapId}) =>
+    RustLib.instance.api
+        .crateApiLendaswapApiLendaswapGetHtlcClaimData(swapId: swapId);
 
 /// Information about a tradeable asset.
 class AssetInfo {
@@ -337,6 +356,48 @@ class EvmToBtcSwapResult {
           gelatoForwarderAddress == other.gelatoForwarderAddress &&
           gelatoUserNonce == other.gelatoUserNonce &&
           gelatoUserDeadline == other.gelatoUserDeadline;
+}
+
+/// Get the HTLC claim data for a BTC→EVM swap.
+///
+/// Returns the data needed to call claimSwap on the Ethereum HTLC contract:
+/// - htlc_address: The HTLC contract address on the EVM chain
+/// - swap_id_bytes32: The swap ID formatted as bytes32 for the contract
+/// - preimage_bytes32: The preimage/secret formatted as bytes32
+/// - calldata: The complete calldata for the claimSwap transaction (ready to send)
+///
+/// The swap_id is converted to bytes32 by removing hyphens and padding with zeros.
+class HtlcClaimData {
+  final String htlcAddress;
+  final String swapIdBytes32;
+  final String preimageBytes32;
+
+  /// Complete calldata for eth_sendTransaction: selector + swapId + secret
+  final String calldata;
+
+  const HtlcClaimData({
+    required this.htlcAddress,
+    required this.swapIdBytes32,
+    required this.preimageBytes32,
+    required this.calldata,
+  });
+
+  @override
+  int get hashCode =>
+      htlcAddress.hashCode ^
+      swapIdBytes32.hashCode ^
+      preimageBytes32.hashCode ^
+      calldata.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HtlcClaimData &&
+          runtimeType == other.runtimeType &&
+          htlcAddress == other.htlcAddress &&
+          swapIdBytes32 == other.swapIdBytes32 &&
+          preimageBytes32 == other.preimageBytes32 &&
+          calldata == other.calldata;
 }
 
 /// Quote response for a swap.

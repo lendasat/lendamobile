@@ -2,6 +2,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
+import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -89,20 +90,7 @@ class _TokenSelectorSheet extends StatefulWidget {
 }
 
 class _TokenSelectorSheetState extends State<_TokenSelectorSheet> {
-  late TextEditingController _searchController;
   String _searchQuery = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   List<SwapToken> get _filteredTokens {
     if (_searchQuery.isEmpty) {
@@ -119,14 +107,13 @@ class _TokenSelectorSheetState extends State<_TokenSelectorSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final title = widget.label == 'sell'
         ? 'Select token to sell'
         : widget.label == 'buy'
             ? 'Select token to buy'
             : 'Select token';
 
-    return ArkScaffold(
+    return ArkScaffoldUnsafe(
       context: context,
       extendBodyBehindAppBar: true,
       appBar: BitNetAppBar(
@@ -134,65 +121,54 @@ class _TokenSelectorSheetState extends State<_TokenSelectorSheet> {
         text: title,
         hasBackButton: false,
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: AppTheme.cardPadding * 2),
-          // Search field
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.cardPadding,
-            ),
-            child: GlassContainer(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMid),
-              child: TextField(
-                controller: _searchController,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: Column(
+          children: [
+            const SizedBox(height: AppTheme.cardPadding * 3),
+            // Search field
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.cardPadding,
+              ),
+              child: SearchFieldWidget(
+                hintText: 'Search tokens...',
+                isSearchEnabled: true,
+                handleSearch: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
                 onChanged: (value) {
                   setState(() {
                     _searchQuery = value;
                   });
                 },
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Search by name or network...',
-                  hintStyle: TextStyle(
-                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: isDarkMode ? AppTheme.white60 : AppTheme.black60,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.cardPadding,
-                    vertical: AppTheme.elementSpacing,
-                  ),
-                ),
               ),
             ),
-          ),
-          const SizedBox(height: AppTheme.elementSpacing),
-          // Token list
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.cardPadding,
-              ),
-              itemCount: _filteredTokens.length,
-              itemBuilder: (context, index) {
-                final token = _filteredTokens[index];
-                final isSelected = token == widget.selectedToken;
+            const SizedBox(height: AppTheme.elementSpacing),
+            // Token list
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.cardPadding,
+                ),
+                itemCount: _filteredTokens.length,
+                itemBuilder: (context, index) {
+                  final token = _filteredTokens[index];
+                  final isSelected = token == widget.selectedToken;
 
-                return _TokenListItem(
-                  token: token,
-                  isSelected: isSelected,
-                  onTap: () => widget.onTokenSelected(token),
-                );
-              },
+                  return _TokenListItem(
+                    token: token,
+                    isSelected: isSelected,
+                    onTap: () => widget.onTokenSelected(token),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -318,8 +294,6 @@ class TokenIcon extends StatelessWidget {
       case SwapToken.usdtPolygon:
       case SwapToken.usdtEthereum:
         return 'assets/images/tokens/usdt.svg';
-      case SwapToken.polPolygon:
-        return 'assets/images/tokens/polygon.svg';
       case SwapToken.xautEthereum:
         return 'assets/images/tokens/xaut.svg';
     }
@@ -406,7 +380,6 @@ class TokenIconWithNetwork extends StatelessWidget {
         return 'assets/images/tokens/bitcoin.svg';
       case SwapToken.usdcPolygon:
       case SwapToken.usdtPolygon:
-      case SwapToken.polPolygon:
         return 'assets/images/tokens/polygon.svg';
       case SwapToken.usdcEthereum:
       case SwapToken.usdtEthereum:

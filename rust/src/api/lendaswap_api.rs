@@ -5,6 +5,7 @@
 
 use crate::lendaswap::{self, SwapInfo};
 use anyhow::Result;
+use lendaswap_core::api::GetSwapResponse;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -555,6 +556,95 @@ pub async fn lendaswap_clear_and_recover() -> Result<Vec<SwapInfo>> {
     lendaswap::clear_local_storage().await?;
     let swaps = lendaswap::recover_swaps().await?;
     Ok(swaps.iter().map(SwapInfo::from_extended_data).collect())
+}
+
+/// Get the preimage (secret) for a swap.
+///
+/// This is needed for claiming Ethereum swaps via WalletConnect,
+/// where the user must call claimSwap(swapId, secret) on the HTLC contract.
+///
+/// # Returns
+/// The preimage as a hex string (without 0x prefix).
+pub async fn lendaswap_get_swap_preimage(swap_id: String) -> Result<String> {
+    tracing::info!(
+        "[LendaSwap API] get_swap_preimage called - swap_id: {}",
+        swap_id
+    );
+
+    let data = lendaswap::get_swap(&swap_id).await?;
+    let preimage_hex = hex::encode(data.swap_params.preimage);
+
+    tracing::info!(
+        "[LendaSwap API] get_swap_preimage SUCCESS - swap_id: {}, preimage_length: {}",
+        swap_id,
+        preimage_hex.len()
+    );
+
+    Ok(preimage_hex)
+}
+
+/// Get the HTLC claim data for a BTC→EVM swap.
+///
+/// Returns the data needed to call claimSwap on the Ethereum HTLC contract:
+/// - htlc_address: The HTLC contract address on the EVM chain
+/// - swap_id_bytes32: The swap ID formatted as bytes32 for the contract
+/// - preimage_bytes32: The preimage/secret formatted as bytes32
+/// - calldata: The complete calldata for the claimSwap transaction (ready to send)
+///
+/// The swap_id is converted to bytes32 by removing hyphens and padding with zeros.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HtlcClaimData {
+    pub htlc_address: String,
+    pub swap_id_bytes32: String,
+    pub preimage_bytes32: String,
+    /// Complete calldata for eth_sendTransaction: selector + swapId + secret
+    pub calldata: String,
+}
+
+/// Get HTLC claim data for calling claimSwap on Ethereum.
+///
+/// This converts the swap ID and preimage to the bytes32 format expected
+/// by the HTLC contract's claimSwap(bytes32 swapId, bytes32 secret) function.
+pub async fn lendaswap_get_htlc_claim_data(swap_id: String) -> Result<HtlcClaimData> {
+    tracing::info!(
+        "[LendaSwap API] get_htlc_claim_data called - swap_id: {}",
+        swap_id
+    );
+
+    let data = lendaswap::get_swap(&swap_id).await?;
+
+    // Get the EVM HTLC address from the swap response
+    let htlc_address = match &data.response {
+        GetSwapResponse::BtcToEvm(r) => r.htlc_address_evm.clone(),
+        _ => return Err(anyhow::anyhow!("Swap is not a BTC→EVM swap")),
+    };
+
+    // Convert UUID to bytes32: remove hyphens and pad with zeros
+    // UUID is 32 hex chars (16 bytes), pad to 64 hex chars (32 bytes)
+    let uuid_hex = swap_id.replace("-", "");
+    let swap_id_hex = format!("{:0<64}", uuid_hex);
+    let swap_id_bytes32 = format!("0x{}", swap_id_hex);
+
+    // Preimage is already 32 bytes
+    let preimage_hex = hex::encode(data.swap_params.preimage);
+    let preimage_bytes32 = format!("0x{}", preimage_hex);
+
+    // Build calldata: function selector (4 bytes) + swapId (32 bytes) + secret (32 bytes)
+    // claimSwap(bytes32,bytes32) selector = 0x1818a9fa
+    let calldata = format!("0x1818a9fa{}{}", swap_id_hex, preimage_hex);
+
+    tracing::info!(
+        "[LendaSwap API] get_htlc_claim_data SUCCESS - htlc: {}, calldata_len: {}",
+        htlc_address,
+        calldata.len()
+    );
+
+    Ok(HtlcClaimData {
+        htlc_address,
+        swap_id_bytes32,
+        preimage_bytes32,
+        calldata,
+    })
 }
 
 // ============================================================================

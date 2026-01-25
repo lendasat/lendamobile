@@ -13,7 +13,6 @@ abstract final class SwapConfig {
   // Default prices (fallbacks)
   static const double defaultBtcPrice = 104000.0;
   static const double defaultXautPrice = 2650.0; // 1 oz gold
-  static const double defaultPolPrice = 0.45; // POL token
 
   // Fee defaults (when quote unavailable)
   static const double defaultProtocolFeePercent = 0.5;
