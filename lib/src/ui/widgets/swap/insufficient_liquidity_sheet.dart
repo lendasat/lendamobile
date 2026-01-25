@@ -38,7 +38,7 @@ class InsufficientLiquiditySheet extends StatelessWidget {
               const SizedBox(height: AppTheme.cardPadding),
               // Title
               Text(
-                'Insufficient Liquidity',
+                'We\'re Out of Liquidity',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -47,7 +47,7 @@ class InsufficientLiquiditySheet extends StatelessWidget {
               const SizedBox(height: AppTheme.elementSpacing),
               // Description
               Text(
-                'LendaSwap doesn\'t have enough funds for this swap right now. Please try again later or use a different token.',
+                'We don\'t have enough funds for this swap right now. Please try again later or use a different token.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: isDark ? AppTheme.white60 : AppTheme.black60,
                     ),
