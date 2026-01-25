@@ -65,4 +65,5 @@ rust/src/frb_generated.rs
 *.log
 firebase-debug.log
 
- .claude/settings.local.json
+# Claude Code config (local only)
+.claude/
