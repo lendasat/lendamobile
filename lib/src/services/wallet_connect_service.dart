@@ -543,6 +543,9 @@ class WalletConnectService extends ChangeNotifier {
     try {
       logger.i('Sending transaction to $to on ${selectedChain.chainId}...');
 
+      // Launch the connected wallet app so user can approve the transaction
+      _appKitModal!.launchConnectedWallet();
+
       final result = await _appKitModal!.request(
         topic: session.topic ?? '',
         chainId: selectedChain.chainId,
@@ -585,6 +588,9 @@ class WalletConnectService extends ChangeNotifier {
 
     try {
       logger.i('Signing typed data on ${selectedChain.chainId}...');
+
+      // Launch the connected wallet app so user can sign the data
+      _appKitModal!.launchConnectedWallet();
 
       final result = await _appKitModal!.request(
         topic: session.topic ?? '',

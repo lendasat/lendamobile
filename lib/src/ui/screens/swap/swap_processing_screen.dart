@@ -10,6 +10,7 @@ import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
 import 'package:ark_flutter/src/services/wallet_connect_service.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart';
+import 'package:ark_flutter/src/rust/api/lendaswap_api.dart' as lendaswap_api;
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
@@ -894,19 +895,39 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
     );
   }
 
-  /// Claim using WalletConnect (for Ethereum targets)
+  /// Claim using WalletConnect (for Ethereum targets).
+  ///
+  /// This calls claimSwap(swapId, secret) on the HTLC contract via WalletConnect.
+  /// The user pays gas fees for the transaction.
   Future<void> _claimViaWalletConnect() async {
     if (!_walletService.isConnected) {
+      OverlayService().showError('Please connect your wallet first');
       return;
     }
 
     setState(() => _isClaimingWalletConnect = true);
 
     try {
-      // Use Gelato claim but with WalletConnect signature
-      // The service will detect Ethereum and use the appropriate method
-      await _swapService.claimGelato(widget.swapId);
-      logger.i('Ethereum claim submitted for swap ${widget.swapId}');
+      // Ensure wallet is on the correct chain (Ethereum) before claiming
+      logger.i('Ensuring wallet is on ${_targetEvmChain.name} chain');
+      await _walletService.ensureCorrectChain(_targetEvmChain);
+
+      // Get HTLC claim data from Rust SDK
+      logger.i('Getting HTLC claim data for swap ${widget.swapId}');
+      final claimData =
+          await lendaswap_api.lendaswapGetHtlcClaimData(swapId: widget.swapId);
+
+      logger.i(
+          'Calling claimSwap on HTLC contract ${claimData.htlcAddress} via WalletConnect');
+
+      // Send the claim transaction via WalletConnect
+      final txHash = await _walletService.sendTransaction(
+        to: claimData.htlcAddress,
+        data: claimData.calldata,
+      );
+
+      logger.i('Ethereum claim transaction sent: $txHash');
+      OverlayService().showSuccess('Claim transaction sent!');
 
       // Track swap transaction for analytics
       if (_swapInfo != null) {
@@ -921,6 +942,8 @@ class _SwapProcessingScreenState extends State<SwapProcessingScreen> {
       setState(() {
         _showWalletConnectClaim = false;
       });
+
+      // The swap monitoring will pick up the completion
     } catch (e) {
       logger.e('Failed to claim via WalletConnect: $e');
       if (mounted) {

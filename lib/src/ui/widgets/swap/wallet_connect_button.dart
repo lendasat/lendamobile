@@ -126,6 +126,11 @@ class _WalletConnectButtonState extends State<WalletConnectButton>
       WalletConnectService().setAppKitModal(_appKit, context: context);
 
       logger.i('AppKit initialized in widget, connected: $_wasConnected');
+
+      // If already connected, ensure we're on the correct chain for this widget
+      if (_wasConnected) {
+        _ensureCorrectChain();
+      }
     } catch (e) {
       logger.e('Failed to initialize AppKit: $e');
     } finally {
