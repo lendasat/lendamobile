@@ -9,6 +9,7 @@ import 'package:ark_flutter/src/services/payment_overlay_service.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/glass_container.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/asset_dropdown.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bottom_action_buttons.dart';
 import 'package:ark_flutter/src/services/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -294,13 +295,10 @@ class _SwapSuccessScreenState extends State<SwapSuccessScreen> {
               ),
             ),
             // Floating Done button at bottom
-            Positioned(
-              left: AppTheme.cardPadding,
-              right: AppTheme.cardPadding,
-              bottom: AppTheme.cardPadding,
-              child: LongButtonWidget(
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: BottomCenterButton(
                 title: AppLocalizations.of(context)?.done ?? 'Done',
-                customWidth: double.infinity,
                 onTap: () {
                   PaymentMonitoringService().switchToWalletTab();
                   Navigator.of(context).popUntil((route) => route.isFirst);
