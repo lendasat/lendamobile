@@ -2,6 +2,7 @@ import 'package:ark_flutter/theme.dart';
 import 'package:ark_flutter/src/services/overlay_service.dart';
 import 'package:ark_flutter/src/ui/screens/swap/evm_swap_funding_screen.dart';
 import 'package:ark_flutter/src/ui/screens/swap/swap_controller.dart';
+import 'package:ark_flutter/src/ui/screens/swap/swap_processing_screen.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
 import 'package:ark_flutter/src/ui/widgets/swap/swap_amount_card.dart';
@@ -146,6 +147,10 @@ class SwapScreenState extends State<SwapScreen>
     switch (result) {
       case SwapSuccess():
         _controller.onSwapSuccess();
+      case SwapSuccessRequiresClaiming():
+        // Ethereum swaps require WalletConnect to claim
+        // Navigate to processing screen to complete the flow
+        _navigateToProcessingScreen(result);
       case SwapNavigateToFunding():
         _navigateToFundingScreen();
       case SwapInsufficientLiquidity():
@@ -153,6 +158,25 @@ class SwapScreenState extends State<SwapScreen>
       case SwapError(:final message):
         OverlayService().showError(message);
     }
+  }
+
+  void _navigateToProcessingScreen(SwapSuccessRequiresClaiming result) {
+    // Navigate to processing screen where user can claim via WalletConnect
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SwapProcessingScreen(
+          swapId: result.swapId,
+          sourceToken: result.sourceToken,
+          targetToken: result.targetToken,
+          sourceAmount: result.sourceAmount,
+          targetAmount: result.targetAmount,
+        ),
+      ),
+    ).then((_) {
+      // Clear swap inputs when returning from processing screen
+      _controller.clearAmounts();
+    });
   }
 
   void _showInsufficientLiquiditySheet() {

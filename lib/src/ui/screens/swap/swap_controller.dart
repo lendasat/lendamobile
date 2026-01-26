@@ -26,9 +26,27 @@ sealed class SwapResult {
   const SwapResult();
 }
 
+/// Swap initiated successfully - can auto-claim (Polygon/gasless)
 class SwapSuccess extends SwapResult {
   const SwapSuccess(this.swapId);
   final String swapId;
+}
+
+/// Swap initiated - requires WalletConnect to claim (Ethereum)
+/// Navigate user to processing screen to complete the claim flow
+class SwapSuccessRequiresClaiming extends SwapResult {
+  const SwapSuccessRequiresClaiming({
+    required this.swapId,
+    required this.sourceToken,
+    required this.targetToken,
+    required this.sourceAmount,
+    required this.targetAmount,
+  });
+  final String swapId;
+  final SwapToken sourceToken;
+  final SwapToken targetToken;
+  final String sourceAmount;
+  final String targetAmount;
 }
 
 class SwapNavigateToFunding extends SwapResult {
@@ -719,15 +737,38 @@ class SwapController extends ChangeNotifier {
       }
     }
 
+    // Ethereum swaps require WalletConnect to claim - keep user in flow
+    // Polygon swaps use gasless Gelato claiming - can go to wallet
+    if (_state.targetToken.isEthereum) {
+      final sourceAmountBtc =
+          (_state.satsValue / BitcoinConstants.satsPerBtc).toStringAsFixed(8);
+      final targetAmountStr = _state.targetToken.isStablecoin
+          ? targetAmount.toStringAsFixed(2)
+          : targetAmount.toStringAsFixed(6);
+
+      return SwapSuccessRequiresClaiming(
+        swapId: result.swapId,
+        sourceToken: _state.sourceToken,
+        targetToken: _state.targetToken,
+        sourceAmount: sourceAmountBtc,
+        targetAmount: targetAmountStr,
+      );
+    }
+
     return SwapSuccess(result.swapId);
   }
 
   void onSwapSuccess() {
+    clearAmounts();
+    PaymentMonitoringService().switchToWalletTab();
+    OverlayService().showSuccess('Swap initiated! Processing in background...');
+  }
+
+  /// Clear all swap amounts and reset controllers
+  void clearAmounts() {
     _updateState(_state.clearAmounts());
     sourceController.clear();
     targetController.clear();
-    PaymentMonitoringService().switchToWalletTab();
-    OverlayService().showSuccess('Swap initiated! Processing in background...');
   }
 
   // ============================================================
