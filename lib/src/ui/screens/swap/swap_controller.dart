@@ -57,6 +57,7 @@ class SwapController extends ChangeNotifier {
   final LendaswapPriceFeedService _priceFeed = LendaswapPriceFeedService();
   Timer? _quoteDebounceTimer;
   StreamSubscription<PriceUpdateMessage>? _priceSubscription;
+  StreamSubscription<Map<String, double>>? _coinGeckoSubscription;
 
   // Text controllers for UI binding
   final TextEditingController sourceController = TextEditingController();
@@ -74,18 +75,24 @@ class SwapController extends ChangeNotifier {
   void _connectPriceFeed() {
     _priceFeed.connect();
     _priceSubscription = _priceFeed.priceUpdates.listen(_onPriceUpdate);
+    _coinGeckoSubscription =
+        _priceFeed.coinGeckoPriceUpdates.listen(_onCoinGeckoUpdate);
   }
 
-  /// Handle price updates from the price feed.
+  /// Handle WebSocket price updates from the price feed.
   void _onPriceUpdate(PriceUpdateMessage update) {
-    logger.d('[SwapController] Received price update');
+    logger.d('[SwapController] Received WebSocket price update');
+  }
 
-    // Update token prices from the feed
-    final xautPrice = _priceFeed.getTokenUsdPrice('xaut_eth');
+  /// Handle CoinGecko price updates.
+  void _onCoinGeckoUpdate(Map<String, double> prices) {
+    logger.d('[SwapController] Received CoinGecko price update: $prices');
+
+    final xautPrice = prices['xaut_eth'];
     if (xautPrice != null) {
       _updateState(_state.copyWith(xautUsdPrice: xautPrice));
       logger.i(
-          '[SwapController] Updated XAUT price: \$${xautPrice.toStringAsFixed(2)}');
+          '[SwapController] Updated XAUT price from CoinGecko: \$${xautPrice.toStringAsFixed(2)}');
     }
   }
 
@@ -93,6 +100,7 @@ class SwapController extends ChangeNotifier {
   void dispose() {
     _quoteDebounceTimer?.cancel();
     _priceSubscription?.cancel();
+    _coinGeckoSubscription?.cancel();
     sourceController.dispose();
     targetController.dispose();
     sourceFocusNode.dispose();

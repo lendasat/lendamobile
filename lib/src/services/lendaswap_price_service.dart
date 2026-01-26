@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:ark_flutter/src/logger/logger.dart';
 
@@ -102,8 +103,16 @@ class LendaswapPriceFeedService {
 
   static const String _wsUrl = 'wss://lendaswap.lendasat.com/ws/prices';
 
+  // CoinGecko API for USD prices (same as web frontend)
+  static const String _coingeckoUrl =
+      'https://api.coingecko.com/api/v3/simple/price';
+  static const Map<String, String> _tokenToCoinGecko = {
+    'xaut_eth': 'tether-gold',
+  };
+
   WebSocketChannel? _channel;
   Timer? _reconnectTimer;
+  Timer? _coinGeckoTimer;
   final _priceController = StreamController<PriceUpdateMessage>.broadcast();
 
   PriceUpdateMessage? _latestPrices;
@@ -111,6 +120,17 @@ class LendaswapPriceFeedService {
   bool _isManualClose = false;
   int _reconnectDelay = 1000; // Start with 1 second
   static const int _maxReconnectDelay = 30000; // Max 30 seconds
+
+  // Cached CoinGecko prices
+  final Map<String, double> _coinGeckoPrices = {};
+  DateTime? _lastCoinGeckoFetch;
+
+  // Stream for CoinGecko price updates (separate from WebSocket)
+  final _coinGeckoController = StreamController<Map<String, double>>.broadcast();
+
+  /// Stream of CoinGecko price updates.
+  Stream<Map<String, double>> get coinGeckoPriceUpdates =>
+      _coinGeckoController.stream;
 
   /// Stream of price updates.
   Stream<PriceUpdateMessage> get priceUpdates => _priceController.stream;
@@ -121,21 +141,76 @@ class LendaswapPriceFeedService {
   /// Whether the WebSocket is connected.
   bool get isConnected => _isConnected;
 
+  /// Get cached XAUT USD price (from CoinGecko).
+  double? get xautUsdPrice => _coinGeckoPrices['xaut_eth'];
+
   /// Connect to the price feed.
   void connect() {
     if (_isConnected) return;
 
     _isManualClose = false;
     _connectWebSocket();
+    _startCoinGeckoPolling();
   }
 
   /// Disconnect from the price feed.
   void disconnect() {
     _isManualClose = true;
     _reconnectTimer?.cancel();
+    _coinGeckoTimer?.cancel();
     _channel?.sink.close();
     _channel = null;
     _isConnected = false;
+  }
+
+  /// Start polling CoinGecko for USD prices.
+  void _startCoinGeckoPolling() {
+    // Fetch immediately
+    _fetchCoinGeckoPrices();
+
+    // Then poll every 60 seconds (same as web frontend)
+    _coinGeckoTimer?.cancel();
+    _coinGeckoTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      _fetchCoinGeckoPrices();
+    });
+  }
+
+  /// Fetch USD prices from CoinGecko API.
+  Future<void> _fetchCoinGeckoPrices() async {
+    try {
+      final coinGeckoIds = _tokenToCoinGecko.values.join(',');
+      final url = '$_coingeckoUrl?ids=$coinGeckoIds&vs_currencies=usd';
+
+      logger.d('[PriceFeed] Fetching CoinGecko prices: $url');
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+        // Map CoinGecko IDs back to token IDs
+        for (final entry in _tokenToCoinGecko.entries) {
+          final tokenId = entry.key;
+          final coinGeckoId = entry.value;
+          final priceData = data[coinGeckoId] as Map<String, dynamic>?;
+          if (priceData != null && priceData['usd'] != null) {
+            final price = (priceData['usd'] as num).toDouble();
+            _coinGeckoPrices[tokenId] = price;
+            logger.i(
+                '[PriceFeed] CoinGecko price for $tokenId: \$${price.toStringAsFixed(2)}');
+          }
+        }
+
+        _lastCoinGeckoFetch = DateTime.now();
+
+        // Emit CoinGecko price update to notify listeners
+        _coinGeckoController.add(Map.from(_coinGeckoPrices));
+      } else {
+        logger.w(
+            '[PriceFeed] CoinGecko API error: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      logger.e('[PriceFeed] Failed to fetch CoinGecko prices: $e');
+    }
   }
 
   void _connectWebSocket() {
@@ -230,50 +305,20 @@ class LendaswapPriceFeedService {
   /// Get the USD price for a token.
   ///
   /// For stablecoins, returns ~1.0.
-  /// For XAUT, returns the gold price in USD.
+  /// For XAUT, returns the gold price from CoinGecko.
   double? getTokenUsdPrice(String tokenId) {
-    if (_latestPrices == null) {
-      logger.w('[PriceFeed] No prices available yet');
-      return null;
-    }
-
     // For stablecoins, they're ~1:1 with USD
     if (tokenId.contains('usdc') || tokenId.contains('usdt')) {
       return 1.0;
     }
 
-    // For XAUT, we need to calculate from BTC rate
-    // Get XAUT/BTC rate and multiply by BTC/USD
+    // For XAUT, use CoinGecko price (same as web frontend)
     if (tokenId.contains('xaut')) {
-      // Find XAUT -> BTC rate (BTC per 1 XAUT)
-      final pair = _latestPrices!.findPair(tokenId, 'btc_arkade');
-      if (pair == null) {
-        logger.w('[PriceFeed] No XAUT -> BTC pair found for $tokenId');
-        // Log available pairs for debugging
-        final pairNames = _latestPrices!.pairs
-            .map((p) => '${p.source}->${p.target}')
-            .join(', ');
-        logger.d('[PriceFeed] Available pairs: $pairNames');
-        return null;
+      final price = _coinGeckoPrices[tokenId];
+      if (price == null) {
+        logger.w('[PriceFeed] No CoinGecko price for $tokenId yet');
       }
-
-      final btcPerXaut = pair.tiers.tier1;
-
-      // We also need BTC/USD - get from USDC pair
-      final usdcPair = _latestPrices!.findPair('btc_arkade', 'usdc_pol');
-      if (usdcPair == null) {
-        logger.w('[PriceFeed] No BTC -> USDC pair found');
-        return null;
-      }
-
-      // This gives us BTC per 1 USDC, so invert to get USDC per BTC
-      final usdPerBtc = 1 / usdcPair.tiers.tier1;
-
-      // XAUT price = BTC per XAUT * USD per BTC
-      final xautPrice = btcPerXaut * usdPerBtc;
-      logger.d(
-          '[PriceFeed] Calculated XAUT price: \$$xautPrice (btcPerXaut=$btcPerXaut, usdPerBtc=$usdPerBtc)');
-      return xautPrice;
+      return price;
     }
 
     return null;
@@ -283,5 +328,6 @@ class LendaswapPriceFeedService {
   void dispose() {
     disconnect();
     _priceController.close();
+    _coinGeckoController.close();
   }
 }
