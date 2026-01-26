@@ -217,15 +217,18 @@ class _SwapDetailSheetState extends State<SwapDetailSheet> {
           if (mounted) {
             // Close the detail sheet and navigate to processing screen
             Navigator.of(context).pop();
+            final target = _getTargetToken();
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => SwapProcessingScreen(
                   swapId: widget.swapId,
                   sourceToken: SwapToken.bitcoin,
-                  targetToken: _getTargetToken(),
+                  targetToken: target,
                   sourceAmount:
                       _formatAmount(_swapInfo!.sourceAmountSats.toInt()),
-                  targetAmount: _swapInfo!.targetAmountUsd.toStringAsFixed(2),
+                  // Use 6 decimals for gold tokens, 2 for stablecoins
+                  targetAmount: _swapInfo!.targetAmountUsd
+                      .toStringAsFixed(target.isGold ? 6 : 2),
                 ),
               ),
             );

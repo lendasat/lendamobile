@@ -1,5 +1,6 @@
 import 'package:ark_flutter/l10n/app_localizations.dart';
 import 'package:ark_flutter/src/constants/bitcoin_constants.dart';
+import 'package:ark_flutter/src/models/swap_token.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/rust/lendaswap.dart' show SwapInfo;
 import 'package:ark_flutter/src/services/bitcoin_price_service.dart';
@@ -406,6 +407,10 @@ class _SwapCompletedBottomSheetContent extends StatelessWidget {
     final sentAmountSats = swap.sourceAmountSats.toInt();
     final btcPrice = BitcoinPriceCache.currentPrice ?? 0;
 
+    // Check if target is a gold token (XAUT)
+    final targetToken = SwapToken.fromTokenId(swap.targetToken);
+    final isGoldSwap = targetToken?.isGold ?? false;
+
     // For BTC→EVM swaps, user receives stablecoins
     // For EVM→BTC swaps, user receives BTC
     final receivedBtcSats = isBtcToEvm ? 0 : sentAmountSats;
@@ -449,9 +454,11 @@ class _SwapCompletedBottomSheetContent extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 if (isBtcToEvm)
-                  // Received stablecoins
+                  // Received stablecoins or gold tokens
                   Text(
-                    '\$${receivedAmountUsd.toStringAsFixed(2)}',
+                    isGoldSwap
+                        ? '${receivedAmountUsd.toStringAsFixed(6)} ${targetToken?.symbol ?? 'XAUt'}'
+                        : '\$${receivedAmountUsd.toStringAsFixed(2)}',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                       color: AppTheme.successColor,
@@ -493,7 +500,9 @@ class _SwapCompletedBottomSheetContent extends StatelessWidget {
           // Swap direction subtitle
           Text(
             isBtcToEvm
-                ? '${_formatAmount(sentAmountSats)} sats → ${swap.targetToken.toUpperCase()}'
+                ? isGoldSwap
+                    ? '${_formatAmount(sentAmountSats)} sats → ${targetToken?.symbol ?? 'XAUt'}'
+                    : '${_formatAmount(sentAmountSats)} sats → \$${receivedAmountUsd.toStringAsFixed(2)}'
                 : '\$${receivedAmountUsd.toStringAsFixed(2)} → BTC',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
