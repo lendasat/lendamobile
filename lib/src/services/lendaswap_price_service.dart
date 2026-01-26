@@ -232,7 +232,10 @@ class LendaswapPriceFeedService {
   /// For stablecoins, returns ~1.0.
   /// For XAUT, returns the gold price in USD.
   double? getTokenUsdPrice(String tokenId) {
-    if (_latestPrices == null) return null;
+    if (_latestPrices == null) {
+      logger.w('[PriceFeed] No prices available yet');
+      return null;
+    }
 
     // For stablecoins, they're ~1:1 with USD
     if (tokenId.contains('usdc') || tokenId.contains('usdt')) {
@@ -244,19 +247,33 @@ class LendaswapPriceFeedService {
     if (tokenId.contains('xaut')) {
       // Find XAUT -> BTC rate (BTC per 1 XAUT)
       final pair = _latestPrices!.findPair(tokenId, 'btc_arkade');
-      if (pair == null) return null;
+      if (pair == null) {
+        logger.w('[PriceFeed] No XAUT -> BTC pair found for $tokenId');
+        // Log available pairs for debugging
+        final pairNames = _latestPrices!.pairs
+            .map((p) => '${p.source}->${p.target}')
+            .join(', ');
+        logger.d('[PriceFeed] Available pairs: $pairNames');
+        return null;
+      }
 
       final btcPerXaut = pair.tiers.tier1;
 
       // We also need BTC/USD - get from USDC pair
       final usdcPair = _latestPrices!.findPair('btc_arkade', 'usdc_pol');
-      if (usdcPair == null) return null;
+      if (usdcPair == null) {
+        logger.w('[PriceFeed] No BTC -> USDC pair found');
+        return null;
+      }
 
       // This gives us BTC per 1 USDC, so invert to get USDC per BTC
       final usdPerBtc = 1 / usdcPair.tiers.tier1;
 
       // XAUT price = BTC per XAUT * USD per BTC
-      return btcPerXaut * usdPerBtc;
+      final xautPrice = btcPerXaut * usdPerBtc;
+      logger.d(
+          '[PriceFeed] Calculated XAUT price: \$$xautPrice (btcPerXaut=$btcPerXaut, usdPerBtc=$usdPerBtc)');
+      return xautPrice;
     }
 
     return null;

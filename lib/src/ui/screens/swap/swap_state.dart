@@ -23,9 +23,8 @@ class SwapState {
     BigInt? spendableBalanceSats,
     this.isLoadingBalance = true,
     this.btcUsdPrice = 104000.0,
-    double? xautUsdPrice,
-  })  : _xautUsdPrice = xautUsdPrice ?? 2650.0,
-        availableBalanceSats = availableBalanceSats ?? BigInt.zero,
+    this.xautUsdPrice,
+  })  : availableBalanceSats = availableBalanceSats ?? BigInt.zero,
         spendableBalanceSats = spendableBalanceSats ?? BigInt.zero;
 
   // Token selection
@@ -58,10 +57,7 @@ class SwapState {
 
   // Prices
   final double btcUsdPrice;
-  final double? _xautUsdPrice;
-
-  /// XAUT USD price with fallback for hot reload safety
-  double get xautUsdPrice => _xautUsdPrice ?? 2650.0;
+  final double? xautUsdPrice;
 
   /// Create initial state
   factory SwapState.initial() => SwapState();
@@ -110,20 +106,31 @@ class SwapState {
   bool get isAmountValid => satsValue >= 1000 && !hasInsufficientFunds;
 
   /// Check if swap can be executed
-  bool get canExecute => isAmountValid && !isExecuting;
+  bool get canExecute => isAmountValid && !isExecuting && hasPricesForSwap;
 
   /// Get button title based on state
   String get buttonTitle {
+    if (!hasPricesForSwap) return 'Cannot fetch prices';
     if (hasInsufficientFunds) return 'Not enough funds';
     if (isAmountTooSmall) return 'Amount too small (min 1,000 sats)';
     return 'Swap ${sourceToken.symbol} to ${targetToken.symbol}';
   }
 
-  /// Get the USD price for a token.
-  double getTokenUsdPrice(SwapToken token) {
+  /// Get the USD price for a token. Returns null if price not available.
+  double? getTokenUsdPrice(SwapToken token) {
     if (token.isStablecoin) return 1.0;
-    if (token.isGold) return xautUsdPrice;
-    return 1.0; // Fallback
+    if (token.isGold) return xautUsdPrice; // null if not fetched
+    return 1.0;
+  }
+
+  /// Check if prices are available for the current swap pair.
+  /// Returns true if all required prices are available.
+  bool get hasPricesForSwap {
+    // Check if source token price is needed and available
+    if (sourceToken.isGold && xautUsdPrice == null) return false;
+    // Check if target token price is needed and available
+    if (targetToken.isGold && xautUsdPrice == null) return false;
+    return true;
   }
 
   /// Copy with new values

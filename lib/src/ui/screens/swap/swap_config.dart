@@ -12,8 +12,7 @@ abstract final class SwapConfig {
 
   // Default prices (fallbacks - real prices come from LendaSwap price feed)
   static const double defaultBtcPrice = 104000.0;
-  static const double defaultXautPrice =
-      2650.0; // 1 oz gold (updated from server)
+  // Note: No XAUT default - must be fetched from price feed
 
   // Fee defaults (when quote unavailable)
   static const double defaultProtocolFeePercent = 0.5;

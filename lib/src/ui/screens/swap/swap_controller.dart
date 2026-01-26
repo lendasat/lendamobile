@@ -217,7 +217,9 @@ class SwapController extends ChangeNotifier {
     // Helper to calculate tokenAmount for gold target tokens
     String? calcTokenAmount(double usd) {
       if (_state.targetToken.isGold && usd > 0) {
-        final tokens = usd / _state.getTokenUsdPrice(_state.targetToken);
+        final price = _state.getTokenUsdPrice(_state.targetToken);
+        if (price == null || price <= 0) return null;
+        final tokens = usd / price;
         return tokens.toStringAsFixed(6);
       }
       return null;
@@ -292,7 +294,17 @@ class SwapController extends ChangeNotifier {
 
   SwapState _calculateFromTokenSource(String value) {
     final tokens = double.tryParse(value) ?? 0;
-    final usd = tokens * _state.getTokenUsdPrice(_state.sourceToken);
+    final price = _state.getTokenUsdPrice(_state.sourceToken);
+    if (price == null || price <= 0) {
+      // Price not available - clear amounts
+      return _state.copyWith(
+        tokenAmount: value,
+        usdAmount: '',
+        btcAmount: '',
+        satsAmount: '',
+      );
+    }
+    final usd = tokens * price;
     final btc = usd > 0 ? usd / _state.btcUsdPrice : 0.0;
     final sats = SwapConfig.btcToSats(btc);
     return _state.copyWith(
@@ -319,7 +331,9 @@ class SwapController extends ChangeNotifier {
     // Helper to calculate tokenAmount for gold source tokens
     String? calcTokenAmount(double usd) {
       if (_state.sourceToken.isGold && usd > 0) {
-        final tokens = usd / _state.getTokenUsdPrice(_state.sourceToken);
+        final price = _state.getTokenUsdPrice(_state.sourceToken);
+        if (price == null || price <= 0) return null;
+        final tokens = usd / price;
         return tokens.toStringAsFixed(6);
       }
       return null;
@@ -389,7 +403,17 @@ class SwapController extends ChangeNotifier {
 
   SwapState _calculateFromTokenTarget(String value) {
     final tokens = double.tryParse(value) ?? 0;
-    final usd = tokens * _state.getTokenUsdPrice(_state.targetToken);
+    final price = _state.getTokenUsdPrice(_state.targetToken);
+    if (price == null || price <= 0) {
+      // Price not available - clear amounts
+      return _state.copyWith(
+        tokenAmount: value,
+        usdAmount: '',
+        btcAmount: '',
+        satsAmount: '',
+      );
+    }
+    final usd = tokens * price;
     final btc = usd > 0 ? usd / _state.btcUsdPrice : 0.0;
     final sats = SwapConfig.btcToSats(btc);
     return _state.copyWith(
@@ -427,8 +451,9 @@ class SwapController extends ChangeNotifier {
       targetController.text = _state.usdAmount;
     } else {
       final usd = double.tryParse(_state.usdAmount) ?? 0;
-      if (usd > 0) {
-        final tokens = usd / _state.getTokenUsdPrice(target);
+      final price = _state.getTokenUsdPrice(target);
+      if (usd > 0 && price != null && price > 0) {
+        final tokens = usd / price;
         targetController.text = tokens.toStringAsFixed(6);
       } else {
         targetController.text = '';
@@ -453,8 +478,9 @@ class SwapController extends ChangeNotifier {
     String tokenAmount = _state.tokenAmount;
     if (_state.targetToken.isGold) {
       final usd = double.tryParse(_state.usdAmount) ?? 0;
-      if (usd > 0) {
-        final tokens = usd / _state.getTokenUsdPrice(_state.targetToken);
+      final price = _state.getTokenUsdPrice(_state.targetToken);
+      if (usd > 0 && price != null && price > 0) {
+        final tokens = usd / price;
         tokenAmount = tokens.toStringAsFixed(6);
       }
     }
@@ -490,8 +516,9 @@ class SwapController extends ChangeNotifier {
     // Recalculate tokenAmount when changing to gold token
     if (token.isGold) {
       final usd = double.tryParse(_state.usdAmount) ?? 0;
-      if (usd > 0) {
-        final tokens = usd / newState.getTokenUsdPrice(token);
+      final price = newState.getTokenUsdPrice(token);
+      if (usd > 0 && price != null && price > 0) {
+        final tokens = usd / price;
         newState = newState.copyWith(tokenAmount: tokens.toStringAsFixed(6));
       }
     }
@@ -518,8 +545,9 @@ class SwapController extends ChangeNotifier {
     // Recalculate tokenAmount when changing to gold token
     if (token.isGold) {
       final usd = double.tryParse(_state.usdAmount) ?? 0;
-      if (usd > 0) {
-        final tokens = usd / newState.getTokenUsdPrice(token);
+      final price = newState.getTokenUsdPrice(token);
+      if (usd > 0 && price != null && price > 0) {
+        final tokens = usd / price;
         newState = newState.copyWith(tokenAmount: tokens.toStringAsFixed(6));
       }
     }

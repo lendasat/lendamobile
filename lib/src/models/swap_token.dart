@@ -273,7 +273,8 @@ enum SwapToken {
   /// Fallback USD price for initial UI rendering.
   /// Real prices are fetched from LendaSwap price feed via WebSocket.
   /// @deprecated Use SwapState.getTokenUsdPrice() which uses live prices.
-  double get defaultUsdPrice {
+  /// Returns null for XAUT - must fetch from price feed.
+  double? get defaultUsdPrice {
     switch (this) {
       case SwapToken.bitcoin:
         return 104000.0; // Fallback BTC price
@@ -283,7 +284,7 @@ enum SwapToken {
       case SwapToken.usdtEthereum:
         return 1.0; // Stablecoins are 1:1 with USD
       case SwapToken.xautEthereum:
-        return 2650.0; // Fallback gold price (updated from price feed)
+        return null; // Must fetch from price feed - no hardcoded fallback
     }
   }
 }
