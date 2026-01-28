@@ -10,6 +10,7 @@ import 'package:ark_flutter/src/ui/widgets/utility/ark_bottom_sheet.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/search_field_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/screens/loans/loan_offer_detail_screen.dart';
 import 'package:ark_flutter/src/ui/screens/loans/contract_detail_screen.dart';
 import 'package:ark_flutter/src/ui/screens/loans/loan_filter_screen.dart';
@@ -23,8 +24,9 @@ import 'loans_state.dart';
 /// Main Lendasat Loans screen with offers and contracts.
 class LoansScreen extends StatefulWidget {
   final String aspId;
+  final bool showAppBar;
 
-  const LoansScreen({super.key, required this.aspId});
+  const LoansScreen({super.key, required this.aspId, this.showAppBar = false});
 
   @override
   State<LoansScreen> createState() => LoansScreenState();
@@ -115,6 +117,13 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
 
         return ArkScaffoldUnsafe(
           context: context,
+          appBar: widget.showAppBar
+              ? BitNetAppBar(
+                  text: AppLocalizations.of(context)!.loansAndContracts,
+                  context: context,
+                  hasBackButton: true,
+                )
+              : null,
           body: GestureDetector(
             onTap: () => _searchFocusNode.unfocus(),
             behavior: HitTestBehavior.translucent,
@@ -148,13 +157,14 @@ class LoansScreenState extends State<LoansScreen> with WidgetsBindingObserver {
                                   onSignUp: () => _showSignupModal(context),
                                 ),
                               ),
-                            SliverToBoxAdapter(
-                              child: _LoansOffersHeader(),
-                            ),
-                            _LoansOffersSliver(
-                              offers: state.arkadeOffers,
-                              onOfferTap: (offer) => _openOfferDetail(offer),
-                            ),
+                            // Available Offers section disabled - users can no longer take new contracts
+                            // SliverToBoxAdapter(
+                            //   child: _LoansOffersHeader(),
+                            // ),
+                            // _LoansOffersSliver(
+                            //   offers: state.arkadeOffers,
+                            //   onOfferTap: (offer) => _openOfferDetail(offer),
+                            // ),
                             _LoansStickyHeader(
                               searchFocusNode: _searchFocusNode,
                               filterOptions: state.filterOptions,
@@ -690,7 +700,7 @@ class _LoansStickyHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: AppTheme.cardPadding * 2),
+              const SizedBox(height: AppTheme.cardPadding),
               Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.cardPadding),

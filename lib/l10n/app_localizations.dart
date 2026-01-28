@@ -2360,6 +2360,12 @@ abstract class AppLocalizations {
   /// **'Loans Marketplace'**
   String get loansAndLeverage;
 
+  /// No description provided for @loansAndContracts.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans & Contracts'**
+  String get loansAndContracts;
+
   /// No description provided for @availableOffers.
   ///
   /// In en, this message translates to:

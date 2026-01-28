@@ -1185,6 +1185,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get loansAndLeverage => 'قرضوں کا بازار';
 
   @override
+  String get loansAndContracts => 'قرضے اور معاہدے';
+
+  @override
   String get availableOffers => 'دستیاب پیشکشیں';
 
   @override

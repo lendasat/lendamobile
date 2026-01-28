@@ -1176,6 +1176,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get loansAndLeverage => 'ローンマーケット';
 
   @override
+  String get loansAndContracts => 'ローンと契約';
+
+  @override
   String get availableOffers => '利用可能なオファー';
 
   @override

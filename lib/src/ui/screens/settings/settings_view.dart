@@ -323,6 +323,25 @@ class SettingsViewState extends State<SettingsView> {
               //   onTap: () => controller.switchTab('claim_sats'),
               // ),
 
+              // Loans & Contracts
+              ArkListTile(
+                leading: RoundedButtonWidget(
+                  iconData: FontAwesomeIcons.handHoldingDollar,
+                  onTap: () => controller.switchTab('loans'),
+                  size: AppTheme.iconSize * 1.5,
+                  buttonType: ButtonType.transparent,
+                ),
+                text: AppLocalizations.of(context)!.loansAndContracts,
+                trailing: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: AppTheme.iconSize * 0.75,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.white60
+                      : AppTheme.black60,
+                ),
+                onTap: () => controller.switchTab('loans'),
+              ),
+
               // Developer Options
               ArkListTile(
                 leading: RoundedButtonWidget(
