@@ -1,5 +1,6 @@
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/providers/theme_provider.dart';
+import 'package:ark_flutter/src/ui/screens/loans/loans_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/settings_view.dart';
 import 'package:ark_flutter/src/ui/screens/settings/settings_style_view.dart';
 import 'package:ark_flutter/src/ui/screens/settings/change_language.dart';
@@ -70,6 +71,8 @@ class Settings extends StatelessWidget {
         return const AgbsAndImpressumScreen();
       case 'developer_options':
         return const DeveloperOptionsScreen();
+      case 'loans':
+        return LoansScreen(aspId: aspId, showAppBar: true);
       case 'main':
       default:
         return SettingsView(aspId: aspId);

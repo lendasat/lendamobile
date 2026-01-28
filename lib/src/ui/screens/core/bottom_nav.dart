@@ -2,7 +2,6 @@ import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/services/onchain_monitoring_service.dart';
 import 'package:ark_flutter/src/services/payment_monitoring_service.dart';
 import 'package:ark_flutter/src/services/swap_monitoring_service.dart';
-import 'package:ark_flutter/src/ui/screens/loans/loans_screen.dart';
 import 'package:ark_flutter/src/ui/screens/swap/swap_screen.dart';
 import 'package:ark_flutter/src/ui/screens/core/walletscreen.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/bottom_nav_gradient.dart';
@@ -31,7 +30,6 @@ class _BottomNavState extends State<BottomNav> {
   final GlobalKey<WalletScreenState> _walletKey =
       GlobalKey<WalletScreenState>();
   final GlobalKey<SwapScreenState> _swapKey = GlobalKey<SwapScreenState>();
-  final GlobalKey<LoansScreenState> _loansKey = GlobalKey<LoansScreenState>();
 
   @override
   void initState() {
@@ -39,7 +37,6 @@ class _BottomNavState extends State<BottomNav> {
     _screens = [
       WalletScreen(key: _walletKey, aspId: widget.aspId),
       SwapScreen(key: _swapKey),
-      LoansScreen(key: _loansKey, aspId: widget.aspId),
     ];
 
     // Initialize monitoring services after first frame
@@ -113,14 +110,11 @@ class _BottomNavState extends State<BottomNav> {
     // Dismiss keyboard and unfocus all screens when switching tabs
     FocusScope.of(context).unfocus();
     _swapKey.currentState?.unfocusAll();
-    _loansKey.currentState?.unfocusAll();
 
     // If tapping the already selected tab, scroll to top
     if (index == _selectedIndex) {
       if (index == 0) {
         _walletKey.currentState?.scrollToTop();
-      } else if (index == 2) {
-        _loansKey.currentState?.scrollToTop();
       }
       return;
     }
@@ -171,8 +165,6 @@ class _BottomNavState extends State<BottomNav> {
                     _buildNavItem(0, FontAwesomeIcons.wallet, isLight),
                     _buildNavItem(
                         1, FontAwesomeIcons.arrowRightArrowLeft, isLight),
-                    _buildNavItem(
-                        2, FontAwesomeIcons.handHoldingDollar, isLight),
                   ],
                 ),
               ),

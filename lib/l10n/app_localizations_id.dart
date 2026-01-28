@@ -1184,6 +1184,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get loansAndLeverage => 'Pasar Pinjaman';
 
   @override
+  String get loansAndContracts => 'Pinjaman & Kontrak';
+
+  @override
   String get availableOffers => 'Penawaran Tersedia';
 
   @override

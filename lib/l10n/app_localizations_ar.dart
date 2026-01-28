@@ -1183,6 +1183,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get loansAndLeverage => 'سوق القروض';
 
   @override
+  String get loansAndContracts => 'القروض والعقود';
+
+  @override
   String get availableOffers => 'العروض المتاحة';
 
   @override

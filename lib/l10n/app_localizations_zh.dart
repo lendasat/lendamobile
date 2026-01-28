@@ -1173,6 +1173,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loansAndLeverage => '贷款市场';
 
   @override
+  String get loansAndContracts => '贷款与合约';
+
+  @override
   String get availableOffers => '可用报价';
 
   @override

@@ -1185,6 +1185,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loansAndLeverage => 'ऋण बाज़ार';
 
   @override
+  String get loansAndContracts => 'ऋण और अनुबंध';
+
+  @override
   String get availableOffers => 'उपलब्ध ऑफर';
 
   @override

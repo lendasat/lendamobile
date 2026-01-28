@@ -1194,6 +1194,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get loansAndLeverage => 'Mercato dei Prestiti';
 
   @override
+  String get loansAndContracts => 'Prestiti e Contratti';
+
+  @override
   String get availableOffers => 'Offerte Disponibili';
 
   @override
