@@ -43,7 +43,8 @@ class DetailRow extends StatelessWidget {
                       label,
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight:
+                            isBold ? FontWeight.w600 : FontWeight.normal,
                         color: isDarkMode ? Colors.white : Colors.black,
                       ),
                     ),
