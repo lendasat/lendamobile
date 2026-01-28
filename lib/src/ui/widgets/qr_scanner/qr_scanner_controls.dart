@@ -49,7 +49,8 @@ class QrScannerControls extends StatelessWidget {
                       ? CupertinoIcons.bolt_fill
                       : CupertinoIcons.bolt_slash_fill,
                   onTap: onToggleTorch,
-                  color: isTorchEnabled ? AppTheme.colorBitcoin : AppTheme.white90,
+                  color:
+                      isTorchEnabled ? AppTheme.colorBitcoin : AppTheme.white90,
                 ),
                 _buildControlButton(
                   icon: CupertinoIcons.photo_fill,
