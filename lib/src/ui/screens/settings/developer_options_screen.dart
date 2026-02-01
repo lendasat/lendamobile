@@ -1,15 +1,19 @@
 import 'package:ark_flutter/src/logger/hybrid_logger.dart';
+import 'package:ark_flutter/src/logger/logger.dart';
 import 'package:ark_flutter/src/ui/widgets/loaders/loaders.dart';
 import 'package:ark_flutter/src/rust/api/ark_api.dart';
 import 'package:ark_flutter/src/services/settings_controller.dart';
 import 'package:ark_flutter/src/services/settings_service.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/button_types.dart';
+import 'package:ark_flutter/src/ui/widgets/bitnet/long_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/rounded_button_widget.dart';
 import 'package:ark_flutter/src/ui/widgets/bitnet/bitnet_app_bar.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_list_tile.dart';
 import 'package:ark_flutter/src/ui/widgets/utility/ark_scaffold.dart';
 import 'package:ark_flutter/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -26,6 +30,14 @@ class _DeveloperOptionsScreenState extends State<DeveloperOptionsScreen> {
   bool _isLoadingVtxoBalance = false;
   bool _isSettling = false;
   bool _isRecovering = false;
+  bool _isDiscovering = false;
+  bool _isLoadingBoltzSwaps = false;
+  bool _isRestoringBoltzSwaps = false;
+
+  // Boltz swap data
+  List<BoltzSubmarineSwapInfo> _submarineSwaps = [];
+  List<BoltzReverseSwapInfo> _reverseSwaps = [];
+  List<RestoredBoltzSwap> _restoredSwaps = [];
 
   // Environment info
   String _esploraUrl = '';
@@ -73,6 +85,73 @@ class _DeveloperOptionsScreenState extends State<DeveloperOptionsScreen> {
     } finally {
       if (mounted) {
         setState(() => _isLoadingVtxoBalance = false);
+      }
+    }
+  }
+
+  Future<void> _loadBoltzSwaps() async {
+    if (_isLoadingBoltzSwaps) return;
+    setState(() => _isLoadingBoltzSwaps = true);
+    try {
+      final dataDir = await getApplicationSupportDirectory();
+      final result = await listBoltzSwaps(dataDir: dataDir.path);
+      if (mounted) {
+        setState(() {
+          _submarineSwaps = result.$1;
+          _reverseSwaps = result.$2;
+        });
+      }
+      logger.i(
+          'Boltz swaps loaded: ${result.$1.length} submarine, ${result.$2.length} reverse');
+    } catch (e) {
+      logger.e('Error loading Boltz swaps: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load Boltz swaps: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingBoltzSwaps = false);
+      }
+    }
+  }
+
+  Future<void> _restoreBoltzSwaps() async {
+    if (_isRestoringBoltzSwaps) return;
+    setState(() => _isRestoringBoltzSwaps = true);
+    try {
+      final dataDir = await getApplicationSupportDirectory();
+      final network = await _settingsService.getNetwork();
+      final boltzUrl = await _settingsService.getBoltzUrl();
+      logger.i('Restoring Boltz swaps: network=$network, boltzUrl=$boltzUrl');
+      final result = await restoreBoltzSwaps(
+        dataDir: dataDir.path,
+        network: network,
+        boltzUrl: boltzUrl,
+      );
+      if (mounted) {
+        setState(() {
+          _restoredSwaps = result;
+        });
+      }
+      logger.i('Boltz restore found ${result.length} swaps from server');
+    } catch (e) {
+      logger.e('Error restoring Boltz swaps: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Boltz restore failed: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isRestoringBoltzSwaps = false);
       }
     }
   }
@@ -169,6 +248,49 @@ class _DeveloperOptionsScreenState extends State<DeveloperOptionsScreen> {
     } finally {
       if (mounted) {
         setState(() => _isRecovering = false);
+      }
+    }
+  }
+
+  Future<void> _vtxoDiscovery() async {
+    if (_isDiscovering) return;
+    setState(() => _isDiscovering = true);
+    try {
+      debugPrint('VTXO discovery triggered...');
+      // balance() now forces a VTXO cache refresh from the server
+      // before reading, so calling it acts as discovery
+      final balanceResult = await balance();
+      final totalSats = balanceResult.offchain.totalSats;
+      debugPrint('VTXO discovery complete: $totalSats sats');
+      // Update displayed breakdown
+      if (mounted) {
+        setState(() {
+          _pendingSats = balanceResult.offchain.pendingSats;
+          _confirmedSats = balanceResult.offchain.confirmedSats;
+          _expiredSats = balanceResult.offchain.expiredSats;
+          _recoverableSats = balanceResult.offchain.recoverableSats;
+          _totalSats = balanceResult.offchain.totalSats;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('VTXO cache refreshed: $totalSats sats'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error during VTXO discovery: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('VTXO discovery failed: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isDiscovering = false);
       }
     }
   }
@@ -341,6 +463,23 @@ class _DeveloperOptionsScreenState extends State<DeveloperOptionsScreen> {
               onTap: _isExportingLogs ? null : _exportLogs,
             ),
 
+            // Swap Debug
+            ArkListTile(
+              leading: RoundedButtonWidget(
+                iconData: Icons.swap_horiz_rounded,
+                onTap: () => controller.switchTab('swap_debug'),
+                size: AppTheme.iconSize * 1.5,
+                buttonType: ButtonType.transparent,
+              ),
+              text: 'Swap Debug',
+              trailing: Icon(
+                Icons.chevron_right_rounded,
+                size: AppTheme.iconSize * 0.75,
+                color: isDark ? AppTheme.white60 : AppTheme.black60,
+              ),
+              onTap: () => controller.switchTab('swap_debug'),
+            ),
+
             const SizedBox(height: AppTheme.elementSpacing),
 
             // Environment Info
@@ -492,11 +631,393 @@ class _DeveloperOptionsScreenState extends State<DeveloperOptionsScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: AppTheme.elementSpacing * 0.5),
+                  // VTXO Discovery Button
+                  Center(
+                    child: LongButtonWidget(
+                      title:
+                          _isDiscovering ? 'Discovering...' : 'VTXO Discovery',
+                      customWidth: double.infinity,
+                      customHeight: 44,
+                      buttonType: ButtonType.outlined,
+                      state: _isDiscovering
+                          ? ButtonState.loading
+                          : ButtonState.idle,
+                      leadingIcon: _isDiscovering
+                          ? null
+                          : const Icon(
+                              Icons.manage_search_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                      onTap: _vtxoDiscovery,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: AppTheme.elementSpacing),
+
+            // Boltz Swaps Debug Section
+            Container(
+              margin: const EdgeInsets.symmetric(
+                horizontal: AppTheme.cardPadding * 0.5,
+              ),
+              padding: const EdgeInsets.all(AppTheme.elementSpacing),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Boltz Swaps',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      GestureDetector(
+                        onTap: _loadBoltzSwaps,
+                        child: _isLoadingBoltzSwaps
+                            ? dotProgress(context, size: 14)
+                            : Icon(
+                                Icons.refresh_rounded,
+                                size: 18,
+                                color: isDark
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                              ),
+                      ),
+                    ],
+                  ),
+                  if (_submarineSwaps.isEmpty &&
+                      _reverseSwaps.isEmpty &&
+                      !_isLoadingBoltzSwaps)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Tap refresh to load Boltz swap data',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                          color: isDark ? AppTheme.white60 : AppTheme.black60,
+                        ),
+                      ),
+                    ),
+                  if (_submarineSwaps.isNotEmpty) ...[
+                    const SizedBox(height: AppTheme.elementSpacing),
+                    Text(
+                      'Outgoing (Submarine) - ${_submarineSwaps.length}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    ..._submarineSwaps.map((s) => _buildSwapRow(
+                          s.swapId,
+                          s.status,
+                          s.amountSats,
+                          s.createdAt,
+                        )),
+                  ],
+                  if (_reverseSwaps.isNotEmpty) ...[
+                    const SizedBox(height: AppTheme.elementSpacing),
+                    Text(
+                      'Incoming (Reverse) - ${_reverseSwaps.length}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    ..._reverseSwaps.map((s) => _buildSwapRow(
+                          s.swapId,
+                          s.status,
+                          s.amountSats,
+                          s.createdAt,
+                        )),
+                  ],
+                  const SizedBox(height: AppTheme.elementSpacing),
+                  Divider(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.1),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Restore from Boltz Server',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      _isRestoringBoltzSwaps
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : GestureDetector(
+                              onTap: _restoreBoltzSwaps,
+                              child: Icon(
+                                Icons.cloud_download_rounded,
+                                size: 18,
+                                color: isDark
+                                    ? AppTheme.white60
+                                    : AppTheme.black60,
+                              ),
+                            ),
+                    ],
+                  ),
+                  if (_restoredSwaps.isEmpty && !_isRestoringBoltzSwaps)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Tap cloud icon to query Boltz server for past swaps using your xpub',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                          color: isDark ? AppTheme.white60 : AppTheme.black60,
+                        ),
+                      ),
+                    ),
+                  if (_restoredSwaps.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Found ${_restoredSwaps.length} swap(s) on server',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.successColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    ..._restoredSwaps.map((s) => _buildRestoredSwapRow(s)),
+                  ],
                 ],
               ),
             ),
 
             const SizedBox(height: AppTheme.cardPadding * 2),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSwapRow(
+    String swapId,
+    String status,
+    BigInt amountSats,
+    BigInt createdAt,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final date = DateTime.fromMillisecondsSinceEpoch(createdAt.toInt() * 1000);
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+
+    return GestureDetector(
+      onTap: () {
+        Clipboard.setData(ClipboardData(text: swapId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Swap ID copied: $swapId'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.03)
+              : Colors.black.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    swapId,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(
+                  Icons.copy_rounded,
+                  size: 12,
+                  color: isDark ? AppTheme.white60 : AppTheme.black60,
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$amountSats sats',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+                Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: status.contains('Paid') || status.contains('Claimed')
+                        ? AppTheme.successColor
+                        : status.contains('Failed') ||
+                                status.contains('Expired')
+                            ? AppTheme.errorColor
+                            : AppTheme.colorBitcoin,
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              dateStr,
+              style: TextStyle(
+                fontSize: 10,
+                color: isDark ? AppTheme.white60 : AppTheme.black60,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRestoredSwapRow(RestoredBoltzSwap swap) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () {
+        Clipboard.setData(ClipboardData(text: swap.swapId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Swap ID copied: ${swap.swapId}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+      onLongPress: () {
+        Clipboard.setData(ClipboardData(text: swap.rawJson));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Full swap JSON copied'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.03)
+              : Colors.black.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    swap.swapId,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(
+                  Icons.copy_rounded,
+                  size: 12,
+                  color: isDark ? AppTheme.white60 : AppTheme.black60,
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  swap.swapType,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+                Text(
+                  swap.status,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: swap.status.contains('completed') ||
+                            swap.status.contains('claimed')
+                        ? AppTheme.successColor
+                        : swap.status.contains('failed') ||
+                                swap.status.contains('expired')
+                            ? AppTheme.errorColor
+                            : AppTheme.colorBitcoin,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Long press to copy full JSON',
+              style: TextStyle(
+                fontSize: 9,
+                fontStyle: FontStyle.italic,
+                color: isDark ? AppTheme.white60 : AppTheme.black60,
+              ),
+            ),
           ],
         ),
       ),

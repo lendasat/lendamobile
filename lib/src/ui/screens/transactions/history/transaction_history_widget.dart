@@ -1416,9 +1416,13 @@ class _SwapItemWidget extends StatelessWidget {
     final amountSats = swapItem.amountSats;
     final usdAmount = swapItem.usdAmount;
     final isExpired = swapItem.displayStatus == SwapDisplayStatus.expired;
+    final isRefunded = swapItem.displayStatus == SwapDisplayStatus.refunded;
+    final isRefundable = swapItem.displayStatus == SwapDisplayStatus.refundable;
+    final isFailed = swapItem.displayStatus == SwapDisplayStatus.failed;
+    final isInactive = isExpired || isRefunded || isRefundable || isFailed;
 
-    // Use grey color for expired swaps, bitcoin color otherwise
-    final iconColor = isExpired
+    // Use grey for expired/refunded/failed, bitcoin color otherwise
+    final iconColor = isInactive
         ? (isDark ? AppTheme.white60 : AppTheme.black60)
         : AppTheme.colorBitcoin;
 
@@ -1444,11 +1448,17 @@ class _SwapItemWidget extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Swap icon - greyed out for expired swaps
+                      // Swap icon - greyed out for inactive swaps
                       RoundedButtonWidget(
-                        iconData: swapItem.isBtcToEvm
-                            ? Icons.north_east
-                            : Icons.south_west,
+                        iconData: isRefunded
+                            ? Icons.undo_rounded
+                            : isRefundable
+                                ? Icons.replay_rounded
+                                : isFailed
+                                    ? Icons.error_outline_rounded
+                                    : swapItem.isBtcToEvm
+                                        ? Icons.north_east
+                                        : Icons.south_west,
                         iconColor: iconColor,
                         backgroundColor: iconColor.withValues(alpha: 0.15),
                         buttonType: ButtonType.secondary,
@@ -1497,7 +1507,7 @@ class _SwapItemWidget extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // RIGHT SIDE - Show "Expired" for expired swaps instead of amount
+                  // RIGHT SIDE - Show status label for inactive swaps instead of amount
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -1509,6 +1519,32 @@ class _SwapItemWidget extends StatelessWidget {
                                     color: isDark
                                         ? AppTheme.white60
                                         : AppTheme.black60,
+                                  ),
+                        )
+                      else if (isRefunded)
+                        Text(
+                          'Refunded',
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: isDark
+                                        ? AppTheme.white60
+                                        : AppTheme.black60,
+                                  ),
+                        )
+                      else if (isRefundable)
+                        Text(
+                          'Refundable',
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: AppTheme.colorBitcoin,
+                                  ),
+                        )
+                      else if (isFailed)
+                        Text(
+                          'Failed',
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: AppTheme.errorColor,
                                   ),
                         )
                       else if (hideAmounts)

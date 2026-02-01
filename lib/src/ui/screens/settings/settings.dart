@@ -14,6 +14,7 @@ import 'package:ark_flutter/src/ui/screens/settings/claim_sats_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/chart_time_range_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/agbs_and_impressum_screen.dart';
 import 'package:ark_flutter/src/ui/screens/settings/developer_options_screen.dart';
+import 'package:ark_flutter/src/ui/screens/settings/swap_debug_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -71,6 +72,8 @@ class Settings extends StatelessWidget {
         return const AgbsAndImpressumScreen();
       case 'developer_options':
         return const DeveloperOptionsScreen();
+      case 'swap_debug':
+        return const SwapDebugScreen();
       case 'loans':
         return LoansScreen(aspId: aspId, showAppBar: true);
       case 'main':
