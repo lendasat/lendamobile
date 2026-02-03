@@ -65,9 +65,16 @@ Future<Addresses> address({BigInt? amount}) =>
 Future<List<Transaction>> txHistory() =>
     RustLib.instance.api.crateApiArkApiTxHistory();
 
-Future<String> send({required String address, required BigInt amountSats}) =>
-    RustLib.instance.api
-        .crateApiArkApiSend(address: address, amountSats: amountSats);
+Future<String> send({
+  required String address,
+  required BigInt amountSats,
+  BigInt? feeSats,
+}) =>
+    RustLib.instance.api.crateApiArkApiSend(
+      address: address,
+      amountSats: amountSats,
+      feeSats: feeSats,
+    );
 
 /// Pay a BOLT11 Lightning invoice using Ark funds via Boltz submarine swap
 Future<LnPaymentResult> payLnInvoice({required String invoice}) =>
