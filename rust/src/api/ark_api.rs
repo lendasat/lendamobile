@@ -221,9 +221,10 @@ pub async fn tx_history() -> Result<Vec<Transaction>> {
     Ok(txs)
 }
 
-pub async fn send(address: String, amount_sats: u64) -> Result<String> {
+pub async fn send(address: String, amount_sats: u64, fee_sats: Option<u64>) -> Result<String> {
     let amount = bitcoin::Amount::from_sat(amount_sats);
-    let txid = crate::ark::client::send(address, amount).await?;
+    let fee = fee_sats.map(bitcoin::Amount::from_sat);
+    let txid = crate::ark::client::send(address, amount, fee).await?;
     Ok(txid.to_string())
 }
 

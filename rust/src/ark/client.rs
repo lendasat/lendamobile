@@ -159,7 +159,7 @@ pub async fn tx_history() -> Result<Vec<Transaction>> {
     }
 }
 
-pub async fn send(address: String, amount: Amount) -> Result<Txid> {
+pub async fn send(address: String, amount: Amount, fee: Option<Amount>) -> Result<Txid> {
     let maybe_client = ARK_CLIENT.try_get();
 
     match maybe_client {
@@ -214,6 +214,7 @@ pub async fn send(address: String, amount: Amount) -> Result<Txid> {
                         vtxo_outpoints.into_iter(),
                         address.assume_checked(),
                         amount,
+                        fee,
                     )
                     .await
                     .map_err(|e| anyhow!("Failed sending onchain {e:#}"))?;
